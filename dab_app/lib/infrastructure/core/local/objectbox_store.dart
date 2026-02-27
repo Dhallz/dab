@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -10,9 +12,17 @@ class ObjectBoxStore {
 
   /// Create an instance of ObjectBox to use throughout the app.
   static Future<ObjectBoxStore> create() async {
-    final docsDir = await getApplicationDocumentsDirectory();
-    // Future: Use p.join(docsDir.path, "obx-db") if needed
-    final store = await openStore(directory: p.join(docsDir.path, "obx-db"));
+    final supportDir = await getApplicationSupportDirectory();
+    final dbPath = p.join(supportDir.path, "obx-db");
+    print('ObjectBox: Opening store at: $dbPath');
+
+    // Ensure the directory exists
+    final directory = Directory(dbPath);
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+
+    final store = await openStore(directory: dbPath);
     return ObjectBoxStore._create(store);
   }
 }
