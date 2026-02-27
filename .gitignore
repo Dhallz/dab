@@ -1,0 +1,44 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+
+# IDE related
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Dart/Flutter related
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+**/build/
+
+# Flutter specific
+**/ios/Flutter/.last_build_id
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/doc/api/
+/coverage/
+.flutter-plugins-dependencies
+app.*.symbols
+app.*.map.json
+
+# Environment files
+.env
+.env.*
+
+# Miscellaneous
+*.class
+*.pyc
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/

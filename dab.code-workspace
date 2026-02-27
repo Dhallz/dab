@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "dab_api"
+		},
+		{
+			"path": "dab_app"
+		},
+		{
+			"path": "aretefacts"
+		}
+	],
+	"settings": {}
+}

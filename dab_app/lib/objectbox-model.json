@@ -1,0 +1,68 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:4753593989117032601",
+      "lastPropertyId": "4:8005673301360801686",
+      "name": "UserRecord",
+      "properties": [
+        {
+          "id": "1:2574681842802853139",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1325078427106921435",
+          "name": "remoteId",
+          "indexId": "1:6218771340300999518",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:5022952648692684586",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "4:8005673301360801686",
+          "name": "name",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:4174291376144611737",
+      "lastPropertyId": "2:7417587751224718738",
+      "name": "AppSettingsRecord",
+      "properties": [
+        {
+          "id": "1:4291181846982233782",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7417587751224718738",
+          "name": "themeMode",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "2:4174291376144611737",
+  "lastIndexId": "1:6218771340300999518",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}
