@@ -6,6 +6,11 @@ part 'auth_response.mapper.dart';
 class AuthResponse with AuthResponseMappable {
   final String accessToken;
   final String refreshToken;
+  final String userId;
 
-  const AuthResponse({required this.accessToken, required this.refreshToken});
+  const AuthResponse({
+    required this.accessToken,
+    required this.refreshToken,
+    required this.userId,
+  });
 }

@@ -26,14 +26,14 @@ extension OnDioException on DioException {
               {};
           return ValidationFailure(
             errors: errors,
-            message: data['message'] ?? 'Validation failed',
+            message: data['error'] ?? data['message'] ?? 'Validation failed',
           );
         }
 
         // Handle specific server errors
         return ServerFailure(
           message: data is Map
-              ? data['message'] ?? 'Server error'
+              ? data['error'] ?? data['message'] ?? 'Server error'
               : 'Server error',
           statusCode: status,
           errorCode: data is Map ? data['code'] : null,

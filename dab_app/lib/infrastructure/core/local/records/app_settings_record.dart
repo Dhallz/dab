@@ -7,8 +7,9 @@ class AppSettingsRecord {
   @Id()
   int id = 0;
   final String themeMode;
+  String? syncToken;
 
-  AppSettingsRecord({this.id = 0, required this.themeMode});
+  AppSettingsRecord({this.id = 0, required this.themeMode, this.syncToken});
 }
 
 extension OnAppSettingsRecord on AppSettingsRecord {
@@ -17,6 +18,6 @@ extension OnAppSettingsRecord on AppSettingsRecord {
       (m) => m.name == themeMode,
       orElse: () => ThemeMode.system,
     );
-    return AppSettings(themeMode: mode);
+    return AppSettings(themeMode: mode, syncToken: syncToken);
   }
 }

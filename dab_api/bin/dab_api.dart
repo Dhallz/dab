@@ -1,35 +1,36 @@
 import 'dart:io';
 
-import 'package:dab_api/src/infrastructure/config/config.dart';
-import 'package:dab_api/src/infrastructure/database/database_migrator.dart';
+import 'package:dab_api/dab_api.dart';
+import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/health_controller.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
-import 'package:dab_api/src/services/logging_service.dart';
+import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
+import 'package:dab_api/src/service_locator.dart';
 import 'package:relic/relic.dart';
 
 Future<void> main() async {
   final config = Config();
 
-  // Run migrations before starting
-  print('Initializing database...');
-  try {
-    await DatabaseMigrator.runMigrations();
-    print('Migrations completed successfully.');
-  } catch (e) {
-    print('Migration failed: $e');
-  }
+  // 1. Setup Service Locator (DI)
+  // This now also initializes the database with Drift's native migrations
+  await serviceLocator();
+  print('Dependency injection and database ready.');
+
+  // 2. Start background polling
+  sl<ActivityService>().startPolling();
+  print('Phorge polling started.');
 
   final app = RelicApp()
-    // Global Middlewares (Executed in order)
     ..use('/', GlobalErrorHandler().call)
     ..use('/', RequestLogger().call)
-    // Public routes
     ..get('/health', HealthController.check)
-    // Auth routes
     ..post('/register', AuthController().register)
     ..post('/login', AuthController().login)
-    // Sample Hello World
+    ..use('/activities', VegasMiddleware.checkStaleness)
+    ..get('/activities', ActivityController().getActivities)
+    ..get('/ws', ActivityController().wsHandler)
+    ..post('/mock/activity', ActivityController().createMock)
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

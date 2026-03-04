@@ -1,11 +1,15 @@
 import 'package:dio/dio.dart';
 
+import 'vegas_interceptor.dart';
+
 class RestApiClient {
   final Dio dio;
   final String baseUrl;
 
   RestApiClient({required this.baseUrl, Dio? dio})
-    : dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl));
+    : dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)) {
+    this.dio.interceptors.add(VegasInterceptor());
+  }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) {
     return dio.get(path, queryParameters: queryParameters);

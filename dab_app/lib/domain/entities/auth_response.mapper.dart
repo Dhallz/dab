@@ -31,17 +31,24 @@ class AuthResponseMapper extends ClassMapperBase<AuthResponse> {
     'refreshToken',
     _$refreshToken,
   );
+  static String _$userId(AuthResponse v) => v.userId;
+  static const Field<AuthResponse, String> _f$userId = Field(
+    'userId',
+    _$userId,
+  );
 
   @override
   final MappableFields<AuthResponse> fields = const {
     #accessToken: _f$accessToken,
     #refreshToken: _f$refreshToken,
+    #userId: _f$userId,
   };
 
   static AuthResponse _instantiate(DecodingData data) {
     return AuthResponse(
       accessToken: data.dec(_f$accessToken),
       refreshToken: data.dec(_f$refreshToken),
+      userId: data.dec(_f$userId),
     );
   }
 
@@ -107,7 +114,7 @@ extension AuthResponseValueCopy<$R, $Out>
 
 abstract class AuthResponseCopyWith<$R, $In extends AuthResponse, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? accessToken, String? refreshToken});
+  $R call({String? accessToken, String? refreshToken, String? userId});
   AuthResponseCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -120,16 +127,19 @@ class _AuthResponseCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AuthResponse> $mapper =
       AuthResponseMapper.ensureInitialized();
   @override
-  $R call({String? accessToken, String? refreshToken}) => $apply(
-    FieldCopyWithData({
-      if (accessToken != null) #accessToken: accessToken,
-      if (refreshToken != null) #refreshToken: refreshToken,
-    }),
-  );
+  $R call({String? accessToken, String? refreshToken, String? userId}) =>
+      $apply(
+        FieldCopyWithData({
+          if (accessToken != null) #accessToken: accessToken,
+          if (refreshToken != null) #refreshToken: refreshToken,
+          if (userId != null) #userId: userId,
+        }),
+      );
   @override
   AuthResponse $make(CopyWithData data) => AuthResponse(
     accessToken: data.get(#accessToken, or: $value.accessToken),
     refreshToken: data.get(#refreshToken, or: $value.refreshToken),
+    userId: data.get(#userId, or: $value.userId),
   );
 
   @override

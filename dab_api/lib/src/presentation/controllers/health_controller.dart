@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:relic/relic.dart';
 
-import '../../infrastructure/database/database_client.dart';
+import '../../infrastructure/database/postgres_client.dart';
 
 class HealthController {
   static Future<Response> check(Request request) async {
     bool dbHealthy = false;
     try {
-      final pool = DatabaseClient().pool;
+      final pool = PostgresClient().pool;
       await pool.execute('SELECT 1');
       dbHealthy = true;
     } catch (e) {

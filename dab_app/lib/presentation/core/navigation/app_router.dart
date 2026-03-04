@@ -12,9 +12,9 @@ class AppRouter {
         builder: AppRoute.splash.view,
       ),
       GoRoute(
-        path: AppRoute.login.path,
-        name: AppRoute.login.name,
-        builder: AppRoute.login.view,
+        path: AppRoute.auth.path,
+        name: AppRoute.auth.name,
+        builder: AppRoute.auth.view,
       ),
       GoRoute(
         path: AppRoute.home.path,

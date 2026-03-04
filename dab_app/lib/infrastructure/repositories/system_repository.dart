@@ -25,7 +25,10 @@ class SystemRepository extends Repository implements ISystemRepository {
   Future<Either<AppFailure, Unit>> saveSettings(AppSettings settings) {
     return guardedCall(() async {
       await _localDataSource.saveSettings(
-        AppSettingsRecord(themeMode: settings.themeMode.name),
+        AppSettingsRecord(
+          themeMode: settings.themeMode.name,
+          syncToken: settings.syncToken,
+        ),
       );
       return unit;
     });

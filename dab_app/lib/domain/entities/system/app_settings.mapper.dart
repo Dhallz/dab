@@ -28,12 +28,24 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
     opt: true,
     def: ThemeMode.system,
   );
+  static String? _$syncToken(AppSettings v) => v.syncToken;
+  static const Field<AppSettings, String> _f$syncToken = Field(
+    'syncToken',
+    _$syncToken,
+    opt: true,
+  );
 
   @override
-  final MappableFields<AppSettings> fields = const {#themeMode: _f$themeMode};
+  final MappableFields<AppSettings> fields = const {
+    #themeMode: _f$themeMode,
+    #syncToken: _f$syncToken,
+  };
 
   static AppSettings _instantiate(DecodingData data) {
-    return AppSettings(themeMode: data.dec(_f$themeMode));
+    return AppSettings(
+      themeMode: data.dec(_f$themeMode),
+      syncToken: data.dec(_f$syncToken),
+    );
   }
 
   @override
@@ -96,7 +108,7 @@ extension AppSettingsValueCopy<$R, $Out>
 
 abstract class AppSettingsCopyWith<$R, $In extends AppSettings, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({ThemeMode? themeMode});
+  $R call({ThemeMode? themeMode, String? syncToken});
   AppSettingsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -109,11 +121,17 @@ class _AppSettingsCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AppSettings> $mapper =
       AppSettingsMapper.ensureInitialized();
   @override
-  $R call({ThemeMode? themeMode}) =>
-      $apply(FieldCopyWithData({if (themeMode != null) #themeMode: themeMode}));
+  $R call({ThemeMode? themeMode, Object? syncToken = $none}) => $apply(
+    FieldCopyWithData({
+      if (themeMode != null) #themeMode: themeMode,
+      if (syncToken != $none) #syncToken: syncToken,
+    }),
+  );
   @override
-  AppSettings $make(CopyWithData data) =>
-      AppSettings(themeMode: data.get(#themeMode, or: $value.themeMode));
+  AppSettings $make(CopyWithData data) => AppSettings(
+    themeMode: data.get(#themeMode, or: $value.themeMode),
+    syncToken: data.get(#syncToken, or: $value.syncToken),
+  );
 
   @override
   AppSettingsCopyWith<$R2, AppSettings, $Out2> $chain<$R2, $Out2>(

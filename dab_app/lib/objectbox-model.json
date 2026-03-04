@@ -36,7 +36,7 @@
     },
     {
       "id": "2:4174291376144611737",
-      "lastPropertyId": "2:7417587751224718738",
+      "lastPropertyId": "3:3503005441903137361",
       "name": "AppSettingsRecord",
       "properties": [
         {
@@ -48,6 +48,11 @@
         {
           "id": "2:7417587751224718738",
           "name": "themeMode",
+          "type": 9
+        },
+        {
+          "id": "3:3503005441903137361",
+          "name": "syncToken",
           "type": 9
         }
       ],

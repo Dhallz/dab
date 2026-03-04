@@ -1,36 +1,41 @@
-import 'dart:convert';
-
 import 'package:relic/relic.dart';
 
-import '../../services/auth_service.dart';
+import '../../application/auth_service.dart';
+import '../../service_locator.dart';
+
+final userIdProperty = ContextProperty<String>('userId');
+
+extension AuthContext on Request {
+  String get userId => userIdProperty.get(this);
+  String? get userIdOrNull => userIdProperty[this];
+}
 
 class AuthMiddleware extends MiddlewareObject {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = sl<AuthService>();
 
   @override
   Handler call(Handler next) {
     return (request) async {
-      final auth = request.headers.authorization;
+      final authHeaders = request.headers['Authorization'];
+      final authHeader = authHeaders?.isNotEmpty == true
+          ? authHeaders!.first
+          : null;
 
-      if (auth is! BearerAuthorizationHeader) {
+      if (authHeader == null || !authHeader.startsWith('Bearer ')) {
         return Response.unauthorized(
-          body: Body.fromString(
-            jsonEncode({'error': 'Missing or invalid Authorization header'}),
-            mimeType: MimeType.json,
-          ),
+          body: Body.fromString('Missing or invalid token'),
         );
       }
 
-      final jwt = _authService.verifyToken(auth.token);
+      final token = authHeader.substring(7);
+      final jwt = _authService.verifyToken(token);
 
       if (jwt == null) {
-        return Response.unauthorized(
-          body: Body.fromString(
-            jsonEncode({'error': 'Invalid or expired token'}),
-            mimeType: MimeType.json,
-          ),
-        );
+        return Response.unauthorized(body: Body.fromString('Invalid token'));
       }
+
+      // Store the userId in the context property
+      userIdProperty[request] = jwt.payload['sub'] as String;
 
       return await next(request);
     };

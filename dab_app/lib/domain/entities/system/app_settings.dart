@@ -6,6 +6,7 @@ part 'app_settings.mapper.dart';
 @MappableClass()
 class AppSettings with AppSettingsMappable {
   final ThemeMode themeMode;
+  final String? syncToken;
 
-  const AppSettings({this.themeMode = ThemeMode.system});
+  const AppSettings({this.themeMode = ThemeMode.system, this.syncToken});
 }

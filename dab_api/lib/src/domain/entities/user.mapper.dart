@@ -24,12 +24,33 @@ class UserMapper extends ClassMapperBase<User> {
 
   static String _$id(User v) => v.id;
   static const Field<User, String> _f$id = Field('id', _$id);
+  static String _$name(User v) => v.name;
+  static const Field<User, String> _f$name = Field('name', _$name);
   static String _$email(User v) => v.email;
   static const Field<User, String> _f$email = Field('email', _$email);
   static String _$passwordHash(User v) => v.passwordHash;
   static const Field<User, String> _f$passwordHash = Field(
     'passwordHash',
     _$passwordHash,
+  );
+  static String _$role(User v) => v.role;
+  static const Field<User, String> _f$role = Field(
+    'role',
+    _$role,
+    opt: true,
+    def: 'Standard',
+  );
+  static String? _$phorgePhid(User v) => v.phorgePhid;
+  static const Field<User, String> _f$phorgePhid = Field(
+    'phorgePhid',
+    _$phorgePhid,
+    opt: true,
+  );
+  static String? _$phorgeUsername(User v) => v.phorgeUsername;
+  static const Field<User, String> _f$phorgeUsername = Field(
+    'phorgeUsername',
+    _$phorgeUsername,
+    opt: true,
   );
   static DateTime _$createdAt(User v) => v.createdAt;
   static const Field<User, DateTime> _f$createdAt = Field(
@@ -46,8 +67,12 @@ class UserMapper extends ClassMapperBase<User> {
   @override
   final MappableFields<User> fields = const {
     #id: _f$id,
+    #name: _f$name,
     #email: _f$email,
     #passwordHash: _f$passwordHash,
+    #role: _f$role,
+    #phorgePhid: _f$phorgePhid,
+    #phorgeUsername: _f$phorgeUsername,
     #createdAt: _f$createdAt,
     #updatedAt: _f$updatedAt,
   };
@@ -55,8 +80,12 @@ class UserMapper extends ClassMapperBase<User> {
   static User _instantiate(DecodingData data) {
     return User(
       id: data.dec(_f$id),
+      name: data.dec(_f$name),
       email: data.dec(_f$email),
       passwordHash: data.dec(_f$passwordHash),
+      role: data.dec(_f$role),
+      phorgePhid: data.dec(_f$phorgePhid),
+      phorgeUsername: data.dec(_f$phorgeUsername),
       createdAt: data.dec(_f$createdAt),
       updatedAt: data.dec(_f$updatedAt),
     );
@@ -110,8 +139,12 @@ abstract class UserCopyWith<$R, $In extends User, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   $R call({
     String? id,
+    String? name,
     String? email,
     String? passwordHash,
+    String? role,
+    String? phorgePhid,
+    String? phorgeUsername,
     DateTime? createdAt,
     DateTime? updatedAt,
   });
@@ -127,15 +160,23 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
   @override
   $R call({
     String? id,
+    String? name,
     String? email,
     String? passwordHash,
+    String? role,
+    Object? phorgePhid = $none,
+    Object? phorgeUsername = $none,
     DateTime? createdAt,
     Object? updatedAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
+      if (name != null) #name: name,
       if (email != null) #email: email,
       if (passwordHash != null) #passwordHash: passwordHash,
+      if (role != null) #role: role,
+      if (phorgePhid != $none) #phorgePhid: phorgePhid,
+      if (phorgeUsername != $none) #phorgeUsername: phorgeUsername,
       if (createdAt != null) #createdAt: createdAt,
       if (updatedAt != $none) #updatedAt: updatedAt,
     }),
@@ -143,8 +184,12 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
   @override
   User $make(CopyWithData data) => User(
     id: data.get(#id, or: $value.id),
+    name: data.get(#name, or: $value.name),
     email: data.get(#email, or: $value.email),
     passwordHash: data.get(#passwordHash, or: $value.passwordHash),
+    role: data.get(#role, or: $value.role),
+    phorgePhid: data.get(#phorgePhid, or: $value.phorgePhid),
+    phorgeUsername: data.get(#phorgeUsername, or: $value.phorgeUsername),
     createdAt: data.get(#createdAt, or: $value.createdAt),
     updatedAt: data.get(#updatedAt, or: $value.updatedAt),
   );

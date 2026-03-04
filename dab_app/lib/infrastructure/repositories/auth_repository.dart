@@ -1,11 +1,11 @@
 import 'package:dab_app/domain/entities/user.dart';
 import 'package:dab_app/infrastructure/core/local/records/user_record.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failures.dart';
 import '../../domain/entities/auth_response.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
+import '../core/local/token_storage.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
 import 'core/repository.dart';
@@ -13,15 +13,12 @@ import 'core/repository.dart';
 class AuthRepository extends Repository implements IAuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final AuthLocalDataSource _localDataSource;
-  final FlutterSecureStorage _secureStorage;
-
-  static const _accessTokenKey = 'access_token';
-  static const _refreshTokenKey = 'refresh_token';
+  final TokenStorage _tokenStorage;
 
   AuthRepository(
     this._remoteDataSource,
     this._localDataSource,
-    this._secureStorage,
+    this._tokenStorage,
   );
 
   @override
@@ -30,12 +27,25 @@ class AuthRepository extends Repository implements IAuthRepository {
     required String password,
   }) {
     return guardedCall(() async {
+      print('DEBUG: AuthRepository.login started for $email');
       final json = await _remoteDataSource.login(
         email: email,
         password: password,
       );
+      print('DEBUG: AuthRepository.login response received: $json');
+
       final response = AuthResponseMapper.fromMap(json);
-      await saveTokens(response);
+      print('DEBUG: AuthResponse mapped successfully');
+
+      final tokenResult = await saveTokens(response);
+      tokenResult.getOrElse((f) => throw f);
+
+      print('DEBUG: Saving user to local DB');
+      _localDataSource.saveUser(
+        UserRecord(remoteId: response.userId, email: email, name: ''),
+      );
+      print('DEBUG: User saved. Login complete.');
+
       return response;
     });
   }
@@ -53,7 +63,12 @@ class AuthRepository extends Repository implements IAuthRepository {
         name: name,
       );
       final response = AuthResponseMapper.fromMap(json);
-      await saveTokens(response);
+      final tokenResult = await saveTokens(response);
+      tokenResult.getOrElse((f) => throw f);
+
+      _localDataSource.saveUser(
+        UserRecord(remoteId: response.userId, email: email, name: name),
+      );
       return response;
     });
   }
@@ -80,30 +95,30 @@ class AuthRepository extends Repository implements IAuthRepository {
 
   @override
   Future<Either<AppFailure, String>> getAccessToken() async {
-    final token = await _secureStorage.read(key: _accessTokenKey);
-    if (token == null) return const Left(AuthFailure('No access token found'));
-    return Right(token);
+    final tokens = await _tokenStorage.readTokens();
+    if (tokens == null) return const Left(AuthFailure('No access token found'));
+    return Right(tokens['accessToken']!);
   }
 
   Future<Either<AppFailure, String>> getRefreshToken() async {
-    final token = await _secureStorage.read(key: _refreshTokenKey);
-    if (token == null) return const Left(AuthFailure('No refresh token found'));
-    return Right(token);
+    final tokens = await _tokenStorage.readTokens();
+    if (tokens == null)
+      return const Left(AuthFailure('No refresh token found'));
+    return Right(tokens['refreshToken']!);
   }
 
   @override
   Future<Either<AppFailure, Unit>> saveTokens(AuthResponse response) async {
     try {
-      await _secureStorage.write(
-        key: _accessTokenKey,
-        value: response.accessToken,
+      print('DEBUG: Saving tokens to local file...');
+      await _tokenStorage.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
       );
-      await _secureStorage.write(
-        key: _refreshTokenKey,
-        value: response.refreshToken,
-      );
+      print('DEBUG: Tokens saved successfully');
       return const Right(unit);
     } catch (e) {
+      print('DEBUG: TokenStorage Error: $e');
       return Left(UnknownFailure(originalError: e));
     }
   }
@@ -111,8 +126,7 @@ class AuthRepository extends Repository implements IAuthRepository {
   @override
   Future<Either<AppFailure, Unit>> clearTokens() async {
     try {
-      await _secureStorage.delete(key: _accessTokenKey);
-      await _secureStorage.delete(key: _refreshTokenKey);
+      await _tokenStorage.clear();
       return const Right(unit);
     } catch (e) {
       return Left(UnknownFailure(originalError: e));

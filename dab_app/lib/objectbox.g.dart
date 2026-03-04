@@ -58,7 +58,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(2, 4174291376144611737),
     name: 'AppSettingsRecord',
-    lastPropertyId: const obx_int.IdUid(2, 7417587751224718738),
+    lastPropertyId: const obx_int.IdUid(3, 3503005441903137361),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -70,6 +70,12 @@ final _entities = <obx_int.ModelEntity>[
       obx_int.ModelProperty(
         id: const obx_int.IdUid(2, 7417587751224718738),
         name: 'themeMode',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 3503005441903137361),
+        name: 'syncToken',
         type: 9,
         flags: 0,
       ),
@@ -184,9 +190,13 @@ obx_int.ModelDefinition getObjectBoxModel() {
       },
       objectToFB: (AppSettingsRecord object, fb.Builder fbb) {
         final themeModeOffset = fbb.writeString(object.themeMode);
-        fbb.startTable(3);
+        final syncTokenOffset = object.syncToken == null
+            ? null
+            : fbb.writeString(object.syncToken!);
+        fbb.startTable(4);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, themeModeOffset);
+        fbb.addOffset(2, syncTokenOffset);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -202,9 +212,13 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final themeModeParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 6, '');
+        final syncTokenParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 8);
         final object = AppSettingsRecord(
           id: idParam,
           themeMode: themeModeParam,
+          syncToken: syncTokenParam,
         );
 
         return object;
@@ -248,5 +262,10 @@ class AppSettingsRecord_ {
   /// See [AppSettingsRecord.themeMode].
   static final themeMode = obx.QueryStringProperty<AppSettingsRecord>(
     _entities[1].properties[1],
+  );
+
+  /// See [AppSettingsRecord.syncToken].
+  static final syncToken = obx.QueryStringProperty<AppSettingsRecord>(
+    _entities[1].properties[2],
   );
 }
