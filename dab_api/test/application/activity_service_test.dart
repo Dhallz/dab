@@ -1,14 +1,14 @@
 import 'package:dab_api/src/application/activity_service.dart';
 import 'package:dab_api/src/application/presence_service.dart';
 import 'package:dab_api/src/domain/core/failure.dart';
-import 'package:dab_api/src/domain/entities/activity.dart';
-import 'package:dab_api/src/domain/entities/activity_provider.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
+
+import '../test_utils.dart';
 
 class MockActivityRepo extends Mock implements AbsIActivityRepository {}
 
@@ -26,16 +26,7 @@ void main() {
   late MockRedis mockRedis;
 
   setUpAll(() {
-    registerFallbackValue(
-      Activity(
-        id: 'test',
-        userId: 'test',
-        provider: const PhorgeTaskProvider(taskPhid: 'T123'),
-        title: 'test',
-        content: 'test',
-        createdAt: DateTime.now(),
-      ),
-    );
+    registerFallbackValue(TestData.activity());
   });
 
   setUp(() {
@@ -67,7 +58,7 @@ void main() {
         // Act
         await service.logActivity(
           userId: 'u123',
-          provider: const GenericProvider(name: 'Slack', category: 'message'),
+          provider: TestData.slackMessage().provider,
           title: 'Test Broadcast',
           content: 'Hello World',
         );
@@ -91,7 +82,7 @@ void main() {
       // Act
       await service.logActivity(
         userId: 'u123',
-        provider: const GitHubCommitProvider(repo: 'org/repo', branch: 'main'),
+        provider: TestData.githubCommit().provider,
         title: 'Failed Broadcast',
         content: 'Should not hit redis',
       );
@@ -107,16 +98,7 @@ void main() {
   group('ActivityService - getRecent', () {
     test('returns activities from repository', () async {
       // Arrange
-      final mockList = [
-        Activity(
-          id: '1',
-          userId: 'u1',
-          provider: const GenericProvider(name: 'Slack', category: 'message'),
-          title: 't1',
-          content: 'c1',
-          createdAt: DateTime.now(),
-        ),
-      ];
+      final mockList = [TestData.slackMessage()];
       when(
         () => mockActivityRepo.getRecentActivities(),
       ).thenAnswer((_) async => right(mockList));

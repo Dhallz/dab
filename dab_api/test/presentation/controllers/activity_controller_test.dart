@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:dab_api/src/application/activity_service.dart';
 import 'package:dab_api/src/application/presence_service.dart';
-import 'package:dab_api/src/domain/entities/activity.dart';
 import 'package:dab_api/src/domain/entities/activity_provider.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
@@ -48,16 +47,7 @@ void main() {
         );
         userIdProperty[request] = 'user123';
 
-        final mockActivities = [
-          Activity(
-            id: '1',
-            userId: 'user123',
-            provider: const GenericProvider(name: 'Mock', category: 'test'),
-            title: 'Test',
-            content: 'Content',
-            createdAt: DateTime.now(),
-          ),
-        ];
+        final mockActivities = [TestData.activity(userId: 'user123')];
 
         when(
           () => mockActivityService.getRecent(),

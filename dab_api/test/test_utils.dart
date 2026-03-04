@@ -1,5 +1,7 @@
 import 'package:relic/relic.dart';
 
+export 'test_factories.dart';
+
 /// A utility to create real Request objects for testing since the constructor is private.
 class TestRequest {
   static Request create({

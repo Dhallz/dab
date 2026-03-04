@@ -1,11 +1,12 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:dab_api/src/application/auth_service.dart';
 import 'package:dab_api/src/domain/entities/session.dart' as domain;
-import 'package:dab_api/src/domain/entities/user.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
+
+import '../test_utils.dart';
 
 class MockAuthRepo extends Mock implements AbsIAuthRepository {}
 
@@ -17,16 +18,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeSession());
-    registerFallbackValue(
-      User(
-        id: '123',
-        name: 'test',
-        email: 'test@acme.com',
-        passwordHash: 'hash',
-        role: 'Standard',
-        createdAt: DateTime.now(),
-      ),
-    );
+    registerFallbackValue(TestData.user());
   });
 
   setUp(() {
@@ -51,14 +43,7 @@ void main() {
     });
 
     test('rejects if user already exists', () async {
-      final existingUser = User(
-        id: '1',
-        name: 'Bob',
-        email: 'bob@acme.com',
-        passwordHash: 'hash',
-        role: 'Standard',
-        createdAt: DateTime.now(),
-      );
+      final existingUser = TestData.user(name: 'Bob', email: 'bob@acme.com');
       when(
         () => mockRepo.findByEmail('bob@acme.com'),
       ).thenAnswer((_) async => right(existingUser));
@@ -77,14 +62,11 @@ void main() {
   group('AuthService - login', () {
     test('returns tokens if credentials are correct', () async {
       final hash = BCrypt.hashpw('correct_horse', BCrypt.gensalt());
-      final existingUser = User(
+      final existingUser = TestData.user(
         id: '1',
         name: 'Alice',
         email: 'alice@acme.com',
-        passwordHash: hash,
-        role: 'Standard',
-        createdAt: DateTime.now(),
-      );
+      ).copyWith(passwordHash: hash);
 
       when(
         () => mockRepo.findByEmail('alice@acme.com'),
@@ -105,14 +87,11 @@ void main() {
 
     test('fails if password is incorrect', () async {
       final hash = BCrypt.hashpw('correct', BCrypt.gensalt());
-      final existingUser = User(
+      final existingUser = TestData.user(
         id: '1',
         name: 'Alice',
         email: 'alice@acme.com',
-        passwordHash: hash,
-        role: 'Standard',
-        createdAt: DateTime.now(),
-      );
+      ).copyWith(passwordHash: hash);
 
       when(
         () => mockRepo.findByEmail('alice@acme.com'),
