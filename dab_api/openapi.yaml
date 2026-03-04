@@ -1,43 +1,113 @@
 openapi: 3.0.3
 info:
   title: Dev Activity Board (DAB) API
-  description: A lightweight API built with Dart Relic
+  description: High-performance aggregator of developer activities, featuring real-time caching and the Vegas Sync Pattern.
   version: 1.0.0
 servers:
   - url: http://localhost:8081
     description: Local development server
 
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 paths:
-  /hello/{name}/age/{age}:
-    get:
-      summary: Hello World Endpoint
-      description: Returns a greeting message personalized with the provided name and age.
-      operationId: helloUser
-      parameters:
-        - name: name
-          in: path
-          required: true
-          description: The name of the user to greet
-          schema:
-            type: string
-        - name: age
-          in: path
-          required: true
-          description: The age of the user
-          schema:
-            type: integer
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Created
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
       responses:
         '200':
-          description: A successful welcome message
+          description: OK with JWT token
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "Hello, Nova! To think you are 27 years old.\n"
-        '404':
-          description: The route was not found or fallback was triggered
+                type: object
+                properties:
+                  token:
+                    type: string
+  /activities:
+    get:
+      summary: Get the latest activities using the Envelope and Vegas Patterns
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Sync-Token
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Client's version clock to detect staleness
+      responses:
+        '200':
+          description: Successful data envelope
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "Sorry, that doesn't compute.\n"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                      syncToken:
+                        type: string
+        '304':
+          description: Not Modified. The client's sync token matches the server version.
+  /ws:
+    get:
+      summary: WebSocket Connection for real-time broadcasts
+      description: This endpoint upgrades the connection to WebSocket.
+      responses:
+        '101':
+          description: Switching Protocols
+  /health:
+    get:
+      summary: General API health check
+      responses:
+        '200':
+          description: API is healthy
+  /health/db:
+    get:
+      summary: Infrastructure health check (PostgreSQL and Redis)
+      responses:
+        '200':
+          description: Databases connected
+
