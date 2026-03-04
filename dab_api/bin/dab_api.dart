@@ -24,7 +24,7 @@ Future<void> main() async {
   final app = RelicApp()
     ..use('/', GlobalErrorHandler().call)
     ..use('/', RequestLogger().call)
-    ..get('/health', HealthController.check)
+    ..get('/health', HealthController().check)
     ..post('/register', AuthController().register)
     ..post('/login', AuthController().login)
     ..use('/activities', VegasMiddleware.checkStaleness)

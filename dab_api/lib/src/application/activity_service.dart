@@ -71,8 +71,9 @@ class ActivityService {
               );
 
               final createResult = await _repo.createActivity(activityWithUser);
-              createResult.match(
-                (f) => print('Failed to save polled activity: ${f.message}'),
+              await createResult.match(
+                (f) async =>
+                    print('Failed to save polled activity: ${f.message}'),
                 (_) async {
                   await _redis.incrementVersion();
                   await _redis.fanOutActivity(activityWithUser);
@@ -111,13 +112,14 @@ class ActivityService {
     );
 
     final result = await _repo.createActivity(activity);
-    result.match((f) => print('Failed to log activity: ${f.message}'), (
-      _,
-    ) async {
-      await _redis.incrementVersion();
-      await _redis.fanOutActivity(activity);
-      _broadcastActivity(activity);
-    });
+    await result.match(
+      (f) async => print('Failed to log activity: ${f.message}'),
+      (_) async {
+        await _redis.incrementVersion();
+        await _redis.fanOutActivity(activity);
+        _broadcastActivity(activity);
+      },
+    );
   }
 
   void _broadcastActivity(Activity activity) {

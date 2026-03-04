@@ -1,19 +1,18 @@
+import 'package:dab_api/src/application/activity_service.dart';
+import 'package:dab_api/src/application/auth_service.dart';
+import 'package:dab_api/src/application/logging_service.dart';
+import 'package:dab_api/src/application/presence_service.dart';
+import 'package:dab_api/src/application/push_notification_service.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
+import 'package:dab_api/src/infrastructure/config/config.dart';
+import 'package:dab_api/src/infrastructure/database/app_database.dart';
+import 'package:dab_api/src/infrastructure/database/postgres_client.dart';
+import 'package:dab_api/src/infrastructure/database/redis/redis_client.dart';
+import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/repositories/activity_repository.dart';
+import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
 import 'package:get_it/get_it.dart';
-
-import 'application/activity_service.dart';
-import 'application/auth_service.dart';
-import 'application/logging_service.dart';
-import 'application/presence_service.dart';
-import 'application/push_notification_service.dart';
-import 'infrastructure/config/config.dart';
-import 'infrastructure/database/app_database.dart';
-import 'infrastructure/database/postgres_client.dart';
-import 'infrastructure/database/redis/redis_client.dart';
-import 'infrastructure/database/redis/redis_service.dart';
-import 'infrastructure/repositories/activity_repository.dart';
-import 'infrastructure/repositories/auth_repository.dart';
 
 final GetIt sl = GetIt.instance;
 
