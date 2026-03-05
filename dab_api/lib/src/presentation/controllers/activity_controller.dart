@@ -37,31 +37,49 @@ class ActivityController {
     );
   }
 
-  Future<Response> getPastActivities(Request request) async {
-    final userId = userIdProperty.get(request);
-    final dateStr = request.url.queryParameters['date'];
+  Future<Response> searchActivities(Request request) async {
+    final callerId = userIdProperty.get(request);
 
-    if (dateStr == null) {
-      return Response.badRequest(
-        body: Body.fromString(jsonEncode({'error': 'Missing date parameter'})),
-      );
-    }
+    final startDateStr = request.url.queryParameters['startDate'];
+    final endDateStr = request.url.queryParameters['endDate'];
+    final usersStr = request.url.queryParameters['users'];
+    final authoredOnlyStr = request.url.queryParameters['authoredOnly'];
 
-    DateTime date;
-    try {
-      date = DateTime.parse(dateStr);
-    } catch (_) {
+    if (startDateStr == null || endDateStr == null) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Invalid date format. Use YYYY-MM-DD'}),
+          jsonEncode({'error': 'Missing startDate or endDate parameter'}),
         ),
       );
     }
 
+    DateTime startDate;
+    DateTime endDate;
     try {
-      final activities = await _activityService.fetchPastActivities(
-        userId,
-        date,
+      startDate = DateTime.parse(startDateStr);
+      endDate = DateTime.parse(endDateStr);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Invalid date format. Use ISO 8601 or YYYY-MM-DD',
+          }),
+        ),
+      );
+    }
+
+    final targetUserIds = usersStr != null && usersStr.isNotEmpty
+        ? usersStr.split(',')
+        : [callerId];
+
+    final authoredOnly = authoredOnlyStr?.toLowerCase() != 'false';
+
+    try {
+      final activities = await _activityService.searchActivities(
+        targetUserIds: targetUserIds,
+        startDate: startDate,
+        endDate: endDate,
+        authoredOnly: authoredOnly,
       );
       final jsonList = activities.map((a) => a.toMap()).toList();
 
@@ -80,7 +98,7 @@ class ActivityController {
     } catch (e) {
       return Response.internalServerError(
         body: Body.fromString(
-          jsonEncode({'error': 'Failed to fetch past activities: $e'}),
+          jsonEncode({'error': 'Failed to search activities: $e'}),
         ),
       );
     }

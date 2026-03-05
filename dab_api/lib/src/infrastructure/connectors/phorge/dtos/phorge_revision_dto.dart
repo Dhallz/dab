@@ -6,6 +6,7 @@ part 'phorge_revision_dto.mapper.dart';
 class PhorgeRevisionDto with PhorgeRevisionDtoMappable {
   final int id;
   final String phid;
+  final String authorPHID;
   final String title;
   final String uri;
   final String statusName;
@@ -14,6 +15,7 @@ class PhorgeRevisionDto with PhorgeRevisionDtoMappable {
   const PhorgeRevisionDto({
     required this.id,
     required this.phid,
+    required this.authorPHID,
     required this.title,
     required this.uri,
     required this.statusName,
@@ -26,6 +28,7 @@ class PhorgeRevisionDto with PhorgeRevisionDtoMappable {
     return PhorgeRevisionDto(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       phid: json['phid']?.toString() ?? '',
+      authorPHID: fields['authorPHID']?.toString() ?? '',
       title: fields['title'] as String? ?? 'Unknown',
       uri: fields['uri'] as String? ?? '',
       statusName: status['name'] as String? ?? 'Unknown',

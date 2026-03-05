@@ -8,41 +8,25 @@ void main() async {
   final client = PhorgeClient();
 
   try {
-    // 1. Get whoami
     final whoami = await client.call('user.whoami', {});
     final phid = whoami['phid'];
 
-    print('Fetching tasks for $phid...');
-    final res = await client.call('maniphest.search', {
-      'constraints': {
-        'assigned': [phid],
-        'statuses': ['open'],
-      },
-      'limit': 1,
-    });
-
-    final tasks = res['data'] as List;
-    if (tasks.isEmpty) {
-      print('No tasks found');
-      exit(0);
-    }
-
-    final taskPhid = tasks.first['phid'];
-    print('Fetching transactions for $taskPhid...');
+    print('Testing global transaction search sorting for author $phid...');
 
     final txRes = await client.call('transaction.search', {
-      'objectIdentifier': taskPhid,
+      'objectType': 'TASK',
+      'constraints': {
+        'authorPHIDs': [phid],
+      },
+      'limit': 5,
     });
 
-    final txs = txRes['data'] as List;
-    for (var tx in txs) {
-      if (tx['type'] == 'comment') {
-        print('\nFound comment transaction:');
-        print(tx);
-      }
+    final data = txRes['data'] as List;
+    for (var tx in data) {
+      print('ID: ${tx['id']}, Date: ${tx['dateCreated']}');
     }
   } catch (e) {
-    print('Error: $e');
+    print('Failed or unsupported: $e');
   }
   exit(0);
 }

@@ -93,19 +93,39 @@ paths:
                         type: string
         '304':
           description: Not Modified. The client's sync token matches the server version.
-  /activities/past:
+  /activities/search:
     get:
-      summary: Fetch historical activities for a specific date directly from Phorge
+      summary: Search for activities based on user, date range, and attribution filter
       security:
         - bearerAuth: []
       parameters:
-        - name: date
+        - name: startDate
           in: query
           required: true
           schema:
             type: string
-            format: date
-          description: The YYYY-MM-DD date to fetch historical transactions for
+            format: date-time
+          description: ISO 8601 start date timestamp
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: ISO 8601 end date timestamp
+        - name: users
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of User UUIDs to query. Defaults to the requesting user.
+        - name: authoredOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: If true, only returns activities directly initiated by the specified users. If false, includes activities on tasks assigned to them.
       responses:
         '200':
           description: Successful data envelope with historical activities

@@ -63,7 +63,14 @@ void main() async {
     );
 
     print('⏳ Querying tasks active in the current Sprint...');
-    final activities = await connector.fetchUserActivities(user: dummyUser);
+    final start = DateTime.now().subtract(const Duration(days: 7));
+    final end = DateTime.now();
+    final activities = await connector.fetchActivities(
+      users: [dummyUser],
+      startDate: start,
+      endDate: end,
+      authoredOnly: true,
+    );
     print(
       '✅ Successfully fetched ${activities.length} activities generated today:',
     );

@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../domain/entities/activity.dart';
 import '../domain/entities/activity_provider.dart';
+import '../domain/entities/user.dart';
 import '../domain/repositories/abs_i_activity_repository.dart';
 import '../domain/repositories/abs_i_auth_repository.dart';
 import '../infrastructure/connectors/phorge/phorge_connector.dart';
@@ -49,21 +50,27 @@ class ActivityService {
     );
   }
 
-  Future<List<Activity>> fetchPastActivities(
-    String userId,
-    DateTime date,
-  ) async {
-    final userResult = await _authRepo.findById(userId);
-    return userResult.match(
-      (f) => throw Exception('Failed to fetch user: ${f.message}'),
-      (user) async {
-        if (user == null) throw Exception('User not found');
-        if (user.phorgePhid == null) return [];
+  Future<List<Activity>> searchActivities({
+    required List<String> targetUserIds,
+    required DateTime startDate,
+    required DateTime endDate,
+    required bool authoredOnly,
+  }) async {
+    List<User> targetUsers = [];
+    for (final userId in targetUserIds) {
+      final userResult = await _authRepo.findById(userId);
+      userResult.map((u) {
+        if (u != null) targetUsers.add(u);
+      });
+    }
 
-        // Directly query Phorge for the historical date.
-        // We do NOT save these to the database. They are hydrated at runtime.
-        return await _phorge.fetchUserActivities(user: user, date: date);
-      },
+    if (targetUsers.isEmpty) return [];
+
+    return await _phorge.fetchActivities(
+      users: targetUsers,
+      startDate: startDate,
+      endDate: endDate,
+      authoredOnly: authoredOnly,
     );
   }
 
@@ -73,36 +80,30 @@ class ActivityService {
       await usersResult.match(
         (f) async => print('DB Error during polling: ${f.message}'),
         (users) async {
-          for (final user in users) {
-            final activities = await _phorge.fetchUserActivities(user: user);
-            for (final activity in activities) {
-              if (_processedIds.contains(activity.id)) continue;
+          final start = DateTime.now().subtract(
+            const Duration(minutes: 60),
+          ); // Check last hour
+          final end = DateTime.now();
+          final activities = await _phorge.fetchActivities(
+            users: users,
+            startDate: start,
+            endDate: end,
+            authoredOnly: false, // Inbox Mode for live polling
+          );
 
-              final activityWithUser = Activity(
-                id: activity.id,
-                userId: user.id,
-                provider: activity.provider,
-                title: activity.title,
-                content: activity.content,
-                url: activity.url,
-                createdAt: activity.createdAt,
-              );
+          for (final activity in activities) {
+            if (_processedIds.contains(activity.id)) continue;
 
-              final createResult = await _repo.createActivity(activityWithUser);
-              await createResult.match(
-                (f) async =>
-                    print('Failed to save polled activity: ${f.message}'),
-                (_) async {
-                  await _redis.incrementVersion();
-                  await _redis.fanOutActivity(activityWithUser);
-                  _broadcastActivity(activityWithUser);
-                  _processedIds.add(activity.id);
-                },
-              );
+            // The provider returns the correct user ID mapped from the authorPHID
+            final createResult = await _repo.createActivity(activity);
+            await createResult.match(
+              (f) async =>
+                  print('Failed to save polled activity: ${f.message}'),
+              (_) async {},
+            );
 
-              if (_processedIds.length > 500) {
-                _processedIds.remove(_processedIds.first);
-              }
+            if (_processedIds.length > 500) {
+              _processedIds.remove(_processedIds.first);
             }
           }
         },

@@ -26,6 +26,11 @@ class PhorgeRevisionDtoMapper extends ClassMapperBase<PhorgeRevisionDto> {
   static const Field<PhorgeRevisionDto, int> _f$id = Field('id', _$id);
   static String _$phid(PhorgeRevisionDto v) => v.phid;
   static const Field<PhorgeRevisionDto, String> _f$phid = Field('phid', _$phid);
+  static String _$authorPHID(PhorgeRevisionDto v) => v.authorPHID;
+  static const Field<PhorgeRevisionDto, String> _f$authorPHID = Field(
+    'authorPHID',
+    _$authorPHID,
+  );
   static String _$title(PhorgeRevisionDto v) => v.title;
   static const Field<PhorgeRevisionDto, String> _f$title = Field(
     'title',
@@ -48,6 +53,7 @@ class PhorgeRevisionDtoMapper extends ClassMapperBase<PhorgeRevisionDto> {
   final MappableFields<PhorgeRevisionDto> fields = const {
     #id: _f$id,
     #phid: _f$phid,
+    #authorPHID: _f$authorPHID,
     #title: _f$title,
     #uri: _f$uri,
     #statusName: _f$statusName,
@@ -58,6 +64,7 @@ class PhorgeRevisionDtoMapper extends ClassMapperBase<PhorgeRevisionDto> {
     return PhorgeRevisionDto(
       id: data.dec(_f$id),
       phid: data.dec(_f$phid),
+      authorPHID: data.dec(_f$authorPHID),
       title: data.dec(_f$title),
       uri: data.dec(_f$uri),
       statusName: data.dec(_f$statusName),
@@ -139,6 +146,7 @@ abstract class PhorgeRevisionDtoCopyWith<
   $R call({
     int? id,
     String? phid,
+    String? authorPHID,
     String? title,
     String? uri,
     String? statusName,
@@ -161,6 +169,7 @@ class _PhorgeRevisionDtoCopyWithImpl<$R, $Out>
   $R call({
     int? id,
     String? phid,
+    String? authorPHID,
     String? title,
     String? uri,
     String? statusName,
@@ -169,6 +178,7 @@ class _PhorgeRevisionDtoCopyWithImpl<$R, $Out>
     FieldCopyWithData({
       if (id != null) #id: id,
       if (phid != null) #phid: phid,
+      if (authorPHID != null) #authorPHID: authorPHID,
       if (title != null) #title: title,
       if (uri != null) #uri: uri,
       if (statusName != null) #statusName: statusName,
@@ -179,6 +189,7 @@ class _PhorgeRevisionDtoCopyWithImpl<$R, $Out>
   PhorgeRevisionDto $make(CopyWithData data) => PhorgeRevisionDto(
     id: data.get(#id, or: $value.id),
     phid: data.get(#phid, or: $value.phid),
+    authorPHID: data.get(#authorPHID, or: $value.authorPHID),
     title: data.get(#title, or: $value.title),
     uri: data.get(#uri, or: $value.uri),
     statusName: data.get(#statusName, or: $value.statusName),

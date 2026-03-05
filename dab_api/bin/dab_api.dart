@@ -32,7 +32,7 @@ Future<void> main() async {
     ..post('/auth/login', AuthController().login)
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
-    ..get('/activities/past', ActivityController().getPastActivities)
+    ..get('/activities/search', ActivityController().searchActivities)
     ..get('/activities', ActivityController().getActivities)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
