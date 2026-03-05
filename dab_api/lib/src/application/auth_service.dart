@@ -8,13 +8,15 @@ import '../domain/entities/session.dart';
 import '../domain/entities/user.dart';
 import '../domain/repositories/abs_i_auth_repository.dart';
 import '../infrastructure/config/config.dart';
+import '../infrastructure/connectors/phorge/phorge_connector.dart';
 
 class AuthService {
   final Config _config = Config();
   final AbsIAuthRepository _repo;
+  final PhorgeConnector _phorgeConnector;
   final _uuid = const Uuid();
 
-  AuthService(this._repo);
+  AuthService(this._repo, this._phorgeConnector);
 
   String _hashPassword(String password) {
     return BCrypt.hashpw(password, BCrypt.gensalt());
@@ -49,12 +51,16 @@ class AuthService {
             ? 'Admin'
             : 'Standard';
 
+        // Auto-link Phorge Account
+        final phorgePhid = await _phorgeConnector.lookupUserPhid(name, email);
+
         final user = User(
           id: _uuid.v4(),
           name: name,
           email: email,
           passwordHash: _hashPassword(password),
           role: role,
+          phorgePhid: phorgePhid,
           createdAt: DateTime.now(),
         );
 

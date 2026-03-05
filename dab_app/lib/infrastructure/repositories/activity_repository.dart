@@ -1,24 +1,22 @@
 import 'dart:convert';
+
 import 'package:fpdart/fpdart.dart';
+
 import '../../../domain/core/failures.dart';
 import '../../../domain/entities/activity.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
-import '../core/remote/rest_api_client.dart';
-import '../core/remote/web_socket_client.dart';
+import '../datasources/activity_remote_data_source.dart';
 import '../repositories/core/repository.dart';
 
 class ActivityRepository extends Repository implements IActivityRepository {
-  final RestApiClient _restClient;
-  final WebSocketClient _wsClient;
+  final ActivityRemoteDataSource _remoteDataSource;
 
-  ActivityRepository(this._restClient, this._wsClient) {
-    _wsClient.connect();
-  }
+  ActivityRepository(this._remoteDataSource);
 
   @override
   Future<Either<AppFailure, List<Activity>>> getRecentActivities() {
     return guardedCall(() async {
-      final response = await _restClient.get('/activities');
+      final response = await _remoteDataSource.getRecentActivities();
 
       // Handle the Vegas Pattern 304 Not Modified
       if (response.statusCode == 304) {
@@ -38,7 +36,8 @@ class ActivityRepository extends Repository implements IActivityRepository {
 
   @override
   Stream<Activity> watchActivities() {
-    return _wsClient.stream
+    return _remoteDataSource
+        .watchActivities()
         .map((event) {
           final Map<String, dynamic> json = jsonDecode(event);
           if (json['type'] == 'ACTIVITY_RECEIVED') {

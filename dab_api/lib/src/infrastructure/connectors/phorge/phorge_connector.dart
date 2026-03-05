@@ -3,6 +3,10 @@ import 'package:dab_api/src/domain/entities/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/user.dart';
 import 'package:uuid/uuid.dart';
 
+import 'dtos/phorge_project_dto.dart';
+import 'dtos/phorge_revision_dto.dart';
+import 'dtos/phorge_task_dto.dart';
+import 'dtos/phorge_transaction_dto.dart';
 import 'phorge_client.dart';
 
 class PhorgeConnector {
@@ -27,12 +31,18 @@ class PhorgeConnector {
 
     if (user.phorgePhid == null) return [];
 
-    final tasks = await _fetchTasks(
+    final sprintTag = _getCurrentSprintTag(targetDate);
+    final sprintPhid = await _fetchSprintProjectPhid(sprintTag);
+
+    final tasks = await _fetchSprintTasks(
       user.id,
       user.phorgePhid!,
+      sprintPhid,
+      sprintTag,
       startOfDay,
       endOfDay,
     );
+
     final revisions = await _fetchRevisions(
       user.id,
       user.phorgePhid!,
@@ -44,44 +54,225 @@ class PhorgeConnector {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
-  String _generateUuid(String source) {
-    // Use v5 UUID for deterministic mapping of external IDs
-    return _uuid.v5(Namespace.url.value, source);
+  String _getCurrentSprintTag([DateTime? now]) {
+    final date = now ?? DateTime.now();
+    int dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays + 1;
+    int woy = ((dayOfYear - date.weekday + 10) / 7).floor();
+
+    int isoWeekNumber(DateTime d) {
+      int doy = d.difference(DateTime(d.year, 1, 1)).inDays + 1;
+      int w = ((doy - d.weekday + 10) / 7).floor();
+      return w;
+    }
+
+    if (woy < 1) {
+      woy = isoWeekNumber(DateTime(date.year - 1, 12, 31));
+    } else if (woy > 52) {
+      int lastDayOfYear = DateTime(date.year, 12, 31).weekday;
+      if (lastDayOfYear < DateTime.thursday) {
+        woy = 1;
+      }
+    }
+
+    int year = date.year;
+    if (date.month == 1 && woy > 50) year--;
+    if (date.month == 12 && woy == 1) year++;
+
+    return 'DS$year-${woy.toString().padLeft(2, '0')}';
   }
 
-  Future<List<Activity>> _fetchTasks(
-    String userId,
-    String phid,
-    DateTime start,
-    DateTime end,
-  ) async {
-    final result = await _client.call('maniphest.search', {
+  Future<String?> _fetchSprintProjectPhid(String tag) async {
+    final result = await _client.call('project.search', {
+      'constraints': {'query': tag},
+    });
+    final data = result['data'] as List<dynamic>?;
+    if (data != null && data.isNotEmpty) {
+      final prj = PhorgeProjectDto.fromConduit(
+        data.first as Map<String, dynamic>,
+      );
+      return prj.phid;
+    }
+    return null;
+  }
+
+  /// Fetches all active Phorge projects/tags for UI filtering within the current Sprint
+  Future<List<PhorgeProjectDto>> fetchAllProjects(String userPhid) async {
+    final sprintTag = _getCurrentSprintTag();
+    final sprintPhid = await _fetchSprintProjectPhid(sprintTag);
+
+    // 1. Fetch all open tasks in the current sprint assigned to the user
+    final tasksData = await _client.call('maniphest.search', {
       'constraints': {
-        'ownerPHIDs': [phid],
-        'modifiedStart': start.millisecondsSinceEpoch ~/ 1000,
-        'modifiedEnd': end.millisecondsSinceEpoch ~/ 1000,
+        'assigned': [userPhid],
+        if (sprintPhid != null) 'projects': [sprintPhid],
+        'statuses': ['open'],
       },
     });
 
-    final data = result['data'] as List<dynamic>;
-    return data.map((task) {
-      final fields = task['fields'] as Map<String, dynamic>;
-      final status = fields['status'] as Map<String, dynamic>;
-      final priority = fields['priority'] as Map<String, dynamic>;
-      final externalId = 'phorge-task-${task['id']}';
+    final rawData = tasksData['data'] as List<dynamic>?;
+    if (rawData == null || rawData.isEmpty) return [];
 
-      return Activity(
-        id: _generateUuid(externalId),
-        userId: userId,
-        provider: PhorgeTaskProvider(taskPhid: task['phid'] as String?),
-        title: '[T${task['id']}] ${fields['name']}',
-        content: 'Status: ${status['name']} | Priority: ${priority['name']}',
-        url: fields['uri'],
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          fields['dateModified'] * 1000,
-        ),
-      );
-    }).toList();
+    final tasks = rawData
+        .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
+
+    // 2. Extract unique Project PHIDs attached to these sprint tasks
+    final tagPhids = <String>{};
+    for (final task in tasks) {
+      tagPhids.addAll(task.projectPHIDs);
+    }
+    tagPhids.remove(
+      sprintPhid,
+    ); // Exclude the Sprint tag itself from UI filters
+
+    if (tagPhids.isEmpty) return [];
+
+    // 3. Fetch the metadata for these specific tag PHIDs
+    final result = await _client.call('project.search', {
+      'constraints': {'phids': tagPhids.toList()},
+      'limit': 100,
+    });
+
+    final tagsData = result['data'] as List<dynamic>?;
+    if (tagsData == null) return [];
+
+    return tagsData
+        .map((e) => PhorgeProjectDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Searches Phorge for a user account using the robust full-text 'query' constraint.
+  /// It first searches by the email prefix, then falls back to the provided real name.
+  /// Returns the PHID if found, or null if the user does not exist in Phorge.
+  Future<String?> lookupUserPhid(String name, String email) async {
+    final prefix = email.split('@').first;
+
+    // Attempt 1: Prefix search (e.g. "david" or "dlimier")
+    var result = await _client.call('user.search', {
+      'constraints': {'query': prefix},
+    });
+
+    var data = result['data'] as List<dynamic>?;
+    if (data != null && data.isNotEmpty) {
+      return (data.first as Map<String, dynamic>)['phid']?.toString();
+    }
+
+    // Attempt 2: Full name fallback (e.g. "David Limier")
+    result = await _client.call('user.search', {
+      'constraints': {'query': name},
+    });
+
+    data = result['data'] as List<dynamic>?;
+    if (data != null && data.isNotEmpty) {
+      return (data.first as Map<String, dynamic>)['phid']?.toString();
+    }
+
+    return null;
+  }
+
+  String _generateUuid(String source) {
+    return _uuid.v5(Namespace.url.value, source);
+  }
+
+  Future<List<Activity>> _fetchSprintTasks(
+    String userId,
+    String userPhid,
+    String? sprintPhid,
+    String sprintTag,
+    DateTime start,
+    DateTime end,
+  ) async {
+    Map<String, dynamic> constraints = {
+      'modifiedStart': start.millisecondsSinceEpoch ~/ 1000,
+      'modifiedEnd': end.millisecondsSinceEpoch ~/ 1000,
+      'statuses': ['open'],
+      'assigned': [userPhid],
+    };
+
+    if (sprintPhid != null) {
+      constraints['projects'] = [sprintPhid];
+    }
+
+    final result = await _client.call('maniphest.search', {
+      'constraints': constraints,
+    });
+
+    final rawData = result['data'] as List<dynamic>?;
+    if (rawData == null) return [];
+
+    final tasks = rawData
+        .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
+
+    List<Activity> activities = [];
+
+    for (final task in tasks) {
+      final txResult = await _client.call('transaction.search', {
+        'objectIdentifier': task.phid,
+      });
+
+      final rawTxData = txResult['data'] as List<dynamic>?;
+      if (rawTxData == null) continue;
+
+      final transactions = rawTxData
+          .map(
+            (e) => PhorgeTransactionDto.fromConduit(e as Map<String, dynamic>),
+          )
+          .toList();
+
+      for (final tx in transactions) {
+        if (tx.dateCreated.isBefore(start) || tx.dateCreated.isAfter(end))
+          continue;
+
+        // Filter: We only care if the user originated the event, OR if the event happened on a task they own
+        if (tx.authorPHID != userPhid && task.ownerPHID != userPhid) continue;
+
+        String content = 'Updated task';
+        SprintContext? sprintContext;
+
+        if (tx.type == 'vcs' || tx.type == 'edit') continue; // Skip noise
+
+        if (tx.type == 'comment') {
+          content = tx.commentText?.trim() ?? 'Commented on task';
+        } else if (tx.type == 'status') {
+          content = 'Changed status from ${tx.oldValue} to ${tx.newValue}';
+          sprintContext = SprintContext(
+            tag: sprintTag,
+            columnFrom: tx.oldValue?.toString(),
+            columnTo: tx.newValue?.toString(),
+          );
+        } else if (tx.type == 'columns') {
+          content = 'Moved task on the sprint board';
+          sprintContext = SprintContext(
+            tag: sprintTag,
+            columnFrom: 'board',
+            columnTo: 'board',
+          );
+        } else if (tx.type == 'projects') {
+          content = 'Updated project tags';
+        } else {
+          continue;
+        }
+
+        activities.add(
+          Activity(
+            id: _generateUuid('phorge-tx-${tx.id}'),
+            userId: userId,
+            provider: PhorgeTaskProvider(
+              taskPhid: task.phid,
+              sprintContext: sprintContext,
+              tags: task.projectPHIDs.join(','),
+            ),
+            title: '[T${task.id}] ${task.name}',
+            content: content,
+            url: task.uri,
+            createdAt: tx.dateCreated,
+          ),
+        );
+      }
+    }
+
+    return activities;
   }
 
   Future<List<Activity>> _fetchRevisions(
@@ -98,22 +289,22 @@ class PhorgeConnector {
       },
     });
 
-    final data = result['data'] as List<dynamic>;
-    return data.map((rev) {
-      final fields = rev['fields'] as Map<String, dynamic>;
-      final status = fields['status'] as Map<String, dynamic>;
-      final externalId = 'phorge-rev-${rev['id']}';
+    final rawData = result['data'] as List<dynamic>?;
+    if (rawData == null) return [];
 
+    final revisions = rawData
+        .map((e) => PhorgeRevisionDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
+
+    return revisions.map((rev) {
       return Activity(
-        id: _generateUuid(externalId),
+        id: _generateUuid('phorge-rev-${rev.id}'),
         userId: userId,
-        provider: PhorgeRevisionProvider(revisionId: rev['phid'] as String?),
-        title: 'D${rev['id']}: ${fields['title']}',
-        content: 'Status: ${status['name']}',
-        url: fields['uri'],
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          fields['dateModified'] * 1000,
-        ),
+        provider: PhorgeRevisionProvider(revisionId: rev.phid),
+        title: 'D${rev.id}: ${rev.title}',
+        content: 'Status: ${rev.statusName}',
+        url: rev.uri,
+        createdAt: rev.dateModified,
       );
     }).toList();
   }

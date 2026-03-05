@@ -4,6 +4,7 @@ import '../domain/containers/activity_usecases.dart';
 import '../domain/containers/auth_usecases.dart';
 import '../domain/containers/monitoring_usecases.dart';
 import '../domain/containers/system_usecases.dart';
+import '../domain/containers/presence_usecases.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
 import '../infrastructure/core/remote/rest_api_client.dart';
@@ -12,10 +13,13 @@ import '../infrastructure/datasources/auth_local_data_source.dart';
 import '../infrastructure/datasources/auth_remote_data_source.dart';
 import '../infrastructure/datasources/monitoring_remote_data_source.dart';
 import '../infrastructure/datasources/system_local_data_source.dart';
+import '../infrastructure/datasources/activity_remote_data_source.dart';
+import '../infrastructure/datasources/presence_remote_data_source.dart';
 import '../infrastructure/repositories/activity_repository.dart';
 import '../infrastructure/repositories/auth_repository.dart';
 import '../infrastructure/repositories/monitoring_repository.dart';
 import '../infrastructure/repositories/system_repository.dart';
+import '../infrastructure/repositories/presence_repository.dart';
 import '../presentation/core/navigation/app_router.dart';
 
 final sl = ServiceLocator();
@@ -38,12 +42,14 @@ class ServiceLocator {
   late final MonitoringRepository monitoringRepository;
   late final SystemRepository systemRepository;
   late final ActivityRepository activityRepository;
+  late final PresenceRepository presenceRepository;
 
   // UseCase Containers
   late final AuthUseCases authUseCases;
   late final MonitoringUseCases monitoringUseCases;
   late final SystemUseCases systemUseCases;
   late final ActivityUseCases activityUseCases;
+  late final PresenceUseCases presenceUseCases;
 
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
@@ -78,7 +84,16 @@ class ServiceLocator {
 
     // 5. Activity Context
     final wsClient = WebSocketClient('ws://localhost:8081/ws');
-    activityRepository = ActivityRepository(restApiClient, wsClient);
+    final activityRemoteDataSource = ActivityRemoteDataSource(
+      restApiClient,
+      wsClient,
+    );
+    activityRepository = ActivityRepository(activityRemoteDataSource);
     activityUseCases = ActivityUseCases(activityRepository);
+
+    // 6. Presence Context
+    final presenceRemoteDataSource = PresenceRemoteDataSource(wsClient);
+    presenceRepository = PresenceRepository(presenceRemoteDataSource);
+    presenceUseCases = PresenceUseCases(presenceRepository);
   }
 }

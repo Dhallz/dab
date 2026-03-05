@@ -4,6 +4,8 @@ import 'package:dab_api/dab_api.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/health_controller.dart';
+import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
+import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
 import 'package:dab_api/src/service_locator.dart';
@@ -25,12 +27,17 @@ Future<void> main() async {
     ..use('/', GlobalErrorHandler().call)
     ..use('/', RequestLogger().call)
     ..get('/health', HealthController().check)
-    ..post('/register', AuthController().register)
-    ..post('/login', AuthController().login)
+    ..get('/health/db', HealthController().checkDb)
+    ..post('/auth/register', AuthController().register)
+    ..post('/auth/login', AuthController().login)
+    ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
+    ..get('/activities/past', ActivityController().getPastActivities)
     ..get('/activities', ActivityController().getActivities)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
+    ..use('/metadata', AuthMiddleware().call)
+    ..get('/metadata/providers', MetadataController().getProviders)
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

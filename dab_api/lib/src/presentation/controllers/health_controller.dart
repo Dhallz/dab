@@ -9,6 +9,18 @@ class HealthController {
   final PostgresClient _pg = sl<PostgresClient>();
 
   Future<Response> check(Request request) async {
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'status': 'healthy',
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  Future<Response> checkDb(Request request) async {
     bool dbHealthy = false;
     try {
       final pool = _pg.pool;

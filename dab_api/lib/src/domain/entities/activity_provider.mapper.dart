@@ -8,6 +8,149 @@
 
 part of 'activity_provider.dart';
 
+class SprintContextMapper extends ClassMapperBase<SprintContext> {
+  SprintContextMapper._();
+
+  static SprintContextMapper? _instance;
+  static SprintContextMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = SprintContextMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'SprintContext';
+
+  static String _$tag(SprintContext v) => v.tag;
+  static const Field<SprintContext, String> _f$tag = Field('tag', _$tag);
+  static String? _$columnFrom(SprintContext v) => v.columnFrom;
+  static const Field<SprintContext, String> _f$columnFrom = Field(
+    'columnFrom',
+    _$columnFrom,
+    opt: true,
+  );
+  static String? _$columnTo(SprintContext v) => v.columnTo;
+  static const Field<SprintContext, String> _f$columnTo = Field(
+    'columnTo',
+    _$columnTo,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<SprintContext> fields = const {
+    #tag: _f$tag,
+    #columnFrom: _f$columnFrom,
+    #columnTo: _f$columnTo,
+  };
+
+  static SprintContext _instantiate(DecodingData data) {
+    return SprintContext(
+      tag: data.dec(_f$tag),
+      columnFrom: data.dec(_f$columnFrom),
+      columnTo: data.dec(_f$columnTo),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static SprintContext fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<SprintContext>(map);
+  }
+
+  static SprintContext fromJson(String json) {
+    return ensureInitialized().decodeJson<SprintContext>(json);
+  }
+}
+
+mixin SprintContextMappable {
+  String toJson() {
+    return SprintContextMapper.ensureInitialized().encodeJson<SprintContext>(
+      this as SprintContext,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return SprintContextMapper.ensureInitialized().encodeMap<SprintContext>(
+      this as SprintContext,
+    );
+  }
+
+  SprintContextCopyWith<SprintContext, SprintContext, SprintContext>
+  get copyWith => _SprintContextCopyWithImpl<SprintContext, SprintContext>(
+    this as SprintContext,
+    $identity,
+    $identity,
+  );
+  @override
+  String toString() {
+    return SprintContextMapper.ensureInitialized().stringifyValue(
+      this as SprintContext,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return SprintContextMapper.ensureInitialized().equalsValue(
+      this as SprintContext,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return SprintContextMapper.ensureInitialized().hashValue(
+      this as SprintContext,
+    );
+  }
+}
+
+extension SprintContextValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, SprintContext, $Out> {
+  SprintContextCopyWith<$R, SprintContext, $Out> get $asSprintContext =>
+      $base.as((v, t, t2) => _SprintContextCopyWithImpl<$R, $Out>(v, t, t2));
+}
+
+abstract class SprintContextCopyWith<$R, $In extends SprintContext, $Out>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({String? tag, String? columnFrom, String? columnTo});
+  SprintContextCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
+}
+
+class _SprintContextCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, SprintContext, $Out>
+    implements SprintContextCopyWith<$R, SprintContext, $Out> {
+  _SprintContextCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<SprintContext> $mapper =
+      SprintContextMapper.ensureInitialized();
+  @override
+  $R call({
+    String? tag,
+    Object? columnFrom = $none,
+    Object? columnTo = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (tag != null) #tag: tag,
+      if (columnFrom != $none) #columnFrom: columnFrom,
+      if (columnTo != $none) #columnTo: columnTo,
+    }),
+  );
+  @override
+  SprintContext $make(CopyWithData data) => SprintContext(
+    tag: data.get(#tag, or: $value.tag),
+    columnFrom: data.get(#columnFrom, or: $value.columnFrom),
+    columnTo: data.get(#columnTo, or: $value.columnTo),
+  );
+
+  @override
+  SprintContextCopyWith<$R2, SprintContext, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  ) => _SprintContextCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
 class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
   ActivityProviderMapper._();
 
@@ -68,6 +211,7 @@ class PhorgeTaskProviderMapper extends ClassMapperBase<PhorgeTaskProvider> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = PhorgeTaskProviderMapper._());
       ActivityProviderMapper.ensureInitialized();
+      SprintContextMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -87,17 +231,23 @@ class PhorgeTaskProviderMapper extends ClassMapperBase<PhorgeTaskProvider> {
     _$tags,
     opt: true,
   );
+  static SprintContext? _$sprintContext(PhorgeTaskProvider v) =>
+      v.sprintContext;
+  static const Field<PhorgeTaskProvider, SprintContext> _f$sprintContext =
+      Field('sprintContext', _$sprintContext, opt: true);
 
   @override
   final MappableFields<PhorgeTaskProvider> fields = const {
     #taskPhid: _f$taskPhid,
     #tags: _f$tags,
+    #sprintContext: _f$sprintContext,
   };
 
   static PhorgeTaskProvider _instantiate(DecodingData data) {
     return PhorgeTaskProvider(
       taskPhid: data.dec(_f$taskPhid),
       tags: data.dec(_f$tags),
+      sprintContext: data.dec(_f$sprintContext),
     );
   }
 
@@ -172,8 +322,9 @@ abstract class PhorgeTaskProviderCopyWith<
   $Out
 >
     implements ActivityProviderCopyWith<$R, $In, $Out> {
+  SprintContextCopyWith<$R, SprintContext, SprintContext>? get sprintContext;
   @override
-  $R call({String? taskPhid, String? tags});
+  $R call({String? taskPhid, String? tags, SprintContext? sprintContext});
   PhorgeTaskProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -188,16 +339,25 @@ class _PhorgeTaskProviderCopyWithImpl<$R, $Out>
   late final ClassMapperBase<PhorgeTaskProvider> $mapper =
       PhorgeTaskProviderMapper.ensureInitialized();
   @override
-  $R call({Object? taskPhid = $none, Object? tags = $none}) => $apply(
+  SprintContextCopyWith<$R, SprintContext, SprintContext>? get sprintContext =>
+      $value.sprintContext?.copyWith.$chain((v) => call(sprintContext: v));
+  @override
+  $R call({
+    Object? taskPhid = $none,
+    Object? tags = $none,
+    Object? sprintContext = $none,
+  }) => $apply(
     FieldCopyWithData({
       if (taskPhid != $none) #taskPhid: taskPhid,
       if (tags != $none) #tags: tags,
+      if (sprintContext != $none) #sprintContext: sprintContext,
     }),
   );
   @override
   PhorgeTaskProvider $make(CopyWithData data) => PhorgeTaskProvider(
     taskPhid: data.get(#taskPhid, or: $value.taskPhid),
     tags: data.get(#tags, or: $value.tags),
+    sprintContext: data.get(#sprintContext, or: $value.sprintContext),
   );
 
   @override

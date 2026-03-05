@@ -1,7 +1,9 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:dab_api/src/application/auth_service.dart';
 import 'package:dab_api/src/domain/entities/session.dart' as domain;
+import 'package:dab_api/src/domain/entities/user.dart' as domain;
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
+import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_connector.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -10,11 +12,14 @@ import '../test_utils.dart';
 
 class MockAuthRepo extends Mock implements AbsIAuthRepository {}
 
+class MockPhorgeConnector extends Mock implements PhorgeConnector {}
+
 class FakeSession extends Fake implements domain.Session {}
 
 void main() {
   late AuthService service;
   late MockAuthRepo mockRepo;
+  late MockPhorgeConnector mockPhorgeConnector;
 
   setUpAll(() {
     registerFallbackValue(FakeSession());
@@ -23,7 +28,8 @@ void main() {
 
   setUp(() {
     mockRepo = MockAuthRepo();
-    service = AuthService(mockRepo);
+    mockPhorgeConnector = MockPhorgeConnector();
+    service = AuthService(mockRepo, mockPhorgeConnector);
   });
 
   group('AuthService - register', () {
@@ -36,19 +42,19 @@ void main() {
 
       expect(result.isLeft(), isTrue);
       result.match(
-        (f) => expect(f.message, contains('restricted to acme.com')),
+        (f) => expect(f.message, contains('restricted to necs.com')),
         (_) => fail('Should not succeed'),
       );
       verifyNever(() => mockRepo.createUser(any()));
     });
 
     test('rejects if user already exists', () async {
-      final existingUser = TestData.user(name: 'Bob', email: 'bob@acme.com');
+      final existingUser = TestData.user(name: 'Bob', email: 'bob@necs.com');
       when(
-        () => mockRepo.findByEmail('bob@acme.com'),
+        () => mockRepo.findByEmail('bob@necs.com'),
       ).thenAnswer((_) async => right(existingUser));
 
-      final result = await service.register('Bob', 'bob@acme.com', 'pwd');
+      final result = await service.register('Bob', 'bob@necs.com', 'pwd');
 
       expect(result.isLeft(), isTrue);
       result.match(
@@ -56,6 +62,34 @@ void main() {
         (_) => fail('Should not succeed'),
       );
       verifyNever(() => mockRepo.createUser(any()));
+    });
+
+    test('successfully links Phorge PHID if found', () async {
+      when(
+        () => mockRepo.findByEmail('charlie@necs.com'),
+      ).thenAnswer((_) async => right(null));
+      when(
+        () => mockPhorgeConnector.lookupUserPhid('Charlie', 'charlie@necs.com'),
+      ).thenAnswer((_) async => 'PHID-USER-charlie');
+      when(
+        () => mockRepo.createUser(any()),
+      ).thenAnswer((_) async => right(null));
+      when(
+        () => mockRepo.createSession(any()),
+      ).thenAnswer((_) async => right(null));
+
+      final result = await service.register(
+        'Charlie',
+        'charlie@necs.com',
+        'pwd',
+      );
+
+      expect(result.isRight(), isTrue);
+
+      final captured = verify(() => mockRepo.createUser(captureAny())).captured;
+      final savedUser = captured.first as domain.User;
+
+      expect(savedUser.phorgePhid, equals('PHID-USER-charlie'));
     });
   });
 
@@ -65,17 +99,17 @@ void main() {
       final existingUser = TestData.user(
         id: '1',
         name: 'Alice',
-        email: 'alice@acme.com',
+        email: 'alice@necs.com',
       ).copyWith(passwordHash: hash);
 
       when(
-        () => mockRepo.findByEmail('alice@acme.com'),
+        () => mockRepo.findByEmail('alice@necs.com'),
       ).thenAnswer((_) async => right(existingUser));
       when(
         () => mockRepo.createSession(any()),
       ).thenAnswer((_) async => right(null));
 
-      final result = await service.login('alice@acme.com', 'correct_horse');
+      final result = await service.login('alice@necs.com', 'correct_horse');
 
       expect(result.isRight(), isTrue);
       result.match((_) => fail('Should not fail'), (tokens) {
@@ -90,14 +124,14 @@ void main() {
       final existingUser = TestData.user(
         id: '1',
         name: 'Alice',
-        email: 'alice@acme.com',
+        email: 'alice@necs.com',
       ).copyWith(passwordHash: hash);
 
       when(
-        () => mockRepo.findByEmail('alice@acme.com'),
+        () => mockRepo.findByEmail('alice@necs.com'),
       ).thenAnswer((_) async => right(existingUser));
 
-      final result = await service.login('alice@acme.com', 'wrong');
+      final result = await service.login('alice@necs.com', 'wrong');
 
       expect(result.isLeft(), isTrue);
       result.match(

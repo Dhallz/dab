@@ -113,9 +113,12 @@ This document outlines the coding standards and conventions for the `dab_app` pr
 - **Initialization**: For constructor initializers where `this` is not available, use the static `AbsBloc.appCubit` property.
 - **View Lifecycle**: Use the `onInit` callback in `AppBlocBuilder/Consumer` for one-time View initialization logic (e.g., firing a "Started" event).
 
-##- **Domain Persistence**: `fpdart`
-- **Local Persistence**: `objectbox`, `flutter_secure_storage`
-- **Localization**: `flutter_localizations`, `intl`
-s**: Implement a custom `Dio` interceptor to automatically inject Auth tokens and handle 401s.
-- **Safe API Calls**: use a helper/mixin to wrap Repository calls and standardize the `try/catch` + `toAppFailure` flow.
-- **Environments**: Use an `AppConfig` approach for Base URLs.
+---
+
+## 🏗️ Workflow & Methodology
+To ensure a stable foundation for the user interface, the following sequence must be followed for every new feature:
+
+1.  **Contract Layer**: Define the Domain interfaces (IRepository) and Entities first.
+2.  **API Implementation (Backend First)**: Complete all `dab_api` endpoints and data models before starting the frontend work. 
+3.  **Infrastructure (Client)**: Implement the concrete Repository on the client side once the API is stable.
+4.  **UI Implementation**: Build the Blocs and Views only *after* the data flow is verified and working.

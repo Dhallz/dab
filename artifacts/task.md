@@ -5,94 +5,69 @@
 - [x] Review with user
 - [x] Scaffold directory structure
 - [x] Phase 1: Core & Infrastructure Foundation
-  - [x] Implement `IRepository` interface & `Repository` base class
-  - [x] Implement `RestApiClient` (`lib/infrastructure/core/api/rest/rest_api_client.dart`)
-  - [x] Implement `DioException` mapper extension
-  - [x] Configure `GoRouter` & `AppRoute` (`lib/presentation/core/navigation/`)
-  - [x] Initialize Theme & Styles
 - [x] Phase 2: Initial Feature Implementation (Auth)
-  - [x] Create `User` entity
-  - [x] Implement `IAuthRepository` (`abs_i_auth_repository.dart`) & Data Source
-  - [x] Create Auth Use Cases (`Login`, `Register`, `Logout`, `CheckAuthStatus`)
-  - [x] Implement `AuthUseCases` container
-  - [x] Update `AuthCubit` to use the container
 - [x] Phase 3: Verification & Integration
-  - [x] Run `build_runner`
-  - [x] Update `main.dart` with Providers
 - [x] Phase 4: Local Persistence (ObjectBox)
-  - [x] Initialize `ObjectBox` store (`lib/infrastructure/core/database/local/objectbox_store.dart`)
-  - [x] Create initial entity `UserRecord` (`lib/infrastructure/core/database/local/models/user_record.dart`)
-  - [x] Create Local Data Sources
 - [x] Phase 10: Architectural Standardization
-  - [x] Ensure all entities use `dart_mappable`
 - [x] Phase 11: Infrastructure Refactoring
-  - [x] Migrate `api/rest` to `remote/`
-  - [x] Migrate `database/local` to `local/`
-  - [x] Rename `models` to `records`
-  - [x] Update all project imports
-  - [x] Run build runner and verify
 - [x] Phase 12: UseCase Standardization (Execute Pattern)
-  - [x] Restore Auth UseCases to `execute()` pattern
-  - [x] Restore Monitoring UseCases to `execute()` pattern
-  - [x] Restore System UseCases to `execute()` pattern
-  - [x] Clean up unused `usecase.dart` file
 - [x] Phase 13: Repository Standardization
-  - [x] Standardize `IAuthRepository` return types to `Either`
-  - [x] Implement `Either` returns in `AuthRepository`
-  - [x] Update call sites if any
 - [x] Phase 14: View Standardization
-  - [x] Update `presentation_hierarchy.md` with strict View convention
-  - [x] Update `code_conventions.md` with View file structure
-  - [x] Refactor `Settings` view to match `Login` pattern
 - [x] Phase 15: Failures Relocation
-  - [x] Move `failures.dart` to `domain/core/`
-  - [x] Update all file imports
 - [x] Phase 16: Bloc Utility Refactoring
-  - [x] Create `abs_bloc.dart` and `abs_cubit.dart`
-  - [x] Create `app_bloc_consumer.dart` with safe `onInit`
-  - [x] Delete temporary `i_` bloc files
 - [x] Phase 17: Base Class Migration
-  - [x] Migrate `AuthCubit` to `AbsCubit`
-  - [x] Migrate `LoginBloc` to `AbsBloc`
-  - [x] Migrate `SettingsCubit` to `AbsCubit`
 - [x] Phase 18: App Feature Realignment
-  - [x] Move & Rename `SettingsCubit` to `AppCubit` in `features/app/`
-  - [x] Create `SettingsBloc` (View) and events
-  - [x] Update `SettingsView` to consume `SettingsBloc`
-  - [x] Provide `AppCubit` in `main.dart`
 - [x] Phase 19: Global AppCubit Integration
-  - [x] Add static `appResolver` to `AbsBloc` and `AbsCubit`
-  - [x] Initialize resolvers in `main.dart`
-  - [x] Verify `AppCubit` still extends `AbsCubit`
 - [x] Phase 21: Presentation Utility Standardization
-  - [x] Create `AppBlocBuilder`
-  - [x] Create `AppBlocListener`
-  - [x] Refactor `SettingsViewMobile` to use `AppBlocBuilder`/`Consumer`
-  - [x] Verify `LoginViewMobile` standardization
 - [x] Phase 6: Monitoring & Health
-  - [x] Create `IMonitoringRepository` interface
-  - [x] Implement `CheckApiHealth` use case
-  - [x] Create `MonitoringUseCases` container
-  - [x] Implement `MonitoringRepository` & Data Source
 - [x] Phase 7: Transversal Services (DI)
-  - [x] Implement `InjectionContainer` in `lib/services/injection/`
-  - [x] Refactor `main.dart` to use the container
-  - [x] Update documentation
 - [x] Phase 8: Design System
-  - [x] Implement `AppColors` & `AppGradients`
-  - [x] Implement `AppTextStyles`
-  - [x] Implement `AppIcons`
-  - [x] Integrate into `AppTheme`
 - [x] Phase 9: Persistent Settings
-  - [x] Create `ISystemRepository` and `AppSettings` entity
-  - [x] Implement `SystemLocalDataSource` (ObjectBox)
-  - [x] Implement `SystemRepository`
-  - [x] Create `GetAppSettings` & `SaveAppSettings` use cases
-  - [x] Create `SystemUseCases` container
-  - [x] Define `Settings` route in `AppRoute` and `AppRouter`
-  - [x] Create `SettingsCubit` and `SettingsState`
-  - [x] Implement `SettingsView` UI
-  - [x] Wire up for global theme management in `main.dart`
 - [x] Create `/scaffold-dab-app` workflow for project duplication
-- [x] Sync all project artifacts and workflows to `aretefacts` workspace
+- [x] Sync all project artifacts and workflows to DAB workspace
+- [x] Sync all project artifacts to system folder for Task UI visibility
 - [x] Finalize Architecture Documentation & Workspace Cleanup
+- [x] Phase 23: Global Navigation & Views
+- [x] Phase 25: Client UI Design
+- [x] Phase 23: Authentication Feature Completion
+- [x] Phase 2: Live Activity Dashboard
+- [x] Phase 2: Live Activity Dashboard (Refinement)
+- [ ] Phase 3: Admin Console & Team Management
+- [x] Phase 4: Phorge Connector Integration
+- [ ] 🚀 Future Roadmap: Personal Workspace
+- [x] Phase 24: Local Relic ORM Migration
+- [x] Phase 25: Drift ORM Prototype
+- [x] Phase 26: Infrastructure Refactoring
+- [x] Phase 27: Schema Reorganization & Refinement
+- [x] Phase 28: Infrastructure Hierarchy Refinement
+- [x] Phase 29: Dependency Injection Refactor
+- [x] Phase 30: Native Drift Migrations 🧬
+- [x] Phase 31: Functional Error Handling (fpdart) 🛡️
+- [x] Phase 32: GetIt Service Locator 💉
+- [x] Phase 33: Relic Native WebSockets 🌐
+- [x] Phase 34: Polymorphic Activity Providers (Relational) 🧩
+- [x] Phase 35: Architectural Review & Refinement 🏛️
+- [x] Phase 36: Forensic Artifact Consolidation & High-Fidelity Review 📚
+- [x] Phase 37: Redis Infrastructure Implementation 🏗️
+- [x] Phase 38: Client-Side Vegas Sync Pattern 📱 🔄
+- [x] Phase 39: Server-Side Unit Tests & OpenAPI 🧪📜
+
+- [x] Phase 40: Comprehensive API Unit Testing
+    - [x] Application Layer Tests
+        - [x] `LoggingService` & `RequestLogger`
+        - [x] `PresenceService` (WebSocket tracking)
+        - [x] `PushNotificationService`
+        - [x] `AuthService`
+    - [x] Presentation Layer Tests
+        - [x] `AuthController` (Login/Register)
+        - [x] `ActivityController` (Envelope Pattern & Vegas Clock)
+        - [x] `HealthController` (Postgres health)
+        - [x] `VegasMiddleware` (Staleness logic)
+    - [x] Test Infrastructure
+        - [x] `test_utils.dart` for `TestRequest` & `FakeSession`
+
+- [x] Phase 41: Test Data Infrastructure Migration
+    - [x] `ActivityService` tests
+    - [x] `ActivityController` tests
+    - [x] `PresenceService` tests
+    - [x] `AuthService` & `AuthController` tests

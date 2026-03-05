@@ -37,6 +37,55 @@ class ActivityController {
     );
   }
 
+  Future<Response> getPastActivities(Request request) async {
+    final userId = userIdProperty.get(request);
+    final dateStr = request.url.queryParameters['date'];
+
+    if (dateStr == null) {
+      return Response.badRequest(
+        body: Body.fromString(jsonEncode({'error': 'Missing date parameter'})),
+      );
+    }
+
+    DateTime date;
+    try {
+      date = DateTime.parse(dateStr);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid date format. Use YYYY-MM-DD'}),
+        ),
+      );
+    }
+
+    try {
+      final activities = await _activityService.fetchPastActivities(
+        userId,
+        date,
+      );
+      final jsonList = activities.map((a) => a.toMap()).toList();
+
+      return Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': jsonList,
+            'meta': {
+              'dataType': 'list:activity',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Failed to fetch past activities: $e'}),
+        ),
+      );
+    }
+  }
+
   WebSocketUpgrade wsHandler(Request request) {
     return WebSocketUpgrade((webSocket) async {
       _presence.addSession(webSocket);

@@ -49,6 +49,24 @@ class ActivityService {
     );
   }
 
+  Future<List<Activity>> fetchPastActivities(
+    String userId,
+    DateTime date,
+  ) async {
+    final userResult = await _authRepo.findById(userId);
+    return userResult.match(
+      (f) => throw Exception('Failed to fetch user: ${f.message}'),
+      (user) async {
+        if (user == null) throw Exception('User not found');
+        if (user.phorgePhid == null) return [];
+
+        // Directly query Phorge for the historical date.
+        // We do NOT save these to the database. They are hydrated at runtime.
+        return await _phorge.fetchUserActivities(user: user, date: date);
+      },
+    );
+  }
+
   Future<void> _pollPhorge() async {
     try {
       final usersResult = await _authRepo.findUsersWithPhorge();

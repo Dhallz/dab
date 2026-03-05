@@ -24,6 +24,18 @@ class AuthRepository implements AbsIAuthRepository {
   }
 
   @override
+  Future<Either<DatabaseFailure, User?>> findById(String id) async {
+    try {
+      final user = await (_db.select(
+        _db.usersTable,
+      )..where((u) => u.id.equals(id))).getSingleOrNull();
+      return Right(user);
+    } catch (e) {
+      return Left(DatabaseFailure('Error finding user by ID: $e'));
+    }
+  }
+
+  @override
   Future<Either<DatabaseFailure, void>> createUser(User user) async {
     try {
       await _db

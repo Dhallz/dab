@@ -3,6 +3,15 @@ import 'package:dart_mappable/dart_mappable.dart';
 part 'activity_provider.mapper.dart';
 
 @MappableClass()
+class SprintContext with SprintContextMappable {
+  final String tag;
+  final String? columnFrom;
+  final String? columnTo;
+
+  const SprintContext({required this.tag, this.columnFrom, this.columnTo});
+}
+
+@MappableClass()
 sealed class ActivityProvider with ActivityProviderMappable {
   const ActivityProvider();
 
@@ -15,8 +24,9 @@ class PhorgeTaskProvider extends ActivityProvider
     with PhorgeTaskProviderMappable {
   final String? taskPhid;
   final String? tags;
+  final SprintContext? sprintContext;
 
-  const PhorgeTaskProvider({this.taskPhid, this.tags});
+  const PhorgeTaskProvider({this.taskPhid, this.tags, this.sprintContext});
 
   @override
   String get name => 'Phorge';

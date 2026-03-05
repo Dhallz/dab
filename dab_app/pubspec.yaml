@@ -41,6 +41,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   fpdart: ^1.1.0
   dio: ^5.8.0+1
+  web_socket_channel: ^2.4.0
   dart_mappable: ^4.4.0
   objectbox: ^4.0.0
   objectbox_flutter_libs: ^4.0.0

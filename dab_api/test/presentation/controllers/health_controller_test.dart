@@ -31,9 +31,22 @@ void main() {
       controller = HealthController();
     });
 
-    test('check should return healthy when DB is connected', () async {
+    test('check should return healthy API status', () async {
       final request = TestRequest.create(
         url: Uri.parse('http://localhost/health'),
+      );
+
+      final response = await controller.check(request);
+
+      expect(response.statusCode, equals(200));
+      final body = jsonDecode(await response.readAsString());
+      expect(body['status'], equals('healthy'));
+      expect(body.containsKey('database'), isFalse);
+    });
+
+    test('checkDb should return healthy when DB is connected', () async {
+      final request = TestRequest.create(
+        url: Uri.parse('http://localhost/health/db'),
       );
 
       final emptyResult = pg.Result(
@@ -44,7 +57,7 @@ void main() {
 
       when(() => mockPool.execute(any())).thenAnswer((_) async => emptyResult);
 
-      final response = await controller.check(request);
+      final response = await controller.checkDb(request);
 
       expect(response.statusCode, equals(200));
       final body = jsonDecode(await response.readAsString());
@@ -52,14 +65,14 @@ void main() {
       expect(body['database'], equals('connected'));
     });
 
-    test('check should return degraded when DB fails', () async {
+    test('checkDb should return degraded when DB fails', () async {
       final request = TestRequest.create(
-        url: Uri.parse('http://localhost/health'),
+        url: Uri.parse('http://localhost/health/db'),
       );
 
       when(() => mockPool.execute(any())).thenThrow(Exception('DB Down'));
 
-      final response = await controller.check(request);
+      final response = await controller.checkDb(request);
 
       expect(
         response.statusCode,

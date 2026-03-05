@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "dab_app"
+		},
+		{
+			"path": "artifacts"
 		}
 	],
 	"settings": {}
