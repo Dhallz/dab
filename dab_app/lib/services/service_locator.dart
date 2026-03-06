@@ -3,23 +3,24 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../domain/containers/activity_usecases.dart';
 import '../domain/containers/auth_usecases.dart';
 import '../domain/containers/monitoring_usecases.dart';
-import '../domain/containers/system_usecases.dart';
 import '../domain/containers/presence_usecases.dart';
+import '../domain/containers/system_usecases.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
+import '../infrastructure/core/remote/auth_interceptor.dart';
 import '../infrastructure/core/remote/rest_api_client.dart';
 import '../infrastructure/core/remote/web_socket_client.dart';
+import '../infrastructure/datasources/activity_remote_data_source.dart';
 import '../infrastructure/datasources/auth_local_data_source.dart';
 import '../infrastructure/datasources/auth_remote_data_source.dart';
 import '../infrastructure/datasources/monitoring_remote_data_source.dart';
-import '../infrastructure/datasources/system_local_data_source.dart';
-import '../infrastructure/datasources/activity_remote_data_source.dart';
 import '../infrastructure/datasources/presence_remote_data_source.dart';
+import '../infrastructure/datasources/system_local_data_source.dart';
 import '../infrastructure/repositories/activity_repository.dart';
 import '../infrastructure/repositories/auth_repository.dart';
 import '../infrastructure/repositories/monitoring_repository.dart';
-import '../infrastructure/repositories/system_repository.dart';
 import '../infrastructure/repositories/presence_repository.dart';
+import '../infrastructure/repositories/system_repository.dart';
 import '../presentation/core/navigation/app_router.dart';
 
 final sl = ServiceLocator();
@@ -54,9 +55,11 @@ class ServiceLocator {
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
     // 1. Core Infrastructure
-    restApiClient = RestApiClient(baseUrl: 'http://localhost:8081');
-    objectBoxStore = await ObjectBoxStore.create();
+    restApiClient = RestApiClient(baseUrl: 'http://localhost:8080');
     tokenStorage = TokenStorage();
+    restApiClient.addInterceptor(AuthInterceptor(tokenStorage));
+
+    objectBoxStore = await ObjectBoxStore.create();
     secureStorage = const FlutterSecureStorage();
     appRouter = AppRouter();
 
@@ -83,7 +86,7 @@ class ServiceLocator {
     systemUseCases = SystemUseCases(systemRepository);
 
     // 5. Activity Context
-    final wsClient = WebSocketClient('ws://localhost:8081/ws');
+    final wsClient = WebSocketClient('ws://localhost:8080/ws');
     final activityRemoteDataSource = ActivityRemoteDataSource(
       restApiClient,
       wsClient,

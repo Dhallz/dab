@@ -14,6 +14,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   static ActivityMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ActivityMapper._());
+      ActivityProviderMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -25,10 +26,8 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   static const Field<Activity, String> _f$id = Field('id', _$id);
   static String _$userId(Activity v) => v.userId;
   static const Field<Activity, String> _f$userId = Field('userId', _$userId);
-  static String _$type(Activity v) => v.type;
-  static const Field<Activity, String> _f$type = Field('type', _$type);
-  static String _$provider(Activity v) => v.provider;
-  static const Field<Activity, String> _f$provider = Field(
+  static ActivityProvider _$provider(Activity v) => v.provider;
+  static const Field<Activity, ActivityProvider> _f$provider = Field(
     'provider',
     _$provider,
   );
@@ -48,7 +47,6 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   final MappableFields<Activity> fields = const {
     #id: _f$id,
     #userId: _f$userId,
-    #type: _f$type,
     #provider: _f$provider,
     #title: _f$title,
     #content: _f$content,
@@ -60,7 +58,6 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     return Activity(
       id: data.dec(_f$id),
       userId: data.dec(_f$userId),
-      type: data.dec(_f$type),
       provider: data.dec(_f$provider),
       title: data.dec(_f$title),
       content: data.dec(_f$content),
@@ -129,8 +126,7 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
   $R call({
     String? id,
     String? userId,
-    String? type,
-    String? provider,
+    ActivityProvider? provider,
     String? title,
     String? content,
     String? url,
@@ -151,8 +147,7 @@ class _ActivityCopyWithImpl<$R, $Out>
   $R call({
     String? id,
     String? userId,
-    String? type,
-    String? provider,
+    ActivityProvider? provider,
     String? title,
     String? content,
     Object? url = $none,
@@ -161,7 +156,6 @@ class _ActivityCopyWithImpl<$R, $Out>
     FieldCopyWithData({
       if (id != null) #id: id,
       if (userId != null) #userId: userId,
-      if (type != null) #type: type,
       if (provider != null) #provider: provider,
       if (title != null) #title: title,
       if (content != null) #content: content,
@@ -173,7 +167,6 @@ class _ActivityCopyWithImpl<$R, $Out>
   Activity $make(CopyWithData data) => Activity(
     id: data.get(#id, or: $value.id),
     userId: data.get(#userId, or: $value.userId),
-    type: data.get(#type, or: $value.type),
     provider: data.get(#provider, or: $value.provider),
     title: data.get(#title, or: $value.title),
     content: data.get(#content, or: $value.content),

@@ -8,12 +8,15 @@ class VegasInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final settingsResult = await sl.systemRepository.getSettings();
-    final settings = settingsResult.fold((l) => null, (r) => r);
-    final token = settings?.syncToken;
+    // Only apply sync token to the main activities list, not searches or other endpoints
+    if (options.path == '/activities') {
+      final settingsResult = await sl.systemRepository.getSettings();
+      final settings = settingsResult.fold((l) => null, (r) => r);
+      final token = settings?.syncToken;
 
-    if (token != null) {
-      options.headers['X-Sync-Token'] = token;
+      if (token != null) {
+        options.headers['X-Sync-Token'] = token;
+      }
     }
     super.onRequest(options, handler);
   }

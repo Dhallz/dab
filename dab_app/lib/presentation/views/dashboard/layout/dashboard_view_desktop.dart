@@ -1,26 +1,15 @@
-import 'package:dab_app/presentation/views/admin/admin_console_view.dart';
-import 'package:dab_app/presentation/views/history/history_explorer_view.dart';
-import 'package:dab_app/presentation/views/statistics/statistics_view.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity.dart';
 import '../../../core/app_bloc_consumer.dart';
 import '../../../core/widgets/dab_mesh_background.dart';
-import '../bloc/dashboard_bloc.dart';
-import '../bloc/dashboard_event.dart';
-import '../bloc/dashboard_state.dart';
+import '../dashboard_bloc.dart';
+import '../dashboard_event.dart';
+import '../dashboard_state.dart';
 import '../widgets/dab_activity_card.dart';
-import '../widgets/dab_top_menu.dart';
 
 class DashboardViewDesktop extends StatefulWidget {
-  final DabViewTab activeTab;
-  final ValueChanged<DabViewTab> onTabChanged;
-
-  const DashboardViewDesktop({
-    super.key,
-    required this.activeTab,
-    required this.onTabChanged,
-  });
+  const DashboardViewDesktop({super.key});
 
   @override
   State<DashboardViewDesktop> createState() => _DashboardViewDesktopState();
@@ -43,12 +32,13 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
                 : state.activities
                       .where(
                         (a) =>
-                            a.provider.toLowerCase() ==
+                            a.provider.name.toLowerCase() ==
                             _selectedProvider.toLowerCase(),
                       )
                       .toList();
 
             return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildSidebar(),
                 Expanded(
@@ -56,7 +46,13 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
                     children: [
                       _buildTopBar(),
                       Expanded(
-                        child: _buildTabContent(state, filteredActivities),
+                        child: CustomScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            _buildMetricsGrid(),
+                            _buildActivitySection(state, filteredActivities),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -70,7 +66,7 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
   }
 
   Widget _buildSidebar() {
-    final providers = ['All', 'GitHub', 'Slack', 'Jira', 'Linear'];
+    final providers = ['All', 'GitHub', 'Slack', 'Jira', 'Linear', 'Phorge'];
 
     return Container(
       width: 260,
@@ -84,58 +80,8 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'DAB',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 2.0,
-            ),
-          ),
-          const SizedBox(height: 48),
-          _SidebarItem(
-            icon: Icons.dashboard_rounded,
-            label: 'Dashboard',
-            isSelected: widget.activeTab == DabViewTab.feed,
-            onTap: () => widget.onTabChanged(DabViewTab.feed),
-          ),
-          _SidebarItem(
-            icon: Icons.history_rounded,
-            label: 'Historical Explorer',
-            isSelected: widget.activeTab == DabViewTab.history,
-            onTap: () => widget.onTabChanged(DabViewTab.history),
-          ),
-          _SidebarItem(
-            icon: Icons.insights_rounded,
-            label: 'Statistics',
-            isSelected: widget.activeTab == DabViewTab.stats,
-            onTap: () => widget.onTabChanged(DabViewTab.stats),
-          ),
-          _SidebarItem(
-            icon: Icons.notifications_rounded,
-            label: 'Alerts',
-            onTap: () {},
-          ),
-          _SidebarItem(
-            icon: Icons.link_rounded,
-            label: 'Connections',
-            onTap: () {},
-          ),
-          _SidebarItem(
-            icon: Icons.admin_panel_settings_rounded,
-            label: 'Admin Console',
-            isSelected: widget.activeTab == DabViewTab.admin,
-            onTap: () => widget.onTabChanged(DabViewTab.admin),
-          ),
-          _SidebarItem(
-            icon: Icons.settings_rounded,
-            label: 'Settings',
-            onTap: () {},
-          ),
-          const SizedBox(height: 32),
           Text(
-            'STACK PROVIDERS',
+            'FEED FILTERS',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -150,31 +96,12 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
               label: p,
               isSelected: _selectedProvider == p,
               onTap: () => setState(() => _selectedProvider = p),
-              isCompact: true,
+              isCompact: false,
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildTabContent(DashboardState state, List<Activity> activities) {
-    switch (widget.activeTab) {
-      case DabViewTab.feed:
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            _buildMetricsGrid(),
-            _buildActivitySection(state, activities),
-          ],
-        );
-      case DabViewTab.history:
-        return const HistoryExplorerView();
-      case DabViewTab.stats:
-        return const StatisticsView();
-      case DabViewTab.admin:
-        return const AdminConsoleView();
-    }
   }
 
   Widget _buildTopBar() {
@@ -191,14 +118,7 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 48),
-          Expanded(
-            child: DabTopMenu(
-              activeTab: widget.activeTab,
-              onTabChanged: widget.onTabChanged,
-            ),
-          ),
-          const SizedBox(width: 48),
+          const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -219,19 +139,6 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
                   ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 24),
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: Color(0xFF6366F1),
-            child: Text(
-              'AD',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
         ],
@@ -324,6 +231,8 @@ class _DashboardViewDesktopState extends State<DashboardViewDesktop> {
         return Icons.task_alt_rounded;
       case 'linear':
         return Icons.layers_outlined;
+      case 'phorge':
+        return Icons.settings_suggest_rounded;
       default:
         return Icons.radar_rounded;
     }

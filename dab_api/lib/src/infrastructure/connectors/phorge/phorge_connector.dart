@@ -191,7 +191,7 @@ class PhorgeConnector {
           'objectType': 'TASK',
           'constraints': {'authorPHIDs': userPhids},
           'limit': 100,
-          if (afterCursor != null) 'after': afterCursor,
+          ?'after': afterCursor,
         });
 
         final rawTxData = txResult['data'] as List<dynamic>?;
@@ -300,13 +300,15 @@ class PhorgeConnector {
             .toList();
 
         for (final tx in transactions) {
-          if (tx.dateCreated.isBefore(start) || tx.dateCreated.isAfter(end))
+          if (tx.dateCreated.isBefore(start) || tx.dateCreated.isAfter(end)) {
             continue;
+          }
 
           // In Inbox mode, we care if the user originated it, OR if it happened on a task they own
           if (!userPhids.contains(tx.authorPHID) &&
-              !userPhids.contains(task.ownerPHID))
+              !userPhids.contains(task.ownerPHID)) {
             continue;
+          }
 
           _processTransaction(
             tx,

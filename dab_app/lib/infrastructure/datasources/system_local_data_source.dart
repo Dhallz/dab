@@ -15,7 +15,12 @@ class SystemLocalDataSource {
   }
 
   Future<void> saveSettings(AppSettingsRecord record) async {
-    record.id = 1; // Singleton record
+    final existing = _box.get(1);
+    if (existing != null) {
+      record.id = 1;
+    } else {
+      record.id = 0; // First insertion, let ObjectBox assign ID 1
+    }
     _box.put(record);
   }
 }

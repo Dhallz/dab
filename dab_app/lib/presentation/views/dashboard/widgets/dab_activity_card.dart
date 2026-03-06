@@ -73,7 +73,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                   ),
                                 ),
                                 child: Text(
-                                  widget.activity.provider.toUpperCase(),
+                                  widget.activity.provider.name.toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
@@ -175,7 +175,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
 
   Widget _buildProviderIcon(Color color) {
     IconData icon;
-    switch (widget.activity.provider.toLowerCase()) {
+    switch (widget.activity.provider.name.toLowerCase()) {
       case 'github':
         icon = Icons.terminal_rounded;
         break;
@@ -232,7 +232,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
   }
 
   Color _getProviderColor() {
-    switch (widget.activity.provider.toLowerCase()) {
+    switch (widget.activity.provider.name.toLowerCase()) {
       case 'github':
         return const Color(0xFF24292F);
       case 'slack':

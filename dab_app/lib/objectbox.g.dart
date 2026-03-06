@@ -15,6 +15,7 @@ import 'package:objectbox/objectbox.dart' as obx;
 import 'package:objectbox_flutter_libs/objectbox_flutter_libs.dart';
 
 import 'infrastructure/core/local/records/app_settings_record.dart';
+import 'infrastructure/core/local/records/auth_credential_record.dart';
 import 'infrastructure/core/local/records/user_record.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
@@ -83,6 +84,34 @@ final _entities = <obx_int.ModelEntity>[
     relations: <obx_int.ModelRelation>[],
     backlinks: <obx_int.ModelBacklink>[],
   ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(3, 2073501343485982893),
+    name: 'AuthCredentialRecord',
+    lastPropertyId: const obx_int.IdUid(3, 4253006677878960762),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 3625288301493778704),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 4737509218442785945),
+        name: 'email',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 4253006677878960762),
+        name: 'password',
+        type: 9,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
 ];
 
 /// Shortcut for [obx.Store.new] that passes [getObjectBoxModel] and for Flutter
@@ -123,7 +152,7 @@ Future<obx.Store> openStore({
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
     entities: _entities,
-    lastEntityId: const obx_int.IdUid(2, 4174291376144611737),
+    lastEntityId: const obx_int.IdUid(3, 2073501343485982893),
     lastIndexId: const obx_int.IdUid(1, 6218771340300999518),
     lastRelationId: const obx_int.IdUid(0, 0),
     lastSequenceId: const obx_int.IdUid(0, 0),
@@ -224,6 +253,48 @@ obx_int.ModelDefinition getObjectBoxModel() {
         return object;
       },
     ),
+    AuthCredentialRecord: obx_int.EntityDefinition<AuthCredentialRecord>(
+      model: _entities[2],
+      toOneRelations: (AuthCredentialRecord object) => [],
+      toManyRelations: (AuthCredentialRecord object) => {},
+      getId: (AuthCredentialRecord object) => object.id,
+      setId: (AuthCredentialRecord object, int id) {
+        object.id = id;
+      },
+      objectToFB: (AuthCredentialRecord object, fb.Builder fbb) {
+        final emailOffset = fbb.writeString(object.email);
+        final passwordOffset = fbb.writeString(object.password);
+        fbb.startTable(4);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, emailOffset);
+        fbb.addOffset(2, passwordOffset);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final emailParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final passwordParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 8, '');
+        final object = AuthCredentialRecord(
+          id: idParam,
+          email: emailParam,
+          password: passwordParam,
+        );
+
+        return object;
+      },
+    ),
   };
 
   return obx_int.ModelDefinition(model, bindings);
@@ -267,5 +338,23 @@ class AppSettingsRecord_ {
   /// See [AppSettingsRecord.syncToken].
   static final syncToken = obx.QueryStringProperty<AppSettingsRecord>(
     _entities[1].properties[2],
+  );
+}
+
+/// [AuthCredentialRecord] entity fields to define ObjectBox queries.
+class AuthCredentialRecord_ {
+  /// See [AuthCredentialRecord.id].
+  static final id = obx.QueryIntegerProperty<AuthCredentialRecord>(
+    _entities[2].properties[0],
+  );
+
+  /// See [AuthCredentialRecord.email].
+  static final email = obx.QueryStringProperty<AuthCredentialRecord>(
+    _entities[2].properties[1],
+  );
+
+  /// See [AuthCredentialRecord.password].
+  static final password = obx.QueryStringProperty<AuthCredentialRecord>(
+    _entities[2].properties[2],
   );
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures.dart';
@@ -17,21 +18,54 @@ class ActivityRepository extends Repository implements IActivityRepository {
   Future<Either<AppFailure, List<Activity>>> getRecentActivities() {
     return guardedCall(() async {
       final response = await _remoteDataSource.getRecentActivities();
-
-      // Handle the Vegas Pattern 304 Not Modified
-      if (response.statusCode == 304) {
-        // Here we would ideally load from the local ObjectBox cache
-        // For the sake of this prototype assuming no new data, we return empty list
-        // Or we should fetch from ObjectBox if implemented. For now:
-        return []; // TODO: Implement reading from ObjectBox cache when 304
-      }
-
-      // Parse the Envelope Pattern
-      final Map<String, dynamic> responseData = response.data;
-      final List<dynamic> jsonList = responseData['data'] ?? [];
-
+      final List<dynamic> jsonList = _getEnvelopeData(response);
       return jsonList.map((json) => ActivityMapper.fromMap(json)).toList();
     });
+  }
+
+  @override
+  Future<Either<AppFailure, List<Activity>>> searchActivities({
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? users,
+    bool authoredOnly = true,
+  }) {
+    print('DEBUG: ActivityRepository.searchActivities entry');
+    return guardedCall(() async {
+      print(
+        'DEBUG: ActivityRepository.searchActivities calling remoteDataSource',
+      );
+      final response = await _remoteDataSource.searchActivities(
+        startDate: startDate,
+        endDate: endDate,
+        users: users,
+        authoredOnly: authoredOnly,
+      );
+
+      print(
+        'DEBUG: ActivityRepository.searchActivities response: ${response.statusCode}',
+      );
+      final List<dynamic> jsonList = _getEnvelopeData(response);
+      print(
+        'DEBUG: ActivityRepository.searchActivities jsonList length: ${jsonList.length}',
+      );
+      return jsonList.map((json) => ActivityMapper.fromMap(json)).toList();
+    });
+  }
+
+  List<dynamic> _getEnvelopeData(Response response) {
+    if (response.statusCode == 304 || response.data == null) return [];
+
+    final dynamic data = response.data;
+    final Map<String, dynamic> map;
+
+    if (data is Map<String, dynamic>) {
+      map = data;
+    } else {
+      map = jsonDecode(data.toString());
+    }
+
+    return map['data'] ?? [];
   }
 
   @override
@@ -46,7 +80,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
           throw Exception('Unknown event type');
         })
         .handleError((e) {
-          print('Error watching activities: $e');
+          // Log or handle error appropriately
         });
   }
 }

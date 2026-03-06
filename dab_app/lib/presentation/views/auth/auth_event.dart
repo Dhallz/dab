@@ -2,6 +2,10 @@ sealed class AuthEvent {
   const AuthEvent();
 }
 
+class AuthStarted extends AuthEvent {
+  const AuthStarted();
+}
+
 class AuthModeToggled extends AuthEvent {
   const AuthModeToggled();
 }

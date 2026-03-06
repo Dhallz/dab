@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../domain/containers/activity_usecases.dart';
-import '../../../../domain/entities/activity.dart';
-import '../../../core/abs_bloc.dart';
+import '../../../domain/containers/activity_usecases.dart';
+import '../../../domain/entities/activity.dart';
+import '../../core/abs_bloc.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 

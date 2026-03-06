@@ -57,9 +57,33 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "3:2073501343485982893",
+      "lastPropertyId": "3:4253006677878960762",
+      "name": "AuthCredentialRecord",
+      "properties": [
+        {
+          "id": "1:3625288301493778704",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4737509218442785945",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "3:4253006677878960762",
+          "name": "password",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "2:4174291376144611737",
+  "lastEntityId": "3:2073501343485982893",
   "lastIndexId": "1:6218771340300999518",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",

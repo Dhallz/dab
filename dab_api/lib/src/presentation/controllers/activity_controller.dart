@@ -58,6 +58,17 @@ class ActivityController {
     try {
       startDate = DateTime.parse(startDateStr);
       endDate = DateTime.parse(endDateStr);
+
+      // If dates are the same, expand endDate to cover the full day
+      if (startDate.isAtSameMomentAs(endDate)) {
+        startDate = DateTime(startDate.year, startDate.month, startDate.day);
+        endDate = startDate.add(const Duration(days: 1));
+      } else if (endDate.hour == 0 &&
+          endDate.minute == 0 &&
+          endDate.second == 0) {
+        // If endDate is just a date (at midnight), make it cover that full day
+        endDate = endDate.add(const Duration(days: 1));
+      }
     } catch (_) {
       return Response.badRequest(
         body: Body.fromString(

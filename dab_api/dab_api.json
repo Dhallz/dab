@@ -1,0 +1,385 @@
+{
+  "info": {
+    "name": "dab_api.paw",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "DAB API",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Register a new user",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseURL}}/auth/register",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/auth/register"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "disabled": false,
+                  "raw": "{\"email\":\"david@necs.com\",\"password\":\"master\",\"name\":\"David Limier\"}"
+                },
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            },
+            {
+              "name": "Login user",
+              "request": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseURL}}/auth/login",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/auth/login"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "disabled": false,
+                  "raw": "{\"email\":\"david@necs.com\",\"password\":\"master\"}"
+                },
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            }
+          ],
+          "protocolProfileBehavior": null,
+          "response": []
+        },
+        {
+          "name": "Metadata",
+          "item": [
+            {
+              "name": "Get available provider metadata (e.g., Phorge projects/tags)",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/metadata/providers",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/metadata/providers"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "{{accessToken}}",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            }
+          ],
+          "protocolProfileBehavior": null,
+          "response": []
+        },
+        {
+          "name": "Activities",
+          "item": [
+            {
+              "name": "Get the latest activities using the Envelope and Vegas Patterns",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/activities",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/activities"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "X-Sync-Token",
+                    "value": "0",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "{{accessToken}}",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            },
+            {
+              "name": "Search for activities based on user, date range, and attribution filter",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/activities/search?startDate=2026-03-02&endDate=2026-03-04&users=&authoredOnly=false",
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2026-03-02",
+                      "disabled": false,
+                      "description": "ISO 8601 start date timestamp"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2026-03-04",
+                      "disabled": false,
+                      "description": "ISO 8601 end date timestamp"
+                    },
+                    {
+                      "key": "users",
+                      "value": "",
+                      "disabled": false,
+                      "description": "Comma-separated list of User UUIDs to query. Defaults to the requesting user."
+                    },
+                    {
+                      "key": "authoredOnly",
+                      "value": "false",
+                      "disabled": false,
+                      "description": "If true, only returns activities directly initiated by the specified users. If false, includes activities on tasks assigned to them."
+                    }
+                  ],
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/activities/search"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "disabled": false,
+                    "description": null
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "{{accessToken}}",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            }
+          ],
+          "protocolProfileBehavior": null,
+          "response": []
+        },
+        {
+          "name": "Ws",
+          "item": [
+            {
+              "name": "WebSocket Connection for real-time broadcasts",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/ws",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "port": null,
+                  "path": [
+                    "ws"
+                  ]
+                },
+                "description": "This endpoint upgrades the connection to WebSocket.",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            }
+          ],
+          "protocolProfileBehavior": null,
+          "response": []
+        },
+        {
+          "name": "Health",
+          "item": [
+            {
+              "name": "General API health check",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/health",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/health"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            },
+            {
+              "name": "Infrastructure health check (PostgreSQL and Redis)",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseURL}}/health/db",
+                  "query": null,
+                  "protocol": null,
+                  "host": [
+                    "{{baseURL}}/health/db"
+                  ],
+                  "port": null,
+                  "path": null
+                },
+                "description": "",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*",
+                    "disabled": false,
+                    "description": null
+                  }
+                ],
+                "body": null,
+                "auth": null
+              },
+              "protocolProfileBehavior": {
+                "followRedirects": false,
+                "followOriginalHttpMethod": false,
+                "followAuthorizationHeader": false
+              },
+              "response": []
+            }
+          ],
+          "protocolProfileBehavior": null,
+          "response": []
+        }
+      ],
+      "protocolProfileBehavior": null,
+      "response": []
+    }
+  ]
+}

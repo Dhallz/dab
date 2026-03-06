@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-enum DabViewTab { feed, history, stats, admin }
+enum DabViewTab { feed, explorer, insights, admin }
 
 class DabTopMenu extends StatelessWidget {
   final DabViewTab activeTab;
@@ -40,16 +40,16 @@ class DabTopMenu extends StatelessWidget {
                   onTap: () => onTabChanged(DabViewTab.feed),
                 ),
                 _TabItem(
-                  label: 'History',
+                  label: 'Explorer',
                   icon: Icons.history_rounded,
-                  isSelected: activeTab == DabViewTab.history,
-                  onTap: () => onTabChanged(DabViewTab.history),
+                  isSelected: activeTab == DabViewTab.explorer,
+                  onTap: () => onTabChanged(DabViewTab.explorer),
                 ),
                 _TabItem(
-                  label: 'Stats',
+                  label: 'Insights',
                   icon: Icons.insights_rounded,
-                  isSelected: activeTab == DabViewTab.stats,
-                  onTap: () => onTabChanged(DabViewTab.stats),
+                  isSelected: activeTab == DabViewTab.insights,
+                  onTap: () => onTabChanged(DabViewTab.insights),
                 ),
                 _TabItem(
                   label: 'Admin',

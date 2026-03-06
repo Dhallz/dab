@@ -34,7 +34,7 @@ void main() async {
 
   print('Search (authoredOnly=true) Status: ${searchRes.statusCode}');
   print(
-    'Response body preview: ${searchRes.body.length > 500 ? searchRes.body.substring(0, 500) + '...' : searchRes.body}',
+    'Response body preview: ${searchRes.body.length > 500 ? "${searchRes.body.substring(0, 500)}..." : searchRes.body}',
   );
 
   final searchResFalse = await http.get(
@@ -46,7 +46,7 @@ void main() async {
 
   print('\nSearch (authoredOnly=false) Status: ${searchResFalse.statusCode}');
   print(
-    'Response body preview: ${searchResFalse.body.length > 500 ? searchResFalse.body.substring(0, 500) + '...' : searchResFalse.body}',
+    'Response body preview: ${searchResFalse.body.length > 500 ? "${searchResFalse.body.substring(0, 500)}..." : searchResFalse.body}',
   );
 
   exit(0);

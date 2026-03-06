@@ -11,11 +11,28 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
   final auth.AuthCubit? authCubit;
 
   AuthBloc(this._usecases, {this.authCubit}) : super(const AuthState()) {
+    on<AuthStarted>(_onStarted);
     on<AuthModeToggled>(_onModeToggled);
     on<AuthEmailChanged>(_onEmailChanged);
     on<AuthPasswordChanged>(_onPasswordChanged);
     on<AuthNameChanged>(_onNameChanged);
     on<AuthSubmitted>(_onSubmitted);
+
+    add(const AuthStarted());
+  }
+
+  Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    final result = await _usecases.getSavedCredentials.execute();
+    await result.fold((failure) async => null, (credentials) async {
+      if (credentials != null) {
+        emit(
+          state.copyWith(
+            email: credentials['email'],
+            password: credentials['password'],
+          ),
+        );
+      }
+    });
   }
 
   void _onModeToggled(AuthModeToggled event, Emitter<AuthState> emit) {
@@ -49,9 +66,8 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
         email: state.email,
         password: state.password,
       );
-      result.fold(
-        (failure) {
-          print('DEBUG: AuthBloc login failure: ${failure.message}');
+      await result.fold(
+        (failure) async {
           emit(
             state.copyWith(
               status: AuthViewStatus.failure,
@@ -59,8 +75,11 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
             ),
           );
         },
-        (response) {
-          print('DEBUG: AuthBloc login success! Syncing cubit...');
+        (response) async {
+          await _usecases.saveCredentials.execute(
+            email: state.email,
+            password: state.password,
+          );
           authCubit?.checkAuth();
           emit(state.copyWith(status: AuthViewStatus.success));
         },
@@ -71,14 +90,18 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
         password: state.password,
         name: state.name,
       );
-      result.fold(
-        (failure) => emit(
+      await result.fold(
+        (failure) async => emit(
           state.copyWith(
             status: AuthViewStatus.failure,
             errorMessage: failure.message,
           ),
         ),
-        (response) {
+        (response) async {
+          await _usecases.saveCredentials.execute(
+            email: state.email,
+            password: state.password,
+          );
           authCubit?.checkAuth();
           emit(state.copyWith(status: AuthViewStatus.success));
         },

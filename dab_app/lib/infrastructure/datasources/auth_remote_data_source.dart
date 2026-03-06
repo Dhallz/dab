@@ -11,7 +11,7 @@ class AuthRemoteDataSource {
     required String name,
   }) async {
     final response = await _client.dio.post(
-      '/register',
+      '/auth/register',
       data: {'email': email, 'password': password, 'name': name},
     );
     return response.data as Map<String, dynamic>;
@@ -21,9 +21,9 @@ class AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    print('DEBUG: AuthRemoteDataSource.login calling /login');
+    print('DEBUG: AuthRemoteDataSource.login calling /auth/login');
     final response = await _client.dio.post(
-      '/login',
+      '/auth/login',
       data: {'email': email, 'password': password},
     );
     print(

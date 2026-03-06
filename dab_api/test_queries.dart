@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
 
 void main() async {
-  final config = Config();
   final client = PhorgeClient();
 
   try {

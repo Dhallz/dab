@@ -1,13 +1,14 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
+import 'activity_provider.dart';
+
 part 'activity.mapper.dart';
 
 @MappableClass()
 class Activity with ActivityMappable {
   final String id;
   final String userId;
-  final String type; // 'commit', 'slack', 'jira', 'linear'
-  final String provider; // 'GitHub', 'Slack', 'Jira', 'Linear'
+  final ActivityProvider provider;
   final String title;
   final String content;
   final String? url;
@@ -16,11 +17,14 @@ class Activity with ActivityMappable {
   Activity({
     required this.id,
     required this.userId,
-    required this.type,
     required this.provider,
     required this.title,
     required this.content,
     this.url,
     required this.createdAt,
   });
+}
+
+extension OnActivity on Activity {
+  String get type => provider.category;
 }

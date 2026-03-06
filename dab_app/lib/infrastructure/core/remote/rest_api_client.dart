@@ -7,8 +7,21 @@ class RestApiClient {
   final String baseUrl;
 
   RestApiClient({required this.baseUrl, Dio? dio})
-    : dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)) {
+    : dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl,
+              validateStatus: (status) =>
+                  status != null &&
+                  ((status >= 200 && status < 300) || status == 304),
+            ),
+          ) {
     this.dio.interceptors.add(VegasInterceptor());
+  }
+
+  void addInterceptor(Interceptor interceptor) {
+    dio.interceptors.add(interceptor);
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) {

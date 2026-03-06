@@ -24,7 +24,7 @@ class AuthViewMobile extends StatelessWidget {
           },
           listener: (context, state, bloc) {
             if (state.status == AuthViewStatus.success) {
-              context.go(AppRoute.home.path);
+              context.go(AppRoute.homeDashboard.path);
             } else if (state.status == AuthViewStatus.failure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.errorMessage ?? 'Auth Failed')),

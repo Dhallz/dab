@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../auth_state.dart';
 
 class AuthForm extends StatefulWidget {
@@ -37,6 +38,20 @@ class _AuthFormState extends State<AuthForm> {
   }
 
   @override
+  void didUpdateWidget(covariant AuthForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state.email != _emailController.text) {
+      _emailController.text = widget.state.email;
+    }
+    if (widget.state.password != _passwordController.text) {
+      _passwordController.text = widget.state.password;
+    }
+    if (widget.state.name != _nameController.text) {
+      _nameController.text = widget.state.name;
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -70,7 +85,7 @@ class _AuthFormState extends State<AuthForm> {
           label: const Text('Sign in with Company SSO'),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
-            side: BorderSide(color: Colors.white.withOpacity(0.2)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -81,19 +96,23 @@ class _AuthFormState extends State<AuthForm> {
 
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+            Expanded(
+              child: Divider(color: Colors.white.withValues(alpha: 0.1)),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'OR',
                 style: TextStyle(
-                  color: const Color(0xFF94A3B8).withOpacity(0.5),
+                  color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+            Expanded(
+              child: Divider(color: Colors.white.withValues(alpha: 0.1)),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -165,7 +184,9 @@ class _AuthFormState extends State<AuthForm> {
             widget.state.isLogin
                 ? "Don't have an account? Register"
                 : "Already have an account? Sign In",
-            style: TextStyle(color: const Color(0xFF94A3B8).withOpacity(0.8)),
+            style: TextStyle(
+              color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+            ),
           ),
         ),
       ],
@@ -215,14 +236,16 @@ class _AuthTextField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: const Color(0xFF94A3B8).withOpacity(0.5),
+              color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
             ),
             prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20),
             filled: true,
-            fillColor: const Color(0xFF0F172A).withOpacity(0.3),
+            fillColor: const Color(0xFF0F172A).withValues(alpha: 0.3),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

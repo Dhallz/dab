@@ -27,24 +27,19 @@ class AuthRepository extends Repository implements IAuthRepository {
     required String password,
   }) {
     return guardedCall(() async {
-      print('DEBUG: AuthRepository.login started for $email');
       final json = await _remoteDataSource.login(
         email: email,
         password: password,
       );
-      print('DEBUG: AuthRepository.login response received: $json');
 
       final response = AuthResponseMapper.fromMap(json);
-      print('DEBUG: AuthResponse mapped successfully');
 
       final tokenResult = await saveTokens(response);
       tokenResult.getOrElse((f) => throw f);
 
-      print('DEBUG: Saving user to local DB');
       _localDataSource.saveUser(
         UserRecord(remoteId: response.userId, email: email, name: ''),
       );
-      print('DEBUG: User saved. Login complete.');
 
       return response;
     });
@@ -102,23 +97,21 @@ class AuthRepository extends Repository implements IAuthRepository {
 
   Future<Either<AppFailure, String>> getRefreshToken() async {
     final tokens = await _tokenStorage.readTokens();
-    if (tokens == null)
+    if (tokens == null) {
       return const Left(AuthFailure('No refresh token found'));
+    }
     return Right(tokens['refreshToken']!);
   }
 
   @override
   Future<Either<AppFailure, Unit>> saveTokens(AuthResponse response) async {
     try {
-      print('DEBUG: Saving tokens to local file...');
       await _tokenStorage.saveTokens(
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
-      print('DEBUG: Tokens saved successfully');
       return const Right(unit);
     } catch (e) {
-      print('DEBUG: TokenStorage Error: $e');
       return Left(UnknownFailure(originalError: e));
     }
   }
@@ -131,5 +124,33 @@ class AuthRepository extends Repository implements IAuthRepository {
     } catch (e) {
       return Left(UnknownFailure(originalError: e));
     }
+  }
+
+  @override
+  Future<Either<AppFailure, Unit>> saveCredentials(
+    String email,
+    String password,
+  ) async {
+    return guardedCall(() async {
+      _localDataSource.saveCredentials(email, password);
+      return unit;
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, Map<String, String>?>> getSavedCredentials() async {
+    return guardedCall(() async {
+      final record = _localDataSource.getSavedCredentials();
+      if (record == null) return null;
+      return {'email': record.email, 'password': record.password};
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, Unit>> clearCredentials() async {
+    return guardedCall(() async {
+      _localDataSource.clearCredentials();
+      return unit;
+    });
   }
 }

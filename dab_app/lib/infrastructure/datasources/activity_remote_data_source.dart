@@ -13,6 +13,32 @@ class ActivityRemoteDataSource {
     return await _restClient.get('/activities');
   }
 
+  Future<Response> searchActivities({
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? users,
+    bool authoredOnly = true,
+  }) async {
+    final queryParameters = <String, dynamic>{
+      'authoredOnly': authoredOnly.toString(),
+    };
+
+    if (startDate != null) {
+      queryParameters['startDate'] = startDate.toIso8601String().split('T')[0];
+    }
+    if (endDate != null) {
+      queryParameters['endDate'] = endDate.toIso8601String().split('T')[0];
+    }
+    if (users != null && users.isNotEmpty) {
+      queryParameters['users'] = users.join(',');
+    }
+
+    return await _restClient.get(
+      '/activities/search',
+      queryParameters: queryParameters,
+    );
+  }
+
   Stream<dynamic> watchActivities() {
     return _wsClient.stream;
   }

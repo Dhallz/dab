@@ -12,8 +12,8 @@ class AuthState {
     this.status = AuthViewStatus.initial,
     this.isLogin = true,
     this.errorMessage,
-    this.email = 'admin@acme.com',
-    this.password = 'securepassword',
+    this.email = '',
+    this.password = '',
     this.name = '',
   });
 
