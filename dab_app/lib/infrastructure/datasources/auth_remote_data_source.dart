@@ -21,13 +21,17 @@ class AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    print('DEBUG: AuthRemoteDataSource.login calling /auth/login');
     final response = await _client.dio.post(
       '/auth/login',
       data: {'email': email, 'password': password},
     );
-    print(
-      'DEBUG: AuthRemoteDataSource.login response status: ${response.statusCode}',
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> refresh({required String refreshToken}) async {
+    final response = await _client.dio.post(
+      '/auth/refresh',
+      data: {'refreshToken': refreshToken},
     );
     return response.data as Map<String, dynamic>;
   }

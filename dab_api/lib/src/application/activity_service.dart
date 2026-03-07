@@ -120,6 +120,9 @@ class ActivityService {
     required String content,
     String? url,
   }) async {
+    final userResult = await _authRepo.findById(userId);
+    final authorName = userResult.getOrElse((f) => null)?.name ?? 'Unknown';
+
     final activity = Activity(
       id: _uuid.v4(),
       userId: userId,
@@ -127,6 +130,9 @@ class ActivityService {
       title: title,
       content: content,
       url: url,
+      authorName: authorName,
+      authorAvatarUrl: null,
+      commentCount: 0,
       createdAt: DateTime.now(),
     );
 
@@ -151,6 +157,9 @@ class ActivityService {
       'title': activity.title,
       'content': activity.content,
       'url': activity.url,
+      'authorName': activity.authorName,
+      'authorAvatarUrl': activity.authorAvatarUrl,
+      'commentCount': activity.commentCount,
       'createdAt': activity.createdAt.toIso8601String(),
     });
   }

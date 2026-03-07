@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'activity_category_styles.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
@@ -46,5 +47,6 @@ class AppTheme {
       centerTitle: true,
       titleTextStyle: AppTextStyles.h3,
     ),
+    extensions: [ActivityCategoryStyles.dark()],
   );
 }

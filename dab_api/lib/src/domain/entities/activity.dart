@@ -12,6 +12,9 @@ class Activity with ActivityMappable {
   final String title;
   final String content;
   final String? url;
+  final String authorName;
+  final String? authorAvatarUrl;
+  final int commentCount;
   final DateTime createdAt;
 
   Activity({
@@ -21,6 +24,9 @@ class Activity with ActivityMappable {
     required this.title,
     required this.content,
     this.url,
+    required this.authorName,
+    this.authorAvatarUrl,
+    this.commentCount = 0,
     required this.createdAt,
   });
 }

@@ -36,11 +36,17 @@ class AppColors {
   static const Color shadow = Color(0xFF000000);
 
   // Surface Roles (Official M3)
-  static const Color surfaceContainerLowest = Color(0xFFF0F0F0);
-  static const Color surfaceContainerLow = Color(0xFFEBEBEB);
-  static const Color surfaceContainer = Color(0xFFE8E8E8);
-  static const Color surfaceContainerHigh = Color(0xFFE0E0E0);
-  static const Color surfaceContainerHighest = Color(0xFFD8D8D8);
+  static const Color surfaceContainerLowest = Color(0xFF0F172A);
+  static const Color surfaceContainerLow = Color(0xFF1E293B);
+  static const Color surfaceContainer = Color(0xFF1E293B);
+  static const Color surfaceContainerHigh = Color(0xFF334155);
+  static const Color surfaceContainerHighest = Color(0xFF475569);
+
+  // Semantic Text & UI Roles
+  static const Color onSurfaceVariantLow = Color(0xFF94A3B8);
+  static const Color onSurfaceVariant = Color(0xFFCBD5E1);
+  static const Color accentIndigo = Color(0xFF6366F1);
+  static const Color outlineVariant = Color(0xFF64748B);
 
   // --- Functional / Semantic Extras ---
 
@@ -54,7 +60,13 @@ class AppColors {
   static const Color black = Color(0xFF000000);
   static const Color transparent = Color(0x00000000);
 
-  // --- Brand / Artistic Tokens ---
+  // --- Activity Category Colors ---
+  static const Color engineering = Color(0xFF3B82F6);
+  static const Color revision = Color(0xFFA855F7);
+  static const Color product = Color(0xFF10B981);
+  static const Color genericActivity = Color(0xFFF59E0B);
+
+  // Gradient Getters
 
   // Gradients components
   static const Color _gradientYellow = Color(0xFFFFE24C);

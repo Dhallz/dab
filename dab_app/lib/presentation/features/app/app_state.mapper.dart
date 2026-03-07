@@ -15,6 +15,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AppStateMapper._());
       AppSettingsMapper.ensureInitialized();
+      ProviderConfigMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -36,17 +37,26 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: false,
   );
+  static List<ProviderConfig> _$configs(AppState v) => v.configs;
+  static const Field<AppState, List<ProviderConfig>> _f$configs = Field(
+    'configs',
+    _$configs,
+    opt: true,
+    def: const [],
+  );
 
   @override
   final MappableFields<AppState> fields = const {
     #settings: _f$settings,
     #isLoading: _f$isLoading,
+    #configs: _f$configs,
   };
 
   static AppState _instantiate(DecodingData data) {
     return AppState(
       settings: data.dec(_f$settings),
       isLoading: data.dec(_f$isLoading),
+      configs: data.dec(_f$configs),
     );
   }
 
@@ -108,7 +118,17 @@ extension AppStateValueCopy<$R, $Out> on ObjectCopyWith<$R, AppState, $Out> {
 abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings;
-  $R call({AppSettings? settings, bool? isLoading});
+  ListCopyWith<
+    $R,
+    ProviderConfig,
+    ProviderConfigCopyWith<$R, ProviderConfig, ProviderConfig>
+  >
+  get configs;
+  $R call({
+    AppSettings? settings,
+    bool? isLoading,
+    List<ProviderConfig>? configs,
+  });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -124,16 +144,33 @@ class _AppStateCopyWithImpl<$R, $Out>
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings =>
       $value.settings.copyWith.$chain((v) => call(settings: v));
   @override
-  $R call({AppSettings? settings, bool? isLoading}) => $apply(
+  ListCopyWith<
+    $R,
+    ProviderConfig,
+    ProviderConfigCopyWith<$R, ProviderConfig, ProviderConfig>
+  >
+  get configs => ListCopyWith(
+    $value.configs,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(configs: v),
+  );
+  @override
+  $R call({
+    AppSettings? settings,
+    bool? isLoading,
+    List<ProviderConfig>? configs,
+  }) => $apply(
     FieldCopyWithData({
       if (settings != null) #settings: settings,
       if (isLoading != null) #isLoading: isLoading,
+      if (configs != null) #configs: configs,
     }),
   );
   @override
   AppState $make(CopyWithData data) => AppState(
     settings: data.get(#settings, or: $value.settings),
     isLoading: data.get(#isLoading, or: $value.isLoading),
+    configs: data.get(#configs, or: $value.configs),
   );
 
   @override

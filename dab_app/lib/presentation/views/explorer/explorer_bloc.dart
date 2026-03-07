@@ -41,16 +41,12 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
   ) async {
     emit(state.copyWith(status: ExplorerStatus.loading));
 
-    print(
-      'DEBUG: ExplorerBloc._fetchActivities calling repository.searchActivities for date $date',
-    );
     final result = await _activityUseCases.repository.searchActivities(
       startDate: date,
       endDate: date,
       authoredOnly: true,
     );
 
-    print('DEBUG: ExplorerBloc._fetchActivities result received: $result');
     result.fold(
       (failure) => emit(
         state.copyWith(

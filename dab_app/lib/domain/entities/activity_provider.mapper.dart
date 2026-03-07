@@ -174,8 +174,8 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
     _$name,
     mode: FieldMode.member,
   );
-  static String _$category(ActivityProvider v) => v.category;
-  static const Field<ActivityProvider, String> _f$category = Field(
+  static ActivityCategory _$category(ActivityProvider v) => v.category;
+  static const Field<ActivityProvider, ActivityCategory> _f$category = Field(
     'category',
     _$category,
     mode: FieldMode.member,
@@ -256,8 +256,8 @@ class PhorgeTaskProviderMapper extends ClassMapperBase<PhorgeTaskProvider> {
     _$name,
     mode: FieldMode.member,
   );
-  static String _$category(PhorgeTaskProvider v) => v.category;
-  static const Field<PhorgeTaskProvider, String> _f$category = Field(
+  static ActivityCategory _$category(PhorgeTaskProvider v) => v.category;
+  static const Field<PhorgeTaskProvider, ActivityCategory> _f$category = Field(
     'category',
     _$category,
     mode: FieldMode.member,
@@ -423,12 +423,9 @@ class PhorgeRevisionProviderMapper
     _$name,
     mode: FieldMode.member,
   );
-  static String _$category(PhorgeRevisionProvider v) => v.category;
-  static const Field<PhorgeRevisionProvider, String> _f$category = Field(
-    'category',
-    _$category,
-    mode: FieldMode.member,
-  );
+  static ActivityCategory _$category(PhorgeRevisionProvider v) => v.category;
+  static const Field<PhorgeRevisionProvider, ActivityCategory> _f$category =
+      Field('category', _$category, mode: FieldMode.member);
 
   @override
   final MappableFields<PhorgeRevisionProvider> fields = const {
@@ -575,12 +572,9 @@ class GitHubCommitProviderMapper extends ClassMapperBase<GitHubCommitProvider> {
     _$name,
     mode: FieldMode.member,
   );
-  static String _$category(GitHubCommitProvider v) => v.category;
-  static const Field<GitHubCommitProvider, String> _f$category = Field(
-    'category',
-    _$category,
-    mode: FieldMode.member,
-  );
+  static ActivityCategory _$category(GitHubCommitProvider v) => v.category;
+  static const Field<GitHubCommitProvider, ActivityCategory> _f$category =
+      Field('category', _$category, mode: FieldMode.member);
 
   @override
   final MappableFields<GitHubCommitProvider> fields = const {
@@ -709,6 +703,7 @@ class GenericProviderMapper extends ClassMapperBase<GenericProvider> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = GenericProviderMapper._());
       ActivityProviderMapper.ensureInitialized();
+      ActivityCategoryMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -718,12 +713,12 @@ class GenericProviderMapper extends ClassMapperBase<GenericProvider> {
 
   static String _$name(GenericProvider v) => v.name;
   static const Field<GenericProvider, String> _f$name = Field('name', _$name);
-  static String _$category(GenericProvider v) => v.category;
-  static const Field<GenericProvider, String> _f$category = Field(
+  static ActivityCategory _$category(GenericProvider v) => v.category;
+  static const Field<GenericProvider, ActivityCategory> _f$category = Field(
     'category',
     _$category,
     opt: true,
-    def: 'generic',
+    def: ActivityCategory.generic,
   );
 
   @override
@@ -802,7 +797,7 @@ extension GenericProviderValueCopy<$R, $Out>
 abstract class GenericProviderCopyWith<$R, $In extends GenericProvider, $Out>
     implements ActivityProviderCopyWith<$R, $In, $Out> {
   @override
-  $R call({String? name, String? category});
+  $R call({String? name, ActivityCategory? category});
   GenericProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -817,7 +812,7 @@ class _GenericProviderCopyWithImpl<$R, $Out>
   late final ClassMapperBase<GenericProvider> $mapper =
       GenericProviderMapper.ensureInitialized();
   @override
-  $R call({String? name, String? category}) => $apply(
+  $R call({String? name, ActivityCategory? category}) => $apply(
     FieldCopyWithData({
       if (name != null) #name: name,
       if (category != null) #category: category,

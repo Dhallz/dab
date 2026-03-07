@@ -78,6 +78,25 @@ class AuthRepository extends Repository implements IAuthRepository {
   }
 
   @override
+  Future<Either<AppFailure, Unit>> refreshToken() {
+    return guardedCall(() async {
+      final tokens = await _tokenStorage.readTokens();
+      if (tokens == null || tokens['refreshToken'] == null) {
+        throw const AuthFailure('No refresh token available');
+      }
+
+      final json = await _remoteDataSource.refresh(
+        refreshToken: tokens['refreshToken']!,
+      );
+
+      final response = AuthResponseMapper.fromMap(json);
+      await saveTokens(response);
+
+      return unit;
+    });
+  }
+
+  @override
   Future<Either<AppFailure, User>> checkAuthStatus() {
     return guardedCall(() async {
       final userRecord = _localDataSource.getUser();

@@ -41,4 +41,34 @@ class MetadataController {
       );
     }
   }
+
+  Future<Response> getConfigs(Request request) async {
+    try {
+      final configs = await _service.getConfigs();
+      final jsonList = configs.map((c) => c.toMap()).toList();
+
+      return Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': jsonList,
+            'meta': {
+              'dataType': 'list:provider_config',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Failed to fetch provider configurations',
+            'details': e.toString(),
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
 }

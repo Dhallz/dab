@@ -6,6 +6,7 @@ import 'package:dab_api/src/application/presence_service.dart';
 import 'package:dab_api/src/application/push_notification_service.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_connector.dart';
@@ -15,6 +16,7 @@ import 'package:dab_api/src/infrastructure/database/redis/redis_client.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/repositories/activity_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
+import 'package:dab_api/src/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:get_it/get_it.dart';
 
@@ -28,6 +30,8 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<AppDatabase>(db);
 
   final config = Config(); // Use existing config or inject it
+  sl.registerSingleton<Config>(config);
+
   final redisClient = RedisClient(
     host: config.redisHost,
     port: config.redisPort,
@@ -56,8 +60,14 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<AbsIProviderMetadataRepository>(
     ProviderMetadataRepository(phorgeConnector: sl<PhorgeConnector>()),
   );
+  sl.registerSingleton<AbsIProviderConfigRepository>(
+    ProviderConfigRepository(config: sl<Config>()),
+  );
   sl.registerSingleton<MetadataService>(
-    MetadataService(repo: sl<AbsIProviderMetadataRepository>()),
+    MetadataService(
+      repo: sl<AbsIProviderMetadataRepository>(),
+      configRepo: sl<AbsIProviderConfigRepository>(),
+    ),
   );
   sl.registerSingleton<ActivityService>(
     ActivityService(

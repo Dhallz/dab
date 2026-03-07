@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
+
+import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../core/abs_cubit.dart';
 import 'app_state.dart';
 
 class AppCubit extends AbsCubit<AppState> {
-  final SystemUseCases _useCases;
+  final SystemUseCases _systemUseCases;
+  final MetadataUseCases _metadataUseCases;
 
-  AppCubit(this._useCases) : super(const AppState());
+  AppCubit(this._systemUseCases, this._metadataUseCases)
+    : super(const AppState());
 
   Future<void> init() async {
     emit(state.copyWith(isLoading: true));
-    final result = await _useCases.getAppSettings.execute();
-    result.fold(
-      (failure) => emit(state.copyWith(isLoading: false)),
-      (settings) => emit(state.copyWith(settings: settings, isLoading: false)),
+
+    // Fetch settings
+    final settingsResult = await _systemUseCases.getAppSettings.execute();
+
+    // Fetch configs
+    final configsResult = await _metadataUseCases.getProviderConfigs.execute();
+
+    emit(
+      state.copyWith(
+        settings: settingsResult.getOrElse((failure) => state.settings),
+        configs: configsResult.getOrElse((failure) => []),
+        isLoading: false,
+      ),
     );
   }
 
@@ -23,7 +36,7 @@ class AppCubit extends AbsCubit<AppState> {
     // Optimistic update
     emit(state.copyWith(settings: newSettings));
 
-    final result = await _useCases.saveAppSettings.execute(newSettings);
+    final result = await _systemUseCases.saveAppSettings.execute(newSettings);
 
     // If saving fails, we could revert the UI or show an error
     result.fold(

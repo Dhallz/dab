@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../domain/containers/activity_usecases.dart';
 import '../domain/containers/auth_usecases.dart';
+import '../domain/containers/metadata_usecases.dart';
 import '../domain/containers/monitoring_usecases.dart';
 import '../domain/containers/presence_usecases.dart';
 import '../domain/containers/system_usecases.dart';
@@ -15,11 +16,13 @@ import '../infrastructure/datasources/auth_local_data_source.dart';
 import '../infrastructure/datasources/auth_remote_data_source.dart';
 import '../infrastructure/datasources/monitoring_remote_data_source.dart';
 import '../infrastructure/datasources/presence_remote_data_source.dart';
+import '../infrastructure/datasources/provider_config_remote_data_source.dart';
 import '../infrastructure/datasources/system_local_data_source.dart';
 import '../infrastructure/repositories/activity_repository.dart';
 import '../infrastructure/repositories/auth_repository.dart';
 import '../infrastructure/repositories/monitoring_repository.dart';
 import '../infrastructure/repositories/presence_repository.dart';
+import '../infrastructure/repositories/provider_config_repository.dart';
 import '../infrastructure/repositories/system_repository.dart';
 import '../presentation/core/navigation/app_router.dart';
 
@@ -44,6 +47,7 @@ class ServiceLocator {
   late final SystemRepository systemRepository;
   late final ActivityRepository activityRepository;
   late final PresenceRepository presenceRepository;
+  late final ProviderConfigRepository providerConfigRepository;
 
   // UseCase Containers
   late final AuthUseCases authUseCases;
@@ -51,13 +55,15 @@ class ServiceLocator {
   late final SystemUseCases systemUseCases;
   late final ActivityUseCases activityUseCases;
   late final PresenceUseCases presenceUseCases;
+  late final MetadataUseCases metadataUseCases;
 
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
     // 1. Core Infrastructure
     restApiClient = RestApiClient(baseUrl: 'http://localhost:8080');
     tokenStorage = TokenStorage();
-    restApiClient.addInterceptor(AuthInterceptor(tokenStorage));
+    final authInterceptor = AuthInterceptor(tokenStorage);
+    restApiClient.addInterceptor(authInterceptor);
 
     objectBoxStore = await ObjectBoxStore.create();
     secureStorage = const FlutterSecureStorage();
@@ -80,6 +86,11 @@ class ServiceLocator {
     );
     authUseCases = AuthUseCases(authRepository, monitoringRepository);
 
+    authInterceptor.onRefreshToken = () async {
+      final result = await authRepository.refreshToken();
+      result.fold((l) => throw Exception('Refresh failed'), (r) => null);
+    };
+
     // 4. System Context
     final systemLocalDataSource = SystemLocalDataSource(objectBoxStore);
     systemRepository = SystemRepository(systemLocalDataSource);
@@ -98,5 +109,14 @@ class ServiceLocator {
     final presenceRemoteDataSource = PresenceRemoteDataSource(wsClient);
     presenceRepository = PresenceRepository(presenceRemoteDataSource);
     presenceUseCases = PresenceUseCases(presenceRepository);
+
+    // 7. Metadata Context
+    final providerConfigRemoteDataSource = ProviderConfigRemoteDataSource(
+      restApiClient,
+    );
+    providerConfigRepository = ProviderConfigRepository(
+      providerConfigRemoteDataSource,
+    );
+    metadataUseCases = MetadataUseCases(providerConfigRepository);
   }
 }

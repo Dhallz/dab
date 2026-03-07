@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_bloc_consumer.dart';
 import '../explorer_bloc.dart';
 import '../explorer_state.dart';
-import '../widgets/activity_card.dart';
+import '../widgets/activity_card/activity_card.dart';
 import '../widgets/explorer_calendar_bar.dart';
 import '../widgets/explorer_sidebar.dart';
 

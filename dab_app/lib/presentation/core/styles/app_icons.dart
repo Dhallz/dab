@@ -25,4 +25,9 @@ class AppIcons {
   static const IconData logout = Icons.logout;
   static const IconData visibility = Icons.visibility_outlined;
   static const IconData visibilityOff = Icons.visibility_off_outlined;
+
+  // Providers
+  static const IconData github = Icons.hub_rounded;
+  static const IconData phorge = Icons.bolt_rounded;
+  static const IconData unknownProvider = Icons.help_outline_rounded;
 }

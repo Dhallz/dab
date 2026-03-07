@@ -21,6 +21,8 @@ abstract interface class IAuthRepository extends IRepository {
 
   Future<Either<AppFailure, User>> checkAuthStatus();
 
+  Future<Either<AppFailure, Unit>> refreshToken();
+
   Future<Either<AppFailure, String>> getAccessToken();
   Future<Either<AppFailure, Unit>> saveTokens(AuthResponse response);
   Future<Either<AppFailure, Unit>> clearTokens();

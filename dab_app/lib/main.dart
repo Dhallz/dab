@@ -10,6 +10,7 @@ import 'presentation/core/navigation/app_router.dart';
 import 'presentation/features/app/app_cubit.dart';
 import 'presentation/features/app/app_state.dart';
 import 'presentation/features/auth/auth_cubit.dart';
+import 'presentation/views/dashboard/dashboard_bloc.dart';
 import 'services/service_locator.dart';
 
 void main() async {
@@ -18,7 +19,7 @@ void main() async {
   // Initialize all dependencies via the transversal ServiceLocator
   await sl.init();
 
-  final appCubit = AppCubit(sl.systemUseCases)..init();
+  final appCubit = AppCubit(sl.systemUseCases, sl.metadataUseCases)..init();
 
   // Initialize base class resolvers
   AbsBloc.appCubit = appCubit;
@@ -39,6 +40,7 @@ void main() async {
           BlocProvider(
             create: (context) => AuthCubit(sl.authUseCases)..checkAuth(),
           ),
+          BlocProvider(create: (context) => DashboardBloc(sl.activityUseCases)),
         ],
         child: DabApp(appRouter: sl.appRouter),
       ),

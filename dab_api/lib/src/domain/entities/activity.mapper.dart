@@ -38,6 +38,24 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   static const Field<Activity, String> _f$content = Field('content', _$content);
   static String? _$url(Activity v) => v.url;
   static const Field<Activity, String> _f$url = Field('url', _$url, opt: true);
+  static String _$authorName(Activity v) => v.authorName;
+  static const Field<Activity, String> _f$authorName = Field(
+    'authorName',
+    _$authorName,
+  );
+  static String? _$authorAvatarUrl(Activity v) => v.authorAvatarUrl;
+  static const Field<Activity, String> _f$authorAvatarUrl = Field(
+    'authorAvatarUrl',
+    _$authorAvatarUrl,
+    opt: true,
+  );
+  static int _$commentCount(Activity v) => v.commentCount;
+  static const Field<Activity, int> _f$commentCount = Field(
+    'commentCount',
+    _$commentCount,
+    opt: true,
+    def: 0,
+  );
   static DateTime _$createdAt(Activity v) => v.createdAt;
   static const Field<Activity, DateTime> _f$createdAt = Field(
     'createdAt',
@@ -52,6 +70,9 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     #title: _f$title,
     #content: _f$content,
     #url: _f$url,
+    #authorName: _f$authorName,
+    #authorAvatarUrl: _f$authorAvatarUrl,
+    #commentCount: _f$commentCount,
     #createdAt: _f$createdAt,
   };
 
@@ -63,6 +84,9 @@ class ActivityMapper extends ClassMapperBase<Activity> {
       title: data.dec(_f$title),
       content: data.dec(_f$content),
       url: data.dec(_f$url),
+      authorName: data.dec(_f$authorName),
+      authorAvatarUrl: data.dec(_f$authorAvatarUrl),
+      commentCount: data.dec(_f$commentCount),
       createdAt: data.dec(_f$createdAt),
     );
   }
@@ -132,6 +156,9 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
     String? title,
     String? content,
     String? url,
+    String? authorName,
+    String? authorAvatarUrl,
+    int? commentCount,
     DateTime? createdAt,
   });
   ActivityCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -156,6 +183,9 @@ class _ActivityCopyWithImpl<$R, $Out>
     String? title,
     String? content,
     Object? url = $none,
+    String? authorName,
+    Object? authorAvatarUrl = $none,
+    int? commentCount,
     DateTime? createdAt,
   }) => $apply(
     FieldCopyWithData({
@@ -165,6 +195,9 @@ class _ActivityCopyWithImpl<$R, $Out>
       if (title != null) #title: title,
       if (content != null) #content: content,
       if (url != $none) #url: url,
+      if (authorName != null) #authorName: authorName,
+      if (authorAvatarUrl != $none) #authorAvatarUrl: authorAvatarUrl,
+      if (commentCount != null) #commentCount: commentCount,
       if (createdAt != null) #createdAt: createdAt,
     }),
   );
@@ -176,6 +209,9 @@ class _ActivityCopyWithImpl<$R, $Out>
     title: data.get(#title, or: $value.title),
     content: data.get(#content, or: $value.content),
     url: data.get(#url, or: $value.url),
+    authorName: data.get(#authorName, or: $value.authorName),
+    authorAvatarUrl: data.get(#authorAvatarUrl, or: $value.authorAvatarUrl),
+    commentCount: data.get(#commentCount, or: $value.commentCount),
     createdAt: data.get(#createdAt, or: $value.createdAt),
   );
 

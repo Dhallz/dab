@@ -205,3 +205,38 @@ paths:
                       timestamp:
                         type: string
                         format: date-time
+  /metadata/configs:
+    get:
+      summary: Get essential provider configurations (e.g., base URLs for deep-linking)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing ProviderConfig
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        baseUrl:
+                          type: string
+                        iconUrl:
+                          type: string
+                          nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_config']
+                      timestamp:
+                        type: string
+                        format: date-time
+

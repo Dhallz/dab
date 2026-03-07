@@ -49,6 +49,9 @@ void main() {
       () async {
         // Arrange
         when(
+          () => mockAuthRepo.findById(any()),
+        ).thenAnswer((_) async => right(TestData.user()));
+        when(
           () => mockActivityRepo.createActivity(any()),
         ).thenAnswer((_) async => right<DatabaseFailure, void>(null));
         when(() => mockRedis.incrementVersion()).thenAnswer((_) async => 1042);
@@ -75,6 +78,9 @@ void main() {
 
     test('does not fan out if database insert fails', () async {
       // Arrange
+      when(
+        () => mockAuthRepo.findById(any()),
+      ).thenAnswer((_) async => right(TestData.user()));
       when(
         () => mockActivityRepo.createActivity(any()),
       ).thenAnswer((_) async => left(DatabaseFailure('DB Error')));

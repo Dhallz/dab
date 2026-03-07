@@ -456,6 +456,40 @@ class $ActivitiesTableTable extends ActivitiesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _authorNameMeta = const VerificationMeta(
+    'authorName',
+  );
+  @override
+  late final GeneratedColumn<String> authorName = GeneratedColumn<String>(
+    'author_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorAvatarUrlMeta = const VerificationMeta(
+    'authorAvatarUrl',
+  );
+  @override
+  late final GeneratedColumn<String> authorAvatarUrl = GeneratedColumn<String>(
+    'author_avatar_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _commentCountMeta = const VerificationMeta(
+    'commentCount',
+  );
+  @override
+  late final GeneratedColumn<int> commentCount = GeneratedColumn<int>(
+    'comment_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -475,6 +509,9 @@ class $ActivitiesTableTable extends ActivitiesTable
     title,
     content,
     url,
+    authorName,
+    authorAvatarUrl,
+    commentCount,
     createdAt,
   ];
   @override
@@ -535,6 +572,32 @@ class $ActivitiesTableTable extends ActivitiesTable
         url.isAcceptableOrUnknown(data['url']!, _urlMeta),
       );
     }
+    if (data.containsKey('author_name')) {
+      context.handle(
+        _authorNameMeta,
+        authorName.isAcceptableOrUnknown(data['author_name']!, _authorNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_authorNameMeta);
+    }
+    if (data.containsKey('author_avatar_url')) {
+      context.handle(
+        _authorAvatarUrlMeta,
+        authorAvatarUrl.isAcceptableOrUnknown(
+          data['author_avatar_url']!,
+          _authorAvatarUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('comment_count')) {
+      context.handle(
+        _commentCountMeta,
+        commentCount.isAcceptableOrUnknown(
+          data['comment_count']!,
+          _commentCountMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -576,6 +639,18 @@ class $ActivitiesTableTable extends ActivitiesTable
         DriftSqlType.string,
         data['${effectivePrefix}url'],
       ),
+      authorName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_name'],
+      )!,
+      authorAvatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_avatar_url'],
+      ),
+      commentCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}comment_count'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -597,6 +672,9 @@ class ActivitiesTableData extends DataClass
   final String title;
   final String content;
   final String? url;
+  final String authorName;
+  final String? authorAvatarUrl;
+  final int commentCount;
   final DateTime createdAt;
   const ActivitiesTableData({
     required this.id,
@@ -605,6 +683,9 @@ class ActivitiesTableData extends DataClass
     required this.title,
     required this.content,
     this.url,
+    required this.authorName,
+    this.authorAvatarUrl,
+    required this.commentCount,
     required this.createdAt,
   });
   @override
@@ -618,6 +699,11 @@ class ActivitiesTableData extends DataClass
     if (!nullToAbsent || url != null) {
       map['url'] = Variable<String>(url);
     }
+    map['author_name'] = Variable<String>(authorName);
+    if (!nullToAbsent || authorAvatarUrl != null) {
+      map['author_avatar_url'] = Variable<String>(authorAvatarUrl);
+    }
+    map['comment_count'] = Variable<int>(commentCount);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -630,6 +716,11 @@ class ActivitiesTableData extends DataClass
       title: Value(title),
       content: Value(content),
       url: url == null && nullToAbsent ? const Value.absent() : Value(url),
+      authorName: Value(authorName),
+      authorAvatarUrl: authorAvatarUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authorAvatarUrl),
+      commentCount: Value(commentCount),
       createdAt: Value(createdAt),
     );
   }
@@ -646,6 +737,9 @@ class ActivitiesTableData extends DataClass
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
       url: serializer.fromJson<String?>(json['url']),
+      authorName: serializer.fromJson<String>(json['authorName']),
+      authorAvatarUrl: serializer.fromJson<String?>(json['authorAvatarUrl']),
+      commentCount: serializer.fromJson<int>(json['commentCount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -659,6 +753,9 @@ class ActivitiesTableData extends DataClass
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
       'url': serializer.toJson<String?>(url),
+      'authorName': serializer.toJson<String>(authorName),
+      'authorAvatarUrl': serializer.toJson<String?>(authorAvatarUrl),
+      'commentCount': serializer.toJson<int>(commentCount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -670,6 +767,9 @@ class ActivitiesTableData extends DataClass
     String? title,
     String? content,
     Value<String?> url = const Value.absent(),
+    String? authorName,
+    Value<String?> authorAvatarUrl = const Value.absent(),
+    int? commentCount,
     DateTime? createdAt,
   }) => ActivitiesTableData(
     id: id ?? this.id,
@@ -678,6 +778,11 @@ class ActivitiesTableData extends DataClass
     title: title ?? this.title,
     content: content ?? this.content,
     url: url.present ? url.value : this.url,
+    authorName: authorName ?? this.authorName,
+    authorAvatarUrl: authorAvatarUrl.present
+        ? authorAvatarUrl.value
+        : this.authorAvatarUrl,
+    commentCount: commentCount ?? this.commentCount,
     createdAt: createdAt ?? this.createdAt,
   );
   ActivitiesTableData copyWithCompanion(ActivitiesTableCompanion data) {
@@ -690,6 +795,15 @@ class ActivitiesTableData extends DataClass
       title: data.title.present ? data.title.value : this.title,
       content: data.content.present ? data.content.value : this.content,
       url: data.url.present ? data.url.value : this.url,
+      authorName: data.authorName.present
+          ? data.authorName.value
+          : this.authorName,
+      authorAvatarUrl: data.authorAvatarUrl.present
+          ? data.authorAvatarUrl.value
+          : this.authorAvatarUrl,
+      commentCount: data.commentCount.present
+          ? data.commentCount.value
+          : this.commentCount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -703,14 +817,27 @@ class ActivitiesTableData extends DataClass
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('url: $url, ')
+          ..write('authorName: $authorName, ')
+          ..write('authorAvatarUrl: $authorAvatarUrl, ')
+          ..write('commentCount: $commentCount, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, userId, providerName, title, content, url, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    providerName,
+    title,
+    content,
+    url,
+    authorName,
+    authorAvatarUrl,
+    commentCount,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -721,6 +848,9 @@ class ActivitiesTableData extends DataClass
           other.title == this.title &&
           other.content == this.content &&
           other.url == this.url &&
+          other.authorName == this.authorName &&
+          other.authorAvatarUrl == this.authorAvatarUrl &&
+          other.commentCount == this.commentCount &&
           other.createdAt == this.createdAt);
 }
 
@@ -731,6 +861,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   final Value<String> title;
   final Value<String> content;
   final Value<String?> url;
+  final Value<String> authorName;
+  final Value<String?> authorAvatarUrl;
+  final Value<int> commentCount;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const ActivitiesTableCompanion({
@@ -740,6 +873,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     this.title = const Value.absent(),
     this.content = const Value.absent(),
     this.url = const Value.absent(),
+    this.authorName = const Value.absent(),
+    this.authorAvatarUrl = const Value.absent(),
+    this.commentCount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -750,6 +886,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     required String title,
     required String content,
     this.url = const Value.absent(),
+    required String authorName,
+    this.authorAvatarUrl = const Value.absent(),
+    this.commentCount = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -757,6 +896,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
        providerName = Value(providerName),
        title = Value(title),
        content = Value(content),
+       authorName = Value(authorName),
        createdAt = Value(createdAt);
   static Insertable<ActivitiesTableData> custom({
     Expression<String>? id,
@@ -765,6 +905,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     Expression<String>? title,
     Expression<String>? content,
     Expression<String>? url,
+    Expression<String>? authorName,
+    Expression<String>? authorAvatarUrl,
+    Expression<int>? commentCount,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -775,6 +918,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
       if (title != null) 'title': title,
       if (content != null) 'content': content,
       if (url != null) 'url': url,
+      if (authorName != null) 'author_name': authorName,
+      if (authorAvatarUrl != null) 'author_avatar_url': authorAvatarUrl,
+      if (commentCount != null) 'comment_count': commentCount,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -787,6 +933,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     Value<String>? title,
     Value<String>? content,
     Value<String?>? url,
+    Value<String>? authorName,
+    Value<String?>? authorAvatarUrl,
+    Value<int>? commentCount,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -797,6 +946,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
       title: title ?? this.title,
       content: content ?? this.content,
       url: url ?? this.url,
+      authorName: authorName ?? this.authorName,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
+      commentCount: commentCount ?? this.commentCount,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -823,6 +975,15 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     if (url.present) {
       map['url'] = Variable<String>(url.value);
     }
+    if (authorName.present) {
+      map['author_name'] = Variable<String>(authorName.value);
+    }
+    if (authorAvatarUrl.present) {
+      map['author_avatar_url'] = Variable<String>(authorAvatarUrl.value);
+    }
+    if (commentCount.present) {
+      map['comment_count'] = Variable<int>(commentCount.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -841,6 +1002,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('url: $url, ')
+          ..write('authorName: $authorName, ')
+          ..write('authorAvatarUrl: $authorAvatarUrl, ')
+          ..write('commentCount: $commentCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1745,6 +1909,9 @@ typedef $$ActivitiesTableTableCreateCompanionBuilder =
       required String title,
       required String content,
       Value<String?> url,
+      required String authorName,
+      Value<String?> authorAvatarUrl,
+      Value<int> commentCount,
       required DateTime createdAt,
       Value<int> rowid,
     });
@@ -1756,6 +1923,9 @@ typedef $$ActivitiesTableTableUpdateCompanionBuilder =
       Value<String> title,
       Value<String> content,
       Value<String?> url,
+      Value<String> authorName,
+      Value<String?> authorAvatarUrl,
+      Value<int> commentCount,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -1840,6 +2010,21 @@ class $$ActivitiesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorAvatarUrl => $composableBuilder(
+    column: $table.authorAvatarUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get commentCount => $composableBuilder(
+    column: $table.commentCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -1910,6 +2095,21 @@ class $$ActivitiesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorAvatarUrl => $composableBuilder(
+    column: $table.authorAvatarUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get commentCount => $composableBuilder(
+    column: $table.commentCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1944,6 +2144,21 @@ class $$ActivitiesTableTableAnnotationComposer
 
   GeneratedColumn<String> get url =>
       $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get authorAvatarUrl => $composableBuilder(
+    column: $table.authorAvatarUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get commentCount => $composableBuilder(
+    column: $table.commentCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2011,6 +2226,9 @@ class $$ActivitiesTableTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String?> url = const Value.absent(),
+                Value<String> authorName = const Value.absent(),
+                Value<String?> authorAvatarUrl = const Value.absent(),
+                Value<int> commentCount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ActivitiesTableCompanion(
@@ -2020,6 +2238,9 @@ class $$ActivitiesTableTableTableManager
                 title: title,
                 content: content,
                 url: url,
+                authorName: authorName,
+                authorAvatarUrl: authorAvatarUrl,
+                commentCount: commentCount,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -2031,6 +2252,9 @@ class $$ActivitiesTableTableTableManager
                 required String title,
                 required String content,
                 Value<String?> url = const Value.absent(),
+                required String authorName,
+                Value<String?> authorAvatarUrl = const Value.absent(),
+                Value<int> commentCount = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => ActivitiesTableCompanion.insert(
@@ -2040,6 +2264,9 @@ class $$ActivitiesTableTableTableManager
                 title: title,
                 content: content,
                 url: url,
+                authorName: authorName,
+                authorAvatarUrl: authorAvatarUrl,
+                commentCount: commentCount,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

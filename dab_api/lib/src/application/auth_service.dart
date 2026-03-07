@@ -131,6 +131,40 @@ class AuthService {
     }
   }
 
+  Future<Either<AuthFailure, Map<String, String>>> refreshToken(
+    String refreshToken,
+  ) async {
+    final sessionResult = await _repo.findSessionByToken(refreshToken);
+
+    return sessionResult.match(
+      (f) => Left(AuthFailure('Database error: ${f.message}')),
+      (session) async {
+        if (session == null) {
+          return const Left(AuthFailure('Invalid refresh token'));
+        }
+
+        if (session.expiresAt.isBefore(DateTime.now())) {
+          await _repo.deleteSession(refreshToken);
+          return const Left(AuthFailure('Refresh token expired'));
+        }
+
+        final userResult = await _repo.findById(session.userId);
+        return userResult.match(
+          (f) => Left(AuthFailure('Database error: ${f.message}')),
+          (user) async {
+            if (user == null) {
+              return const Left(AuthFailure('User not found'));
+            }
+
+            // Rotate tokens: delete old session, create new one
+            await _repo.deleteSession(refreshToken);
+            return Right(await _createSessionAndGetTokens(user));
+          },
+        );
+      },
+    );
+  }
+
   Future<void> logout(String refreshToken) async {
     await _repo.deleteSession(refreshToken);
   }

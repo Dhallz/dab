@@ -46,6 +46,9 @@ class TestData {
       title: 'T$taskSuffix: $taskName',
       content: 'Moved task T$taskSuffix from "Open" to "Resolved".',
       url: 'https://phorge.example.com/T$taskSuffix',
+      authorName: 'Test Phorge User',
+      authorAvatarUrl: null,
+      commentCount: 2,
       createdAt: DateTime.now(),
     );
   }
@@ -65,6 +68,9 @@ class TestData {
       title: '[$repo:$branch] New commit $commitHash',
       content: 'feat: add test data factories for better unit testing',
       url: 'https://github.com/dhallz/$repo/commit/$commitHash',
+      authorName: 'dhallz',
+      authorAvatarUrl: 'https://avatars.githubusercontent.com/u/123456',
+      commentCount: 0,
       createdAt: DateTime.now(),
     );
   }
@@ -81,6 +87,9 @@ class TestData {
       provider: GenericProvider(name: 'Slack', category: 'message'),
       title: 'New message in $channel',
       content: "Hey team, I've finished the unit tests for the Vegas pattern.",
+      authorName: 'Slack User',
+      authorAvatarUrl: null,
+      commentCount: 1,
       createdAt: DateTime.now(),
     );
   }
@@ -97,6 +106,9 @@ class TestData {
       provider: const GenericProvider(name: 'Mock'),
       title: title,
       content: 'Test content for $title',
+      authorName: 'Mock Author',
+      authorAvatarUrl: null,
+      commentCount: 0,
       createdAt: DateTime.now(),
     );
   }

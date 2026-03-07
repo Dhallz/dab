@@ -191,7 +191,7 @@ class PhorgeConnector {
           'objectType': 'TASK',
           'constraints': {'authorPHIDs': userPhids},
           'limit': 100,
-          ?'after': afterCursor,
+          if (afterCursor != null) 'after': afterCursor,
         });
 
         final rawTxData = txResult['data'] as List<dynamic>?;
@@ -363,18 +363,20 @@ class PhorgeConnector {
     }
 
     // Resolve which user triggered this Activity
-    final authorUuid = validUsers
-        .firstWhere(
-          (u) => u.phorgePhid == tx.authorPHID,
-          orElse: () => validUsers
-              .first, // Fallback to the first requested user if it was an inbox event initiated by a random 3rd party
-        )
-        .id;
+    final author = validUsers.firstWhere(
+      (u) => u.phorgePhid == tx.authorPHID,
+      orElse: () => validUsers.first,
+    );
+    final authorUuid = author.id;
+    final authorName = author.name;
 
     activities.add(
       Activity(
         id: _generateUuid('phorge-tx-${tx.id}'),
         userId: authorUuid,
+        authorName: authorName,
+        authorAvatarUrl: null, // Phorge avatar integration can be added later
+        commentCount: tx.type == 'comment' ? 1 : 0, // Basic count for now
         provider: PhorgeTaskProvider(
           taskPhid: task.phid,
           sprintContext: sprintContext,
@@ -382,7 +384,7 @@ class PhorgeConnector {
         ),
         title: '[T${task.id}] ${task.name}',
         content: content,
-        url: task.uri,
+        url: '/T${task.id}',
         createdAt: tx.dateCreated,
       ),
     );
@@ -410,20 +412,23 @@ class PhorgeConnector {
         .toList();
 
     return revisions.map((rev) {
-      final authorUuid = validUsers
-          .firstWhere(
-            (u) => u.phorgePhid == rev.authorPHID,
-            orElse: () => validUsers.first,
-          )
-          .id;
+      final author = validUsers.firstWhere(
+        (u) => u.phorgePhid == rev.authorPHID,
+        orElse: () => validUsers.first,
+      );
+      final authorUuid = author.id;
+      final authorName = author.name;
 
       return Activity(
         id: _generateUuid('phorge-rev-${rev.id}'),
         userId: authorUuid,
+        authorName: authorName,
+        authorAvatarUrl: null,
+        commentCount: 0,
         provider: PhorgeRevisionProvider(revisionId: rev.phid),
         title: 'D${rev.id}: ${rev.title}',
         content: 'Status: ${rev.statusName}',
-        url: rev.uri,
+        url: '/D${rev.id}',
         createdAt: rev.dateModified,
       );
     }).toList();

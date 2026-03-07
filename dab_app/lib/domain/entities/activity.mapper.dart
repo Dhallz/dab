@@ -7,6 +7,60 @@
 
 part of 'activity.dart';
 
+class ActivityCategoryMapper extends EnumMapper<ActivityCategory> {
+  ActivityCategoryMapper._();
+
+  static ActivityCategoryMapper? _instance;
+  static ActivityCategoryMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ActivityCategoryMapper._());
+    }
+    return _instance!;
+  }
+
+  static ActivityCategory fromValue(dynamic value) {
+    ensureInitialized();
+    return MapperContainer.globals.fromValue(value);
+  }
+
+  @override
+  ActivityCategory decode(dynamic value) {
+    switch (value) {
+      case r'commit':
+        return ActivityCategory.commit;
+      case r'revision':
+        return ActivityCategory.revision;
+      case r'task':
+        return ActivityCategory.task;
+      case r'generic':
+        return ActivityCategory.generic;
+      default:
+        throw MapperException.unknownEnumValue(value);
+    }
+  }
+
+  @override
+  dynamic encode(ActivityCategory self) {
+    switch (self) {
+      case ActivityCategory.commit:
+        return r'commit';
+      case ActivityCategory.revision:
+        return r'revision';
+      case ActivityCategory.task:
+        return r'task';
+      case ActivityCategory.generic:
+        return r'generic';
+    }
+  }
+}
+
+extension ActivityCategoryMapperExtension on ActivityCategory {
+  String toValue() {
+    ActivityCategoryMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<ActivityCategory>(this) as String;
+  }
+}
+
 class ActivityMapper extends ClassMapperBase<Activity> {
   ActivityMapper._();
 
@@ -35,6 +89,22 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   static const Field<Activity, String> _f$title = Field('title', _$title);
   static String _$content(Activity v) => v.content;
   static const Field<Activity, String> _f$content = Field('content', _$content);
+  static String _$authorName(Activity v) => v.authorName;
+  static const Field<Activity, String> _f$authorName = Field(
+    'authorName',
+    _$authorName,
+  );
+  static String? _$authorAvatarUrl(Activity v) => v.authorAvatarUrl;
+  static const Field<Activity, String> _f$authorAvatarUrl = Field(
+    'authorAvatarUrl',
+    _$authorAvatarUrl,
+    opt: true,
+  );
+  static int _$commentCount(Activity v) => v.commentCount;
+  static const Field<Activity, int> _f$commentCount = Field(
+    'commentCount',
+    _$commentCount,
+  );
   static String? _$url(Activity v) => v.url;
   static const Field<Activity, String> _f$url = Field('url', _$url, opt: true);
   static DateTime _$createdAt(Activity v) => v.createdAt;
@@ -50,6 +120,9 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     #provider: _f$provider,
     #title: _f$title,
     #content: _f$content,
+    #authorName: _f$authorName,
+    #authorAvatarUrl: _f$authorAvatarUrl,
+    #commentCount: _f$commentCount,
     #url: _f$url,
     #createdAt: _f$createdAt,
   };
@@ -61,6 +134,9 @@ class ActivityMapper extends ClassMapperBase<Activity> {
       provider: data.dec(_f$provider),
       title: data.dec(_f$title),
       content: data.dec(_f$content),
+      authorName: data.dec(_f$authorName),
+      authorAvatarUrl: data.dec(_f$authorAvatarUrl),
+      commentCount: data.dec(_f$commentCount),
       url: data.dec(_f$url),
       createdAt: data.dec(_f$createdAt),
     );
@@ -129,6 +205,9 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
     ActivityProvider? provider,
     String? title,
     String? content,
+    String? authorName,
+    String? authorAvatarUrl,
+    int? commentCount,
     String? url,
     DateTime? createdAt,
   });
@@ -150,6 +229,9 @@ class _ActivityCopyWithImpl<$R, $Out>
     ActivityProvider? provider,
     String? title,
     String? content,
+    String? authorName,
+    Object? authorAvatarUrl = $none,
+    int? commentCount,
     Object? url = $none,
     DateTime? createdAt,
   }) => $apply(
@@ -159,6 +241,9 @@ class _ActivityCopyWithImpl<$R, $Out>
       if (provider != null) #provider: provider,
       if (title != null) #title: title,
       if (content != null) #content: content,
+      if (authorName != null) #authorName: authorName,
+      if (authorAvatarUrl != $none) #authorAvatarUrl: authorAvatarUrl,
+      if (commentCount != null) #commentCount: commentCount,
       if (url != $none) #url: url,
       if (createdAt != null) #createdAt: createdAt,
     }),
@@ -170,6 +255,9 @@ class _ActivityCopyWithImpl<$R, $Out>
     provider: data.get(#provider, or: $value.provider),
     title: data.get(#title, or: $value.title),
     content: data.get(#content, or: $value.content),
+    authorName: data.get(#authorName, or: $value.authorName),
+    authorAvatarUrl: data.get(#authorAvatarUrl, or: $value.authorAvatarUrl),
+    commentCount: data.get(#commentCount, or: $value.commentCount),
     url: data.get(#url, or: $value.url),
     createdAt: data.get(#createdAt, or: $value.createdAt),
   );

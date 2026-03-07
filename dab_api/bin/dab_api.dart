@@ -30,6 +30,7 @@ Future<void> main() async {
     ..get('/health/db', HealthController().checkDb)
     ..post('/auth/register', AuthController().register)
     ..post('/auth/login', AuthController().login)
+    ..post('/auth/refresh', AuthController().refresh)
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
     ..get('/activities/search', ActivityController().searchActivities)
@@ -38,6 +39,7 @@ Future<void> main() async {
     ..post('/mock/activity', ActivityController().createMock)
     ..use('/metadata', AuthMiddleware().call)
     ..get('/metadata/providers', MetadataController().getProviders)
+    ..get('/metadata/configs', MetadataController().getConfigs)
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

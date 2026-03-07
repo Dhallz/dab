@@ -70,4 +70,34 @@ class AuthController {
       ),
     );
   }
+
+  Future<Response> refresh(Request request) async {
+    final body = await request.readAsString();
+    final data = jsonDecode(body);
+
+    final refreshToken = data['refreshToken'] as String?;
+
+    if (refreshToken == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Refresh token is required'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final result = await _authService.refreshToken(refreshToken);
+
+    return result.match(
+      (failure) => Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message, 'details': failure.toMap()}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (tokens) => Response.ok(
+        body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
+      ),
+    );
+  }
 }

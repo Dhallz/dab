@@ -11,6 +11,11 @@ class ActivitiesTable extends Table {
   TextColumn get title => text()();
   TextColumn get content => text()();
   TextColumn get url => text().nullable()();
+  TextColumn get authorName => text().named('author_name')();
+  TextColumn get authorAvatarUrl =>
+      text().nullable().named('author_avatar_url')();
+  IntColumn get commentCount =>
+      integer().withDefault(const Constant(0)).named('comment_count')();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
 
   @override

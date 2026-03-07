@@ -28,6 +28,9 @@ class ActivityRepository implements AbsIActivityRepository {
                 title: activity.title,
                 content: activity.content,
                 url: Value(activity.url),
+                authorName: activity.authorName,
+                authorAvatarUrl: Value(activity.authorAvatarUrl),
+                commentCount: Value(activity.commentCount),
                 createdAt: activity.createdAt,
               ),
             );
@@ -148,6 +151,9 @@ class ActivityRepository implements AbsIActivityRepository {
       title: activityData.title,
       content: activityData.content,
       url: activityData.url,
+      authorName: activityData.authorName,
+      authorAvatarUrl: activityData.authorAvatarUrl,
+      commentCount: activityData.commentCount,
       createdAt: activityData.createdAt,
     );
   }

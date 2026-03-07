@@ -1,5 +1,7 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
+import 'activity.dart';
+
 part 'activity_provider.mapper.dart';
 
 @MappableClass()
@@ -16,7 +18,7 @@ sealed class ActivityProvider with ActivityProviderMappable {
   const ActivityProvider();
 
   String get name;
-  String get category;
+  ActivityCategory get category;
 }
 
 @MappableClass()
@@ -32,7 +34,7 @@ class PhorgeTaskProvider extends ActivityProvider
   String get name => 'Phorge';
 
   @override
-  String get category => 'task';
+  ActivityCategory get category => ActivityCategory.task;
 }
 
 @MappableClass()
@@ -46,7 +48,7 @@ class PhorgeRevisionProvider extends ActivityProvider
   String get name => 'Phorge';
 
   @override
-  String get category => 'revision';
+  ActivityCategory get category => ActivityCategory.revision;
 }
 
 @MappableClass()
@@ -61,7 +63,7 @@ class GitHubCommitProvider extends ActivityProvider
   String get name => 'GitHub';
 
   @override
-  String get category => 'commit';
+  ActivityCategory get category => ActivityCategory.commit;
 }
 
 @MappableClass()
@@ -70,7 +72,10 @@ class GenericProvider extends ActivityProvider with GenericProviderMappable {
   final String name;
 
   @override
-  final String category;
+  final ActivityCategory category;
 
-  const GenericProvider({required this.name, this.category = 'generic'});
+  const GenericProvider({
+    required this.name,
+    this.category = ActivityCategory.generic,
+  });
 }
