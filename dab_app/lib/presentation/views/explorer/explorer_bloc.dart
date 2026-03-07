@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stream_transform/stream_transform.dart';
 
 import '../../../../domain/containers/activity_usecases.dart';
 import '../../../../domain/entities/activity.dart';
@@ -14,7 +15,11 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
 
   ExplorerBloc(this._activityUseCases) : super(ExplorerState.initial()) {
     on<ExplorerStarted>(_onStarted);
-    on<ExplorerDateChanged>(_onDateChanged);
+    on<ExplorerDateChanged>(
+      _onDateChanged,
+      transformer: (events, mapper) =>
+          events.debounce(const Duration(milliseconds: 300)).switchMap(mapper),
+    );
     on<ExplorerActivityReceived>(_onActivityReceived);
   }
 

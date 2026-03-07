@@ -1,10 +1,9 @@
-import 'dart:async';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/app_bloc_consumer.dart';
+import '../../../core/extensions/date_extensions.dart';
+import '../../../core/widgets/dab_app_bar.dart';
 import '../explorer_bloc.dart';
 import '../explorer_event.dart';
 import '../explorer_state.dart';
@@ -22,18 +21,16 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
   DateTime? _anchorDate;
   DateTime? _previewDate;
   bool _isInternalUpdating = false;
-  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.15);
+    _pageController = PageController(viewportFraction: 1 / 7);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -73,12 +70,9 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
       _previewDate = targetDate;
     });
 
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-      if (!DateUtils.isSameDay(targetDate, currentDate)) {
-        bloc.add(ExplorerDateChanged(targetDate));
-      }
-    });
+    if (!DateUtils.isSameDay(targetDate, currentDate)) {
+      bloc.add(ExplorerDateChanged(targetDate));
+    }
   }
 
   @override
@@ -96,7 +90,10 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildDateSelector(context, state, bloc, displayDate),
+            DabAppBar(
+              actions: [_buildJumpToDateButton(context, displayDate, bloc)],
+              child: _buildDateSelector(context, state, bloc, displayDate),
+            ),
             const SizedBox(height: 24),
             _buildHeader(state, displayDate),
           ],
@@ -116,152 +113,65 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
       _previewDate = state.selectedDate;
       _pageController = PageController(
         initialPage: _initialPage,
-        viewportFraction: 0.15,
+        viewportFraction: 1 / 7,
       );
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate viewportFraction based on approximate item width (78px)
-        final double listAreaWidth = (constraints.maxWidth - 160).clamp(
-          100.0,
-          constraints.maxWidth,
-        );
-        final double vFraction = (78.0 / listAreaWidth).clamp(0.05, 1.0);
+        // We want to show exactly 7 items, each ~80px wide.
+        const double itemWidth = 80.0;
+        final double selectorWidth = itemWidth * 7;
 
-        if (_pageController.viewportFraction != vFraction) {
-          final currentPage = _pageController.hasClients
-              ? _pageController.page?.round() ?? _initialPage
-              : _initialPage;
-          _pageController = PageController(
-            initialPage: currentPage,
-            viewportFraction: vFraction,
-          );
-        }
-
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B).withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Static Selection Highlight in the middle
-                        Container(
-                          width: 78,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF6366F1,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(
-                                0xFF6366F1,
-                              ).withValues(alpha: 0.2),
-                            ),
-                          ),
-                        ),
-                        PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (page) =>
-                              _onPageChanged(page, bloc, state.selectedDate),
-                          itemBuilder: (context, index) {
-                            final diff = index - _initialPage;
-                            final date = _anchorDate!.add(Duration(days: diff));
-                            final isSelected = DateUtils.isSameDay(
-                              date,
-                              displayDate,
-                            );
-
-                            return Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  _pageController.animateToPage(
-                                    index,
-                                    duration: const Duration(milliseconds: 500),
-                                    curve: Curves.easeOutCubic,
-                                  );
-                                },
-                                child: _buildDateButton(
-                                  DateFormat('E').format(date),
-                                  DateFormat('d').format(date),
-                                  isSelected: isSelected,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: selectorWidth,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Static Selection Highlight in the middle of the 7 items
+                // (Page index target is always the center, which is the 4th item)
+                Container(
+                  width: itemWidth - 10,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withValues(alpha: 0.1),
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _buildJumpToDateButton(context, displayDate, bloc),
-                  ),
-                ],
-              ),
+                ),
+                PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (page) =>
+                      _onPageChanged(page, bloc, state.selectedDate),
+                  itemBuilder: (context, index) {
+                    final diff = index - _initialPage;
+                    final date = _anchorDate!.add(Duration(days: diff));
+                    final isSelected = DateUtils.isSameDay(date, displayDate);
+
+                    return Center(
+                      child: _DateButton(
+                        date: date,
+                        isSelected: isSelected,
+                        onTap: () {
+                          _pageController.animateToPage(
+                            index,
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOutCubic,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDateButton(String day, String date, {required bool isSelected}) {
-    return Container(
-      width: 70,
-      padding: EdgeInsets.symmetric(vertical: isSelected ? 12 : 8),
-      decoration: const BoxDecoration(color: Colors.transparent),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            day.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isSelected
-                  ? const Color(0xFF6366F1)
-                  : const Color(0xFF94A3B8).withValues(alpha: 0.6),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            date,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isSelected
-                  ? const Color(0xFF6366F1)
-                  : const Color(0xFF94A3B8),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -297,7 +207,7 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
@@ -326,7 +236,8 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
   }
 
   Widget _buildHeader(ExplorerState state, DateTime displayDate) {
-    final dateStr = DateFormat('EEEE, MMMM dth').format(displayDate);
+    final dayStr = DateFormat('EEEE, MMMM').format(displayDate);
+    final dateStr = '$dayStr ${displayDate.withOrdinalSuffix}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -334,30 +245,35 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dateStr,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF1F5F9),
-                  letterSpacing: -0.5,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateStr,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFF1F5F9),
+                    letterSpacing: -0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                state.status == ExplorerStatus.loading
-                    ? 'Fetching activities...'
-                    : 'Viewing ${state.activities.length} archived activities from this date.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                const SizedBox(height: 4),
+                Text(
+                  state.status == ExplorerStatus.loading
+                      ? 'Fetching activities...'
+                      : 'Viewing ${state.activities.length} archived activities from this date.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(width: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
@@ -376,6 +292,82 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DateButton extends StatefulWidget {
+  final DateTime date;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _DateButton({
+    required this.date,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_DateButton> createState() => _DateButtonState();
+}
+
+class _DateButtonState extends State<_DateButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isWeekend =
+        widget.date.weekday == DateTime.saturday ||
+        widget.date.weekday == DateTime.sunday;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 70,
+          padding: EdgeInsets.symmetric(vertical: widget.isSelected ? 12 : 8),
+          decoration: BoxDecoration(
+            color: _isHovered && !widget.isSelected
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                DateFormat('E').format(widget.date).toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isSelected
+                      ? const Color(0xFF6366F1)
+                      : isWeekend
+                      ? const Color(0xFF64748B).withValues(alpha: 0.5)
+                      : const Color(0xFF94A3B8).withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('d').format(widget.date),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isSelected
+                      ? const Color(0xFF6366F1)
+                      : isWeekend
+                      ? const Color(0xFF94A3B8).withValues(alpha: 0.7)
+                      : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

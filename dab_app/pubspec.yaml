@@ -50,6 +50,7 @@ dependencies:
   timeago: ^3.7.0
   url_launcher: ^6.3.0
   flutter_markdown: ^0.7.5
+  stream_transform: ^2.1.1
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +60,7 @@ dev_dependencies:
   dart_mappable_builder: ^4.4.0
   objectbox_generator: ^4.0.0
   mocktail: ^1.0.4
+  bloc_test: ^10.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
