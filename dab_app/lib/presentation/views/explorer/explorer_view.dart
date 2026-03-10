@@ -13,8 +13,11 @@ class ExplorerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          ExplorerBloc(sl.activityUseCases)..add(const ExplorerStarted()),
+      create: (context) => ExplorerBloc(
+        sl.activityUseCases,
+        sl.userUseCases,
+        sl.metadataUseCases,
+      )..add(const ExplorerStarted()),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 900) {

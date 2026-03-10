@@ -6,6 +6,8 @@ import '../domain/containers/metadata_usecases.dart';
 import '../domain/containers/monitoring_usecases.dart';
 import '../domain/containers/presence_usecases.dart';
 import '../domain/containers/system_usecases.dart';
+import '../domain/containers/user_usecases.dart';
+import '../domain/repositories/abs_i_user_repository.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
 import '../infrastructure/core/remote/auth_interceptor.dart';
@@ -24,6 +26,7 @@ import '../infrastructure/repositories/monitoring_repository.dart';
 import '../infrastructure/repositories/presence_repository.dart';
 import '../infrastructure/repositories/provider_config_repository.dart';
 import '../infrastructure/repositories/system_repository.dart';
+import '../infrastructure/repositories/user_repository.dart';
 import '../presentation/core/navigation/app_router.dart';
 
 final sl = ServiceLocator();
@@ -48,6 +51,7 @@ class ServiceLocator {
   late final ActivityRepository activityRepository;
   late final PresenceRepository presenceRepository;
   late final ProviderConfigRepository providerConfigRepository;
+  late final IUserRepository userRepository;
 
   // UseCase Containers
   late final AuthUseCases authUseCases;
@@ -56,6 +60,7 @@ class ServiceLocator {
   late final ActivityUseCases activityUseCases;
   late final PresenceUseCases presenceUseCases;
   late final MetadataUseCases metadataUseCases;
+  late final UserUseCases userUseCases;
 
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
@@ -118,5 +123,9 @@ class ServiceLocator {
       providerConfigRemoteDataSource,
     );
     metadataUseCases = MetadataUseCases(providerConfigRepository);
+
+    // 8. User Context
+    userRepository = UserRepository(restApiClient);
+    userUseCases = UserUseCases(userRepository);
   }
 }

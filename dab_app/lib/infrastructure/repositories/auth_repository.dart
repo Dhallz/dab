@@ -38,7 +38,11 @@ class AuthRepository extends Repository implements IAuthRepository {
       tokenResult.getOrElse((f) => throw f);
 
       _localDataSource.saveUser(
-        UserRecord(remoteId: response.userId, email: email, name: ''),
+        UserRecord(
+          remoteId: response.userId,
+          email: response.email,
+          name: response.name,
+        ),
       );
 
       return response;

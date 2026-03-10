@@ -15,5 +15,6 @@ class UserRecord {
 }
 
 extension OnUserRecord on UserRecord {
-  User get toDomain => User(id: remoteId, email: email);
+  User get toDomain =>
+      User(id: remoteId, name: name ?? 'Unknown', email: email);
 }

@@ -15,6 +15,8 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExplorerStateMapper._());
       ActivityMapper.ensureInitialized();
+      UserMapper.ensureInitialized();
+      GroupMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -47,6 +49,57 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     'selectedDate',
     _$selectedDate,
   );
+  static DirectoryType _$directoryType(ExplorerState v) => v.directoryType;
+  static const Field<ExplorerState, DirectoryType> _f$directoryType = Field(
+    'directoryType',
+    _$directoryType,
+    opt: true,
+    def: DirectoryType.users,
+  );
+  static List<User> _$users(ExplorerState v) => v.users;
+  static const Field<ExplorerState, List<User>> _f$users = Field(
+    'users',
+    _$users,
+    opt: true,
+    def: const [],
+  );
+  static List<Group> _$groups(ExplorerState v) => v.groups;
+  static const Field<ExplorerState, List<Group>> _f$groups = Field(
+    'groups',
+    _$groups,
+    opt: true,
+    def: const [],
+  );
+  static Set<String> _$selectedUserIds(ExplorerState v) => v.selectedUserIds;
+  static const Field<ExplorerState, Set<String>> _f$selectedUserIds = Field(
+    'selectedUserIds',
+    _$selectedUserIds,
+    opt: true,
+    def: const {},
+  );
+  static Set<String> _$selectedGroupIds(ExplorerState v) => v.selectedGroupIds;
+  static const Field<ExplorerState, Set<String>> _f$selectedGroupIds = Field(
+    'selectedGroupIds',
+    _$selectedGroupIds,
+    opt: true,
+    def: const {},
+  );
+  static List<String> _$availableProviders(ExplorerState v) =>
+      v.availableProviders;
+  static const Field<ExplorerState, List<String>> _f$availableProviders = Field(
+    'availableProviders',
+    _$availableProviders,
+    opt: true,
+    def: const [],
+  );
+  static Set<String> _$selectedProviders(ExplorerState v) =>
+      v.selectedProviders;
+  static const Field<ExplorerState, Set<String>> _f$selectedProviders = Field(
+    'selectedProviders',
+    _$selectedProviders,
+    opt: true,
+    def: const {},
+  );
 
   @override
   final MappableFields<ExplorerState> fields = const {
@@ -54,6 +107,13 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     #activities: _f$activities,
     #errorMessage: _f$errorMessage,
     #selectedDate: _f$selectedDate,
+    #directoryType: _f$directoryType,
+    #users: _f$users,
+    #groups: _f$groups,
+    #selectedUserIds: _f$selectedUserIds,
+    #selectedGroupIds: _f$selectedGroupIds,
+    #availableProviders: _f$availableProviders,
+    #selectedProviders: _f$selectedProviders,
   };
 
   static ExplorerState _instantiate(DecodingData data) {
@@ -62,6 +122,13 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       activities: data.dec(_f$activities),
       errorMessage: data.dec(_f$errorMessage),
       selectedDate: data.dec(_f$selectedDate),
+      directoryType: data.dec(_f$directoryType),
+      users: data.dec(_f$users),
+      groups: data.dec(_f$groups),
+      selectedUserIds: data.dec(_f$selectedUserIds),
+      selectedGroupIds: data.dec(_f$selectedGroupIds),
+      availableProviders: data.dec(_f$availableProviders),
+      selectedProviders: data.dec(_f$selectedProviders),
     );
   }
 
@@ -129,11 +196,22 @@ abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
   get activities;
+  ListCopyWith<$R, User, UserCopyWith<$R, User, User>> get users;
+  ListCopyWith<$R, Group, GroupCopyWith<$R, Group, Group>> get groups;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get availableProviders;
   $R call({
     ExplorerStatus? status,
     List<Activity>? activities,
     String? errorMessage,
     DateTime? selectedDate,
+    DirectoryType? directoryType,
+    List<User>? users,
+    List<Group>? groups,
+    Set<String>? selectedUserIds,
+    Set<String>? selectedGroupIds,
+    List<String>? availableProviders,
+    Set<String>? selectedProviders,
   });
   ExplorerStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -154,17 +232,52 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     (v) => call(activities: v),
   );
   @override
+  ListCopyWith<$R, User, UserCopyWith<$R, User, User>> get users =>
+      ListCopyWith(
+        $value.users,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(users: v),
+      );
+  @override
+  ListCopyWith<$R, Group, GroupCopyWith<$R, Group, Group>> get groups =>
+      ListCopyWith(
+        $value.groups,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(groups: v),
+      );
+  @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get availableProviders => ListCopyWith(
+    $value.availableProviders,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(availableProviders: v),
+  );
+  @override
   $R call({
     ExplorerStatus? status,
     List<Activity>? activities,
     Object? errorMessage = $none,
     DateTime? selectedDate,
+    DirectoryType? directoryType,
+    List<User>? users,
+    List<Group>? groups,
+    Set<String>? selectedUserIds,
+    Set<String>? selectedGroupIds,
+    List<String>? availableProviders,
+    Set<String>? selectedProviders,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
       if (activities != null) #activities: activities,
       if (errorMessage != $none) #errorMessage: errorMessage,
       if (selectedDate != null) #selectedDate: selectedDate,
+      if (directoryType != null) #directoryType: directoryType,
+      if (users != null) #users: users,
+      if (groups != null) #groups: groups,
+      if (selectedUserIds != null) #selectedUserIds: selectedUserIds,
+      if (selectedGroupIds != null) #selectedGroupIds: selectedGroupIds,
+      if (availableProviders != null) #availableProviders: availableProviders,
+      if (selectedProviders != null) #selectedProviders: selectedProviders,
     }),
   );
   @override
@@ -173,6 +286,19 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     activities: data.get(#activities, or: $value.activities),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
     selectedDate: data.get(#selectedDate, or: $value.selectedDate),
+    directoryType: data.get(#directoryType, or: $value.directoryType),
+    users: data.get(#users, or: $value.users),
+    groups: data.get(#groups, or: $value.groups),
+    selectedUserIds: data.get(#selectedUserIds, or: $value.selectedUserIds),
+    selectedGroupIds: data.get(#selectedGroupIds, or: $value.selectedGroupIds),
+    availableProviders: data.get(
+      #availableProviders,
+      or: $value.availableProviders,
+    ),
+    selectedProviders: data.get(
+      #selectedProviders,
+      or: $value.selectedProviders,
+    ),
   );
 
   @override

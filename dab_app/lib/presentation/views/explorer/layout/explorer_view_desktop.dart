@@ -5,7 +5,7 @@ import '../explorer_bloc.dart';
 import '../explorer_state.dart';
 import '../widgets/activity_card/activity_card.dart';
 import '../widgets/explorer_calendar_bar.dart';
-import '../widgets/explorer_sidebar.dart';
+import '../widgets/explorer_sidebar/explorer_sidebar.dart';
 
 class ExplorerViewDesktop extends StatelessWidget {
   const ExplorerViewDesktop({super.key});

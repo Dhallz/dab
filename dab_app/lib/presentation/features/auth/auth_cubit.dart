@@ -41,20 +41,37 @@ class AuthCubit extends Cubit<AuthState> {
     );
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
-      (response) =>
-          emit(AuthState.authenticated(User(id: 'temp', email: email))),
+      (response) => emit(
+        AuthState.authenticated(
+          User(
+            id: response.userId,
+            name: response.name,
+            email: response.email,
+            avatarUrl: response.avatarUrl,
+          ),
+        ),
+      ),
     );
   }
 
-  Future<void> register(String email, String password) async {
+  Future<void> register(String email, String password, String name) async {
     final result = await _usecases.register.execute(
       email: email,
       password: password,
-      name: 'User',
+      name: name,
     );
     result.fold(
       (failure) => emit(AuthState.error(failure.message)),
-      (_) => emit(AuthState.authenticated(User(id: 'temp', email: email))),
+      (response) => emit(
+        AuthState.authenticated(
+          User(
+            id: response.userId,
+            name: response.name,
+            email: response.email,
+            avatarUrl: response.avatarUrl,
+          ),
+        ),
+      ),
     );
   }
 

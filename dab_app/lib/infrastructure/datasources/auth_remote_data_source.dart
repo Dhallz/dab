@@ -35,4 +35,9 @@ class AuthRemoteDataSource {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> getUser(String id) async {
+    final response = await _client.get('/users/$id');
+    return response.data as Map<String, dynamic>;
+  }
 }
