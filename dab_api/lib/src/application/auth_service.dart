@@ -107,6 +107,9 @@ class AuthService {
       'accessToken': accessToken,
       'refreshToken': refreshToken,
       'userId': user.id,
+      'name': user.name,
+      'email': user.email,
+      'avatarUrl': user.avatarUrl ?? '',
     };
   }
 

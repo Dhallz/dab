@@ -15,6 +15,7 @@ class UsersTable extends Table {
   TextColumn get phorgeUsername => text().nullable().named('phorge_username')();
   DateTimeColumn get createdAt => dateTime().named('created_at')();
   DateTimeColumn get updatedAt => dateTime().nullable().named('updated_at')();
+  TextColumn get avatarUrl => text().nullable().named('avatar_url')();
 
   @override
   Set<Column> get primaryKey => {id};

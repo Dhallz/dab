@@ -4,6 +4,8 @@ import 'package:dab_api/src/infrastructure/database/tables/activities_table.dart
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/sessions_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/users_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_postgres/drift_postgres.dart';
 import 'package:postgres/postgres.dart' hide Session;
@@ -11,13 +13,20 @@ import 'package:postgres/postgres.dart' hide Session;
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [UsersTable, ActivitiesTable, ActivityPhorgeTable, SessionsTable],
+  tables: [
+    UsersTable,
+    ActivitiesTable,
+    ActivityPhorgeTable,
+    SessionsTable,
+    GroupsTable,
+    GroupMembersTable,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2; // Incremented for new activity structure
+  int get schemaVersion => 3; // Incremented for groups and user enhancements
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,11 +35,12 @@ class AppDatabase extends _$AppDatabase {
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
-        // Handle migration from old activities to new structure
-        // Since this is early dev, we can just recreate or add tables
         await m.createTable(activityPhorgeTable);
-        // Note: activitiesTable column changes are handled by Drift usually,
-        // but since we renamed column, we might need a migration step if data exists.
+      }
+      if (from < 3) {
+        await m.addColumn(usersTable, usersTable.avatarUrl);
+        await m.createTable(groupsTable);
+        await m.createTable(groupMembersTable);
       }
     },
     beforeOpen: (details) async {

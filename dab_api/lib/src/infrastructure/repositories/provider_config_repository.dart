@@ -19,13 +19,19 @@ class ProviderConfigRepository implements AbsIProviderConfigRepository {
       if (_config.phorgeUrl.isNotEmpty) {
         configs.add(
           ProviderConfig(
-            id: 'phorge',
+            id: 'Phorge',
             baseUrl: _config.phorgeUrl,
-            // You can optionally add a default icon URL here if needed
             iconUrl: null,
           ),
         );
       }
+
+      // Add default providers for UI presentation
+      configs.addAll([
+        const ProviderConfig(id: 'GitHub', baseUrl: 'https://github.com'),
+        const ProviderConfig(id: 'Slack', baseUrl: 'https://slack.com'),
+        const ProviderConfig(id: 'Jira', baseUrl: 'https://jira.atlassian.com'),
+      ]);
 
       // In the future, GitHub or other providers would be added here
 

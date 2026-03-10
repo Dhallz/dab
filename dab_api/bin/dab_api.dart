@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:dab_api/dab_api.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
+import 'package:dab_api/src/presentation/controllers/group_controller.dart';
 import 'package:dab_api/src/presentation/controllers/health_controller.dart';
 import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
+import 'package:dab_api/src/presentation/controllers/user_controller.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
@@ -40,6 +42,13 @@ Future<void> main() async {
     ..use('/metadata', AuthMiddleware().call)
     ..get('/metadata/providers', MetadataController().getProviders)
     ..get('/metadata/configs', MetadataController().getConfigs)
+    ..use('/users', AuthMiddleware().call)
+    ..get('/users', UserController().getUsers)
+    ..get('/users/:id', UserController().getUser)
+    ..use('/groups', AuthMiddleware().call)
+    ..get('/groups', GroupController().getGroups)
+    ..post('/groups', GroupController().saveGroup)
+    ..delete('/groups/:id', GroupController().deleteGroup)
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

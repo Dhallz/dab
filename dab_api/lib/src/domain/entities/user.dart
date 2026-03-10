@@ -7,6 +7,7 @@ class User with UserMappable {
   final String id;
   final String name;
   final String email;
+  final String? avatarUrl;
   final String passwordHash;
   final String role; // 'Admin' or 'Standard'
   final String? phorgePhid;
@@ -17,12 +18,13 @@ class User with UserMappable {
   User({
     required this.id,
     required this.name,
-    required this.email,
-    required this.passwordHash,
+    this.email = '',
+    this.avatarUrl,
+    this.passwordHash = '',
     this.role = 'Standard',
     this.phorgePhid,
     this.phorgeUsername,
-    required this.createdAt,
+    DateTime? createdAt,
     this.updatedAt,
-  });
+  }) : createdAt = createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
 }

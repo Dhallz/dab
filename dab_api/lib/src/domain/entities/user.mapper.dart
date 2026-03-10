@@ -27,11 +27,24 @@ class UserMapper extends ClassMapperBase<User> {
   static String _$name(User v) => v.name;
   static const Field<User, String> _f$name = Field('name', _$name);
   static String _$email(User v) => v.email;
-  static const Field<User, String> _f$email = Field('email', _$email);
+  static const Field<User, String> _f$email = Field(
+    'email',
+    _$email,
+    opt: true,
+    def: '',
+  );
+  static String? _$avatarUrl(User v) => v.avatarUrl;
+  static const Field<User, String> _f$avatarUrl = Field(
+    'avatarUrl',
+    _$avatarUrl,
+    opt: true,
+  );
   static String _$passwordHash(User v) => v.passwordHash;
   static const Field<User, String> _f$passwordHash = Field(
     'passwordHash',
     _$passwordHash,
+    opt: true,
+    def: '',
   );
   static String _$role(User v) => v.role;
   static const Field<User, String> _f$role = Field(
@@ -56,6 +69,7 @@ class UserMapper extends ClassMapperBase<User> {
   static const Field<User, DateTime> _f$createdAt = Field(
     'createdAt',
     _$createdAt,
+    opt: true,
   );
   static DateTime? _$updatedAt(User v) => v.updatedAt;
   static const Field<User, DateTime> _f$updatedAt = Field(
@@ -69,6 +83,7 @@ class UserMapper extends ClassMapperBase<User> {
     #id: _f$id,
     #name: _f$name,
     #email: _f$email,
+    #avatarUrl: _f$avatarUrl,
     #passwordHash: _f$passwordHash,
     #role: _f$role,
     #phorgePhid: _f$phorgePhid,
@@ -82,6 +97,7 @@ class UserMapper extends ClassMapperBase<User> {
       id: data.dec(_f$id),
       name: data.dec(_f$name),
       email: data.dec(_f$email),
+      avatarUrl: data.dec(_f$avatarUrl),
       passwordHash: data.dec(_f$passwordHash),
       role: data.dec(_f$role),
       phorgePhid: data.dec(_f$phorgePhid),
@@ -141,6 +157,7 @@ abstract class UserCopyWith<$R, $In extends User, $Out>
     String? id,
     String? name,
     String? email,
+    String? avatarUrl,
     String? passwordHash,
     String? role,
     String? phorgePhid,
@@ -162,22 +179,24 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     String? id,
     String? name,
     String? email,
+    Object? avatarUrl = $none,
     String? passwordHash,
     String? role,
     Object? phorgePhid = $none,
     Object? phorgeUsername = $none,
-    DateTime? createdAt,
+    Object? createdAt = $none,
     Object? updatedAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
       if (name != null) #name: name,
       if (email != null) #email: email,
+      if (avatarUrl != $none) #avatarUrl: avatarUrl,
       if (passwordHash != null) #passwordHash: passwordHash,
       if (role != null) #role: role,
       if (phorgePhid != $none) #phorgePhid: phorgePhid,
       if (phorgeUsername != $none) #phorgeUsername: phorgeUsername,
-      if (createdAt != null) #createdAt: createdAt,
+      if (createdAt != $none) #createdAt: createdAt,
       if (updatedAt != $none) #updatedAt: updatedAt,
     }),
   );
@@ -186,6 +205,7 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     id: data.get(#id, or: $value.id),
     name: data.get(#name, or: $value.name),
     email: data.get(#email, or: $value.email),
+    avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
     passwordHash: data.get(#passwordHash, or: $value.passwordHash),
     role: data.get(#role, or: $value.role),
     phorgePhid: data.get(#phorgePhid, or: $value.phorgePhid),

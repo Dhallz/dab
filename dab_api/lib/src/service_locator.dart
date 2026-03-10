@@ -4,10 +4,12 @@ import 'package:dab_api/src/application/logging_service.dart';
 import 'package:dab_api/src/application/metadata_service.dart';
 import 'package:dab_api/src/application/presence_service.dart';
 import 'package:dab_api/src/application/push_notification_service.dart';
+import 'package:dab_api/src/application/user_service.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_connector.dart';
 import 'package:dab_api/src/infrastructure/database/app_database.dart';
@@ -18,6 +20,7 @@ import 'package:dab_api/src/infrastructure/repositories/activity_repository.dart
 import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
+import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final GetIt sl = GetIt.instance;
@@ -43,6 +46,7 @@ Future<void> serviceLocator() async {
   // 2. Repositories
   sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
   sl.registerSingleton<AbsIActivityRepository>(ActivityRepository(db));
+  sl.registerSingleton<IUserRepository>(UserRepository(db));
 
   // 3. Services (Application Layer)
   sl.registerSingleton<PresenceService>(PresenceService());
@@ -77,4 +81,5 @@ Future<void> serviceLocator() async {
       redis: sl<RedisService>(),
     ),
   );
+  sl.registerSingleton<UserService>(UserService(sl<IUserRepository>()));
 }
