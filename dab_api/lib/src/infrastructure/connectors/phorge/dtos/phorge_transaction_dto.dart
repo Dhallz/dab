@@ -38,6 +38,7 @@ class PhorgeTransactionDto with PhorgeTransactionDtoMappable {
       commentText: _extractComment(json),
       dateCreated: DateTime.fromMillisecondsSinceEpoch(
         (int.tryParse(json['dateCreated']?.toString() ?? '0') ?? 0) * 1000,
+        isUtc: true,
       ),
     );
   }

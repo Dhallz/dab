@@ -180,129 +180,118 @@ class PhorgeConnector {
   ) async {
     List<Activity> activities = [];
 
-    if (authoredOnly) {
-      // Option 1: Find all actions authored by these users directly.
-      List<PhorgeTransactionDto> targetTransactions = [];
-      String? afterCursor;
-
-      // Paginating backwards until we hit a transaction older than the start date
-      while (true) {
+    try {
+      if (authoredOnly) {
+        // PERFORMANCE: Single Transaction Sweep for Authored Activities
+        // Avoids N+1 calls and order-dependency issues.
         final txResult = await _client.call('transaction.search', {
           'objectType': 'TASK',
           'constraints': {'authorPHIDs': userPhids},
-          'limit': 100,
-          if (afterCursor != null) 'after': afterCursor,
+          // Fetch a larger batch to find historical events without loop breaks
+          'limit': 150,
         });
 
         final rawTxData = txResult['data'] as List<dynamic>?;
-        if (rawTxData == null || rawTxData.isEmpty) break;
+        if (rawTxData == null || rawTxData.isEmpty) return [];
 
-        final batch = rawTxData
+        final allTransactions = rawTxData
             .map(
               (e) =>
                   PhorgeTransactionDto.fromConduit(e as Map<String, dynamic>),
             )
+            .where(
+              (tx) =>
+                  !tx.dateCreated.isBefore(start) &&
+                  !tx.dateCreated.isAfter(end),
+            )
             .toList();
-        bool reachedEnd = false;
 
-        for (final tx in batch) {
-          if (tx.dateCreated.isBefore(start)) {
-            reachedEnd = true;
-            break; // Since they are sorted descending, if this one is older than start, all subsequent ones are too.
-          }
-          if (tx.dateCreated.isBefore(end)) {
-            targetTransactions.add(tx);
-          }
+        if (allTransactions.isEmpty) return [];
+
+        // Hydrate all unique tasks in ONE call
+        final taskPhids = allTransactions
+            .map((tx) => tx.objectPHID)
+            .toSet()
+            .toList();
+        final taskResult = await _client.call('maniphest.search', {
+          'constraints': {'phids': taskPhids},
+          'attachments': {'projects': true},
+        });
+
+        final rawTaskData = taskResult['data'] as List<dynamic>?;
+        if (rawTaskData == null) return [];
+
+        final tasksMap = {
+          for (var t in rawTaskData)
+            t['phid'].toString(): PhorgeTaskDto.fromConduit(
+              t as Map<String, dynamic>,
+            ),
+        };
+
+        for (final tx in allTransactions) {
+          final task = tasksMap[tx.objectPHID];
+          if (task == null) continue;
+          _processTransaction(
+            tx,
+            task,
+            sprintTag,
+            userPhids,
+            validUsers,
+            activities,
+            authoredOnly: true,
+          );
+        }
+      } else {
+        // PERFORMANCE: Batch Inbox Lookup
+        // 1. Find all relevant tasks assigned to users
+        Map<String, dynamic> constraints = {
+          'statuses': ['open'],
+          'assigned': userPhids,
+        };
+        if (sprintPhid != null) {
+          constraints['projects'] = [sprintPhid];
         }
 
-        if (reachedEnd) break;
+        final result = await _client.call('maniphest.search', {
+          'constraints': constraints,
+          'attachments': {'projects': true},
+        });
 
-        final cursor = txResult['cursor'] as Map<String, dynamic>?;
-        if (cursor != null && cursor['after'] != null) {
-          afterCursor = cursor['after'].toString();
-        } else {
-          break;
-        }
-      }
+        final rawData = result['data'] as List<dynamic>?;
+        if (rawData == null || rawData.isEmpty) return [];
 
-      if (targetTransactions.isEmpty) return [];
+        final tasks = rawData
+            .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
+            .toList();
 
-      // Hydrate task details for the authored transactions
-      final taskPhids = targetTransactions
-          .map((tx) => tx.objectPHID)
-          .toSet()
-          .toList();
-      final taskResult = await _client.call('maniphest.search', {
-        'constraints': {'phids': taskPhids},
-      });
-
-      final rawTaskData = taskResult['data'] as List<dynamic>?;
-      if (rawTaskData == null) return [];
-
-      final tasksMap = {
-        for (var t in rawTaskData)
-          t['phid'].toString(): PhorgeTaskDto.fromConduit(
-            t as Map<String, dynamic>,
-          ),
-      };
-
-      for (final tx in targetTransactions) {
-        final task = tasksMap[tx.objectPHID];
-        if (task == null) continue;
-
-        _processTransaction(
-          tx,
-          task,
-          sprintTag,
-          userPhids,
-          validUsers,
-          activities,
-          authoredOnly: true,
-        );
-      }
-    } else {
-      // Option 2: Inbox mode. Find tasks assigned to the users modified in this timeframe.
-      Map<String, dynamic> constraints = {
-        'modifiedStart': start.millisecondsSinceEpoch ~/ 1000,
-        'modifiedEnd': end.millisecondsSinceEpoch ~/ 1000,
-        'statuses': ['open'],
-        'assigned': userPhids,
-      };
-
-      if (sprintPhid != null) {
-        constraints['projects'] = [sprintPhid];
-      }
-
-      final result = await _client.call('maniphest.search', {
-        'constraints': constraints,
-      });
-
-      final rawData = result['data'] as List<dynamic>?;
-      if (rawData == null) return [];
-
-      final tasks = rawData
-          .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
-          .toList();
-
-      for (final task in tasks) {
+        // 2. Fetch ALL transactions for these tasks in ONE call
+        final taskPhids = tasks.map((t) => t.phid).toList();
         final txResult = await _client.call('transaction.search', {
-          'objectIdentifier': task.phid,
+          'objectType': 'TASK',
+          'constraints': {'objectPHIDs': taskPhids},
+          'limit': 300,
         });
 
         final rawTxData = txResult['data'] as List<dynamic>?;
-        if (rawTxData == null) continue;
+        if (rawTxData == null) return activities;
 
-        final transactions = rawTxData
+        final allTransactions = rawTxData
             .map(
               (e) =>
                   PhorgeTransactionDto.fromConduit(e as Map<String, dynamic>),
             )
+            .where(
+              (tx) =>
+                  !tx.dateCreated.isBefore(start) &&
+                  !tx.dateCreated.isAfter(end),
+            )
             .toList();
 
-        for (final tx in transactions) {
-          if (tx.dateCreated.isBefore(start) || tx.dateCreated.isAfter(end)) {
-            continue;
-          }
+        final tasksMap = {for (var t in tasks) t.phid: t};
+
+        for (final tx in allTransactions) {
+          final task = tasksMap[tx.objectPHID];
+          if (task == null) continue;
 
           // In Inbox mode, we care if the user originated it, OR if it happened on a task they own
           if (!userPhids.contains(tx.authorPHID) &&
@@ -321,9 +310,13 @@ class PhorgeConnector {
           );
         }
       }
-    }
 
-    return activities;
+      return activities;
+    } catch (e, stack) {
+      print('PhorgeConnector: Error in _fetchSprintTasks: $e');
+      print(stack);
+      return [];
+    }
   }
 
   void _processTransaction(
@@ -340,6 +333,10 @@ class PhorgeConnector {
 
     if (tx.type == 'vcs' || tx.type == 'edit') return; // Skip noise
 
+    print(
+      'PhorgeConnector: Processing transaction ${tx.id} - type: ${tx.type}, date: ${tx.dateCreated.toIso8601String()}',
+    );
+
     if (tx.type == 'comment') {
       content = tx.commentText?.trim() ?? 'Commented on task';
     } else if (tx.type == 'status') {
@@ -349,12 +346,23 @@ class PhorgeConnector {
         columnFrom: tx.oldValue?.toString(),
         columnTo: tx.newValue?.toString(),
       );
-    } else if (tx.type == 'columns') {
+    } else if (tx.type == 'columns' || tx.type == 'core:columns') {
       content = 'Moved task on the sprint board';
+
+      String? extractColumn(dynamic value) {
+        if (value is List && value.isNotEmpty) {
+          final first = value.first;
+          if (first is Map) {
+            return first['columnPHID']?.toString();
+          }
+        }
+        return value?.toString();
+      }
+
       sprintContext = SprintContext(
         tag: sprintTag,
-        columnFrom: 'board',
-        columnTo: 'board',
+        columnFrom: extractColumn(tx.oldValue) ?? 'board',
+        columnTo: extractColumn(tx.newValue) ?? 'board',
       );
     } else if (tx.type == 'projects') {
       content = 'Updated project tags';

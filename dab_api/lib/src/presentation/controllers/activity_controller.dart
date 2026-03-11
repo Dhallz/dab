@@ -56,17 +56,31 @@ class ActivityController {
     DateTime startDate;
     DateTime endDate;
     try {
-      startDate = DateTime.parse(startDateStr);
-      endDate = DateTime.parse(endDateStr);
+      // Helper to ensure date strings are interpreted as UTC if no TZ provided
+      DateTime parseUtc(String s) {
+        if (!s.contains('Z') && !s.contains('+') && !s.contains('-') ||
+            (s.length <= 10 && !s.contains('T'))) {
+          // If it's YYYY-MM-DD or lacks TZ, force UTC
+          return DateTime.parse('${s.contains('T') ? s : '${s}T00:00:00'}Z');
+        }
+        return DateTime.parse(s).toUtc();
+      }
+
+      startDate = parseUtc(startDateStr);
+      endDate = parseUtc(endDateStr);
 
       // If dates are the same, expand endDate to cover the full day
       if (startDate.isAtSameMomentAs(endDate)) {
-        startDate = DateTime(startDate.year, startDate.month, startDate.day);
+        startDate = DateTime.utc(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
         endDate = startDate.add(const Duration(days: 1));
       } else if (endDate.hour == 0 &&
           endDate.minute == 0 &&
           endDate.second == 0) {
-        // If endDate is just a date (at midnight), make it cover that full day
+        // If endDate is just a date (at midnight UTC), make it cover that full day
         endDate = endDate.add(const Duration(days: 1));
       }
     } catch (_) {

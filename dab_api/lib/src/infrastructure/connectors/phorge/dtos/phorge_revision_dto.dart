@@ -34,6 +34,7 @@ class PhorgeRevisionDto with PhorgeRevisionDtoMappable {
       statusName: status['name'] as String? ?? 'Unknown',
       dateModified: DateTime.fromMillisecondsSinceEpoch(
         (int.tryParse(fields['dateModified']?.toString() ?? '0') ?? 0) * 1000,
+        isUtc: true,
       ),
     );
   }
