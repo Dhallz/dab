@@ -67,3 +67,10 @@ class ExplorerGroupSaved extends ExplorerEvent with ExplorerGroupSavedMappable {
   final dynamic group;
   const ExplorerGroupSaved(this.group);
 }
+
+@MappableClass()
+class ExplorerStackToggled extends ExplorerEvent
+    with ExplorerStackToggledMappable {
+  final String taskId;
+  const ExplorerStackToggled(this.taskId);
+}

@@ -4,6 +4,8 @@ import '../../../../domain/entities/activity.dart';
 import '../../../../domain/entities/group.dart';
 import '../../../../domain/entities/user.dart';
 
+import 'explorer_item.dart';
+
 part 'explorer_state.mapper.dart';
 
 enum ExplorerStatus { initial, loading, success, failure }
@@ -13,7 +15,7 @@ enum DirectoryType { users, groups }
 @MappableClass()
 class ExplorerState with ExplorerStateMappable {
   final ExplorerStatus status;
-  final List<Activity> activities;
+  final List<ExplorerItem> items;
   final String? errorMessage;
   final DateTime selectedDate;
 
@@ -30,7 +32,7 @@ class ExplorerState with ExplorerStateMappable {
 
   const ExplorerState({
     this.status = ExplorerStatus.initial,
-    this.activities = const [],
+    this.items = const [],
     this.errorMessage,
     required this.selectedDate,
     this.directoryType = DirectoryType.users,

@@ -4,45 +4,58 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
+import 'activity_history_list.dart';
 
 class ActivityContent extends StatelessWidget {
   final Activity activity;
+  final List<Activity>? activities;
   final bool isExpanded;
   final Color accentColor;
 
   const ActivityContent({
     super.key,
     required this.activity,
+    this.activities,
     required this.isExpanded,
     required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasHistory = activities != null && activities!.length > 1;
+
     return AnimatedSize(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOutCubic,
       alignment: Alignment.topCenter,
-      child: isExpanded
-          ? MarkdownBody(
-              data: _processMarkdown(activity.content),
-              styleSheet: _getMarkdownStyleSheet(isExpanded, accentColor),
-              onTapLink: (text, href, title) {
-                if (href != null) {
-                  launchUrl(Uri.parse(href));
-                }
-              },
+      child: isExpanded && hasHistory
+          ? ActivityHistoryList(
+              activities: activities!,
+              accentColor: accentColor,
             )
-          : Text(
-              _getPlainText(activity.content),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.onSurfaceVariantLow,
-                height: 1.5,
-              ),
-            ),
+          : (isExpanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: MarkdownBody(
+                    data: _processMarkdown(activity.content),
+                    styleSheet: _getMarkdownStyleSheet(isExpanded, accentColor),
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(Uri.parse(href));
+                      }
+                    },
+                  ),
+                )
+              : Text(
+                  _getPlainText(activity.content),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.onSurfaceVariantLow,
+                    height: 1.5,
+                  ),
+                )),
     );
   }
 

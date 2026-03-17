@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -19,15 +18,19 @@ import 'activity_provider_icon.dart';
 
 class ActivityCard extends StatefulWidget {
   final Activity activity;
+  final List<Activity>? activities;
 
-  const ActivityCard({super.key, required this.activity});
+  const ActivityCard({
+    super.key,
+    required this.activity,
+    this.activities,
+  });
 
   @override
   State<ActivityCard> createState() => _ActivityCardState();
 }
 
 class _ActivityCardState extends State<ActivityCard> {
-  bool _isExpanded = false;
   bool _isHovering = false;
 
   Future<void> _launchUrl(List<ProviderConfig> configs) async {
@@ -38,26 +41,20 @@ class _ActivityCardState extends State<ActivityCard> {
 
     if (!originalUrl.startsWith('http')) {
       final String providerName = widget.activity.provider.name.toLowerCase();
-      final config =
-          configs
-              .where((c) => c.id.toLowerCase() == providerName)
-              .firstOrNull ??
-          configs
-              .where((c) => providerName.contains(c.id.toLowerCase()))
-              .firstOrNull;
+      final config = configs.where((c) => c.id.toLowerCase() == providerName).firstOrNull ??
+          configs.where((c) => providerName.contains(c.id.toLowerCase())).firstOrNull;
 
       if (config != null) {
-        finalUrl =
-            '${config.baseUrl}${originalUrl.startsWith('/') ? '' : '/'}$originalUrl';
+        finalUrl = '${config.baseUrl}${originalUrl.startsWith('/') ? '' : '/'}$originalUrl';
       }
     }
 
     final Uri url = Uri.parse(finalUrl);
     if (!await launchUrl(url)) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not launch URL')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch URL')),
+        );
       }
     }
   }
@@ -69,177 +66,157 @@ class _ActivityCardState extends State<ActivityCard> {
         final style = widget.activity.style(context);
 
         return MouseRegion(
-          onEnter: (_) => setState(() {
-            _isHovering = true;
-            _isExpanded = true;
-          }),
-          onExit: (_) => setState(() {
-            _isHovering = false;
-            _isExpanded = false;
-          }),
-          child: GestureDetector(
-            onTap: () => _launchUrl(state.configs),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              transform: Matrix4.identity()..scale(_isHovering ? 1.02 : 1.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow.withValues(
-                        alpha: _isHovering ? 0.6 : 0.4,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _isHovering
-                            ? style.color.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.1),
-                      ),
-                      boxShadow: _isHovering
-                          ? [
-                              BoxShadow(
-                                color: style.color.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                spreadRadius: -5,
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(width: 4, color: style.color),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
+          onEnter: (_) => setState(() => _isHovering = true),
+          onExit: (_) => setState(() => _isHovering = false),
+          cursor: SystemMouseCursors.click,
+          child: AnimatedScale(
+            scale: _isHovering ? 1.02 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: GestureDetector(
+              onTap: () => _launchUrl(state.configs),
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow.withValues(alpha: _isHovering ? 0.6 : 0.4),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _isHovering
+                        ? style.color.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.1),
+                  ),
+                  boxShadow: _isHovering
+                      ? [
+                          BoxShadow(
+                            color: style.color.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            spreadRadius: -5,
+                          ),
+                        ]
+                      : [],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: style.color.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: style.color.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      style.icon,
-                                      color: style.color,
-                                      size: 24,
-                                    ),
+                              // Provider Icon / Category
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: style.color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: style.color.withValues(alpha: 0.2),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                ),
+                                child: Icon(
+                                  style.icon,
+                                  color: style.color,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       children: [
-                                        Row(
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                style.label.toUpperCase(),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: style.color,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
+                                        Flexible(
+                                          child: Text(
+                                            style.label.toUpperCase(),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: style.color,
+                                              letterSpacing: 0.5,
                                             ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              width: 4,
-                                              height: 4,
-                                              decoration: const BoxDecoration(
-                                                color: AppColors
-                                                    .surfaceContainerHighest,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              _formatDate(
-                                                widget.activity.createdAt,
-                                              ),
-                                              style: const TextStyle(
-                                                fontSize: 10,
-                                                color: AppColors
-                                                    .onSurfaceVariantLow,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          widget.activity.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.onSurface,
-                                            letterSpacing: -0.2,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        ActivityContent(
-                                          activity: widget.activity,
-                                          isExpanded: _isExpanded,
-                                          accentColor: style.color,
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          width: 4,
+                                          height: 4,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.surfaceContainerHighest,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _formatDate(widget.activity.createdAt),
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            color: AppColors.onSurfaceVariantLow,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      ActivityProviderIcon(
-                                        activity: widget.activity,
-                                        configs: state.configs,
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      widget.activity.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.onSurface,
+                                        letterSpacing: -0.2,
                                       ),
-                                      if (widget.activity.url != null &&
-                                          widget.activity.url!
-                                              .trim()
-                                              .isNotEmpty) ...[
-                                        const SizedBox(height: 12),
-                                        ActivityLinkButton(
-                                          accentColor: style.color,
-                                          onTap: () =>
-                                              _launchUrl(state.configs),
-                                          isVisible: _isHovering || _isExpanded,
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              ActivityFooter(
-                                authorName: widget.activity.authorName,
-                                authorAvatarUrl:
-                                    widget.activity.authorAvatarUrl,
-                                commentCount: widget.activity.commentCount,
+                              const SizedBox(width: 12),
+                              // Top Right Icons
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  ActivityProviderIcon(
+                                    activity: widget.activity,
+                                    configs: state.configs,
+                                  ),
+                                  if (widget.activity.url != null &&
+                                      widget.activity.url!.trim().isNotEmpty) ...[
+                                    const SizedBox(height: 12),
+                                    ActivityLinkButton(
+                                      accentColor: style.color,
+                                      onTap: () => _launchUrl(state.configs),
+                                      isVisible: _isHovering,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          // Content Section
+                          ActivityContent(
+                            activity: widget.activity,
+                            activities: widget.activities,
+                            isExpanded: _isHovering,
+                            accentColor: style.color,
+                          ),
+                          const SizedBox(height: 16),
+                          // Footer Section
+                          ActivityFooter(
+                            activity: widget.activity,
+                            activities: widget.activities,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

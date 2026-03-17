@@ -6,6 +6,7 @@ import '../../../core/extensions/date_extensions.dart';
 import '../../../core/widgets/dab_app_bar.dart';
 import '../explorer_bloc.dart';
 import '../explorer_event.dart';
+import '../explorer_item.dart';
 import '../explorer_state.dart';
 
 class ExplorerCalendarBar extends StatefulWidget {
@@ -263,7 +264,7 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
                 Text(
                   state.status == ExplorerStatus.loading
                       ? 'Fetching activities...'
-                      : 'Viewing ${state.activities.length} archived activities from this date.',
+                      : 'Viewing ${state.items.fold<int>(0, (sum, item) => sum + (item is SingleActivityItem ? 1 : (item as TaskActivityItem).activities.length))} archived activities from this date.',
                   style: TextStyle(
                     fontSize: 14,
                     color: const Color(0xFF94A3B8).withValues(alpha: 0.8),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/app_bloc_consumer.dart';
 import '../explorer_bloc.dart';
+import '../explorer_item.dart';
 import '../explorer_state.dart';
 import '../widgets/activity_card/activity_card.dart';
 import '../widgets/explorer_calendar_bar.dart';
@@ -24,7 +25,7 @@ class ExplorerViewMobile extends StatelessWidget {
             Expanded(
               child: state.status == ExplorerStatus.loading
                   ? const Center(child: CircularProgressIndicator())
-                  : state.activities.isEmpty
+                  : state.items.isEmpty
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -47,14 +48,24 @@ class ExplorerViewMobile extends StatelessWidget {
                       ],
                     )
                   : ListView.builder(
+                      clipBehavior: Clip.none,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: state.activities.length,
+                      itemCount: state.items.length,
                       itemBuilder: (context, index) {
+                        final item = state.items[index];
+                        final isStack =
+                            item is TaskActivityItem && !item.isExpanded;
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ActivityCard(
-                            activity: state.activities[index],
-                          ),
+                          padding: EdgeInsets.only(bottom: isStack ? 24 : 12),
+                          child: switch (item) {
+                            SingleActivityItem(:final activity) => ActivityCard(
+                              activity: activity,
+                            ),
+                            TaskActivityItem(:final activities) => ActivityCard(
+                              activity: item.latestActivity,
+                              activities: activities,
+                            ),
+                          },
                         );
                       },
                     ),

@@ -10,6 +10,7 @@ import '../../../../domain/entities/activity.dart';
 import '../../../../domain/entities/group.dart';
 import '../../core/abs_bloc.dart';
 import 'explorer_event.dart';
+import 'explorer_item.dart';
 import 'explorer_state.dart';
 
 class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
@@ -36,6 +37,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     on<ExplorerProviderToggled>(_onProviderToggled);
     on<ExplorerRefreshRequested>(_onRefreshRequested);
     on<ExplorerGroupSaved>(_onGroupSaved);
+    on<ExplorerStackToggled>(_onStackToggled);
   }
 
   Future<void> _onStarted(
@@ -132,12 +134,9 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
           return lowerSelected.contains(a.provider.name.toLowerCase());
         }).toList();
 
-        emit(
-          state.copyWith(
-            status: ExplorerStatus.success,
-            activities: filteredActivities,
-          ),
-        );
+        final items = groupActivities(filteredActivities);
+
+        emit(state.copyWith(status: ExplorerStatus.success, items: items));
 
         _activitySubscription?.cancel();
         _activitySubscription = _activityUseCases.watch().listen((activity) {
@@ -145,6 +144,64 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         });
       },
     );
+  }
+
+  List<ExplorerItem> groupActivities(List<Activity> activities) {
+    if (activities.isEmpty) return [];
+
+    // Deduplicate by ID
+    final deduplicated = <String, Activity>{};
+    for (final a in activities) {
+      deduplicated[a.id] = a;
+    }
+    final cleanActivities = deduplicated.values.toList();
+
+    final List<ExplorerItem> items = [];
+    final Map<String, List<Activity>> groups = {};
+    final List<String> taskOrder = [];
+
+    for (final activity in cleanActivities) {
+      final provider = activity.provider;
+      if (provider is PhorgeTaskProvider && provider.taskPhid != null) {
+        final key = '${activity.userId}_${provider.taskPhid}';
+        if (!groups.containsKey(key)) {
+          groups[key] = [];
+          taskOrder.add(key);
+        }
+        groups[key]!.add(activity);
+      } else {
+        items.add(SingleActivityItem(activity));
+      }
+    }
+
+    for (final key in taskOrder) {
+      final groupActivities = groups[key]!;
+      if (groupActivities.length == 1) {
+        items.add(SingleActivityItem(groupActivities.first));
+      } else {
+        final taskPhid =
+            (groupActivities.first.provider as PhorgeTaskProvider).taskPhid!;
+        items.add(
+          TaskActivityItem(
+            activities: groupActivities,
+            taskId: taskPhid,
+            userId: groupActivities.first.userId,
+          ),
+        );
+      }
+    }
+
+    items.sort((a, b) {
+      final dateA = a is SingleActivityItem
+          ? a.activity.createdAt
+          : (a as TaskActivityItem).activities.first.createdAt;
+      final dateB = b is SingleActivityItem
+          ? b.activity.createdAt
+          : (b as TaskActivityItem).activities.first.createdAt;
+      return dateB.compareTo(dateA);
+    });
+
+    return items;
   }
 
   void _onDirectoryTypeChanged(
@@ -218,10 +275,34 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       return;
     }
 
-    final updatedList = [activity, ...state.activities];
-    if (updatedList.length > 100) updatedList.removeLast();
+    final allActivities = <Activity>[];
+    for (final item in state.items) {
+      if (item is SingleActivityItem) {
+        allActivities.add(item.activity);
+      } else if (item is TaskActivityItem) {
+        allActivities.addAll(item.activities);
+      }
+    }
 
-    emit(state.copyWith(activities: updatedList));
+    final updatedActivities = [activity, ...allActivities];
+    // Sort by creation date descending
+    updatedActivities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    final items = groupActivities(updatedActivities.take(200).toList());
+    emit(state.copyWith(items: items));
+  }
+
+  void _onStackToggled(
+    ExplorerStackToggled event,
+    Emitter<ExplorerState> emit,
+  ) {
+    final updatedItems = state.items.map((item) {
+      if (item is TaskActivityItem && item.taskId == event.taskId) {
+        return item.copyWith(isExpanded: !item.isExpanded);
+      }
+      return item;
+    }).toList();
+    emit(state.copyWith(items: updatedItems));
   }
 
   Future<void> _onGroupSaved(

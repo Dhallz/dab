@@ -23,6 +23,7 @@ class ExplorerEventMapper extends ClassMapperBase<ExplorerEvent> {
       ExplorerProviderToggledMapper.ensureInitialized();
       ExplorerRefreshRequestedMapper.ensureInitialized();
       ExplorerGroupSavedMapper.ensureInitialized();
+      ExplorerStackToggledMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -1205,5 +1206,133 @@ class _ExplorerGroupSavedCopyWithImpl<$R, $Out>
   ExplorerGroupSavedCopyWith<$R2, ExplorerGroupSaved, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _ExplorerGroupSavedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerStackToggledMapper extends ClassMapperBase<ExplorerStackToggled> {
+  ExplorerStackToggledMapper._();
+
+  static ExplorerStackToggledMapper? _instance;
+  static ExplorerStackToggledMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExplorerStackToggledMapper._());
+      ExplorerEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerStackToggled';
+
+  static String _$taskId(ExplorerStackToggled v) => v.taskId;
+  static const Field<ExplorerStackToggled, String> _f$taskId = Field(
+    'taskId',
+    _$taskId,
+  );
+
+  @override
+  final MappableFields<ExplorerStackToggled> fields = const {
+    #taskId: _f$taskId,
+  };
+
+  static ExplorerStackToggled _instantiate(DecodingData data) {
+    return ExplorerStackToggled(data.dec(_f$taskId));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerStackToggled fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerStackToggled>(map);
+  }
+
+  static ExplorerStackToggled fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerStackToggled>(json);
+  }
+}
+
+mixin ExplorerStackToggledMappable {
+  String toJson() {
+    return ExplorerStackToggledMapper.ensureInitialized()
+        .encodeJson<ExplorerStackToggled>(this as ExplorerStackToggled);
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerStackToggledMapper.ensureInitialized()
+        .encodeMap<ExplorerStackToggled>(this as ExplorerStackToggled);
+  }
+
+  ExplorerStackToggledCopyWith<
+    ExplorerStackToggled,
+    ExplorerStackToggled,
+    ExplorerStackToggled
+  >
+  get copyWith =>
+      _ExplorerStackToggledCopyWithImpl<
+        ExplorerStackToggled,
+        ExplorerStackToggled
+      >(this as ExplorerStackToggled, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerStackToggledMapper.ensureInitialized().stringifyValue(
+      this as ExplorerStackToggled,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerStackToggledMapper.ensureInitialized().equalsValue(
+      this as ExplorerStackToggled,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerStackToggledMapper.ensureInitialized().hashValue(
+      this as ExplorerStackToggled,
+    );
+  }
+}
+
+extension ExplorerStackToggledValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerStackToggled, $Out> {
+  ExplorerStackToggledCopyWith<$R, ExplorerStackToggled, $Out>
+  get $asExplorerStackToggled => $base.as(
+    (v, t, t2) => _ExplorerStackToggledCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerStackToggledCopyWith<
+  $R,
+  $In extends ExplorerStackToggled,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? taskId});
+  ExplorerStackToggledCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerStackToggledCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerStackToggled, $Out>
+    implements ExplorerStackToggledCopyWith<$R, ExplorerStackToggled, $Out> {
+  _ExplorerStackToggledCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ExplorerStackToggled> $mapper =
+      ExplorerStackToggledMapper.ensureInitialized();
+  @override
+  $R call({String? taskId}) =>
+      $apply(FieldCopyWithData({if (taskId != null) #taskId: taskId}));
+  @override
+  ExplorerStackToggled $make(CopyWithData data) =>
+      ExplorerStackToggled(data.get(#taskId, or: $value.taskId));
+
+  @override
+  ExplorerStackToggledCopyWith<$R2, ExplorerStackToggled, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerStackToggledCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

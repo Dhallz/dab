@@ -14,7 +14,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   static ExplorerStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExplorerStateMapper._());
-      ActivityMapper.ensureInitialized();
+      ExplorerItemMapper.ensureInitialized();
       UserMapper.ensureInitialized();
       GroupMapper.ensureInitialized();
     }
@@ -31,10 +31,10 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     opt: true,
     def: ExplorerStatus.initial,
   );
-  static List<Activity> _$activities(ExplorerState v) => v.activities;
-  static const Field<ExplorerState, List<Activity>> _f$activities = Field(
-    'activities',
-    _$activities,
+  static List<ExplorerItem> _$items(ExplorerState v) => v.items;
+  static const Field<ExplorerState, List<ExplorerItem>> _f$items = Field(
+    'items',
+    _$items,
     opt: true,
     def: const [],
   );
@@ -104,7 +104,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   @override
   final MappableFields<ExplorerState> fields = const {
     #status: _f$status,
-    #activities: _f$activities,
+    #items: _f$items,
     #errorMessage: _f$errorMessage,
     #selectedDate: _f$selectedDate,
     #directoryType: _f$directoryType,
@@ -119,7 +119,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   static ExplorerState _instantiate(DecodingData data) {
     return ExplorerState(
       status: data.dec(_f$status),
-      activities: data.dec(_f$activities),
+      items: data.dec(_f$items),
       errorMessage: data.dec(_f$errorMessage),
       selectedDate: data.dec(_f$selectedDate),
       directoryType: data.dec(_f$directoryType),
@@ -194,15 +194,15 @@ extension ExplorerStateValueCopy<$R, $Out>
 
 abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
-  get activities;
+  ListCopyWith<$R, ExplorerItem, ObjectCopyWith<$R, ExplorerItem, ExplorerItem>>
+  get items;
   ListCopyWith<$R, User, UserCopyWith<$R, User, User>> get users;
   ListCopyWith<$R, Group, GroupCopyWith<$R, Group, Group>> get groups;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get availableProviders;
   $R call({
     ExplorerStatus? status,
-    List<Activity>? activities,
+    List<ExplorerItem>? items,
     String? errorMessage,
     DateTime? selectedDate,
     DirectoryType? directoryType,
@@ -225,11 +225,11 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
   late final ClassMapperBase<ExplorerState> $mapper =
       ExplorerStateMapper.ensureInitialized();
   @override
-  ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
-  get activities => ListCopyWith(
-    $value.activities,
-    (v, t) => v.copyWith.$chain(t),
-    (v) => call(activities: v),
+  ListCopyWith<$R, ExplorerItem, ObjectCopyWith<$R, ExplorerItem, ExplorerItem>>
+  get items => ListCopyWith(
+    $value.items,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(items: v),
   );
   @override
   ListCopyWith<$R, User, UserCopyWith<$R, User, User>> get users =>
@@ -255,7 +255,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
   @override
   $R call({
     ExplorerStatus? status,
-    List<Activity>? activities,
+    List<ExplorerItem>? items,
     Object? errorMessage = $none,
     DateTime? selectedDate,
     DirectoryType? directoryType,
@@ -268,7 +268,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
-      if (activities != null) #activities: activities,
+      if (items != null) #items: items,
       if (errorMessage != $none) #errorMessage: errorMessage,
       if (selectedDate != null) #selectedDate: selectedDate,
       if (directoryType != null) #directoryType: directoryType,
@@ -283,7 +283,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
   @override
   ExplorerState $make(CopyWithData data) => ExplorerState(
     status: data.get(#status, or: $value.status),
-    activities: data.get(#activities, or: $value.activities),
+    items: data.get(#items, or: $value.items),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
     selectedDate: data.get(#selectedDate, or: $value.selectedDate),
     directoryType: data.get(#directoryType, or: $value.directoryType),
