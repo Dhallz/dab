@@ -36,6 +36,18 @@ class UserRepository implements IUserRepository {
   }
 
   @override
+  Future<Either<DatabaseFailure, User?>> findByEmail(String email) async {
+    try {
+      final user = await (_db.select(_db.usersTable)
+            ..where((t) => t.email.equals(email)))
+          .getSingleOrNull();
+      return right(user);
+    } catch (e) {
+      return left(DatabaseFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<DatabaseFailure, List<User>>> getUsersByGroup(
     String groupId,
   ) async {
@@ -49,6 +61,29 @@ class UserRepository implements IUserRepository {
 
       final rows = await query.get();
       return right(rows.map((row) => row.readTable(_db.usersTable)).toList());
+    } catch (e) {
+      return left(DatabaseFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, void>> saveUser(User user) async {
+    try {
+      await _db.into(_db.usersTable).insertOnConflictUpdate(
+            UsersTableCompanion.insert(
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              passwordHash: user.passwordHash,
+              role: Value(user.role),
+              phorgePhid: Value(user.phorgePhid),
+              phorgeUsername: Value(user.phorgeUsername),
+              createdAt: user.createdAt,
+              updatedAt: Value(DateTime.now()),
+              avatarUrl: Value(user.avatarUrl),
+            ),
+          );
+      return right(null);
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }

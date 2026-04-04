@@ -13,6 +13,27 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        phorgePhid:
+          type: string
+          nullable: true
+        phorgeUsername:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
 
 paths:
   /auth/register:
@@ -239,4 +260,69 @@ paths:
                       timestamp:
                         type: string
                         format: date-time
+  /users:
+    get:
+      summary: Get all registered users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope with user list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+  /users/{id}:
+    get:
+      summary: Get a specific user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful data envelope with user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+        '404':
+          description: User not found
+  /users/sync:
+    post:
+      summary: Synchronize users from Phorge
+      description: This endpoint triggers a manual sync of users from Phorge. It only creates missing users based on their Phorge PHID/Email.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sync completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      createdCount:
+                        type: integer
+                  meta:
+                    type: object
 

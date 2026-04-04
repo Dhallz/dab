@@ -81,5 +81,7 @@ Future<void> serviceLocator() async {
       redis: sl<RedisService>(),
     ),
   );
-  sl.registerSingleton<UserService>(UserService(sl<IUserRepository>()));
+  sl.registerSingleton<UserService>(
+    UserService(sl<IUserRepository>(), sl<PhorgeConnector>()),
+  );
 }

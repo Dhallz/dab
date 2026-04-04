@@ -79,37 +79,54 @@ class ActivityService {
       final usersResult = await _authRepo.findUsersWithPhorge();
       await usersResult.match(
         (f) async => print('DB Error during polling: ${f.message}'),
-        (users) async {
-          final start = DateTime.now().subtract(
-            const Duration(minutes: 60),
-          ); // Check last hour
-          final end = DateTime.now();
-          final activities = await _phorge.fetchActivities(
-            users: users,
-            startDate: start,
-            endDate: end,
-            authoredOnly: false, // Inbox Mode for live polling
-          );
+        (allUsers) async {
+          final activeUserIds = _presence.getActiveUserIds();
+          
+          // 1. Prioritize active users
+          final activeUsers = allUsers.where((u) => activeUserIds.contains(u.id)).toList();
+          final otherUsers = allUsers.where((u) => !activeUserIds.contains(u.id)).toList();
 
-          for (final activity in activities) {
-            if (_processedIds.contains(activity.id)) continue;
+          // 2. Fetch for active users first (fast window)
+          if (activeUsers.isNotEmpty) {
+            await _syncUserBatch(activeUsers, minutesLookback: 60);
+          }
 
-            // The provider returns the correct user ID mapped from the authorPHID
-            final createResult = await _repo.createActivity(activity);
-            await createResult.match(
-              (f) async =>
-                  print('Failed to save polled activity: ${f.message}'),
-              (_) async {},
-            );
-
-            if (_processedIds.length > 500) {
-              _processedIds.remove(_processedIds.first);
-            }
+          // 3. Incrementally sync other users (larger window, but maybe infrequent?)
+          // For now, just sync all but in smaller slices (handled by PhorgeConnector)
+          if (otherUsers.isNotEmpty) {
+            await _syncUserBatch(otherUsers, minutesLookback: 120);
           }
         },
       );
     } catch (e) {
       print('Error polling Phorge: $e');
+    }
+  }
+
+  Future<void> _syncUserBatch(List<User> users, {required int minutesLookback}) async {
+    final start = DateTime.now().subtract(Duration(minutes: minutesLookback));
+    final end = DateTime.now();
+
+    final activities = await _phorge.fetchActivities(
+      users: users,
+      startDate: start,
+      endDate: end,
+      authoredOnly: false, // Inbox Mode for live polling
+    );
+
+    for (final activity in activities) {
+      if (_processedIds.contains(activity.id)) continue;
+
+      final createResult = await _repo.createActivity(activity);
+      await createResult.match(
+        (f) async => print('Failed to save polled activity: ${f.message}'),
+        (_) async {
+          _processedIds.add(activity.id);
+          if (_processedIds.length > 1000) {
+            _processedIds.remove(_processedIds.first);
+          }
+        },
+      );
     }
   }
 

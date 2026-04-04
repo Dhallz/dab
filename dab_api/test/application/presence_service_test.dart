@@ -22,14 +22,14 @@ void main() {
     });
 
     test('addSession should track a new session', () {
-      presenceService.addSession(mockSocket);
+      presenceService.addSession(mockSocket, 'user1');
       // We check broadcast to verify it's tracked
       presenceService.broadcast('test', {'foo': 'bar'});
       verify(() => mockSocket.trySendText(any())).called(1);
     });
 
     test('removeSession should stop tracking a session', () {
-      presenceService.addSession(mockSocket);
+      presenceService.addSession(mockSocket, 'user1');
       presenceService.removeSession(mockSocket);
       presenceService.broadcast('test', {'foo': 'bar'});
       verifyNever(() => mockSocket.trySendText(any()));
@@ -39,8 +39,8 @@ void main() {
       final mockSocket2 = MockRelicWebSocket();
       when(() => mockSocket2.trySendText(any())).thenReturn(true);
 
-      presenceService.addSession(mockSocket);
-      presenceService.addSession(mockSocket2);
+      presenceService.addSession(mockSocket, 'user1');
+      presenceService.addSession(mockSocket2, 'user2');
 
       presenceService.broadcast('alert', {'msg': 'hello'});
 

@@ -7,6 +7,7 @@ import 'dtos/phorge_project_dto.dart';
 import 'dtos/phorge_revision_dto.dart';
 import 'dtos/phorge_task_dto.dart';
 import 'dtos/phorge_transaction_dto.dart';
+import 'dtos/phorge_user_dto.dart';
 import 'phorge_client.dart';
 
 class PhorgeConnector {
@@ -24,29 +25,42 @@ class PhorgeConnector {
     final validUsers = users.where((u) => u.phorgePhid != null).toList();
     if (validUsers.isEmpty) return [];
 
-    final userPhids = validUsers.map((u) => u.phorgePhid!).toList();
-    final sprintTag = _getCurrentSprintTag(startDate);
-    final sprintPhid = await _fetchSprintProjectPhid(sprintTag);
+    // Slice users to avoid large batch performance issues
+    const chunkSize = 15;
+    List<Activity> allActivities = [];
 
-    final tasks = await _fetchSprintTasks(
-      validUsers,
-      userPhids,
-      sprintPhid,
-      sprintTag,
-      startDate,
-      endDate,
-      authoredOnly,
-    );
+    for (var i = 0; i < validUsers.length; i += chunkSize) {
+      final chunk = validUsers.sublist(
+        i,
+        i + chunkSize > validUsers.length ? validUsers.length : i + chunkSize,
+      );
+      final chunkPhids = chunk.map((u) => u.phorgePhid!).toList();
 
-    final revisions = await _fetchRevisions(
-      validUsers,
-      userPhids,
-      startDate,
-      endDate,
-    );
+      final sprintTag = _getCurrentSprintTag(startDate);
+      final sprintPhid = await _fetchSprintProjectPhid(sprintTag);
 
-    return [...tasks, ...revisions]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final tasks = await _fetchSprintTasks(
+        chunk,
+        chunkPhids,
+        sprintPhid,
+        sprintTag,
+        startDate,
+        endDate,
+        authoredOnly,
+      );
+
+      final revisions = await _fetchRevisions(
+        chunk,
+        chunkPhids,
+        startDate,
+        endDate,
+      );
+
+      allActivities.addAll(tasks);
+      allActivities.addAll(revisions);
+    }
+
+    return allActivities..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   String _getCurrentSprintTag([DateTime? now]) {
@@ -165,6 +179,21 @@ class PhorgeConnector {
     return null;
   }
 
+  Future<List<PhorgeUserDto>> fetchAllUsers() async {
+    final result = await _client.call('user.search', {
+      'constraints': {
+        'isDisabled': false,
+      },
+    });
+
+    final data = result['data'] as List<dynamic>?;
+    if (data == null) return [];
+
+    return data
+        .map((e) => PhorgeUserDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
+  }
+
   String _generateUuid(String source) {
     return _uuid.v5(Namespace.url.value, source);
   }
@@ -242,40 +271,37 @@ class PhorgeConnector {
           );
         }
       } else {
-        // PERFORMANCE: Batch Inbox Lookup
-        // 1. Find all relevant tasks assigned to users
-        Map<String, dynamic> constraints = {
-          'statuses': ['open'],
-          'assigned': userPhids,
-        };
-        if (sprintPhid != null) {
-          constraints['projects'] = [sprintPhid];
-        }
-
-        final result = await _client.call('maniphest.search', {
-          'constraints': constraints,
+        // PERFORMANCE: Targeted Inbox Lookup
+        // Instead of fetching all tasks, we find tasks assigned to the users
+        // that have changed in the target window.
+        final taskResult = await _client.call('maniphest.search', {
+          'constraints': {
+            'assigned': userPhids,
+            'modifiedAfter': start.millisecondsSinceEpoch ~/ 1000,
+          },
           'attachments': {'projects': true},
         });
 
-        final rawData = result['data'] as List<dynamic>?;
-        if (rawData == null || rawData.isEmpty) return [];
+        final rawTaskData = taskResult['data'] as List<dynamic>?;
+        if (rawTaskData == null || rawTaskData.isEmpty) return [];
 
-        final tasks = rawData
+        final tasks = rawTaskData
             .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
             .toList();
 
-        // 2. Fetch ALL transactions for these tasks in ONE call
         final taskPhids = tasks.map((t) => t.phid).toList();
+        
+        // Fetch transactions for these specific tasks
         final txResult = await _client.call('transaction.search', {
           'objectType': 'TASK',
           'constraints': {'objectPHIDs': taskPhids},
-          'limit': 300,
+          'limit': 200,
         });
 
         final rawTxData = txResult['data'] as List<dynamic>?;
         if (rawTxData == null) return activities;
 
-        final allTransactions = rawTxData
+        final relevantTransactions = rawTxData
             .map(
               (e) =>
                   PhorgeTransactionDto.fromConduit(e as Map<String, dynamic>),
@@ -289,15 +315,9 @@ class PhorgeConnector {
 
         final tasksMap = {for (var t in tasks) t.phid: t};
 
-        for (final tx in allTransactions) {
+        for (final tx in relevantTransactions) {
           final task = tasksMap[tx.objectPHID];
           if (task == null) continue;
-
-          // In Inbox mode, we care if the user originated it, OR if it happened on a task they own
-          if (!userPhids.contains(tx.authorPHID) &&
-              !userPhids.contains(task.ownerPHID)) {
-            continue;
-          }
 
           _processTransaction(
             tx,

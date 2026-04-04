@@ -7,7 +7,10 @@ import '../entities/user.dart';
 abstract class IUserRepository {
   Future<Either<DatabaseFailure, List<User>>> getUsers();
   Future<Either<DatabaseFailure, User>> getUser(String id);
+  Future<Either<DatabaseFailure, User?>> findByEmail(String email);
   Future<Either<DatabaseFailure, List<User>>> getUsersByGroup(String groupId);
+
+  Future<Either<DatabaseFailure, void>> saveUser(User user);
 
   Future<Either<DatabaseFailure, List<Group>>> getGroups();
   Future<Either<DatabaseFailure, Group>> saveGroup(Group group);

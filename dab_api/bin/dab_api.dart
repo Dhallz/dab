@@ -45,6 +45,7 @@ Future<void> main() async {
     ..use('/users', AuthMiddleware().call)
     ..get('/users', UserController().getUsers)
     ..get('/users/:id', UserController().getUser)
+    ..post('/users/sync', UserController().syncUsers)
     ..use('/groups', AuthMiddleware().call)
     ..get('/groups', GroupController().getGroups)
     ..post('/groups', GroupController().saveGroup)

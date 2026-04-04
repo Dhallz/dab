@@ -130,8 +130,9 @@ class ActivityController {
   }
 
   WebSocketUpgrade wsHandler(Request request) {
+    final userId = userIdProperty.get(request);
     return WebSocketUpgrade((webSocket) async {
-      _presence.addSession(webSocket);
+      _presence.addSession(webSocket, userId);
 
       await for (final _ in webSocket.events) {
         if (webSocket.isClosed) {
