@@ -3,6 +3,10 @@ import 'user.dart';
 
 part 'group.mapper.dart';
 
+/// [ARCH: DOMAIN_ENTITY]
+/// ROLE: Organizational unit representing a collection of Users.
+/// CONTRACT: Immutable Plain Old Data (POD) object.
+/// CONSTRAINTS: Must be serializable via [GroupMappable]. 
 @MappableEnum()
 enum GroupType { custom, provider }
 

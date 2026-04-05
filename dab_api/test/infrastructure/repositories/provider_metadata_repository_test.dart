@@ -1,19 +1,19 @@
 import 'package:dab_api/src/domain/core/failure.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_project_dto.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_connector.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class MockPhorgeConnector extends Mock implements PhorgeConnector {}
+class MockPhorgeProjectSource extends Mock implements PhorgeProjectSource {}
 
 void main() {
-  late MockPhorgeConnector mockConnector;
+  late MockPhorgeProjectSource mockSource;
   late ProviderMetadataRepository repository;
 
   setUp(() {
-    mockConnector = MockPhorgeConnector();
-    repository = ProviderMetadataRepository(phorgeConnector: mockConnector);
+    mockSource = MockPhorgeProjectSource();
+    repository = ProviderMetadataRepository(projectSource: mockSource);
   });
 
   group('ProviderMetadataRepository', () {
@@ -40,7 +40,7 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockConnector.fetchAllProjects('PHID-USER-1234'),
+          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
         ).thenAnswer((_) async => tPhorgeProjects);
 
         // Act
@@ -68,7 +68,7 @@ void main() {
         expect(second.icon, isNull);
 
         verify(
-          () => mockConnector.fetchAllProjects('PHID-USER-1234'),
+          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
         ).called(1);
       },
     );
@@ -78,7 +78,7 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockConnector.fetchAllProjects('PHID-USER-1234'),
+          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
         ).thenThrow(Exception('Conduit Error'));
 
         // Act
@@ -95,7 +95,7 @@ void main() {
         expect(failure.message, contains('Conduit Error'));
 
         verify(
-          () => mockConnector.fetchAllProjects('PHID-USER-1234'),
+          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
         ).called(1);
       },
     );

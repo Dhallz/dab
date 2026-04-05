@@ -1,13 +1,14 @@
 import 'dart:convert';
-
 import 'package:relic/relic.dart';
-
-import '../../application/auth_service.dart';
+import '../../application/containers/auth_usecases.dart';
 import '../../service_locator.dart';
 
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Controller for Authentication and Identity Management.
+/// CONTRACT: Maps HTTP requests for registration and login to [AuthUseCases].
+/// CONSTRAINTS: Handles JSON parsing and Failure-to-HTTP mapping. Strictly no business logic.
 class AuthController {
-  final AuthService _authService = sl<AuthService>();
-
+  final AuthUseCases _auth = sl<AuthUseCases>();
   Future<Response> register(Request request) async {
     final body = await request.readAsString();
     final data = jsonDecode(body);
@@ -25,7 +26,7 @@ class AuthController {
       );
     }
 
-    final result = await _authService.register(name, email, password);
+    final result = await _auth.registerNewUser.execute(name, email, password);
 
     return result.match(
       (failure) => Response.badRequest(
@@ -56,7 +57,7 @@ class AuthController {
       );
     }
 
-    final result = await _authService.login(email, password);
+    final result = await _auth.authenticateUser.execute(email, password);
 
     return result.match(
       (failure) => Response.unauthorized(
@@ -86,7 +87,7 @@ class AuthController {
       );
     }
 
-    final result = await _authService.refreshToken(refreshToken);
+    final result = await _auth.refreshToken.execute(refreshToken);
 
     return result.match(
       (failure) => Response.unauthorized(

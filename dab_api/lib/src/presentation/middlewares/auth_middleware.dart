@@ -1,8 +1,9 @@
 import 'package:relic/relic.dart';
-
-import '../../application/auth_service.dart';
+import '../../infrastructure/security/jwt_provider.dart';
 import '../../service_locator.dart';
 
+/// [ARCH: PRESENTATION_CONTEXT]
+/// ROLE: Cross-cutting Identity Property for the Request context.
 final userIdProperty = ContextProperty<String>('userId');
 
 extension AuthContext on Request {
@@ -10,8 +11,12 @@ extension AuthContext on Request {
   String? get userIdOrNull => userIdProperty[this];
 }
 
+/// [ARCH: PRESENTATION_MIDDLEWARE]
+/// ROLE: Request Interceptor for Authentication Guarding.
+/// CONTRACT: Implements [MiddlewareObject] to verify Bearer tokens via [JwtProvider].
+/// CONSTRAINTS: Must fail early with 401 Unauthorized for invalid or missing tokens.
 class AuthMiddleware extends MiddlewareObject {
-  final AuthService _authService = sl<AuthService>();
+  final JwtProvider _jwtProvider = sl<JwtProvider>();
 
   @override
   Handler call(Handler next) {
@@ -28,7 +33,7 @@ class AuthMiddleware extends MiddlewareObject {
       }
 
       final token = authHeader.substring(7);
-      final jwt = _authService.verifyToken(token);
+      final jwt = _jwtProvider.verifyToken(token);
 
       if (jwt == null) {
         return Response.unauthorized(body: Body.fromString('Invalid token'));

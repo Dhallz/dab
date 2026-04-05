@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../core/abs_cubit.dart';
 import 'app_state.dart';
 
+/// [ARCH: PRESENTATION_BLOC]
+/// ROLE: Global State Manager for Application-wide settings and metadata.
+/// CONTRACT: Manages [AppState]. Orchestrates initialization and cross-cutting updates (Theme).
+/// CONSTRAINTS: Directly interacts with [SystemUseCases] and [MetadataUseCases].
 class AppCubit extends AbsCubit<AppState> {
   final SystemUseCases _systemUseCases;
   final MetadataUseCases _metadataUseCases;

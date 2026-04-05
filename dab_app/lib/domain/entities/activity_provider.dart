@@ -1,9 +1,12 @@
 import 'package:dart_mappable/dart_mappable.dart';
-
 import 'activity.dart';
 
 part 'activity_provider.mapper.dart';
 
+/// [ARCH: DOMAIN_ENTITY]
+/// ROLE: Discriminated union for platform-specific activity metadata.
+/// CONTRACT: Sealed hierarchy representing the specific "Type" of an Activity.
+/// CONSTRAINTS: Must be exhaustive. Used for type-safe UI rendering.
 @MappableClass()
 class SprintContext with SprintContextMappable {
   final String tag;

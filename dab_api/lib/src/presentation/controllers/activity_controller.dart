@@ -1,23 +1,29 @@
 import 'dart:convert';
-
 import 'package:relic/relic.dart';
-
-import '../../application/activity_service.dart';
-import '../../application/presence_service.dart';
+import '../../application/containers/activity_usecases.dart';
+import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity_provider.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Entry point for the Activity Feed API.
+/// CONTRACT: Standard Relic Controller mapping HTTP/WebSocket requests to Application UseCases.
+/// CONSTRAINTS: Must not contain business logic. Delegates to [ActivityUseCases].
+/// 
+/// This controller handles historical activity retrieval, complex multi-source 
+/// searches, and real-time WebSocket session management.
 class ActivityController {
-  final ActivityService _activityService = sl<ActivityService>();
+  final ActivityUseCases _activity = sl<ActivityUseCases>();
   final PresenceService _presence = sl<PresenceService>();
 
   Future<Response> getActivities(Request request) async {
     final userId = userIdProperty.get(request);
     final redis = sl<RedisService>(); // Get RedisService instance
     print('User $userId fetching activities...');
-    final activities = await _activityService.getRecent();
+    final activitiesResult = await _activity.getRecentActivities.execute();
+    final activities = activitiesResult.getOrElse((_) => []);
     final syncToken = await redis.getCurrentVersion(); // Fetch syncToken
 
     final jsonList = activities.map((a) => a.toMap()).toList(); // Use a.toMap()
@@ -100,7 +106,7 @@ class ActivityController {
     final authoredOnly = authoredOnlyStr?.toLowerCase() != 'false';
 
     try {
-      final activities = await _activityService.searchActivities(
+      final activities = await _activity.searchActivities.execute(
         targetUserIds: targetUserIds,
         startDate: startDate,
         endDate: endDate,
@@ -148,7 +154,7 @@ class ActivityController {
     final body = await request.readAsString();
     final data = jsonDecode(body);
 
-    await _activityService.logActivity(
+    await _activity.logActivity.execute(
       userId: data['userId'] ?? 'system',
       provider: GenericProvider(
         name: data['provider'] ?? 'Mock',

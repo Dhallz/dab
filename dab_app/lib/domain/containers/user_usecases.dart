@@ -1,20 +1,21 @@
-import 'package:fpdart/fpdart.dart' hide Group;
-
-import '../core/failures.dart';
-import '../entities/group.dart';
-import '../entities/user.dart';
 import '../repositories/abs_i_user_repository.dart';
+import '../usecases/user/delete_group.dart';
+import '../usecases/user/get_groups.dart';
+import '../usecases/user/get_user.dart';
+import '../usecases/user/get_users.dart';
+import '../usecases/user/save_group.dart';
 
 class UserUseCases {
-  final IUserRepository _repo;
+  final DeleteGroup deleteGroup;
+  final GetGroups getGroups;
+  final GetUser getUser;
+  final GetUsers getUsers;
+  final SaveGroup saveGroup;
 
-  UserUseCases(this._repo);
-
-  Future<Either<AppFailure, List<User>>> getUsers() => _repo.getUsers();
-  Future<Either<AppFailure, User>> getUser(String id) => _repo.getUser(id);
-  Future<Either<AppFailure, List<Group>>> getGroups() => _repo.getGroups();
-  Future<Either<AppFailure, Group>> saveGroup(Group group) =>
-      _repo.saveGroup(group);
-  Future<Either<AppFailure, void>> deleteGroup(String id) =>
-      _repo.deleteGroup(id);
+  UserUseCases(IUserRepository repository)
+      : deleteGroup = DeleteGroup(repository),
+        getGroups = GetGroups(repository),
+        getUser = GetUser(repository),
+        getUsers = GetUsers(repository),
+        saveGroup = SaveGroup(repository);
 }

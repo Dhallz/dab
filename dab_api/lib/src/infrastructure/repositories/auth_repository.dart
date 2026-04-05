@@ -1,16 +1,23 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
-
 import '../../domain/core/failure.dart';
 import '../../domain/entities/session.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
 import '../database/app_database.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Persistence implementation for Authentication and User identity.
+/// CONTRACT: Implements [AbsIAuthRepository] using the [AppDatabase] (Drift/Postgres).
+/// CONSTRAINTS: Must handle low-level database exceptions and map them to [DatabaseFailure].
+/// 
+/// This repository acts as the bridge between the high-level [User] and [Session] 
+/// entities and the low-level relational tables.
 class AuthRepository implements AbsIAuthRepository {
   final AppDatabase _db;
   AuthRepository(this._db);
 
+  /// Finds a user by their unique email address.
   @override
   Future<Either<DatabaseFailure, User?>> findByEmail(String email) async {
     try {
@@ -23,6 +30,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Finds a user by their unique internal ID.
   @override
   Future<Either<DatabaseFailure, User?>> findById(String id) async {
     try {
@@ -35,6 +43,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Persists a new user identity.
   @override
   Future<Either<DatabaseFailure, void>> createUser(User user) async {
     try {
@@ -59,6 +68,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Retrieves users who have an associated Phorge identity.
   @override
   Future<Either<DatabaseFailure, List<User>>> findUsersWithPhorge() async {
     try {
@@ -71,6 +81,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Records a new authentication session.
   @override
   Future<Either<DatabaseFailure, void>> createSession(Session session) async {
     try {
@@ -91,6 +102,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Retrieves a session by its refresh token.
   @override
   Future<Either<DatabaseFailure, Session?>> findSessionByToken(
     String token,
@@ -107,6 +119,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Removes a specific session (Logout/Invalidation).
   @override
   Future<Either<DatabaseFailure, void>> deleteSession(String token) async {
     try {
@@ -119,6 +132,7 @@ class AuthRepository implements AbsIAuthRepository {
     }
   }
 
+  /// Removes all sessions for a specific user (Security purge).
   @override
   Future<Either<DatabaseFailure, void>> deleteUserSessions(
     String userId,

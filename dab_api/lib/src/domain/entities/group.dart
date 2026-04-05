@@ -1,20 +1,41 @@
 import 'package:dart_mappable/dart_mappable.dart';
-
 import 'user.dart';
 
 part 'group.mapper.dart';
 
-@MappableEnum()
-enum GroupType { custom, provider }
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Categorizes groups by their origin.
+enum GroupType { 
+  /// Manually created by DAB users.
+  custom, 
+  
+  /// Synchronized from external platforms (e.g., Slack Channels).
+  provider 
+}
 
+/// [ARCH: DOMAIN_ENTITY]
+/// ROLE: Represents a collection of users (Team, Project, or Circle).
+/// CONTRACT: Used for activity filtering and access control.
+/// CONSTRAINTS: Must define membership via internal [User] entities.
 @MappableClass()
 class Group with GroupMappable {
+  /// Unique identifier (UUID).
   final String id;
+  
+  /// Display name of the group.
   final String name;
+  
+  /// Whether the group is manually managed or platform-synced.
   final GroupType type;
+  
+  /// The list of users belonging to this group.
   final List<User> members;
+  
+  /// Optional URL to a group representation icon.
   final String? iconUrl;
-  final String? providerName; // e.g., 'slack', 'jira'
+  
+  /// If [type] is provider, the system name (e.g., 'slack', 'jira').
+  final String? providerName; 
 
   const Group({
     required this.id,

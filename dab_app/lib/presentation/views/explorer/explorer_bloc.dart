@@ -45,8 +45,8 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     Emitter<ExplorerState> emit,
   ) async {
     final results = await Future.wait([
-      _userUseCases.getUsers(),
-      _userUseCases.getGroups(),
+      _userUseCases.getUsers.execute(),
+      _userUseCases.getGroups.execute(),
       _metadataUseCases.getProviderConfigs.execute(),
     ]);
 
@@ -111,7 +111,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
 
     final usersToSearch = targetIds.isEmpty ? null : targetIds.toList();
 
-    final result = await _activityUseCases.repository.searchActivities(
+    final result = await _activityUseCases.searchActivities.execute(
       startDate: date,
       endDate: date,
       users: usersToSearch,
@@ -139,7 +139,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         emit(state.copyWith(status: ExplorerStatus.success, items: items));
 
         _activitySubscription?.cancel();
-        _activitySubscription = _activityUseCases.watch().listen((activity) {
+        _activitySubscription = _activityUseCases.watchActivities.execute().listen((activity) {
           add(ExplorerActivityReceived(activity));
         });
       },
@@ -309,7 +309,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     ExplorerGroupSaved event,
     Emitter<ExplorerState> emit,
   ) async {
-    final result = await _userUseCases.saveGroup(event.group);
+    final result = await _userUseCases.saveGroup.execute(event.group);
     await result.fold(
       (failure) async => emit(
         state.copyWith(

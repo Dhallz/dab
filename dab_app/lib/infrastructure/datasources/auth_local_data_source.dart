@@ -3,6 +3,10 @@ import '../core/local/objectbox_store.dart';
 import '../core/local/records/auth_credential_record.dart';
 import '../core/local/records/user_record.dart';
 
+/// [ARCH: INFRASTRUCTURE_SOURCE]
+/// ROLE: Persistence layer for User profile and saved Credentials using ObjectBox.
+/// CONTRACT: Provides synchronous CRUD operations for local data [Box]es.
+/// CONSTRAINTS: Must only handle [Record] types. Responsibility for Domain mapping lies with the Repository.
 class AuthLocalDataSource {
   final Box<UserRecord> _userBox;
   final Box<AuthCredentialRecord> _credentialBox;

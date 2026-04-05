@@ -1,10 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../domain/containers/auth_usecases.dart';
 import '../../../../domain/entities/user.dart';
 
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Discrete status of the Authentication lifecycle.
 enum AuthStatus { initial, authenticated, unauthenticated, error }
 
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Immutable state for Authentication features.
 class AuthState {
   final AuthStatus status;
   final User? user;
@@ -21,6 +24,10 @@ class AuthState {
       AuthState(status: AuthStatus.error, errorMessage: message);
 }
 
+/// [ARCH: PRESENTATION_BLOC]
+/// ROLE: State Manager for Authentication and Session lifecycle.
+/// CONTRACT: Manages [AuthState]. Orchestrates login, registration, and logout.
+/// CONSTRAINTS: Directly interacts with [AuthUseCases].
 class AuthCubit extends Cubit<AuthState> {
   final AuthUseCases _usecases;
 

@@ -1,10 +1,13 @@
 import 'dart:convert';
-
 import '../../../domain/entities/presence.dart';
 import '../../../domain/repositories/abs_i_presence_repository.dart';
 import '../datasources/presence_remote_data_source.dart';
 import '../repositories/core/repository.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Implementation of Real-time Presence tracking in the Client.
+/// CONTRACT: Implements [IPresenceRepository].
+/// CONSTRAINTS: Bridges [PresenceRemoteDataSource] (WebSocket) to Domain Entities. 
 class PresenceRepository extends Repository implements IPresenceRepository {
   final PresenceRemoteDataSource _remoteDataSource;
 

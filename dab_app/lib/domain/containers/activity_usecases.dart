@@ -1,10 +1,15 @@
 import '../repositories/abs_i_activity_repository.dart';
+import '../usecases/activity/get_recent_activities.dart';
+import '../usecases/activity/search_activities.dart';
+import '../usecases/activity/watch_activities.dart';
 
 class ActivityUseCases {
-  final IActivityRepository repository;
+  final GetRecentActivities getRecentActivities;
+  final SearchActivities searchActivities;
+  final WatchActivities watchActivities;
 
-  ActivityUseCases(this.repository);
-
-  Future<void> getRecent() => repository.getRecentActivities();
-  Stream<dynamic> watch() => repository.watchActivities();
+  ActivityUseCases(IActivityRepository repository)
+      : getRecentActivities = GetRecentActivities(repository),
+        searchActivities = SearchActivities(repository),
+        watchActivities = WatchActivities(repository);
 }

@@ -1,20 +1,22 @@
 import 'dart:convert';
-
 import 'package:relic/relic.dart';
-
-import '../../application/metadata_service.dart';
+import '../../application/containers/metadata_usecases.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Controller for Platform Metadata and Configuration.
+/// CONTRACT: Maps HTTP requests for provider settings and dynamic metadata to [MetadataUseCases].
+/// CONSTRAINTS: Purely for data delivery. Handles user context resolution from [userIdProperty].
 class MetadataController {
-  final MetadataService _service = sl<MetadataService>();
+  final MetadataUseCases _metadata = sl<MetadataUseCases>();
 
   Future<Response> getProviders(Request request) async {
     final userId = userIdProperty.get(request);
-    print('User \$userId fetching metadata...');
+    print('User $userId fetching metadata...');
 
     try {
-      final metadata = await _service.getMetadata(userId);
+      final metadata = await _metadata.getProviderMetadata.execute(userId);
       final jsonList = metadata.map((m) => m.toMap()).toList();
 
       return Response.ok(
@@ -44,7 +46,7 @@ class MetadataController {
 
   Future<Response> getConfigs(Request request) async {
     try {
-      final configs = await _service.getConfigs();
+      final configs = await _metadata.getProviderConfigs.execute();
       final jsonList = configs.map((c) => c.toMap()).toList();
 
       return Response.ok(

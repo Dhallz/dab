@@ -1,17 +1,19 @@
 import 'dart:convert';
-
 import 'package:relic/relic.dart';
-
-import '../../application/user_service.dart';
+import '../../application/containers/group_usecases.dart';
 import '../../domain/entities/group.dart';
 import '../../service_locator.dart';
 
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Controller for Group and Organizational Unit management.
+/// CONTRACT: Maps HTTP requests for group CRUD operations to [GroupUseCases].
+/// CONSTRAINTS: Handles entity mapping (via GroupMapper) and HTTP response status coordination.
 class GroupController {
-  final UserService _userService = sl<UserService>();
+  final GroupUseCases _group = sl<GroupUseCases>();
 
   Future<Response> getGroups(Request request) async {
     try {
-      final groups = await _userService.getGroups();
+      final groups = await _group.getGroups.execute();
       final jsonList = groups.map((g) => g.toMap()).toList();
 
       return Response.ok(
@@ -42,7 +44,7 @@ class GroupController {
       final data = jsonDecode(body);
       final group = GroupMapper.fromMap(data);
 
-      final savedGroup = await _userService.saveGroup(group);
+      final savedGroup = await _group.saveGroup.execute(group);
 
       return Response.ok(
         body: Body.fromString(
@@ -71,7 +73,7 @@ class GroupController {
     if (id == null) return Response.badRequest();
 
     try {
-      await _userService.deleteGroup(id);
+      await _group.deleteGroup.execute(id);
       return Response.ok();
     } catch (e) {
       return Response.internalServerError(

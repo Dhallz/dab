@@ -6,6 +6,14 @@ import 'package:http/io_client.dart';
 
 import '../../config/config.dart';
 
+/// [ARCH: INFRASTRUCTURE_CLIENT]
+/// ROLE: Low-level HTTP client for the Phorge (Conduit) API.
+/// CONTRACT: Handles authentication (api.token) and protocol-specific serialization.
+/// CONSTRAINTS: Must handle x-www-form-urlencoded deep objects for Phorge.
+///
+/// This client is the "Protocol Layer." It speaks specifically to the Phorge 
+/// API's quirks, including the requirement for `api.token` and its custom 
+/// form-encoded parameter flattening.
 class PhorgeClient {
   final String _baseUrl;
   final String _apiToken;

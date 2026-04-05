@@ -1,17 +1,26 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
-
 import '../../domain/core/failure.dart';
 import '../../domain/entities/activity.dart';
 import '../../domain/entities/activity_provider.dart';
 import '../../domain/repositories/abs_i_activity_repository.dart';
 import '../database/app_database.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Persistence implementation for the Unified Activity Feed.
+/// CONTRACT: Implements [AbsIActivityRepository] using [AppDatabase] (Drift/Postgres).
+/// CONSTRAINTS: Employs the **Table-Per-Type (TBT)** pattern to store polymorphic metadata.
+/// 
+/// This repository manages the atomic storage of base activity data and its 
+/// specialized provider-specific metadata across relational tables.
 class ActivityRepository implements AbsIActivityRepository {
   final AppDatabase _db;
   ActivityRepository(this._db);
 
   @override
+  /// [ARCH: INFRASTRUCTURE_ENTRY]
+  /// ROLE: Persists a new activity and its specialized metadata.
+  /// CONTRACT: Atomic transaction across the base `activities` table and type-specific tables.
   Future<Either<DatabaseFailure, void>> createActivity(
     Activity activity,
   ) async {
@@ -120,6 +129,9 @@ class ActivityRepository implements AbsIActivityRepository {
     }
   }
 
+  /// [ARCH: INFRASTRUCTURE_INTERNAL]
+  /// ROLE: Hydrates high-level Activity entities from the database.
+  /// CONTRACT: Uses `leftOuterJoin` to merge base activities with specialized metadata tables.
   Activity _mapRowToActivity(TypedResult row) {
     final activityData = row.readTable(_db.activitiesTable);
     final phorgeData = row.readTableOrNull(_db.activityPhorgeTable);

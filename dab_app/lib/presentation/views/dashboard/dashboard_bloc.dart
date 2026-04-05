@@ -25,7 +25,7 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     emit(state.copyWith(status: DashboardStatus.loading));
 
     print('DEBUG: Fetching recent activities...');
-    final result = await _activityUseCases.repository.getRecentActivities();
+    final result = await _activityUseCases.getRecentActivities.execute();
     print('DEBUG: Fetch completed. Success: ${result.isRight()}');
 
     result.fold(
@@ -45,7 +45,7 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
 
         // Start watching for live updates
         _activitySubscription?.cancel();
-        _activitySubscription = _activityUseCases.watch().listen((activity) {
+        _activitySubscription = _activityUseCases.watchActivities.execute().listen((activity) {
           add(DashboardActivityReceived(activity));
         });
       },

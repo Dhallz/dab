@@ -3,42 +3,35 @@ import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
 import 'package:dab_app/domain/entities/activity.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_bloc.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockActivityUseCases extends Mock implements ActivityUseCases {}
-
-class MockUserUseCases extends Mock implements UserUseCases {}
-
-class MockMetadataUseCases extends Mock implements MetadataUseCases {}
-
 class MockActivityRepository extends Mock implements IActivityRepository {}
+class MockUserRepository extends Mock implements IUserRepository {}
+class MockMetadataUseCases extends Mock implements MetadataUseCases {}
 
 void main() {
   late ExplorerBloc explorerBloc;
-  late MockActivityUseCases mockActivityUseCases;
-  late MockUserUseCases mockUserUseCases;
+  late ActivityUseCases activityUseCases;
+  late UserUseCases userUseCases;
   late MockMetadataUseCases mockMetadataUseCases;
   late MockActivityRepository mockActivityRepository;
+  late MockUserRepository mockUserRepository;
 
   setUp(() {
-    mockActivityUseCases = MockActivityUseCases();
-    mockUserUseCases = MockUserUseCases();
-    mockMetadataUseCases = MockMetadataUseCases();
     mockActivityRepository = MockActivityRepository();
+    mockUserRepository = MockUserRepository();
+    mockMetadataUseCases = MockMetadataUseCases();
 
-    when(
-      () => mockActivityUseCases.repository,
-    ).thenReturn(mockActivityRepository);
-    when(
-      () => mockActivityUseCases.watch(),
-    ).thenAnswer((_) => const Stream.empty());
+    activityUseCases = ActivityUseCases(mockActivityRepository);
+    userUseCases = UserUseCases(mockUserRepository);
 
     explorerBloc = ExplorerBloc(
-      mockActivityUseCases,
-      mockUserUseCases,
+      activityUseCases,
+      userUseCases,
       mockMetadataUseCases,
     );
   });

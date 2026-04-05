@@ -2,6 +2,9 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'activity_provider.mapper.dart';
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Contextual metadata for a specific Sprint event.
+/// CONTRACT: Captures the "Where" (Board/Column) of an activity.
 @MappableClass()
 class SprintContext with SprintContextMappable {
   final String tag;
@@ -11,14 +14,28 @@ class SprintContext with SprintContextMappable {
   const SprintContext({required this.tag, this.columnFrom, this.columnTo});
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Polymorphic base for Platform-specific metadata.
+/// CONTRACT: Defines the Identity (Provider) and Nature (Category) of an activity.
+/// CONSTRAINTS: Must be a sealed class for type-safe exhaustive matching.
+///
+/// This hierarchy is the Domain representation of the **Table-Per-Type (TBT)** 
+/// database pattern. Each subclass corresponds to a specific relational table 
+/// (e.g. `activity_phorge_task`) that holds metadata unique to that platform.
 @MappableClass()
 sealed class ActivityProvider with ActivityProviderMappable {
   const ActivityProvider();
 
+  /// The name of the entire platform element (e.g., "Phorge", "GitHub").
   String get name;
-  String get category; // Replacer for top-level 'type' (task, commit, etc.)
+  
+  /// The nature of the activity (e.g., "task", "revision", "commit").
+  String get category; 
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Phorge Tasks (Maniphest).
+/// CONTRACT: Corresponds to the `activity_phorge_task` SQL table.
 @MappableClass()
 class PhorgeTaskProvider extends ActivityProvider
     with PhorgeTaskProviderMappable {
@@ -35,6 +52,9 @@ class PhorgeTaskProvider extends ActivityProvider
   String get category => 'task';
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Phorge Revisions (Differential).
+/// CONTRACT: Corresponds to the `activity_phorge_revision` SQL table.
 @MappableClass()
 class PhorgeRevisionProvider extends ActivityProvider
     with PhorgeRevisionProviderMappable {
@@ -49,6 +69,9 @@ class PhorgeRevisionProvider extends ActivityProvider
   String get category => 'revision';
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for GitHub Commits.
+/// CONTRACT: Corresponds to the `activity_github_commit` SQL table.
 @MappableClass()
 class GitHubCommitProvider extends ActivityProvider
     with GitHubCommitProviderMappable {

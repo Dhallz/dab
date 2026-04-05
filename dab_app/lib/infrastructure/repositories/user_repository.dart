@@ -1,8 +1,6 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
-
 import '../../domain/core/failures.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/user.dart';
@@ -10,6 +8,10 @@ import '../../domain/repositories/abs_i_user_repository.dart';
 import '../core/remote/rest_api_client.dart';
 import './core/repository.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Implementation of User and Group directory management in the Client.
+/// CONTRACT: Implements [IUserRepository].
+/// CONSTRAINTS: Acts as a proxy to the REST API via [RestApiClient]. Handles DTO mapping and error guarding.
 class UserRepository extends Repository implements IUserRepository {
   final RestApiClient _client;
 

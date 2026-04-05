@@ -1,7 +1,6 @@
 import 'package:dab_app/domain/entities/user.dart';
 import 'package:dab_app/infrastructure/core/local/records/user_record.dart';
 import 'package:fpdart/fpdart.dart';
-
 import '../../domain/core/failures.dart';
 import '../../domain/entities/auth_response.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
@@ -10,6 +9,13 @@ import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
 import 'core/repository.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Orchestrator for Authentication, session management, and identity persistence.
+/// CONTRACT: Implements [IAuthRepository].
+/// CONSTRAINTS: Coordinates between [AuthRemoteDataSource] (API) and [AuthLocalDataSource]/[TokenStorage] (Persistence).
+/// 
+/// This repository is the source of truth for the current user's session state 
+/// and provides the necessary credentials for authenticated requests.
 class AuthRepository extends Repository implements IAuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final AuthLocalDataSource _localDataSource;

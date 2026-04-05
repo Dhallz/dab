@@ -1,9 +1,16 @@
 import 'dart:io';
 
+import 'package:dab_api/src/application/services/connector_registry.dart';
+import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
+import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
+import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_connector.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 
 void main() async {
   final config = Config();
@@ -22,7 +29,28 @@ void main() async {
   print('\n🔗 Connecting to Phorge at ${config.phorgeUrl}...\n');
 
   final client = PhorgeClient();
-  final connector = PhorgeConnector(client: client);
+  final sprintService = PhorgeSprintService();
+  
+  // -----------------------------------------------------
+  // [ARCH: TEST]
+  // ROLE: Integration Test for Activity Architecture.
+  // CONTRACT: Validates the Source -> Registry -> Fetcher pipeline.
+  // -----------------------------------------------------
+
+  print('🧪 Initializing Activity System (Source/Mapper Pair)...');
+  
+  // Infrastructure Sources (Raw I/O)
+  final projectSource = PhorgeProjectSource(client, sprintService);
+  final taskSource = PhorgeTaskSource(client, sprintService);
+  final revisionSource = PhorgeRevisionSource(client);
+  
+  // Application Registry
+  final registry = ConnectorRegistry();
+  registry.register(taskSource, PhorgeTaskMapper());
+  registry.register(revisionSource, PhorgeRevisionMapper());
+  
+  // Application Orchestrator
+  final fetcher = UnifiedActivityFetcher(registry);
 
   try {
     print('==========================================');
@@ -36,7 +64,7 @@ void main() async {
     print('==========================================');
     print('2. Testing Metadata (Available Tags)');
     print('==========================================');
-    final projects = await connector.fetchAllProjects(phid);
+    final projects = await projectSource.fetchActiveSprintProjects(phid);
     print('✅ Successfully fetched ${projects.length} active tags.');
 
     final sampleSize = projects.length > 5 ? 5 : projects.length;
@@ -59,20 +87,22 @@ void main() async {
       passwordHash: '',
       role: 'Standard',
       createdAt: DateTime.now(),
-      phorgePhid: phid, // Crucial: Injecting the discovered PHID
+      phorgePhid: phid,
     );
 
-    print('⏳ Querying tasks active in the current Sprint...');
+    print('⏳ Querying activities using UnifiedActivityFetcher...');
     final start = DateTime.now().subtract(const Duration(days: 7));
     final end = DateTime.now();
-    final activities = await connector.fetchActivities(
+    
+    final activities = await fetcher.fetchAll(
       users: [dummyUser],
-      startDate: start,
-      endDate: end,
+      start: start,
+      end: end,
       authoredOnly: true,
     );
+    
     print(
-      '✅ Successfully fetched ${activities.length} activities generated today:',
+      '✅ Successfully fetched ${activities.length} activities:',
     );
 
     for (var act in activities) {

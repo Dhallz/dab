@@ -1,9 +1,12 @@
 import 'package:objectbox/objectbox.dart';
-
 import '../../objectbox.g.dart';
 import '../core/local/objectbox_store.dart';
 import '../core/local/records/app_settings_record.dart';
 
+/// [ARCH: INFRASTRUCTURE_SOURCE]
+/// ROLE: Persistence layer for local App Settings and Sync Tokens using ObjectBox.
+/// CONTRACT: Provides synchronous/asynchronous CRUD for the [AppSettingsRecord] box.
+/// CONSTRAINTS: Manages a single settings record (ID 1). Focuses on [Record] types.
 class SystemLocalDataSource {
   final Box<AppSettingsRecord> _box;
 

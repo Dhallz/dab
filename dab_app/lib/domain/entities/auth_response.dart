@@ -2,6 +2,10 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'auth_response.mapper.dart';
 
+/// [ARCH: DOMAIN_ENTITY]
+/// ROLE: Payload representing a successful authentication event.
+/// CONTRACT: Immutable container for session tokens and user profile basics.
+/// CONSTRAINTS: Must be serializable via [AuthResponseMappable].
 @MappableClass()
 class AuthResponse with AuthResponseMappable {
   final String accessToken;

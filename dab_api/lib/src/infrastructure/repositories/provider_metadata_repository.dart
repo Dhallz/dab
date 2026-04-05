@@ -1,24 +1,32 @@
 import 'package:fpdart/fpdart.dart';
-
 import '../../domain/core/failure.dart';
 import '../../domain/entities/provider_metadata.dart';
 import '../../domain/repositories/abs_i_provider_metadata_repository.dart';
-import '../connectors/phorge/phorge_connector.dart';
+import '../sources/phorge/phorge_project_source.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Persistence and Retrieval of dynamic provider metadata (Tags, Projects).
+/// CONTRACT: Implements [AbsIProviderMetadataRepository].
+/// CONSTRAINTS: Currently hardcodes User PHID (Legacy lookup missing). Bridges Sources to Metadata Entities.
 class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
-  final PhorgeConnector _phorgeConnector;
+  final PhorgeProjectSource _projectSource;
 
-  ProviderMetadataRepository({required PhorgeConnector phorgeConnector})
-    : _phorgeConnector = phorgeConnector;
+  ProviderMetadataRepository({required PhorgeProjectSource projectSource})
+    : _projectSource = projectSource;
 
+  /// Retrieves metadata relevant to the specified user across all providers.
+  /// 
+  /// Flow:
+  /// 1. Uses [PhorgeProjectSource] to fetch active sprint tags.
+  /// 2. Maps [PhorgeProject] DTOs to unified [ProviderMetadata] entities.
   @override
   Future<Either<Failure, List<ProviderMetadata>>> getMetadata(
     String userId,
   ) async {
     try {
-      // For now, hardcode userPhid since we don't have user object mapped.
-      // In reality, this would lookup User from UserId.
-      final phorgeProjects = await _phorgeConnector.fetchAllProjects(
+      // TODO: Resolve real User PHID from AbsIAuthRepository.
+      // Currently using a placeholder PHID for the Sprint lookup.
+      final phorgeProjects = await _projectSource.fetchActiveSprintProjects(
         'PHID-USER-1234',
       );
 

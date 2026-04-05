@@ -1,11 +1,16 @@
 import 'package:dart_mappable/dart_mappable.dart';
-
 import 'activity_provider.dart';
-
 export 'activity_provider.dart';
 
 part 'activity.mapper.dart';
 
+/// [ARCH: DOMAIN_ENTITY]
+/// ROLE: Central unit of information representing a single item in the feed.
+/// CONTRACT: Immutable Plain Old Data (POD) object.
+/// CONSTRAINTS: Must be serializable via [ActivityMappable]. 
+///
+/// This entity is shared across the entire client, from Infrastructure (API/DB) 
+/// to Presentation (Widgets/State).
 @MappableEnum()
 enum ActivityCategory {
   commit,

@@ -1,14 +1,16 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
-
 import '../../../domain/core/failures.dart';
 import '../../../domain/entities/provider_config.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../datasources/provider_config_remote_data_source.dart';
 import '../repositories/core/repository.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Implementation of Platform Configuration retrieval in the Client.
+/// CONTRACT: Implements [IProviderConfigRepository].
+/// CONSTRAINTS: Bridges [ProviderConfigRemoteDataSource] (API) to Domain Entities.
 class ProviderConfigRepository extends Repository
     implements IProviderConfigRepository {
   final ProviderConfigRemoteDataSource _remoteDataSource;

@@ -1,14 +1,19 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
-
 import '../../../domain/core/failures.dart';
 import '../../../domain/entities/activity.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../datasources/activity_remote_data_source.dart';
 import '../repositories/core/repository.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Implementation of Activity retrieval and synchronization in the Client.
+/// CONTRACT: Implements [IActivityRepository].
+/// CONSTRAINTS: Bridges [ActivityRemoteDataSource] (API) to Domain Entities. Handles envelope stripping.
+/// 
+/// This repository manages the lifecycle of activities from fetching historical 
+/// data to watching real-time streams via WebSockets.
 class ActivityRepository extends Repository implements IActivityRepository {
   final ActivityRemoteDataSource _remoteDataSource;
 

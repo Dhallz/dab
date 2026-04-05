@@ -1,5 +1,9 @@
 import '../core/remote/rest_api_client.dart';
 
+/// [ARCH: INFRASTRUCTURE_SOURCE]
+/// ROLE: Low-level I/O for Authentication and User Profile data from the Remote API.
+/// CONTRACT: Provides raw JSON data (Futures) to the Repositories.
+/// CONSTRAINTS: Must not contain mapping or session logic. Focuses on HTTP POST/GET orchestration.
 class AuthRemoteDataSource {
   final RestApiClient _client;
 

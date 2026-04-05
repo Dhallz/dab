@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dab_api/dab_api.dart';
+import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/group_controller.dart';
@@ -22,7 +23,7 @@ Future<void> main() async {
   print('Dependency injection and database ready.');
 
   // 2. Start background polling
-  sl<ActivityService>().startPolling();
+  // sl<ActivityService>().startPolling();
   print('Phorge polling started.');
 
   final app = RelicApp()

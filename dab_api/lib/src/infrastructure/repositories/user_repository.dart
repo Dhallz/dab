@@ -1,18 +1,22 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:uuid/uuid.dart';
-
 import '../../domain/core/failure.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../database/app_database.dart';
 
+/// [ARCH: INFRASTRUCTURE_REPOSITORY]
+/// ROLE: Persistence implementation for User directory and Team Groupings.
+/// CONTRACT: Implements [IUserRepository] using [AppDatabase].
+/// CONSTRAINTS: Handles many-to-many relationships for groups. Must ensure transactional integrity on group saves.
 class UserRepository implements IUserRepository {
   final AppDatabase _db;
 
   UserRepository(this._db);
 
+  /// Retrieves all users from the database.
   @override
   Future<Either<DatabaseFailure, List<User>>> getUsers() async {
     try {
@@ -23,6 +27,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Fetches a specific user by its primary identifier.
   @override
   Future<Either<DatabaseFailure, User>> getUser(String id) async {
     try {
@@ -35,6 +40,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Finds a user by their unique email.
   @override
   Future<Either<DatabaseFailure, User?>> findByEmail(String email) async {
     try {
@@ -47,6 +53,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Resolves group membership using a JOIN on [groupMembersTable].
   @override
   Future<Either<DatabaseFailure, List<User>>> getUsersByGroup(
     String groupId,
@@ -66,6 +73,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Upserts user data.
   @override
   Future<Either<DatabaseFailure, void>> saveUser(User user) async {
     try {
@@ -89,6 +97,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Retrieves all groups and hydydrates their member lists.
   @override
   Future<Either<DatabaseFailure, List<Group>>> getGroups() async {
     try {
@@ -117,6 +126,7 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  /// Saves a group and its memberships within a single transaction.
   @override
   Future<Either<DatabaseFailure, Group>> saveGroup(Group group) async {
     return _db.transaction(() async {
@@ -136,7 +146,7 @@ class UserRepository implements IUserRepository {
               ),
             );
 
-        // Update members
+        // Update members: Clear and replace to ensure consistency.
         await (_db.delete(
           _db.groupMembersTable,
         )..where((t) => t.groupId.equals(effectiveId))).go();
@@ -159,6 +169,7 @@ class UserRepository implements IUserRepository {
     });
   }
 
+  /// Permanently removes a group record.
   @override
   Future<Either<DatabaseFailure, void>> deleteGroup(String id) async {
     try {
