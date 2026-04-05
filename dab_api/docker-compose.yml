@@ -24,12 +24,12 @@ services:
     build:
       context: .
       target: build
+    # dart run / dartdev resolve the package from cwd; bind mounts + sh -c can
+    # leave the process without a valid getcwd() unless this is explicit.
+    working_dir: /app
     ports:
       - "${API_PUBLIC_PORT:-8080}:${PORT:-8080}"
       - "${DART_VM_PUBLIC_PORT:-8181}:8181"
-    volumes:
-      - .:/app
-      - /app/.dart_tool
     command: sh -c "dart pub get && dart run --enable-vm-service=8181/0.0.0.0 bin/dab_api.dart"
     environment:
       - DB_HOST=db
@@ -39,6 +39,7 @@ services:
       - DB_NAME=dab_api_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - JWT_SECRET=dev_secret_key_for_dab
     depends_on:
       - db
       - redis

@@ -1,9 +1,7 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
-import '../../../../domain/entities/activity.dart';
 import '../../../../domain/entities/group.dart';
 import '../../../../domain/entities/user.dart';
-
 import 'explorer_item.dart';
 
 part 'explorer_state.mapper.dart';
