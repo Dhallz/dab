@@ -2,7 +2,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_transaction_data.mapper.dart';
 
-/// [ARCH: DOMAIN_MODEL]
+/// [ARCH: INFRASTRUCTURE_DTO]
 /// ROLE: Raw technical representation of a Phorge Transaction (Event).
 /// CONTRACT: Corresponds to a `transaction.search` entry in the Phorge API.
 /// CONSTRAINTS: Must be serializable (Mappable). Used for status change and comment mapping.

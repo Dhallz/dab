@@ -2,7 +2,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_task_data.mapper.dart';
 
-/// [ARCH: DOMAIN_MODEL]
+/// [ARCH: INFRASTRUCTURE_DTO]
 /// ROLE: Raw technical representation of a Phorge Maniphest Task.
 /// CONTRACT: Corresponds to a `maniphest.search` entry in the Phorge API.
 /// CONSTRAINTS: Must be serializable (Mappable). Used for internal caching and mapping.

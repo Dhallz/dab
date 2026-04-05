@@ -69,6 +69,18 @@ import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dar
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
+
+import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
+import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
+import 'package:dab_api/src/domain/mappers/teams/teams_message_mapper.dart';
+import 'package:dab_api/src/infrastructure/sources/teams/teams_message_source.dart';
+import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
+import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
+import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
+import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
+import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 
@@ -117,6 +129,18 @@ Future<void> serviceLocator() async {
   final phorgeUserSource = PhorgeUserSource(phorgeClient);
   final phorgeProjectSource = PhorgeProjectSource(phorgeClient, phorgeSprintService);
 
+  // New Scaffolds (Slack, Teams, Jira, Linear, Discord)
+  final slackMapper = SlackMessageMapper();
+  final slackSource = SlackMessageSource();
+  final teamsMapper = TeamsMessageMapper();
+  final teamsSource = TeamsMessageSource();
+  final jiraMapper = JiraIssueMapper();
+  final jiraSource = JiraIssueSource();
+  final linearMapper = LinearIssueMapper();
+  final linearSource = LinearIssueSource();
+  final discordMapper = DiscordMessageMapper();
+  final discordSource = DiscordMessageSource();
+
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
   sl.registerSingleton<PhorgeProjectSource>(phorgeProjectSource);
 
@@ -124,6 +148,14 @@ Future<void> serviceLocator() async {
   final registry = ConnectorRegistry();
   registry.register(phorgeTaskSource, phorgeTaskMapper);
   registry.register(phorgeRevisionSource, phorgeRevisionMapper);
+  
+  // Registering new scaffolds
+  registry.register(slackSource, slackMapper);
+  registry.register(teamsSource, teamsMapper);
+  registry.register(jiraSource, jiraMapper);
+  registry.register(linearSource, linearMapper);
+  registry.register(discordSource, discordMapper);
+
   sl.registerSingleton<ConnectorRegistry>(registry);
 
   final fetcher = UnifiedActivityFetcher(registry);

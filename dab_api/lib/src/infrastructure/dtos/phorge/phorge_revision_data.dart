@@ -2,7 +2,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_revision_data.mapper.dart';
 
-/// [ARCH: DOMAIN_MODEL]
+/// [ARCH: INFRASTRUCTURE_DTO]
 /// ROLE: Raw technical representation of a Phorge Differential Revision (Code Review).
 /// CONTRACT: Corresponds to a `differential.revision.search` entry in the Phorge API.
 /// CONSTRAINTS: Must be serializable (Mappable). Used for mapping activities that represent code changes.

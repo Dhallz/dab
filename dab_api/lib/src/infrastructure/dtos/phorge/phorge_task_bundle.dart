@@ -1,7 +1,7 @@
-import 'package:dab_api/src/domain/models/phorge/phorge_task_data.dart';
-import 'package:dab_api/src/domain/models/phorge/phorge_transaction_data.dart';
+import './phorge_task_data.dart';
+import './phorge_transaction_data.dart';
 
-/// [ARCH: DOMAIN_MODEL]
+/// [ARCH: INFRASTRUCTURE_DTO]
 /// ROLE: Aggregated DTO for Phorge Task processing.
 /// CONTRACT: Provides a complete snapshot of a Task and its events (Transactions).
 /// CONSTRAINTS: Used exclusively by [PhorgeTaskMapper].

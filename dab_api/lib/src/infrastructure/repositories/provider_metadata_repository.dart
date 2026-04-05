@@ -41,6 +41,15 @@ class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
         );
       }).toList();
 
+      // --- Scaffolded Providers ---
+      metadata.addAll([
+        ProviderMetadata(id: 'slack-global', name: 'Slack', provider: 'Slack', type: 'message', color: '#4A154B', icon: 'slack'),
+        ProviderMetadata(id: 'teams-global', name: 'MS Teams', provider: 'Teams', type: 'message', color: '#6264A7', icon: 'teams'),
+        ProviderMetadata(id: 'jira-global', name: 'Jira', provider: 'Jira', type: 'issue', color: '#0052CC', icon: 'jira'),
+        ProviderMetadata(id: 'linear-global', name: 'Linear', provider: 'Linear', type: 'issue', color: '#5E6AD2', icon: 'linear'),
+        ProviderMetadata(id: 'discord-global', name: 'Discord', provider: 'Discord', type: 'message', color: '#5865F2', icon: 'discord'),
+      ]);
+
       return right(metadata);
     } catch (e) {
       return left(
