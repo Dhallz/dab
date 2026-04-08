@@ -1,6 +1,7 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../domain/core/failure.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
@@ -25,7 +26,7 @@ class RegisterUser {
   }
 
   /// Executes the registration logic.
-  /// 
+  ///
   /// 1. Domain Guard: Ensures the email belongs to the corporate domain.
   /// 2. Uniqueness Check: Verified that the email is not already registered.
   /// 3. Role Assignment: Assigns 'Admin' to the initial system user, 'Standard' otherwise.
@@ -37,13 +38,26 @@ class RegisterUser {
     String password,
   ) async {
     // 1. Domain Guard: Prevent unauthorized external registrations.
-    final domain = email.split('@').last;
-    if (domain != _config.allowedDomain) {
-      return Left(
-        AuthFailure(
-          'Registration restricted to ${_config.allowedDomain} domain',
-        ),
-      );
+    // NOTE: We bypass the domain guard for the designated initial admin.
+    final isInitialAdmin =
+        email.toLowerCase() == _config.initialAdminEmail.toLowerCase();
+    final domain = email.split('@').last.toLowerCase();
+    final allowedDomain = _config.allowedDomain;
+
+    if (!isInitialAdmin) {
+      if (allowedDomain.isEmpty) {
+        return const Left(
+          AuthFailure(
+            'Registration domain is not configured. Set DAB_ALLOWED_DOMAIN in '
+            'the API environment.',
+          ),
+        );
+      }
+      if (domain != allowedDomain) {
+        return Left(
+          AuthFailure('Registration restricted to $allowedDomain domain'),
+        );
+      }
     }
 
     final findResult = await _repo.findByEmail(email);
@@ -58,11 +72,20 @@ class RegisterUser {
       return const Left(AuthFailure('User already exists'));
     }
 
+    // 3. Bootstrap Lock: If no admins exist, only allow the initial admin.
+    final adminCountResult = await _repo.countAdmins();
+    final adminCount = adminCountResult.getOrElse((_) => 0);
+
+    if (adminCount == 0 && !isInitialAdmin) {
+      return Left(
+        AuthFailure(
+          'Bootstrap Lock: System not configured. Only the initial admin (${_config.initialAdminEmail}) can register.',
+        ),
+      );
+    }
+
     // Role assignment logic based on configuration.
-    final role =
-        (email.toLowerCase() == _config.initialAdminEmail.toLowerCase())
-        ? 'Admin'
-        : 'Standard';
+    final role = isInitialAdmin ? 'Admin' : 'Standard';
 
     // Auto-link Phorge Account: Essential for immediate activity visibility.
     final phorgePhid = await _phorgeUserSource.lookupUserPhid(name, email);

@@ -1,4 +1,4 @@
-import 'package:dab_app/presentation/views/admin/admin_console_view.dart';
+import 'package:dab_app/presentation/views/admin/admin_view.dart';
 import 'package:dab_app/presentation/views/auth/auth_view.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_view.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_view.dart';
@@ -43,7 +43,7 @@ class AppRoute {
   static final homeAdmin = AppRoute._(
     'home_admin',
     '/home/admin',
-    (context, state) => const AdminConsoleView(),
+    (context, state) => const AdminView(),
   );
   static final settings = AppRoute._(
     'settings',

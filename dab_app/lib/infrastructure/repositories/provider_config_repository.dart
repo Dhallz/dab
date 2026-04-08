@@ -28,6 +28,47 @@ class ProviderConfigRepository extends Repository
     });
   }
 
+  @override
+  Future<Either<AppFailure, bool>> getSystemStatus() {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.getSystemStatus();
+      final data = response.data;
+      final Map<String, dynamic> map;
+
+      if (data is Map<String, dynamic>) {
+        map = data;
+      } else {
+        map = jsonDecode(data.toString());
+      }
+
+      return map['data']['isSystemConfigured'] ?? false;
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> saveProviderConfig(ProviderConfig config) {
+    return guardedCall(() async {
+      await _remoteDataSource.saveProviderConfig(config.toMap());
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, String>> testProviderConfig(ProviderConfig config) {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.testProviderConfig(config.toMap());
+      final dynamic data = response.data;
+      final Map<String, dynamic> map;
+
+      if (data is Map<String, dynamic>) {
+        map = data;
+      } else {
+        map = jsonDecode(data.toString());
+      }
+
+      return map['data']?['message'] ?? 'Connected';
+    });
+  }
+
   List<dynamic> _getEnvelopeData(Response response) {
     if (response.data == null) return [];
 

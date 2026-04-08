@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../domain/core/failures.dart';
 import '../domain/containers/activity_usecases.dart';
 import '../domain/containers/auth_usecases.dart';
 import '../domain/containers/metadata_usecases.dart';
@@ -93,7 +94,16 @@ class ServiceLocator {
 
     authInterceptor.onRefreshToken = () async {
       final result = await authRepository.refreshToken();
-      result.fold((l) => throw Exception('Refresh failed'), (r) => null);
+      result.fold(
+        (failure) {
+          if (failure is AuthFailure &&
+              failure.message == 'No refresh token available') {
+            return;
+          }
+          throw Exception(failure.message);
+        },
+        (_) {},
+      );
     };
 
     // 4. System Context

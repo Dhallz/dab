@@ -23,7 +23,11 @@ class AuthenticateUser {
     }
 
     final user = loginResult.getRight().toNullable()!;
-    final accessToken = _jwtProvider.generateToken({'sub': user.id, 'email': user.email});
+    final accessToken = _jwtProvider.generateToken({
+      'sub': user.id,
+      'email': user.email,
+      'role': user.role,
+    });
     final refreshToken = _uuid.v4();
 
     final session = Session(
@@ -46,6 +50,7 @@ class AuthenticateUser {
       'name': user.name,
       'email': user.email,
       'avatarUrl': user.avatarUrl ?? '',
+      'role': user.role,
     });
   }
 }

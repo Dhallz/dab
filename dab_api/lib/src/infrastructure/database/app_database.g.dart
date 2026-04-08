@@ -4,7 +4,7 @@ part of 'app_database.dart';
 
 // ignore_for_file: type=lint
 class $UsersTableTable extends UsersTable
-    with TableInfo<$UsersTableTable, User> {
+    with TableInfo<$UsersTableTable, UsersTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -84,24 +84,26 @@ class $UsersTableTable extends UsersTable
     'createdAt',
   );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _avatarUrlMeta = const VerificationMeta(
     'avatarUrl',
   );
@@ -133,7 +135,7 @@ class $UsersTableTable extends UsersTable
   static const String $name = 'users';
   @override
   VerificationContext validateIntegrity(
-    Insertable<User> instance, {
+    Insertable<UsersTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -217,9 +219,9 @@ class $UsersTableTable extends UsersTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  User map(Map<String, dynamic> data, {String? tablePrefix}) {
+  UsersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return User(
+    return UsersTableData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -232,10 +234,6 @@ class $UsersTableTable extends UsersTable
         DriftSqlType.string,
         data['${effectivePrefix}email'],
       )!,
-      avatarUrl: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}avatar_url'],
-      ),
       passwordHash: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}password_hash'],
@@ -253,12 +251,16 @@ class $UsersTableTable extends UsersTable
         data['${effectivePrefix}phorge_username'],
       ),
       createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        PgTypes.timestampWithTimezone,
         data['${effectivePrefix}created_at'],
       )!,
       updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        PgTypes.timestampWithTimezone,
         data['${effectivePrefix}updated_at'],
+      ),
+      avatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_url'],
       ),
     );
   }
@@ -269,7 +271,210 @@ class $UsersTableTable extends UsersTable
   }
 }
 
-class UsersTableCompanion extends UpdateCompanion<User> {
+class UsersTableData extends DataClass implements Insertable<UsersTableData> {
+  final String id;
+  final String name;
+  final String email;
+  final String passwordHash;
+  final String role;
+  final String? phorgePhid;
+  final String? phorgeUsername;
+  final PgDateTime createdAt;
+  final PgDateTime? updatedAt;
+  final String? avatarUrl;
+  const UsersTableData({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.passwordHash,
+    required this.role,
+    this.phorgePhid,
+    this.phorgeUsername,
+    required this.createdAt,
+    this.updatedAt,
+    this.avatarUrl,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['email'] = Variable<String>(email);
+    map['password_hash'] = Variable<String>(passwordHash);
+    map['role'] = Variable<String>(role);
+    if (!nullToAbsent || phorgePhid != null) {
+      map['phorge_phid'] = Variable<String>(phorgePhid);
+    }
+    if (!nullToAbsent || phorgeUsername != null) {
+      map['phorge_username'] = Variable<String>(phorgeUsername);
+    }
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (!nullToAbsent || avatarUrl != null) {
+      map['avatar_url'] = Variable<String>(avatarUrl);
+    }
+    return map;
+  }
+
+  UsersTableCompanion toCompanion(bool nullToAbsent) {
+    return UsersTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      email: Value(email),
+      passwordHash: Value(passwordHash),
+      role: Value(role),
+      phorgePhid: phorgePhid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phorgePhid),
+      phorgeUsername: phorgeUsername == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phorgeUsername),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      avatarUrl: avatarUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarUrl),
+    );
+  }
+
+  factory UsersTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UsersTableData(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      email: serializer.fromJson<String>(json['email']),
+      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      role: serializer.fromJson<String>(json['role']),
+      phorgePhid: serializer.fromJson<String?>(json['phorgePhid']),
+      phorgeUsername: serializer.fromJson<String?>(json['phorgeUsername']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+      avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'email': serializer.toJson<String>(email),
+      'passwordHash': serializer.toJson<String>(passwordHash),
+      'role': serializer.toJson<String>(role),
+      'phorgePhid': serializer.toJson<String?>(phorgePhid),
+      'phorgeUsername': serializer.toJson<String?>(phorgeUsername),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+      'avatarUrl': serializer.toJson<String?>(avatarUrl),
+    };
+  }
+
+  UsersTableData copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? passwordHash,
+    String? role,
+    Value<String?> phorgePhid = const Value.absent(),
+    Value<String?> phorgeUsername = const Value.absent(),
+    PgDateTime? createdAt,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+    Value<String?> avatarUrl = const Value.absent(),
+  }) => UsersTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    email: email ?? this.email,
+    passwordHash: passwordHash ?? this.passwordHash,
+    role: role ?? this.role,
+    phorgePhid: phorgePhid.present ? phorgePhid.value : this.phorgePhid,
+    phorgeUsername: phorgeUsername.present
+        ? phorgeUsername.value
+        : this.phorgeUsername,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+  );
+  UsersTableData copyWithCompanion(UsersTableCompanion data) {
+    return UsersTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      email: data.email.present ? data.email.value : this.email,
+      passwordHash: data.passwordHash.present
+          ? data.passwordHash.value
+          : this.passwordHash,
+      role: data.role.present ? data.role.value : this.role,
+      phorgePhid: data.phorgePhid.present
+          ? data.phorgePhid.value
+          : this.phorgePhid,
+      phorgeUsername: data.phorgeUsername.present
+          ? data.phorgeUsername.value
+          : this.phorgeUsername,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UsersTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('email: $email, ')
+          ..write('passwordHash: $passwordHash, ')
+          ..write('role: $role, ')
+          ..write('phorgePhid: $phorgePhid, ')
+          ..write('phorgeUsername: $phorgeUsername, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('avatarUrl: $avatarUrl')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    email,
+    passwordHash,
+    role,
+    phorgePhid,
+    phorgeUsername,
+    createdAt,
+    updatedAt,
+    avatarUrl,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UsersTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.email == this.email &&
+          other.passwordHash == this.passwordHash &&
+          other.role == this.role &&
+          other.phorgePhid == this.phorgePhid &&
+          other.phorgeUsername == this.phorgeUsername &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.avatarUrl == this.avatarUrl);
+}
+
+class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> email;
@@ -277,8 +482,8 @@ class UsersTableCompanion extends UpdateCompanion<User> {
   final Value<String> role;
   final Value<String?> phorgePhid;
   final Value<String?> phorgeUsername;
-  final Value<DateTime> createdAt;
-  final Value<DateTime?> updatedAt;
+  final Value<PgDateTime> createdAt;
+  final Value<PgDateTime?> updatedAt;
   final Value<String?> avatarUrl;
   final Value<int> rowid;
   const UsersTableCompanion({
@@ -302,7 +507,7 @@ class UsersTableCompanion extends UpdateCompanion<User> {
     this.role = const Value.absent(),
     this.phorgePhid = const Value.absent(),
     this.phorgeUsername = const Value.absent(),
-    required DateTime createdAt,
+    required PgDateTime createdAt,
     this.updatedAt = const Value.absent(),
     this.avatarUrl = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -311,7 +516,7 @@ class UsersTableCompanion extends UpdateCompanion<User> {
        email = Value(email),
        passwordHash = Value(passwordHash),
        createdAt = Value(createdAt);
-  static Insertable<User> custom({
+  static Insertable<UsersTableData> custom({
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? email,
@@ -319,8 +524,8 @@ class UsersTableCompanion extends UpdateCompanion<User> {
     Expression<String>? role,
     Expression<String>? phorgePhid,
     Expression<String>? phorgeUsername,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
+    Expression<PgDateTime>? createdAt,
+    Expression<PgDateTime>? updatedAt,
     Expression<String>? avatarUrl,
     Expression<int>? rowid,
   }) {
@@ -347,8 +552,8 @@ class UsersTableCompanion extends UpdateCompanion<User> {
     Value<String>? role,
     Value<String?>? phorgePhid,
     Value<String?>? phorgeUsername,
-    Value<DateTime>? createdAt,
-    Value<DateTime?>? updatedAt,
+    Value<PgDateTime>? createdAt,
+    Value<PgDateTime?>? updatedAt,
     Value<String?>? avatarUrl,
     Value<int>? rowid,
   }) {
@@ -392,10 +597,16 @@ class UsersTableCompanion extends UpdateCompanion<User> {
       map['phorge_username'] = Variable<String>(phorgeUsername.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
     }
     if (avatarUrl.present) {
       map['avatar_url'] = Variable<String>(avatarUrl.value);
@@ -527,13 +738,14 @@ class $ActivitiesTableTable extends ActivitiesTable
     'createdAt',
   );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: true,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -685,7 +897,7 @@ class $ActivitiesTableTable extends ActivitiesTable
         data['${effectivePrefix}comment_count'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        PgTypes.timestampWithTimezone,
         data['${effectivePrefix}created_at'],
       )!,
     );
@@ -708,7 +920,7 @@ class ActivitiesTableData extends DataClass
   final String authorName;
   final String? authorAvatarUrl;
   final int commentCount;
-  final DateTime createdAt;
+  final PgDateTime createdAt;
   const ActivitiesTableData({
     required this.id,
     required this.userId,
@@ -737,7 +949,10 @@ class ActivitiesTableData extends DataClass
       map['author_avatar_url'] = Variable<String>(authorAvatarUrl);
     }
     map['comment_count'] = Variable<int>(commentCount);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
     return map;
   }
 
@@ -773,7 +988,7 @@ class ActivitiesTableData extends DataClass
       authorName: serializer.fromJson<String>(json['authorName']),
       authorAvatarUrl: serializer.fromJson<String?>(json['authorAvatarUrl']),
       commentCount: serializer.fromJson<int>(json['commentCount']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
     );
   }
   @override
@@ -789,7 +1004,7 @@ class ActivitiesTableData extends DataClass
       'authorName': serializer.toJson<String>(authorName),
       'authorAvatarUrl': serializer.toJson<String?>(authorAvatarUrl),
       'commentCount': serializer.toJson<int>(commentCount),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
     };
   }
 
@@ -803,7 +1018,7 @@ class ActivitiesTableData extends DataClass
     String? authorName,
     Value<String?> authorAvatarUrl = const Value.absent(),
     int? commentCount,
-    DateTime? createdAt,
+    PgDateTime? createdAt,
   }) => ActivitiesTableData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -897,7 +1112,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   final Value<String> authorName;
   final Value<String?> authorAvatarUrl;
   final Value<int> commentCount;
-  final Value<DateTime> createdAt;
+  final Value<PgDateTime> createdAt;
   final Value<int> rowid;
   const ActivitiesTableCompanion({
     this.id = const Value.absent(),
@@ -922,7 +1137,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     required String authorName,
     this.authorAvatarUrl = const Value.absent(),
     this.commentCount = const Value.absent(),
-    required DateTime createdAt,
+    required PgDateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -941,7 +1156,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     Expression<String>? authorName,
     Expression<String>? authorAvatarUrl,
     Expression<int>? commentCount,
-    Expression<DateTime>? createdAt,
+    Expression<PgDateTime>? createdAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -969,7 +1184,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     Value<String>? authorName,
     Value<String?>? authorAvatarUrl,
     Value<int>? commentCount,
-    Value<DateTime>? createdAt,
+    Value<PgDateTime>? createdAt,
     Value<int>? rowid,
   }) {
     return ActivitiesTableCompanion(
@@ -1018,7 +1233,10 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
       map['comment_count'] = Variable<int>(commentCount.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1377,7 +1595,7 @@ class ActivityPhorgeTableCompanion
 }
 
 class $SessionsTableTable extends SessionsTable
-    with TableInfo<$SessionsTableTable, Session> {
+    with TableInfo<$SessionsTableTable, SessionsTableData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1415,13 +1633,14 @@ class $SessionsTableTable extends SessionsTable
     'expiresAt',
   );
   @override
-  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
-    'expires_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumn<PgDateTime> expiresAt =
+      GeneratedColumn<PgDateTime>(
+        'expires_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _deviceInfoMeta = const VerificationMeta(
     'deviceInfo',
   );
@@ -1448,7 +1667,7 @@ class $SessionsTableTable extends SessionsTable
   static const String $name = 'sessions';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Session> instance, {
+    Insertable<SessionsTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1494,9 +1713,9 @@ class $SessionsTableTable extends SessionsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Session map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SessionsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Session(
+    return SessionsTableData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1510,7 +1729,7 @@ class $SessionsTableTable extends SessionsTable
         data['${effectivePrefix}token'],
       )!,
       expiresAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        PgTypes.timestampWithTimezone,
         data['${effectivePrefix}expires_at'],
       )!,
       deviceInfo: attachedDatabase.typeMapping.read(
@@ -1526,11 +1745,131 @@ class $SessionsTableTable extends SessionsTable
   }
 }
 
-class SessionsTableCompanion extends UpdateCompanion<Session> {
+class SessionsTableData extends DataClass
+    implements Insertable<SessionsTableData> {
+  final String id;
+  final String userId;
+  final String refreshToken;
+  final PgDateTime expiresAt;
+  final String? deviceInfo;
+  const SessionsTableData({
+    required this.id,
+    required this.userId,
+    required this.refreshToken,
+    required this.expiresAt,
+    this.deviceInfo,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['token'] = Variable<String>(refreshToken);
+    map['expires_at'] = Variable<PgDateTime>(
+      expiresAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || deviceInfo != null) {
+      map['device_info'] = Variable<String>(deviceInfo);
+    }
+    return map;
+  }
+
+  SessionsTableCompanion toCompanion(bool nullToAbsent) {
+    return SessionsTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      refreshToken: Value(refreshToken),
+      expiresAt: Value(expiresAt),
+      deviceInfo: deviceInfo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceInfo),
+    );
+  }
+
+  factory SessionsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      refreshToken: serializer.fromJson<String>(json['refreshToken']),
+      expiresAt: serializer.fromJson<PgDateTime>(json['expiresAt']),
+      deviceInfo: serializer.fromJson<String?>(json['deviceInfo']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'refreshToken': serializer.toJson<String>(refreshToken),
+      'expiresAt': serializer.toJson<PgDateTime>(expiresAt),
+      'deviceInfo': serializer.toJson<String?>(deviceInfo),
+    };
+  }
+
+  SessionsTableData copyWith({
+    String? id,
+    String? userId,
+    String? refreshToken,
+    PgDateTime? expiresAt,
+    Value<String?> deviceInfo = const Value.absent(),
+  }) => SessionsTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    refreshToken: refreshToken ?? this.refreshToken,
+    expiresAt: expiresAt ?? this.expiresAt,
+    deviceInfo: deviceInfo.present ? deviceInfo.value : this.deviceInfo,
+  );
+  SessionsTableData copyWithCompanion(SessionsTableCompanion data) {
+    return SessionsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      refreshToken: data.refreshToken.present
+          ? data.refreshToken.value
+          : this.refreshToken,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      deviceInfo: data.deviceInfo.present
+          ? data.deviceInfo.value
+          : this.deviceInfo,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionsTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('refreshToken: $refreshToken, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('deviceInfo: $deviceInfo')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, refreshToken, expiresAt, deviceInfo);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionsTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.refreshToken == this.refreshToken &&
+          other.expiresAt == this.expiresAt &&
+          other.deviceInfo == this.deviceInfo);
+}
+
+class SessionsTableCompanion extends UpdateCompanion<SessionsTableData> {
   final Value<String> id;
   final Value<String> userId;
   final Value<String> refreshToken;
-  final Value<DateTime> expiresAt;
+  final Value<PgDateTime> expiresAt;
   final Value<String?> deviceInfo;
   final Value<int> rowid;
   const SessionsTableCompanion({
@@ -1545,18 +1884,18 @@ class SessionsTableCompanion extends UpdateCompanion<Session> {
     required String id,
     required String userId,
     required String refreshToken,
-    required DateTime expiresAt,
+    required PgDateTime expiresAt,
     this.deviceInfo = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
        refreshToken = Value(refreshToken),
        expiresAt = Value(expiresAt);
-  static Insertable<Session> custom({
+  static Insertable<SessionsTableData> custom({
     Expression<String>? id,
     Expression<String>? userId,
     Expression<String>? refreshToken,
-    Expression<DateTime>? expiresAt,
+    Expression<PgDateTime>? expiresAt,
     Expression<String>? deviceInfo,
     Expression<int>? rowid,
   }) {
@@ -1574,7 +1913,7 @@ class SessionsTableCompanion extends UpdateCompanion<Session> {
     Value<String>? id,
     Value<String>? userId,
     Value<String>? refreshToken,
-    Value<DateTime>? expiresAt,
+    Value<PgDateTime>? expiresAt,
     Value<String?>? deviceInfo,
     Value<int>? rowid,
   }) {
@@ -1601,7 +1940,10 @@ class SessionsTableCompanion extends UpdateCompanion<Session> {
       map['token'] = Variable<String>(refreshToken.value);
     }
     if (expiresAt.present) {
-      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+      map['expires_at'] = Variable<PgDateTime>(
+        expiresAt.value,
+        PgTypes.timestampWithTimezone,
+      );
     }
     if (deviceInfo.present) {
       map['device_info'] = Variable<String>(deviceInfo.value);
@@ -2209,6 +2551,956 @@ class GroupMembersTableCompanion
   }
 }
 
+class $ProviderConfigsTableTable extends ProviderConfigsTable
+    with TableInfo<$ProviderConfigsTableTable, ProviderConfigsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProviderConfigsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseUrlMeta = const VerificationMeta(
+    'baseUrl',
+  );
+  @override
+  late final GeneratedColumn<String> baseUrl = GeneratedColumn<String>(
+    'base_url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<int> isActive = GeneratedColumn<int>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _iconUrlMeta = const VerificationMeta(
+    'iconUrl',
+  );
+  @override
+  late final GeneratedColumn<String> iconUrl = GeneratedColumn<String>(
+    'icon_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _settingsMeta = const VerificationMeta(
+    'settings',
+  );
+  @override
+  late final GeneratedColumn<String> settings = GeneratedColumn<String>(
+    'settings',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    baseUrl,
+    isActive,
+    iconUrl,
+    settings,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'provider_configs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProviderConfigsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('base_url')) {
+      context.handle(
+        _baseUrlMeta,
+        baseUrl.isAcceptableOrUnknown(data['base_url']!, _baseUrlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_baseUrlMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('icon_url')) {
+      context.handle(
+        _iconUrlMeta,
+        iconUrl.isAcceptableOrUnknown(data['icon_url']!, _iconUrlMeta),
+      );
+    }
+    if (data.containsKey('settings')) {
+      context.handle(
+        _settingsMeta,
+        settings.isAcceptableOrUnknown(data['settings']!, _settingsMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProviderConfigsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProviderConfigsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      baseUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_url'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_active'],
+      )!,
+      iconUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_url'],
+      ),
+      settings: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}settings'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $ProviderConfigsTableTable createAlias(String alias) {
+    return $ProviderConfigsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ProviderConfigsTableData extends DataClass
+    implements Insertable<ProviderConfigsTableData> {
+  final String id;
+  final String name;
+  final String baseUrl;
+
+  /// Stored as 0/1 in Postgres (avoids BOOL vs driver mapping issues).
+  final int isActive;
+  final String? iconUrl;
+  final String settings;
+  final PgDateTime? updatedAt;
+  const ProviderConfigsTableData({
+    required this.id,
+    required this.name,
+    required this.baseUrl,
+    required this.isActive,
+    this.iconUrl,
+    required this.settings,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['base_url'] = Variable<String>(baseUrl);
+    map['is_active'] = Variable<int>(isActive);
+    if (!nullToAbsent || iconUrl != null) {
+      map['icon_url'] = Variable<String>(iconUrl);
+    }
+    map['settings'] = Variable<String>(settings);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    return map;
+  }
+
+  ProviderConfigsTableCompanion toCompanion(bool nullToAbsent) {
+    return ProviderConfigsTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      baseUrl: Value(baseUrl),
+      isActive: Value(isActive),
+      iconUrl: iconUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(iconUrl),
+      settings: Value(settings),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory ProviderConfigsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProviderConfigsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      baseUrl: serializer.fromJson<String>(json['baseUrl']),
+      isActive: serializer.fromJson<int>(json['isActive']),
+      iconUrl: serializer.fromJson<String?>(json['iconUrl']),
+      settings: serializer.fromJson<String>(json['settings']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'baseUrl': serializer.toJson<String>(baseUrl),
+      'isActive': serializer.toJson<int>(isActive),
+      'iconUrl': serializer.toJson<String?>(iconUrl),
+      'settings': serializer.toJson<String>(settings),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+    };
+  }
+
+  ProviderConfigsTableData copyWith({
+    String? id,
+    String? name,
+    String? baseUrl,
+    int? isActive,
+    Value<String?> iconUrl = const Value.absent(),
+    String? settings,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+  }) => ProviderConfigsTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    baseUrl: baseUrl ?? this.baseUrl,
+    isActive: isActive ?? this.isActive,
+    iconUrl: iconUrl.present ? iconUrl.value : this.iconUrl,
+    settings: settings ?? this.settings,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  ProviderConfigsTableData copyWithCompanion(
+    ProviderConfigsTableCompanion data,
+  ) {
+    return ProviderConfigsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      baseUrl: data.baseUrl.present ? data.baseUrl.value : this.baseUrl,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      iconUrl: data.iconUrl.present ? data.iconUrl.value : this.iconUrl,
+      settings: data.settings.present ? data.settings.value : this.settings,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProviderConfigsTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('baseUrl: $baseUrl, ')
+          ..write('isActive: $isActive, ')
+          ..write('iconUrl: $iconUrl, ')
+          ..write('settings: $settings, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, baseUrl, isActive, iconUrl, settings, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProviderConfigsTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.baseUrl == this.baseUrl &&
+          other.isActive == this.isActive &&
+          other.iconUrl == this.iconUrl &&
+          other.settings == this.settings &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ProviderConfigsTableCompanion
+    extends UpdateCompanion<ProviderConfigsTableData> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> baseUrl;
+  final Value<int> isActive;
+  final Value<String?> iconUrl;
+  final Value<String> settings;
+  final Value<PgDateTime?> updatedAt;
+  final Value<int> rowid;
+  const ProviderConfigsTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.baseUrl = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.iconUrl = const Value.absent(),
+    this.settings = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProviderConfigsTableCompanion.insert({
+    required String id,
+    required String name,
+    required String baseUrl,
+    this.isActive = const Value.absent(),
+    this.iconUrl = const Value.absent(),
+    this.settings = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       baseUrl = Value(baseUrl);
+  static Insertable<ProviderConfigsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? baseUrl,
+    Expression<int>? isActive,
+    Expression<String>? iconUrl,
+    Expression<String>? settings,
+    Expression<PgDateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (baseUrl != null) 'base_url': baseUrl,
+      if (isActive != null) 'is_active': isActive,
+      if (iconUrl != null) 'icon_url': iconUrl,
+      if (settings != null) 'settings': settings,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProviderConfigsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? baseUrl,
+    Value<int>? isActive,
+    Value<String?>? iconUrl,
+    Value<String>? settings,
+    Value<PgDateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ProviderConfigsTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      baseUrl: baseUrl ?? this.baseUrl,
+      isActive: isActive ?? this.isActive,
+      iconUrl: iconUrl ?? this.iconUrl,
+      settings: settings ?? this.settings,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (baseUrl.present) {
+      map['base_url'] = Variable<String>(baseUrl.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<int>(isActive.value);
+    }
+    if (iconUrl.present) {
+      map['icon_url'] = Variable<String>(iconUrl.value);
+    }
+    if (settings.present) {
+      map['settings'] = Variable<String>(settings.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProviderConfigsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('baseUrl: $baseUrl, ')
+          ..write('isActive: $isActive, ')
+          ..write('iconUrl: $iconUrl, ')
+          ..write('settings: $settings, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserIdentitiesTableTable extends UserIdentitiesTable
+    with TableInfo<$UserIdentitiesTableTable, UserIdentitiesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserIdentitiesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES users(id) ON DELETE CASCADE',
+  );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  @override
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta(
+    'externalId',
+  );
+  @override
+  late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
+    'external_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Pending'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+        defaultValue: now(),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    providerId,
+    externalId,
+    status,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_identities';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserIdentitiesTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerIdMeta);
+    }
+    if (data.containsKey('external_id')) {
+      context.handle(
+        _externalIdMeta,
+        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_externalIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserIdentitiesTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserIdentitiesTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      )!,
+      externalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $UserIdentitiesTableTable createAlias(String alias) {
+    return $UserIdentitiesTableTable(attachedDatabase, alias);
+  }
+}
+
+class UserIdentitiesTableData extends DataClass
+    implements Insertable<UserIdentitiesTableData> {
+  final String id;
+  final String userId;
+  final String providerId;
+  final String externalId;
+  final String status;
+  final PgDateTime createdAt;
+  final PgDateTime? updatedAt;
+  const UserIdentitiesTableData({
+    required this.id,
+    required this.userId,
+    required this.providerId,
+    required this.externalId,
+    required this.status,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['provider_id'] = Variable<String>(providerId);
+    map['external_id'] = Variable<String>(externalId);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    return map;
+  }
+
+  UserIdentitiesTableCompanion toCompanion(bool nullToAbsent) {
+    return UserIdentitiesTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      providerId: Value(providerId),
+      externalId: Value(externalId),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory UserIdentitiesTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserIdentitiesTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      providerId: serializer.fromJson<String>(json['providerId']),
+      externalId: serializer.fromJson<String>(json['externalId']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'providerId': serializer.toJson<String>(providerId),
+      'externalId': serializer.toJson<String>(externalId),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+    };
+  }
+
+  UserIdentitiesTableData copyWith({
+    String? id,
+    String? userId,
+    String? providerId,
+    String? externalId,
+    String? status,
+    PgDateTime? createdAt,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+  }) => UserIdentitiesTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    providerId: providerId ?? this.providerId,
+    externalId: externalId ?? this.externalId,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  UserIdentitiesTableData copyWithCompanion(UserIdentitiesTableCompanion data) {
+    return UserIdentitiesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
+      externalId: data.externalId.present
+          ? data.externalId.value
+          : this.externalId,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserIdentitiesTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('providerId: $providerId, ')
+          ..write('externalId: $externalId, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    providerId,
+    externalId,
+    status,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserIdentitiesTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.providerId == this.providerId &&
+          other.externalId == this.externalId &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class UserIdentitiesTableCompanion
+    extends UpdateCompanion<UserIdentitiesTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> providerId;
+  final Value<String> externalId;
+  final Value<String> status;
+  final Value<PgDateTime> createdAt;
+  final Value<PgDateTime?> updatedAt;
+  final Value<int> rowid;
+  const UserIdentitiesTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserIdentitiesTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String providerId,
+    required String externalId,
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       providerId = Value(providerId),
+       externalId = Value(externalId);
+  static Insertable<UserIdentitiesTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? providerId,
+    Expression<String>? externalId,
+    Expression<String>? status,
+    Expression<PgDateTime>? createdAt,
+    Expression<PgDateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (providerId != null) 'provider_id': providerId,
+      if (externalId != null) 'external_id': externalId,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserIdentitiesTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? providerId,
+    Value<String>? externalId,
+    Value<String>? status,
+    Value<PgDateTime>? createdAt,
+    Value<PgDateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return UserIdentitiesTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      providerId: providerId ?? this.providerId,
+      externalId: externalId ?? this.externalId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
+    if (externalId.present) {
+      map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserIdentitiesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('providerId: $providerId, ')
+          ..write('externalId: $externalId, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2222,6 +3514,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GroupsTableTable groupsTable = $GroupsTableTable(this);
   late final $GroupMembersTableTable groupMembersTable =
       $GroupMembersTableTable(this);
+  late final $ProviderConfigsTableTable providerConfigsTable =
+      $ProviderConfigsTableTable(this);
+  late final $UserIdentitiesTableTable userIdentitiesTable =
+      $UserIdentitiesTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2233,6 +3529,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessionsTable,
     groupsTable,
     groupMembersTable,
+    providerConfigsTable,
+    userIdentitiesTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2269,8 +3567,8 @@ typedef $$UsersTableTableCreateCompanionBuilder =
       Value<String> role,
       Value<String?> phorgePhid,
       Value<String?> phorgeUsername,
-      required DateTime createdAt,
-      Value<DateTime?> updatedAt,
+      required PgDateTime createdAt,
+      Value<PgDateTime?> updatedAt,
       Value<String?> avatarUrl,
       Value<int> rowid,
     });
@@ -2283,14 +3581,14 @@ typedef $$UsersTableTableUpdateCompanionBuilder =
       Value<String> role,
       Value<String?> phorgePhid,
       Value<String?> phorgeUsername,
-      Value<DateTime> createdAt,
-      Value<DateTime?> updatedAt,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
       Value<String?> avatarUrl,
       Value<int> rowid,
     });
 
 final class $$UsersTableTableReferences
-    extends BaseReferences<_$AppDatabase, $UsersTableTable, User> {
+    extends BaseReferences<_$AppDatabase, $UsersTableTable, UsersTableData> {
   $$UsersTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<
@@ -2365,12 +3663,12 @@ class $$UsersTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
@@ -2450,12 +3748,12 @@ class $$UsersTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2502,10 +3800,10 @@ class $$UsersTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumn<PgDateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumn<PgDateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   GeneratedColumn<String> get avatarUrl =>
@@ -2543,14 +3841,14 @@ class $$UsersTableTableTableManager
         RootTableManager<
           _$AppDatabase,
           $UsersTableTable,
-          User,
+          UsersTableData,
           $$UsersTableTableFilterComposer,
           $$UsersTableTableOrderingComposer,
           $$UsersTableTableAnnotationComposer,
           $$UsersTableTableCreateCompanionBuilder,
           $$UsersTableTableUpdateCompanionBuilder,
-          (User, $$UsersTableTableReferences),
-          User,
+          (UsersTableData, $$UsersTableTableReferences),
+          UsersTableData,
           PrefetchHooks Function({bool groupMembersTableRefs})
         > {
   $$UsersTableTableTableManager(_$AppDatabase db, $UsersTableTable table)
@@ -2573,8 +3871,8 @@ class $$UsersTableTableTableManager
                 Value<String> role = const Value.absent(),
                 Value<String?> phorgePhid = const Value.absent(),
                 Value<String?> phorgeUsername = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
                 Value<String?> avatarUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersTableCompanion(
@@ -2599,8 +3897,8 @@ class $$UsersTableTableTableManager
                 Value<String> role = const Value.absent(),
                 Value<String?> phorgePhid = const Value.absent(),
                 Value<String?> phorgeUsername = const Value.absent(),
-                required DateTime createdAt,
-                Value<DateTime?> updatedAt = const Value.absent(),
+                required PgDateTime createdAt,
+                Value<PgDateTime?> updatedAt = const Value.absent(),
                 Value<String?> avatarUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersTableCompanion.insert(
@@ -2635,7 +3933,7 @@ class $$UsersTableTableTableManager
                 return [
                   if (groupMembersTableRefs)
                     await $_getPrefetchedData<
-                      User,
+                      UsersTableData,
                       $UsersTableTable,
                       GroupMembersTableData
                     >(
@@ -2664,14 +3962,14 @@ typedef $$UsersTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $UsersTableTable,
-      User,
+      UsersTableData,
       $$UsersTableTableFilterComposer,
       $$UsersTableTableOrderingComposer,
       $$UsersTableTableAnnotationComposer,
       $$UsersTableTableCreateCompanionBuilder,
       $$UsersTableTableUpdateCompanionBuilder,
-      (User, $$UsersTableTableReferences),
-      User,
+      (UsersTableData, $$UsersTableTableReferences),
+      UsersTableData,
       PrefetchHooks Function({bool groupMembersTableRefs})
     >;
 typedef $$ActivitiesTableTableCreateCompanionBuilder =
@@ -2685,7 +3983,7 @@ typedef $$ActivitiesTableTableCreateCompanionBuilder =
       required String authorName,
       Value<String?> authorAvatarUrl,
       Value<int> commentCount,
-      required DateTime createdAt,
+      required PgDateTime createdAt,
       Value<int> rowid,
     });
 typedef $$ActivitiesTableTableUpdateCompanionBuilder =
@@ -2699,7 +3997,7 @@ typedef $$ActivitiesTableTableUpdateCompanionBuilder =
       Value<String> authorName,
       Value<String?> authorAvatarUrl,
       Value<int> commentCount,
-      Value<DateTime> createdAt,
+      Value<PgDateTime> createdAt,
       Value<int> rowid,
     });
 
@@ -2798,7 +4096,7 @@ class $$ActivitiesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
@@ -2883,7 +4181,7 @@ class $$ActivitiesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2933,7 +4231,7 @@ class $$ActivitiesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumn<PgDateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   Expression<T> activityPhorgeTableRefs<T extends Object>(
@@ -3002,7 +4300,7 @@ class $$ActivitiesTableTableTableManager
                 Value<String> authorName = const Value.absent(),
                 Value<String?> authorAvatarUrl = const Value.absent(),
                 Value<int> commentCount = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ActivitiesTableCompanion(
                 id: id,
@@ -3028,7 +4326,7 @@ class $$ActivitiesTableTableTableManager
                 required String authorName,
                 Value<String?> authorAvatarUrl = const Value.absent(),
                 Value<int> commentCount = const Value.absent(),
-                required DateTime createdAt,
+                required PgDateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => ActivitiesTableCompanion.insert(
                 id: id,
@@ -3430,7 +4728,7 @@ typedef $$SessionsTableTableCreateCompanionBuilder =
       required String id,
       required String userId,
       required String refreshToken,
-      required DateTime expiresAt,
+      required PgDateTime expiresAt,
       Value<String?> deviceInfo,
       Value<int> rowid,
     });
@@ -3439,7 +4737,7 @@ typedef $$SessionsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> userId,
       Value<String> refreshToken,
-      Value<DateTime> expiresAt,
+      Value<PgDateTime> expiresAt,
       Value<String?> deviceInfo,
       Value<int> rowid,
     });
@@ -3468,7 +4766,7 @@ class $$SessionsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+  ColumnFilters<PgDateTime> get expiresAt => $composableBuilder(
     column: $table.expiresAt,
     builder: (column) => ColumnFilters(column),
   );
@@ -3503,7 +4801,7 @@ class $$SessionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+  ColumnOrderings<PgDateTime> get expiresAt => $composableBuilder(
     column: $table.expiresAt,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3534,7 +4832,7 @@ class $$SessionsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get expiresAt =>
+  GeneratedColumn<PgDateTime> get expiresAt =>
       $composableBuilder(column: $table.expiresAt, builder: (column) => column);
 
   GeneratedColumn<String> get deviceInfo => $composableBuilder(
@@ -3548,17 +4846,21 @@ class $$SessionsTableTableTableManager
         RootTableManager<
           _$AppDatabase,
           $SessionsTableTable,
-          Session,
+          SessionsTableData,
           $$SessionsTableTableFilterComposer,
           $$SessionsTableTableOrderingComposer,
           $$SessionsTableTableAnnotationComposer,
           $$SessionsTableTableCreateCompanionBuilder,
           $$SessionsTableTableUpdateCompanionBuilder,
           (
-            Session,
-            BaseReferences<_$AppDatabase, $SessionsTableTable, Session>,
+            SessionsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $SessionsTableTable,
+              SessionsTableData
+            >,
           ),
-          Session,
+          SessionsTableData,
           PrefetchHooks Function()
         > {
   $$SessionsTableTableTableManager(_$AppDatabase db, $SessionsTableTable table)
@@ -3577,7 +4879,7 @@ class $$SessionsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> refreshToken = const Value.absent(),
-                Value<DateTime> expiresAt = const Value.absent(),
+                Value<PgDateTime> expiresAt = const Value.absent(),
                 Value<String?> deviceInfo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsTableCompanion(
@@ -3593,7 +4895,7 @@ class $$SessionsTableTableTableManager
                 required String id,
                 required String userId,
                 required String refreshToken,
-                required DateTime expiresAt,
+                required PgDateTime expiresAt,
                 Value<String?> deviceInfo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsTableCompanion.insert(
@@ -3616,14 +4918,17 @@ typedef $$SessionsTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $SessionsTableTable,
-      Session,
+      SessionsTableData,
       $$SessionsTableTableFilterComposer,
       $$SessionsTableTableOrderingComposer,
       $$SessionsTableTableAnnotationComposer,
       $$SessionsTableTableCreateCompanionBuilder,
       $$SessionsTableTableUpdateCompanionBuilder,
-      (Session, BaseReferences<_$AppDatabase, $SessionsTableTable, Session>),
-      Session,
+      (
+        SessionsTableData,
+        BaseReferences<_$AppDatabase, $SessionsTableTable, SessionsTableData>,
+      ),
+      SessionsTableData,
       PrefetchHooks Function()
     >;
 typedef $$GroupsTableTableCreateCompanionBuilder =
@@ -4309,6 +5614,518 @@ typedef $$GroupMembersTableTableProcessedTableManager =
       GroupMembersTableData,
       PrefetchHooks Function({bool groupId, bool userId})
     >;
+typedef $$ProviderConfigsTableTableCreateCompanionBuilder =
+    ProviderConfigsTableCompanion Function({
+      required String id,
+      required String name,
+      required String baseUrl,
+      Value<int> isActive,
+      Value<String?> iconUrl,
+      Value<String> settings,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ProviderConfigsTableTableUpdateCompanionBuilder =
+    ProviderConfigsTableCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> baseUrl,
+      Value<int> isActive,
+      Value<String?> iconUrl,
+      Value<String> settings,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$ProviderConfigsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ProviderConfigsTableTable> {
+  $$ProviderConfigsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseUrl => $composableBuilder(
+    column: $table.baseUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconUrl => $composableBuilder(
+    column: $table.iconUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settings => $composableBuilder(
+    column: $table.settings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProviderConfigsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProviderConfigsTableTable> {
+  $$ProviderConfigsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseUrl => $composableBuilder(
+    column: $table.baseUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconUrl => $composableBuilder(
+    column: $table.iconUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settings => $composableBuilder(
+    column: $table.settings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProviderConfigsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProviderConfigsTableTable> {
+  $$ProviderConfigsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get baseUrl =>
+      $composableBuilder(column: $table.baseUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get iconUrl =>
+      $composableBuilder(column: $table.iconUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get settings =>
+      $composableBuilder(column: $table.settings, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$ProviderConfigsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProviderConfigsTableTable,
+          ProviderConfigsTableData,
+          $$ProviderConfigsTableTableFilterComposer,
+          $$ProviderConfigsTableTableOrderingComposer,
+          $$ProviderConfigsTableTableAnnotationComposer,
+          $$ProviderConfigsTableTableCreateCompanionBuilder,
+          $$ProviderConfigsTableTableUpdateCompanionBuilder,
+          (
+            ProviderConfigsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ProviderConfigsTableTable,
+              ProviderConfigsTableData
+            >,
+          ),
+          ProviderConfigsTableData,
+          PrefetchHooks Function()
+        > {
+  $$ProviderConfigsTableTableTableManager(
+    _$AppDatabase db,
+    $ProviderConfigsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProviderConfigsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProviderConfigsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ProviderConfigsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> baseUrl = const Value.absent(),
+                Value<int> isActive = const Value.absent(),
+                Value<String?> iconUrl = const Value.absent(),
+                Value<String> settings = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProviderConfigsTableCompanion(
+                id: id,
+                name: name,
+                baseUrl: baseUrl,
+                isActive: isActive,
+                iconUrl: iconUrl,
+                settings: settings,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String baseUrl,
+                Value<int> isActive = const Value.absent(),
+                Value<String?> iconUrl = const Value.absent(),
+                Value<String> settings = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProviderConfigsTableCompanion.insert(
+                id: id,
+                name: name,
+                baseUrl: baseUrl,
+                isActive: isActive,
+                iconUrl: iconUrl,
+                settings: settings,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProviderConfigsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProviderConfigsTableTable,
+      ProviderConfigsTableData,
+      $$ProviderConfigsTableTableFilterComposer,
+      $$ProviderConfigsTableTableOrderingComposer,
+      $$ProviderConfigsTableTableAnnotationComposer,
+      $$ProviderConfigsTableTableCreateCompanionBuilder,
+      $$ProviderConfigsTableTableUpdateCompanionBuilder,
+      (
+        ProviderConfigsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ProviderConfigsTableTable,
+          ProviderConfigsTableData
+        >,
+      ),
+      ProviderConfigsTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$UserIdentitiesTableTableCreateCompanionBuilder =
+    UserIdentitiesTableCompanion Function({
+      required String id,
+      required String userId,
+      required String providerId,
+      required String externalId,
+      Value<String> status,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$UserIdentitiesTableTableUpdateCompanionBuilder =
+    UserIdentitiesTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> providerId,
+      Value<String> externalId,
+      Value<String> status,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$UserIdentitiesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $UserIdentitiesTableTable> {
+  $$UserIdentitiesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserIdentitiesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserIdentitiesTableTable> {
+  $$UserIdentitiesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserIdentitiesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserIdentitiesTableTable> {
+  $$UserIdentitiesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$UserIdentitiesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserIdentitiesTableTable,
+          UserIdentitiesTableData,
+          $$UserIdentitiesTableTableFilterComposer,
+          $$UserIdentitiesTableTableOrderingComposer,
+          $$UserIdentitiesTableTableAnnotationComposer,
+          $$UserIdentitiesTableTableCreateCompanionBuilder,
+          $$UserIdentitiesTableTableUpdateCompanionBuilder,
+          (
+            UserIdentitiesTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $UserIdentitiesTableTable,
+              UserIdentitiesTableData
+            >,
+          ),
+          UserIdentitiesTableData,
+          PrefetchHooks Function()
+        > {
+  $$UserIdentitiesTableTableTableManager(
+    _$AppDatabase db,
+    $UserIdentitiesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserIdentitiesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserIdentitiesTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserIdentitiesTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> providerId = const Value.absent(),
+                Value<String> externalId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserIdentitiesTableCompanion(
+                id: id,
+                userId: userId,
+                providerId: providerId,
+                externalId: externalId,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String providerId,
+                required String externalId,
+                Value<String> status = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserIdentitiesTableCompanion.insert(
+                id: id,
+                userId: userId,
+                providerId: providerId,
+                externalId: externalId,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserIdentitiesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserIdentitiesTableTable,
+      UserIdentitiesTableData,
+      $$UserIdentitiesTableTableFilterComposer,
+      $$UserIdentitiesTableTableOrderingComposer,
+      $$UserIdentitiesTableTableAnnotationComposer,
+      $$UserIdentitiesTableTableCreateCompanionBuilder,
+      $$UserIdentitiesTableTableUpdateCompanionBuilder,
+      (
+        UserIdentitiesTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $UserIdentitiesTableTable,
+          UserIdentitiesTableData
+        >,
+      ),
+      UserIdentitiesTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4325,4 +6142,8 @@ class $AppDatabaseManager {
       $$GroupsTableTableTableManager(_db, _db.groupsTable);
   $$GroupMembersTableTableTableManager get groupMembersTable =>
       $$GroupMembersTableTableTableManager(_db, _db.groupMembersTable);
+  $$ProviderConfigsTableTableTableManager get providerConfigsTable =>
+      $$ProviderConfigsTableTableTableManager(_db, _db.providerConfigsTable);
+  $$UserIdentitiesTableTableTableManager get userIdentitiesTable =>
+      $$UserIdentitiesTableTableTableManager(_db, _db.userIdentitiesTable);
 }

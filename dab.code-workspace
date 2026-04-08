@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "artifacts"
+		},
+		{
+			"path": "postman"
 		}
 	],
 	"settings": {}

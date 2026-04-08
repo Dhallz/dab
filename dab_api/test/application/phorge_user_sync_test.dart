@@ -1,5 +1,7 @@
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
+import 'package:dab_api/src/domain/entities/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
@@ -9,16 +11,24 @@ import 'package:test/test.dart';
 
 class MockUserRepository extends Mock implements IUserRepository {}
 class MockPhorgeUserSource extends Mock implements PhorgeUserSource {}
+class MockProviderConfigRepository extends Mock implements AbsIProviderConfigRepository {}
 
 void main() {
   late SyncPhorgeUsers syncUseCase;
   late MockUserRepository mockRepo;
   late MockPhorgeUserSource mockSource;
+  late MockProviderConfigRepository mockConfigRepo;
 
   setUp(() {
     mockRepo = MockUserRepository();
     mockSource = MockPhorgeUserSource();
-    syncUseCase = SyncPhorgeUsers(mockRepo, mockSource);
+    mockConfigRepo = MockProviderConfigRepository();
+    syncUseCase = SyncPhorgeUsers(
+      mockRepo,
+      mockSource,
+      mockConfigRepo,
+      allowedDomainOverride: 'necs.com',
+    );
     registerFallbackValue(
       User(id: '', name: '', email: '', createdAt: DateTime.now()),
     );
@@ -39,6 +49,15 @@ void main() {
           realName: 'User Two',
         ),
       ];
+
+      when(() => mockConfigRepo.getConfigs()).thenAnswer((_) async => Right([
+        const ProviderConfig(
+          id: 'phorge',
+          name: 'Phorge',
+          baseUrl: 'https://phorge.example.com',
+          isActive: true,
+        ),
+      ]));
 
       when(() => mockSource.fetchAllUsers()).thenAnswer((_) async => pUsers);
 
@@ -62,7 +81,6 @@ void main() {
       final result = await syncUseCase.execute();
       final createdCount = result.getOrElse((l) => -1);
 
-      // Assert
       expect(createdCount, 1);
       verify(() => mockRepo.getUsers()).called(1);
       verify(() => mockRepo.saveUser(any())).called(1);

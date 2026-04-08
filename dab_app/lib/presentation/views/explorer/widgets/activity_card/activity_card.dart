@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -20,11 +21,7 @@ class ActivityCard extends StatefulWidget {
   final Activity activity;
   final List<Activity>? activities;
 
-  const ActivityCard({
-    super.key,
-    required this.activity,
-    this.activities,
-  });
+  const ActivityCard({super.key, required this.activity, this.activities});
 
   @override
   State<ActivityCard> createState() => _ActivityCardState();
@@ -41,20 +38,26 @@ class _ActivityCardState extends State<ActivityCard> {
 
     if (!originalUrl.startsWith('http')) {
       final String providerName = widget.activity.provider.name.toLowerCase();
-      final config = configs.where((c) => c.id.toLowerCase() == providerName).firstOrNull ??
-          configs.where((c) => providerName.contains(c.id.toLowerCase())).firstOrNull;
+      final config =
+          configs
+              .where((c) => c.id.toLowerCase() == providerName)
+              .firstOrNull ??
+          configs
+              .where((c) => providerName.contains(c.id.toLowerCase()))
+              .firstOrNull;
 
       if (config != null) {
-        finalUrl = '${config.baseUrl}${originalUrl.startsWith('/') ? '' : '/'}$originalUrl';
+        finalUrl =
+            '${config.baseUrl}${originalUrl.startsWith('/') ? '' : '/'}$originalUrl';
       }
     }
 
     final Uri url = Uri.parse(finalUrl);
     if (!await launchUrl(url)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch URL')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not launch URL')));
       }
     }
   }
@@ -78,7 +81,9 @@ class _ActivityCardState extends State<ActivityCard> {
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow.withValues(alpha: _isHovering ? 0.6 : 0.4),
+                  color: AppColors.surfaceContainerLow.withValues(
+                    alpha: _isHovering ? 0.6 : 0.4,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: _isHovering
@@ -150,16 +155,20 @@ class _ActivityCardState extends State<ActivityCard> {
                                           width: 4,
                                           height: 4,
                                           decoration: const BoxDecoration(
-                                            color: AppColors.surfaceContainerHighest,
+                                            color: AppColors
+                                                .surfaceContainerHighest,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          _formatDate(widget.activity.createdAt),
+                                          _formatDate(
+                                            widget.activity.createdAt,
+                                          ),
                                           style: const TextStyle(
                                             fontSize: 10,
-                                            color: AppColors.onSurfaceVariantLow,
+                                            color:
+                                                AppColors.onSurfaceVariantLow,
                                           ),
                                         ),
                                       ],
@@ -189,7 +198,9 @@ class _ActivityCardState extends State<ActivityCard> {
                                     configs: state.configs,
                                   ),
                                   if (widget.activity.url != null &&
-                                      widget.activity.url!.trim().isNotEmpty) ...[
+                                      widget.activity.url!
+                                          .trim()
+                                          .isNotEmpty) ...[
                                     const SizedBox(height: 12),
                                     ActivityLinkButton(
                                       accentColor: style.color,

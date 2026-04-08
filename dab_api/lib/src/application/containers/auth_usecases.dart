@@ -1,9 +1,13 @@
+import '../usecases/auth/get_all_identities.dart';
 import '../usecases/auth/authenticate_user.dart';
+import '../usecases/auth/find_all_users.dart';
+import '../usecases/auth/link_user_identity.dart';
 import '../usecases/auth/login_user.dart';
 import '../usecases/auth/logout_user.dart';
 import '../usecases/auth/refresh_token.dart';
 import '../usecases/auth/register_new_user.dart';
 import '../usecases/auth/register_user.dart';
+import '../usecases/auth/update_user_role.dart';
 
 class AuthUseCases {
   final AuthenticateUser authenticateUser;
@@ -12,6 +16,10 @@ class AuthUseCases {
   final RefreshToken refreshToken;
   final RegisterNewUser registerNewUser;
   final RegisterUser registerUser;
+  final LinkUserIdentity linkUserIdentity;
+  final GetAllIdentities getAllIdentities;
+  final FindAllUsers findAllUsers;
+  final UpdateUserRole updateUserRole;
 
   AuthUseCases({
     required this.authenticateUser,
@@ -20,5 +28,9 @@ class AuthUseCases {
     required this.refreshToken,
     required this.registerNewUser,
     required this.registerUser,
+    required this.linkUserIdentity,
+    required this.getAllIdentities,
+    required this.findAllUsers,
+    required this.updateUserRole,
   });
 }

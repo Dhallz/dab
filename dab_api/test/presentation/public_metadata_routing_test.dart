@@ -1,0 +1,50 @@
+import 'package:relic/relic.dart';
+import 'package:test/test.dart';
+
+import '../test_utils.dart';
+
+/// Regression: Relic [Router.use] applies middleware to every route whose lookup
+/// walks through that prefix node. `use('/metadata', auth)` incorrectly wrapped
+/// `/metadata/configs` and `/metadata/status`. The API must scope auth to
+/// `/metadata/providers` only; this test models that shape.
+void main() {
+  group('public metadata routing', () {
+    test(
+      'GET /metadata/configs and /metadata/status skip auth under '
+      '/metadata/providers middleware',
+      () async {
+        Handler authReject(Handler next) {
+          return (Request req) => Response.unauthorized(
+                body: Body.fromString('auth'),
+              );
+        }
+
+        Handler ok = (Request req) => Response.ok(body: Body.fromString('ok'));
+
+        final router = RelicRouter()
+          ..get('/metadata/status', ok)
+          ..get('/metadata/configs', ok)
+          ..use('/metadata/providers', authReject)
+          ..get('/metadata/providers', ok);
+
+        final configsReq = TestRequest.create(
+          url: Uri.parse('http://localhost/metadata/configs'),
+        );
+        final statusReq = TestRequest.create(
+          url: Uri.parse('http://localhost/metadata/status'),
+        );
+        final providersReq = TestRequest.create(
+          url: Uri.parse('http://localhost/metadata/providers'),
+        );
+
+        final configsRes = await router.asHandler(configsReq) as Response;
+        final statusRes = await router.asHandler(statusReq) as Response;
+        final providersRes = await router.asHandler(providersReq) as Response;
+
+        expect(configsRes.statusCode, 200);
+        expect(statusRes.statusCode, 200);
+        expect(providersRes.statusCode, 401);
+      },
+    );
+  });
+}

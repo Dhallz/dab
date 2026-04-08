@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart' hide Group;
 import '../core/failure.dart';
 import '../entities/group.dart';
 import '../entities/user.dart';
+import '../entities/user_identity.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for User and Group persistence.
@@ -31,4 +32,16 @@ abstract class IUserRepository {
   
   /// Permanently removes a custom group.
   Future<Either<DatabaseFailure, void>> deleteGroup(String id);
+
+  /// Links a DAB user to an external provider identity.
+  Future<Either<DatabaseFailure, UserIdentity>> linkIdentity(UserIdentity identity);
+
+  /// Fetches all linked identities for a specific user.
+  Future<Either<DatabaseFailure, List<UserIdentity>>> getIdentities(String userId);
+
+  /// Fetches a specific identity for a user and provider.
+  Future<Either<DatabaseFailure, UserIdentity?>> getIdentity(String userId, String providerId);
+
+  /// Fetches all identities (for admin overview).
+  Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities();
 }

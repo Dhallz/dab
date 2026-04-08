@@ -40,6 +40,8 @@ class AuthResponseMapper extends ClassMapperBase<AuthResponse> {
   static const Field<AuthResponse, String> _f$name = Field('name', _$name);
   static String _$email(AuthResponse v) => v.email;
   static const Field<AuthResponse, String> _f$email = Field('email', _$email);
+  static String _$role(AuthResponse v) => v.role;
+  static const Field<AuthResponse, String> _f$role = Field('role', _$role);
   static String? _$avatarUrl(AuthResponse v) => v.avatarUrl;
   static const Field<AuthResponse, String> _f$avatarUrl = Field(
     'avatarUrl',
@@ -54,6 +56,7 @@ class AuthResponseMapper extends ClassMapperBase<AuthResponse> {
     #userId: _f$userId,
     #name: _f$name,
     #email: _f$email,
+    #role: _f$role,
     #avatarUrl: _f$avatarUrl,
   };
 
@@ -64,6 +67,7 @@ class AuthResponseMapper extends ClassMapperBase<AuthResponse> {
       userId: data.dec(_f$userId),
       name: data.dec(_f$name),
       email: data.dec(_f$email),
+      role: data.dec(_f$role),
       avatarUrl: data.dec(_f$avatarUrl),
     );
   }
@@ -136,6 +140,7 @@ abstract class AuthResponseCopyWith<$R, $In extends AuthResponse, $Out>
     String? userId,
     String? name,
     String? email,
+    String? role,
     String? avatarUrl,
   });
   AuthResponseCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -156,6 +161,7 @@ class _AuthResponseCopyWithImpl<$R, $Out>
     String? userId,
     String? name,
     String? email,
+    String? role,
     Object? avatarUrl = $none,
   }) => $apply(
     FieldCopyWithData({
@@ -164,6 +170,7 @@ class _AuthResponseCopyWithImpl<$R, $Out>
       if (userId != null) #userId: userId,
       if (name != null) #name: name,
       if (email != null) #email: email,
+      if (role != null) #role: role,
       if (avatarUrl != $none) #avatarUrl: avatarUrl,
     }),
   );
@@ -174,6 +181,7 @@ class _AuthResponseCopyWithImpl<$R, $Out>
     userId: data.get(#userId, or: $value.userId),
     name: data.get(#name, or: $value.name),
     email: data.get(#email, or: $value.email),
+    role: data.get(#role, or: $value.role),
     avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
   );
 

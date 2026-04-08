@@ -13,6 +13,7 @@ class AuthResponse with AuthResponseMappable {
   final String userId;
   final String name;
   final String email;
+  final String role;
   final String? avatarUrl;
 
   const AuthResponse({
@@ -21,6 +22,7 @@ class AuthResponse with AuthResponseMappable {
     required this.userId,
     required this.name,
     required this.email,
+    required this.role,
     this.avatarUrl,
   });
 }

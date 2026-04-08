@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/core/failure.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_project_dto.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
@@ -52,9 +52,9 @@ void main() {
         final metadataList = result.getOrElse(
           (l) => throw Exception('Left side returned'),
         );
-        expect(metadataList.length, 2);
+        expect(metadataList.length, 7);
 
-        final first = metadataList.first;
+        final first = metadataList[0];
         expect(first.id, 'PHID-PROJ-111');
         expect(first.name, 'Backend');
         expect(first.provider, 'Phorge');
@@ -66,6 +66,11 @@ void main() {
         expect(second.name, 'Bug');
         expect(second.color, 'orange');
         expect(second.icon, isNull);
+
+        expect(
+          metadataList.map((m) => m.id),
+          containsAll(['slack-global', 'discord-global']),
+        );
 
         verify(
           () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),

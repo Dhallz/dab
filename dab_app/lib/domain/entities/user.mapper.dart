@@ -27,6 +27,8 @@ class UserMapper extends ClassMapperBase<User> {
   static const Field<User, String> _f$name = Field('name', _$name);
   static String _$email(User v) => v.email;
   static const Field<User, String> _f$email = Field('email', _$email);
+  static String _$role(User v) => v.role;
+  static const Field<User, String> _f$role = Field('role', _$role);
   static String? _$avatarUrl(User v) => v.avatarUrl;
   static const Field<User, String> _f$avatarUrl = Field(
     'avatarUrl',
@@ -39,6 +41,7 @@ class UserMapper extends ClassMapperBase<User> {
     #id: _f$id,
     #name: _f$name,
     #email: _f$email,
+    #role: _f$role,
     #avatarUrl: _f$avatarUrl,
   };
 
@@ -47,6 +50,7 @@ class UserMapper extends ClassMapperBase<User> {
       id: data.dec(_f$id),
       name: data.dec(_f$name),
       email: data.dec(_f$email),
+      role: data.dec(_f$role),
       avatarUrl: data.dec(_f$avatarUrl),
     );
   }
@@ -97,7 +101,13 @@ extension UserValueCopy<$R, $Out> on ObjectCopyWith<$R, User, $Out> {
 
 abstract class UserCopyWith<$R, $In extends User, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? id, String? name, String? email, String? avatarUrl});
+  $R call({
+    String? id,
+    String? name,
+    String? email,
+    String? role,
+    String? avatarUrl,
+  });
   UserCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -112,12 +122,14 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     String? id,
     String? name,
     String? email,
+    String? role,
     Object? avatarUrl = $none,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
       if (name != null) #name: name,
       if (email != null) #email: email,
+      if (role != null) #role: role,
       if (avatarUrl != $none) #avatarUrl: avatarUrl,
     }),
   );
@@ -126,6 +138,7 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     id: data.get(#id, or: $value.id),
     name: data.get(#name, or: $value.name),
     email: data.get(#email, or: $value.email),
+    role: data.get(#role, or: $value.role),
     avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
   );
 

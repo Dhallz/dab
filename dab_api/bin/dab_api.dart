@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:dab_api/dab_api.dart';
 import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
+import 'package:dab_api/src/presentation/controllers/admin_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/group_controller.dart';
 import 'package:dab_api/src/presentation/controllers/health_controller.dart';
 import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
 import 'package:dab_api/src/presentation/controllers/user_controller.dart';
+import 'package:dab_api/src/presentation/middlewares/admin_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
@@ -34,15 +36,19 @@ Future<void> main() async {
     ..post('/auth/register', AuthController().register)
     ..post('/auth/login', AuthController().login)
     ..post('/auth/refresh', AuthController().refresh)
+    ..get('/metadata/status', MetadataController().getStatus)
+    // Public: AppCubit bootstrap (same as status) — must be BEFORE /metadata + AuthMiddleware.
+    ..get('/metadata/configs', MetadataController().getConfigs)
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
     ..get('/activities/search', ActivityController().searchActivities)
     ..get('/activities', ActivityController().getActivities)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
-    ..use('/metadata', AuthMiddleware().call)
+    // Auth only on /metadata/providers — Relic's use(prefix) wraps ALL deeper
+    // routes under that prefix, so use('/metadata', …) also wrapped /configs and /status.
+    ..use('/metadata/providers', AuthMiddleware().call)
     ..get('/metadata/providers', MetadataController().getProviders)
-    ..get('/metadata/configs', MetadataController().getConfigs)
     ..use('/users', AuthMiddleware().call)
     ..get('/users', UserController().getUsers)
     ..get('/users/:id', UserController().getUser)
@@ -51,6 +57,23 @@ Future<void> main() async {
     ..get('/groups', GroupController().getGroups)
     ..post('/groups', GroupController().saveGroup)
     ..delete('/groups/:id', GroupController().deleteGroup)
+    
+    // --- Admin Console (DAB-40) ---
+    // All routes under /admin require both authentication and admin role.
+    ..use('/admin', AuthMiddleware().call)
+    ..use('/admin', AdminMiddleware().call)
+    // Provider Management
+    ..get('/admin/configs', MetadataController().getConfigs)
+    ..post('/admin/configs', MetadataController().saveConfig)
+    ..post('/admin/configs/test', MetadataController().testConfig)
+    // Identity Resolution
+    ..get('/admin/identities', AdminController().getIdentities)
+    ..post('/admin/identities/link', AdminController().linkIdentity)
+    // User Management
+    ..get('/admin/users', AdminController().getUsers)
+    ..post('/admin/users/role', AdminController().postUpdateUserRole)
+    // ------------------------------
+
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

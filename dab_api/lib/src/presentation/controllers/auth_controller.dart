@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:relic/relic.dart';
+
 import '../../application/containers/auth_usecases.dart';
 import '../../service_locator.dart';
 

@@ -24,10 +24,14 @@ class AppCubit extends AbsCubit<AppState> {
     // Fetch configs
     final configsResult = await _metadataUseCases.getProviderConfigs.execute();
 
+    // Fetch system status (DAB-40 Bootstrap Lock)
+    final statusResult = await _metadataUseCases.getSystemStatus.execute();
+
     emit(
       state.copyWith(
         settings: settingsResult.getOrElse((failure) => state.settings),
         configs: configsResult.getOrElse((failure) => []),
+        isSystemConfigured: statusResult.getOrElse((failure) => true),
         isLoading: false,
       ),
     );

@@ -1,17 +1,19 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../domain/core/failure.dart';
 import '../../domain/entities/session.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
 import '../database/app_database.dart';
+import '../database/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence implementation for Authentication and User identity.
 /// CONTRACT: Implements [AbsIAuthRepository] using the [AppDatabase] (Drift/Postgres).
 /// CONSTRAINTS: Must handle low-level database exceptions and map them to [DatabaseFailure].
-/// 
-/// This repository acts as the bridge between the high-level [User] and [Session] 
+///
+/// This repository acts as the bridge between the high-level [User] and [Session]
 /// entities and the low-level relational tables.
 class AuthRepository implements AbsIAuthRepository {
   final AppDatabase _db;
@@ -21,10 +23,10 @@ class AuthRepository implements AbsIAuthRepository {
   @override
   Future<Either<DatabaseFailure, User?>> findByEmail(String email) async {
     try {
-      final user = await (_db.select(
+      final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.email.equals(email))).getSingleOrNull();
-      return Right(user);
+      return Right(row != null ? userFromUsersRow(row) : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by email: $e'));
     }
@@ -34,10 +36,10 @@ class AuthRepository implements AbsIAuthRepository {
   @override
   Future<Either<DatabaseFailure, User?>> findById(String id) async {
     try {
-      final user = await (_db.select(
+      final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.id.equals(id))).getSingleOrNull();
-      return Right(user);
+      return Right(row != null ? userFromUsersRow(row) : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by ID: $e'));
     }
@@ -58,8 +60,8 @@ class AuthRepository implements AbsIAuthRepository {
               role: Value(user.role),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
-              createdAt: user.createdAt,
-              updatedAt: Value(user.updatedAt),
+              createdAt: toPgDateTime(user.createdAt),
+              updatedAt: Value(toPgDateTimeOrNull(user.updatedAt)),
             ),
           );
       return const Right(null);
@@ -72,10 +74,10 @@ class AuthRepository implements AbsIAuthRepository {
   @override
   Future<Either<DatabaseFailure, List<User>>> findUsersWithPhorge() async {
     try {
-      final users = await (_db.select(
+      final rows = await (_db.select(
         _db.usersTable,
       )..where((u) => u.phorgePhid.isNotNull())).get();
-      return Right(users);
+      return Right(rows.map(userFromUsersRow).toList());
     } catch (e) {
       return Left(DatabaseFailure('Error finding users with phorge: $e'));
     }
@@ -92,7 +94,7 @@ class AuthRepository implements AbsIAuthRepository {
               id: session.id,
               userId: session.userId,
               refreshToken: session.refreshToken,
-              expiresAt: session.expiresAt,
+              expiresAt: toPgDateTime(session.expiresAt),
               deviceInfo: Value(session.deviceInfo),
             ),
           );
@@ -108,12 +110,12 @@ class AuthRepository implements AbsIAuthRepository {
     String token,
   ) async {
     try {
-      final session =
+      final row =
           await (_db.select(_db.sessionsTable)
                 ..where((s) => s.refreshToken.equals(token))
                 ..limit(1))
               .getSingleOrNull();
-      return Right(session);
+      return Right(row != null ? sessionFromSessionsRow(row) : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding session: $e'));
     }
@@ -144,6 +146,43 @@ class AuthRepository implements AbsIAuthRepository {
       return const Right(null);
     } catch (e) {
       return Left(DatabaseFailure('Error deleting user sessions: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, int>> countAdmins() async {
+    try {
+      final query = _db.select(_db.usersTable)
+        ..where((u) => u.role.equals('Admin'));
+      final users = await query.get();
+      return Right(users.length);
+    } catch (e) {
+      return Left(DatabaseFailure('Error counting admins: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, List<User>>> findAllUsers() async {
+    try {
+      final rows = await _db.select(_db.usersTable).get();
+      return Right(rows.map(userFromUsersRow).toList());
+    } catch (e) {
+      return Left(DatabaseFailure('Error retrieving all users: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, void>> updateUserRole(
+    String userId,
+    String role,
+  ) async {
+    try {
+      await (_db.update(_db.usersTable)..where((u) => u.id.equals(userId))).write(
+        UsersTableCompanion(role: Value(role)),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(DatabaseFailure('Error updating user role: $e'));
     }
   }
 }

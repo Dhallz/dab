@@ -1,8 +1,6 @@
 import 'package:drift/drift.dart';
+import 'package:drift_postgres/drift_postgres.dart';
 
-import 'package:dab_api/src/domain/entities/session.dart';
-
-@UseRowClass(Session)
 class SessionsTable extends Table {
   @override
   String get tableName => 'sessions';
@@ -10,7 +8,8 @@ class SessionsTable extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text().named('user_id')();
   TextColumn get refreshToken => text().named('token')();
-  DateTimeColumn get expiresAt => dateTime().named('expires_at')();
+  TimestampColumn get expiresAt =>
+      customType(PgTypes.timestampWithTimezone).named('expires_at')();
   TextColumn get deviceInfo => text().nullable().named('device_info')();
 
   @override

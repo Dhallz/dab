@@ -23,12 +23,16 @@ void main() {
     final tConfigs = [
       const ProviderConfig(
         id: 'github',
+        name: 'GitHub',
         baseUrl: 'https://github.com',
+        isActive: true,
         iconUrl: 'https://github.com/favicon.ico',
       ),
       const ProviderConfig(
         id: 'phorge',
+        name: 'Phorge',
         baseUrl: 'https://phorge.com',
+        isActive: true,
         iconUrl: 'https://phorge.com/favicon.ico',
       ),
     ];
