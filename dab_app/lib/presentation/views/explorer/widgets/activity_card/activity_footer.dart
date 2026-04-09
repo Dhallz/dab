@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity.dart';
-import '../../../../../presentation/core/extensions/activity_ui_extensions.dart';
+import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import 'activity_avatar.dart';
 import 'activity_intensity_bar.dart';

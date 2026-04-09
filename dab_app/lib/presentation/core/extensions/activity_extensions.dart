@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity.dart';
 import '../styles/activity_category_styles.dart';
+import '../styles/provider_styles.dart';
 
-extension ActivityUIExtensions on Activity {
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: UI-specific extensions for the [Activity] entity.
+/// CONSTRAINTS: Only methods requiring [BuildContext] or UI tokens go here.
+extension OnActivity on Activity {
   ActivityStyle style(BuildContext context) {
     final theme = Theme.of(context);
     final extension = theme.extension<ActivityCategoryStyles>();
@@ -13,6 +17,15 @@ extension ActivityUIExtensions on Activity {
 
   Color color(BuildContext context) => style(context).color;
   IconData icon(BuildContext context) => style(context).icon;
+
+  ProviderStyle providerStyle(BuildContext context) {
+    final theme = Theme.of(context);
+    final extension = theme.extension<ProviderStyles>();
+    return extension?.styleOf(provider.name) ??
+        ProviderStyles.dark().styleOf(provider.name);
+  }
+
+  Color brandColor(BuildContext context) => providerStyle(context).brandColor;
 
   IconData granularIcon(BuildContext context) {
     final contentLower = content.toLowerCase();
@@ -78,16 +91,4 @@ extension ActivityUIExtensions on Activity {
 
     return style(context).label.toLowerCase();
   }
-}
-
-extension ActivityProviderUIExtensions on ActivityProvider {
-  ActivityStyle style(BuildContext context) {
-    final theme = Theme.of(context);
-    final extension = theme.extension<ActivityCategoryStyles>();
-    return extension?.styleOf(category) ??
-        ActivityCategoryStyles.dark().styleOf(category);
-  }
-
-  Color color(BuildContext context) => style(context).color;
-  IconData icon(BuildContext context) => style(context).icon;
 }

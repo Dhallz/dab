@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity.dart';
 import '../../../../../domain/entities/provider_config.dart';
-import '../../../../../presentation/core/extensions/activity_ui_extensions.dart';
+import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/features/app/app_cubit.dart';
 import '../../../../../presentation/features/app/app_state.dart';
@@ -67,6 +67,7 @@ class _ActivityCardState extends State<ActivityCard> {
     return BlocBuilder<AppCubit, AppState>(
       builder: (context, state) {
         final style = widget.activity.style(context);
+        final brandColor = widget.activity.brandColor(context);
 
         return MouseRegion(
           onEnter: (_) => setState(() => _isHovering = true),
@@ -78,58 +79,58 @@ class _ActivityCardState extends State<ActivityCard> {
             curve: Curves.easeOutCubic,
             child: GestureDetector(
               onTap: () => _launchUrl(state.configs),
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow.withValues(
-                    alpha: _isHovering ? 0.6 : 0.4,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _isHovering
-                        ? style.color.withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.1),
-                  ),
-                  boxShadow: _isHovering
-                      ? [
-                          BoxShadow(
-                            color: style.color.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            spreadRadius: -5,
-                          ),
-                        ]
-                      : [],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+              child: Stack(
+                children: [
+                  Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow.withValues(alpha: _isHovering ? 0.6 : 0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isHovering
+                            ? style.color.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.1),
+                      ),
+                      boxShadow: _isHovering
+                          ? [
+                              BoxShadow(
+                                color: style.color.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                spreadRadius: -5,
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Provider Icon / Category
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: style.color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: style.color.withValues(alpha: 0.2),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Category Icon (Functional Accent)
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: style.color.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: style.color.withValues(alpha: 0.2),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      style.icon,
+                                      color: style.color,
+                                      size: 24,
+                                    ),
                                   ),
-                                ),
-                                child: Icon(
-                                  style.icon,
-                                  color: style.color,
-                                  size: 24,
-                                ),
-                              ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
@@ -210,27 +211,51 @@ class _ActivityCardState extends State<ActivityCard> {
                                   ],
                                 ],
                               ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Content Section
+                              ActivityContent(
+                                activity: widget.activity,
+                                activities: widget.activities,
+                                isExpanded: _isHovering,
+                                accentColor: style.color,
+                              ),
+                              const SizedBox(height: 16),
+                              // Footer Section
+                              ActivityFooter(
+                                activity: widget.activity,
+                                activities: widget.activities,
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          // Content Section
-                          ActivityContent(
-                            activity: widget.activity,
-                            activities: widget.activities,
-                            isExpanded: _isHovering,
-                            accentColor: style.color,
-                          ),
-                          const SizedBox(height: 16),
-                          // Footer Section
-                          ActivityFooter(
-                            activity: widget.activity,
-                            activities: widget.activities,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    top: 32,
+                    bottom: 32,
+                    width: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: brandColor.withValues(alpha: 0.8),
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: brandColor.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: -2,
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

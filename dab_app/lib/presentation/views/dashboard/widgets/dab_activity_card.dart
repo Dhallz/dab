@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../domain/entities/activity.dart';
-import '../../../../presentation/core/extensions/activity_ui_extensions.dart';
+import '../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../presentation/core/extensions/activity_provider_extensions.dart';
 import '../../../../presentation/core/styles/app_colors.dart';
 import '../../auth/widgets/auth_glass_card.dart';
 
@@ -35,7 +36,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
           boxShadow: [
             if (_isHovered)
               BoxShadow(
-                color: style.color.withOpacity(0.15),
+                color: style.color.withValues(alpha: 0.15),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
@@ -102,7 +103,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                     const SizedBox(width: 8),
                     Icon(
                       Icons.chevron_right_rounded,
-                      color: style.color.withOpacity(0.5),
+                      color: style.color.withValues(alpha: 0.5),
                       size: 20,
                     ),
                   ],
@@ -119,12 +120,12 @@ class _DabActivityCardState extends State<DabActivityCard> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 2,
           ),

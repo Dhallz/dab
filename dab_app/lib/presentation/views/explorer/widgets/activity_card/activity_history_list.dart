@@ -4,7 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity.dart';
-import '../../../../../presentation/core/extensions/activity_ui_extensions.dart';
+import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 
 class ActivityHistoryList extends StatelessWidget {

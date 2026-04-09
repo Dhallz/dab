@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.3.0
   flutter_markdown: ^0.7.5
   stream_transform: ^2.1.1
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +74,21 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: Mona Sans
+      fonts:
+        - asset: assets/fonts/MonaSans-Regular.ttf
+        - asset: assets/fonts/MonaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/MonaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/MonaSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/MonaSans-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/MonaSans-Black.ttf
+          weight: 900
 
   # To add assets to your application, add an assets section, like this:
   # assets:

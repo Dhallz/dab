@@ -78,9 +78,10 @@
 |---|---|
 | State management | `flutter_bloc` |
 | Navigation | `go_router` |
-| Networking | `dio` |
+| Networking | `dio` + `cached_network_image` |
 | Local persistence | `objectbox` + `objectbox_flutter_libs` |
 | Secure token storage | `flutter_secure_storage` |
+| Formatting | `timeago` + `intl` |
 | Testing | `mocktail` + `bloc_test` |
 
 ---
@@ -153,6 +154,13 @@
 - `.arb` files in `lib/presentation/core/localization/l10n/`.
 - Naming: `app_en.arb`, `app_fr.arb`, etc.
 - Auto-generated via `flutter gen-l10n` (configured in `l10n.yaml`).
+- **Standard Pattern:** Use the `L10n` extension in `lib/presentation/core/localization/l10n_extension.dart` to access keys via `context.l10n.keyName`.
+
+### UI Styling & Workflows
+
+- **Centralized Tokens:** All UI constants (Colors, Spacing, Icons, etc.) MUST be fetched from `lib/presentation/core/styles/`.
+- **Material 3:** Adhere strictly to M3 color roles (Primary, Surface, OnSurface, etc.).
+- **Scaffolding:** Use the `/sc-view` workflow for creating new view screens to ensure correct folder hierarchy and boilerplate.
 
 ---
 

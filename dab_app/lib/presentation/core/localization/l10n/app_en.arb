@@ -1,7 +1,6 @@
 {
   "@@locale": "en",
   "helloWorld": "Hello World!",
-  "@helloWorld": {
-    "description": "The conventional newborn programmer greeting"
-  }
+  "dashboardTitle": "Dashboard",
+  "dashboardSubtitle": "Coming soon: Live activity feed."
 }

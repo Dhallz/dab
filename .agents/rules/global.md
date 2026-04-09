@@ -1,6 +1,5 @@
 ---
 trigger: always_on
-glob: "**/*.dart,**/pubspec.yaml,dab_api/lib/src/domain/entities/**/*.dart"
 description: Core project architecture and behavioral rules
 ---
 

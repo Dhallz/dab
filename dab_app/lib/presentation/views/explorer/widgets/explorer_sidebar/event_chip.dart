@@ -1,6 +1,7 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import '../../../../core/styles/provider_styles.dart';
+import '../../../../core/extensions/color_extensions.dart';
 
 class EventChip extends StatelessWidget {
   final String provider;
@@ -16,18 +17,15 @@ class EventChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorMap = {
-      'GitHub': Colors.blue,
-      'Phorge': Colors.purple,
-      'Slack': Colors.green,
-      'Jira': Colors.blueAccent,
-    };
+    final theme = Theme.of(context);
+    final providerStyle = theme.extension<ProviderStyles>()?.styleOf(provider) ??
+        ProviderStyles.dark().styleOf(provider);
+    
+    final color = providerStyle.brandColor.toAccessibleBrandColor;
 
-    final color = colorMap[provider] ?? Colors.grey;
-
-    final displayColor = HSLColor.fromColor(
-      color,
-    ).withSaturation(isSelected ? 0.3 : 0.15).withLightness(0.5).toColor();
+    final displayColor = isSelected
+        ? color
+        : HSLColor.fromColor(color).withSaturation(0.15).withLightness(0.5).toColor();
 
     return GestureDetector(
       onTap: onTap,
@@ -57,15 +55,28 @@ class EventChip extends StatelessWidget {
                     ]
                   : [],
             ),
-            child: Text(
-              provider.toUpperCase(),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: isSelected
-                    ? displayColor
-                    : displayColor.withValues(alpha: 0.6),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  providerStyle.icon,
+                  size: 12,
+                  color: isSelected
+                      ? displayColor
+                      : displayColor.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  provider.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected
+                        ? displayColor
+                        : displayColor.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

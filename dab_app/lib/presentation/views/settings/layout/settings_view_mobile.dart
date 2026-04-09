@@ -36,7 +36,7 @@ class SettingsViewMobile extends StatelessWidget {
             ListTile(
               leading: const Icon(AppIcons.info, color: AppColors.secondary),
               title: const Text('Version', style: AppTextStyles.bodyMedium),
-              trailing: const Text('1.0.0', style: AppTextStyles.caption),
+              trailing: const Text('1.0.0', style: AppTextStyles.labelSmall),
             ),
           ],
         );
@@ -47,7 +47,7 @@ class SettingsViewMobile extends StatelessWidget {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title.toUpperCase(),
-      style: AppTextStyles.caption.copyWith(
+      style: AppTextStyles.labelSmall.copyWith(
         fontWeight: FontWeight.bold,
         letterSpacing: 1.2,
         color: AppColors.secondary,

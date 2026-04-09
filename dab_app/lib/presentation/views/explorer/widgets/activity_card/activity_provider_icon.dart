@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity.dart';
 import '../../../../../domain/entities/provider_config.dart';
-import '../../../../../presentation/core/extensions/activity_ui_extensions.dart';
+import '../../../../../presentation/core/extensions/activity_provider_extensions.dart';
 
 class ActivityProviderIcon extends StatelessWidget {
   final Activity activity;
@@ -18,7 +18,7 @@ class ActivityProviderIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconData = activity.provider.icon(context);
-    final iconColor = activity.provider.color(context);
+    final iconColor = activity.provider.brandColor(context);
 
     String? customIconUrl;
     final providerId = activity.provider.name.toLowerCase();
@@ -35,7 +35,7 @@ class ActivityProviderIcon extends StatelessWidget {
     Widget fallbackIcon = Icon(
       iconData,
       size: 16,
-      color: iconColor.withValues(alpha: 0.6),
+      color: iconColor,
     );
 
     Widget icon = fallbackIcon;

@@ -178,17 +178,24 @@ All routes are declared in `AppRoute` and wired in `AppRouter`.
 
 ## Design System: Premium Glassmorphism
 
-| Token | Value |
-|---|---|
-| Primary Background | `#0F172A` (Deep Slate) |
-| Glass Surface | `rgba(30, 41, 59, 0.4–0.7)` + backdrop blur `σ 8–12` |
-| Glass Border | `1px rgba(255, 255, 255, 0.1)` |
-| Typography — UI | `Inter` |
-| Typography — IDs/Hashes | `Roboto Mono` |
+The project uses a unified design system centered around Material 3 roles, implemented in `lib/presentation/core/styles/`.
+
+| Token Category | File | Description |
+|---|---|---|
+| **Colors** | [app_colors.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_colors.dart) | M3 roles + Electric Indigo (`#6366F1`) & Glass Tokens |
+| **Spacing** | [app_spacing.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_spacing.dart) | Base 4px grid (tiny=4, small=8, medium=16, large=24) |
+| **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **Roboto Mono** for Monospace |
+| **Layout** | [app_layout.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_layout.dart) | Viewport constraints, standard border radii (12-24px) |
+| **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application |
+
+### Premium Glassmorphism
+- **Surface**: `AppColors.glassSurface` (low opacity slate) + backdrop blur `σ 8–12`.
+- **Borders**: Subtile `1px` lines using `AppColors.glassBorder` (white alpha).
+- **Branding**: Elevated by **Electric Indigo** accents for high-contrast interactivity.
 
 ### Micro-Animations
 - **Staggered Entrances:** Dashboard cards animate in with a 50ms stagger.
-- **Provider Glow:** Hover reveals `BoxShadow` colored by provider (e.g., Slack Purple `#4A154B`, Phorge Crimson `#8F2A3B`).
+- **Provider Glow:** Hover reveals `BoxShadow` colored by provider glow roles (e.g., Slack Purple `#4A154B`).
 - **Entry Pulse:** Incoming WebSocket events trigger a spring-scale transition.
 
 ---

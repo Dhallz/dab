@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity.dart';
 import 'app_colors.dart';
+import 'app_icons.dart';
 
 class ActivityStyle {
   final Color color;
@@ -34,22 +35,22 @@ class ActivityCategoryStyles extends ThemeExtension<ActivityCategoryStyles> {
       styles: {
         ActivityCategory.commit: const ActivityStyle(
           color: AppColors.engineering,
-          icon: Icons.commit_rounded,
+          icon: AppIcons.commit,
           label: 'COMMIT',
         ),
         ActivityCategory.revision: const ActivityStyle(
           color: AppColors.revision,
-          icon: Icons.code_rounded,
+          icon: AppIcons.revision,
           label: 'REVISION',
         ),
         ActivityCategory.task: const ActivityStyle(
           color: AppColors.product,
-          icon: Icons.task_alt_rounded,
+          icon: AppIcons.task,
           label: 'TASK',
         ),
         ActivityCategory.generic: const ActivityStyle(
           color: AppColors.genericActivity,
-          icon: Icons.bolt_rounded,
+          icon: AppIcons.genericActivity,
           label: 'ACTIVITY',
         ),
       },
