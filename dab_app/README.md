@@ -1,33 +1,48 @@
-# DAB App (Flutter Client)
+# 📱 DAB Dashboard (Flutter)
 
-The cross-platform client for the Dev Activity Board, built with Flutter and following strict Clean Architecture principles.
+The ultra-lean, sub-second real-time dashboard for DAB. Experience **high-frame-rate insight** through premium [glassmorphism](https://en.wikipedia.org/wiki/Glassmorphism) and strict Clean Architecture.
 
-## 🏗️ Architecture
-The app uses **Cubit** for state management and follows the `Presentation -> Application -> Domain` hierarchy. For a deep dive into the client structure, see:
-- **[App Reference](file:///Users/dhallz/git/dab/doc/app.md)**
-- **[Code Conventions](file:///Users/dhallz/git/dab/doc/conventions.md)**
+---
 
-## 🚀 Getting Started
+## 🏗️ Layered Architecture
 
-1. **Install Dependencies**:
+| Layer | Responsibility | Pattern |
+| :--- | :--- | :--- |
+| **Presentation** | UI & Event Handling | Flutter + Bloc/Cubit |
+| **Application** | State Management & Logic | Business Case Cubits |
+| **Domain** | Primitive Models & Contracts | Pure Models |
+| **Infrastructure** | Local Persistence & API Clients | Drift (SQLite) + Dio |
+
+> [!TIP]
+> Dive deep into the mobile world: **[App Documentation](../doc/app.md)** and **[Design Conventions](../doc/conventions.md)**.
+
+---
+
+## 🚀 Ignition Checklist
+
+1. **Gear Up**:
    ```bash
    flutter pub get
    ```
 
-2. **Run Code Generation**:
+2. **Generate Native Bindings**:
    ```bash
    flutter pub run build_runner build --delete-conflicting-outputs
    ```
 
-3. **Launch the App**:
+3. **Launch the Experience**:
    ```bash
    flutter run
    ```
 
-## 🛠️ Tech Stack
-- **State Management**: Bloc/Cubit
-- **Persistence**: Drift (SQLite)
-- **Dependency Injection**: GetIt
-- **UI Components**: Material 3 / Custom Design System
+---
 
-*Powered by Clean Architecture.*
+## 🛠️ Performance Stack
+- **State Engine**: Bloc/Cubit (Predictable State)
+- **Fluid Persistence**: Drift/SQLite (Local-First Sync)
+- **Injection**: GetIt (Performance-first DI)
+- **Visuals**: Material 3 + Custom Glass Shader System
+
+---
+*Built for developers who value their pixels.*
+

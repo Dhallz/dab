@@ -1,36 +1,52 @@
-# DAB API Server
+# ⚙️ DAB API Engine
 
-The backend ecosystem for DAB, built on Clean Architecture and powered by the **Relic** framework.
+The high-performance backend ecosystem for DAB. Built with **Clean Architecture** and powered by the [Relic](https://pub.dev/packages/relic) framework for low-latency, WebSocket-first activity propagation.
 
-## 🏗️ Architecture
-This package handles the **Domain** (Entities/Interfaces) and **Infrastructure** (Postgres, Redis, Connectors) layers. For a deep dive into the API structure, see:
-- **[API Reference](file:///Users/dhallz/git/dab/doc/api.md)**
-- **[Infrastructure & Database](file:///Users/dhallz/git/dab/doc/infrastructure.md)**
+---
 
-## 🚀 Getting Started Locally
+## 🏗️ Architecture Stack
 
-1. **Install Dependencies**:
+| Layer | Responsibility | Tech |
+| :--- | :--- | :--- |
+| **Domain** | Business Logic & Entities | Pure Dart |
+| **Application** | Use Cases & Flow Control | Relic Business Logic |
+| **Infrastructure** | Persistence & External Auth | PostgreSQL + Redis |
+| **Presentation** | REST & WebSocket Endpoints | [Relic Native Server](https://pub.dev/packages/relic) |
+
+> [!IMPORTANT]
+> For a deep dive into the API structure, see the **[API Reference](../doc/api.md)** and **[Infrastructure Guide](../doc/infrastructure.md)**.
+
+---
+
+## 🚀 Getting Started (Dev)
+
+1. **Install Gear**:
    ```bash
    dart pub get
    ```
 
-2. **Start Infrastructure**:
+2. **Boot Infrastructure**:
    ```bash
-   docker-compose up -d db redis  # Starts Postgres and Redis
+   docker-compose up -d db redis  # Postgres & Redis only (use for manual API runs)
    ```
 
-3. **Run Dev Server**:
+3. **Ignite the Server**:
    ```bash
    dart run --enable-vm-service bin/dab_api.dart
    ```
    *Note: Relic supports hot reload when an IDE debugger is attached.*
 
-## 🧪 Testing
-We use **Bruno** for API testing. The collection is located at the project root:
-- **[Bruno Collection](file:///Users/dhallz/git/dab/bruno/)**
+---
 
-## 🐳 Docker Production Build
-To build a Native AOT production image:
+## 🧪 Testing with Bruno
+We use **Bruno** for Git-native, local-first API exploration. The collection is located in the root `/bruno` folder.
+👉 **[Open Bruno Collection](../bruno/)**
+
+---
+
+## 🐳 Production Deployment
+To build a Native AOT optimized Docker image:
 ```bash
 docker build -t dab_api:latest .
 ```
+
