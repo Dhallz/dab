@@ -17,6 +17,12 @@ Thumbs.db
 .pub-cache/
 .pub/
 **/build/
+**/linux/
+**/macos/
+**/web/
+**/windows/
+**/ios/
+**/android/
 
 # Flutter specific
 **/ios/Flutter/.last_build_id

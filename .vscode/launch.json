@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DAB API",
+      "cwd": "dab_api",
+      "request": "launch",
+      "type": "dart",
+      "program": "bin/dab_api.dart"
+    },
+    {
+      "name": "DAB App (Debug)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "DAB App (Profile)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "DAB App (Release)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "DAB Stack",
+      "configurations": ["DAB API", "DAB App (Debug)"]
+    }
+  ]
+}
