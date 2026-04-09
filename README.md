@@ -1,74 +1,89 @@
-# DAB (Dev Activity Board)
+# DAB (Dev Activity Board) ⚡
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Stack: Flutter](https://img.shields.io/badge/Client-Flutter-blue?logo=flutter)](https://flutter.dev)
+[![Backend: Dart](https://img.shields.io/badge/Backend-Dart-0075b0?logo=dart)](https://dart.dev)
+[![Engine: Relic](https://img.shields.io/badge/Engine-Relic-orange)](https://pub.dev/packages/relic)
 
 > **"The Open-Source, Self-Hosted Event Bus for Modern Engineering Teams"**
+> *Reclaim your screen. Reclaim your focus.*
 
 ---
 
-## 🌩️ Stop the "Alt-Tab Tax"
-As developers, **Flow State** is our most valuable asset. Yet, it gets fragmented across 5–7 different tools. The mental re-indexing cost of switching between Slack, Jira, Phorge, and Linear is the hidden tax on every engineering team.
+## 🌩️ Destroy the "Alt-Tab Tax"
 
-**DAB** is the centralized engine that aggregates every signal you need into a single, high-performance interface.
+As developers, **Flow State** is our most precious currency. Yet, we spend it recklessly on fragmented tools. The mental re-indexing cost of jumping between Slack, Jira, Phorge, and Linear is a hidden tax on every line of code you write.
 
-- **Reclaim your flow:** Reclaim your screen real estate by replacing 7+ background applications with one lean dashboard.
-- **Noise to Narrative:** Transform fragmented updates into a searchable chronological narrative of your work.
-- **Sovereignty by Design:** Private-first infrastructure. All sensitive data is AES-256 encrypted and never leaves your network.
+**DAB** is the centralized nerve center that aggregates every signal into a single, high-performance interface.
+
+| Feature | The Old Way 🐌 | The DAB Way ⚡ |
+| :--- | :--- | :--- |
+| **Context Switching** | 7+ browser tabs & background apps | One lean, unified dashboard |
+| **Visibility** | Fragmented notifications & "Where was that?" | A single, searchable chronological pulse |
+| **Privacy** | Your IP living in everyone else's cloud | 100% Self-Hosted. Your data, your rules. |
+| **Speed** | Waiting for page refreshes & cloud lag | Sub-second real-time sync via WebSockets |
 
 ---
 
-## 🛡️ Security & Privacy
-DAB is designed as a **Sovereign Infrastructure**, not a SaaS. Your activity data is your most sensitive engineering intellectual property.
-- **Zero-Trust Local Storage**: All provider tokens and secrets are AES-256 encrypted at rest.
-- **Network Isolation**: Since DAB is self-hosted, your data never leaves your infrastructure. No external pings, no hidden telemetry.
-- **Auditable Core**: Being open-source allows your security team to verify every encryption primitive and data-handling routine.
-- **JWT Enforcement**: Industry-standard JSON Web Tokens (JWT) protect all API communication, with secure OS-level storage for client-side tokens.
+## 🛡️ Sovereignty by Design (Security)
+
+DAB isn't a SaaS; it's **Sovereign Infrastructure**. Your activity data is your team's most sensitive engineering IP. We treat it with appropriate respect.
+
+*   **🔒 Zero-Trust Local Storage**: All provider tokens are AES-256 encrypted at rest.
+*   **🌐 Network Isolation**: Your data never leaves your infrastructure. No external pings, no hidden telemetry.
+*   **🕵️ Auditable Core**: 100% Open-Source. Verify every encryption primitive yourself.
+*   **🔑 JWT Enforcement**: Industry-standard security for all inter-service communication.
 
 ---
 
 ## 🗺️ The "Thermal" Roadmap
-We prioritize features based on "Thermal Heat" — community demand and developer friction points. Check the **[Provider Roadmap](file:///Users/dhallz/git/dab/doc/overview.md#7-provider-roadmap)** to see what's hot.
 
-- ✅ **Phorge**: Tasks & Differential Revisions.
-- 🔜 **Linear**: Issues & Project events.
-- 🔜 **Slack**: Webhooks + Huddle transcriptions.
-- 🔜 **GitHub/GitLab**: The complete dev cycle.
+We prioritize integrations based on **Thermal Heat** — community pulse and developer friction points.
 
----
-
-## 📁 Repository Structure
-
-- **[dab_api](file:///Users/dhallz/git/dab/dab_api/)**: The backend hub built on [Relic](https://pub.dev/packages/relic). Handles ingestion, normalization, and WebSocket-first propagation.
-- **[dab_app](file:///Users/dhallz/git/dab/dab_app/)**: The cross-platform Flutter client with premium glassmorphism and sub-second real-time updates.
-- **[bruno/](file:///Users/dhallz/git/dab/bruno/)**: A git-native, local-first API collection. No cloud dependencies, just pure testing.
-- **[doc/](file:///Users/dhallz/git/dab/doc/)**: The single source of truth for our architecture, standards, and roadmap.
+*   ✅ **Phorge**: Full Differential & Task lifecycle support.
+*   🚀 **Linear**: Issues & Project activity (Coming Soon).
+*   💬 **Slack**: Webhook ingestion & Huddle transcriptions (Researching).
+*   💻 **The Forge**: GitHub, GitLab, and Bitbucket integrations.
 
 ---
 
-## 🚀 Getting Started
+## 🏗️ Repository Architecture
 
-### 1. Boot the Stack
-DAB is fully self-hosted via Docker. Reclaim your environment in minutes:
+| Component | Tech Stack | Responsibility |
+| :--- | :--- | :--- |
+| **[dab_api](./dab_api)** | Dart + Relic | The Hub. Handles ingestion, normalization, and sync. |
+| **[dab_app](./dab_app)** | Flutter | The UI. Real-time [glassmorphism](https://en.wikipedia.org/wiki/Glassmorphism) dashboard. |
+| **[bruno/](./bruno)** | Bruno | Automated, git-native API test suite. |
+| **[doc/](./doc)** | Markdown | The **Single Source of Truth** for the entire project. |
+
+---
+
+## 🚀 Speed-to-Flow (Getting Started)
+
+### 1️⃣ Boot the Nerve Center
+Reclaim your environment in seconds using Docker:
 ```bash
 cd dab_api
-docker-compose up -d  # Starts PostgreSQL, Redis, API, and Swagger
+docker-compose up -d  # Postgres, Redis, API, and Swagger go live
 ```
+🌐 **Services:** 
+- **Core API**: [http://localhost:8080](http://localhost:8080)
+- **Swagger Docs**: [http://localhost:8081](http://localhost:8081)
 
-**Services now live at:**
-- **REST API**: [http://localhost:8080](http://localhost:8080)
-- **Swagger UI**: [http://localhost:8081](http://localhost:8081)
-
-### 2. Launch the Client
+### 2️⃣ Launch the Dashboard
 ```bash
 cd dab_app
-flutter pub get
-flutter run
+flutter pub get && flutter run
 ```
 
-### 3. Test the Pulse
-Open the **[Bruno Collection](file:///Users/dhallz/git/dab/bruno/)**, select the `local` environment, and run the **Login** request to start seeing activity in real-time.
+### 3️⃣ Feel the Pulse
+Open the **[Bruno Collection](./bruno)**, point to the `local` environment, and run the **Login** request. Your local activity bus is now live.
 
 ---
 
-## 🤝 Community & Sovereignty
-DAB exists because developers deserve visibility without micro-management. We are open-source and audit-first. Join us in reclaiming the screen.
+## 🤝 Join the Sovereignty Movement
 
-*Reclaim your screen. Reclaim your focus.*
+DAB exists because developers deserve visibility without micro-management. We are built for those who value their focus above all else. 
+
+**Stop searching. Start building.**
+
