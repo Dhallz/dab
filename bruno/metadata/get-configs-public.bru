@@ -1,0 +1,20 @@
+meta {
+  name: Get Provider Configs (Public)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/metadata/configs
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns configs array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

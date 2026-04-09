@@ -1,0 +1,50 @@
+---
+trigger: always_on
+glob: "**/*.dart,**/pubspec.yaml,**/openapi.yaml,**/*.g.dart"
+description: Keep doc/ in sync with codebase changes
+---
+
+# Doc Maintenance Rule
+
+The `doc/` folder at the root of the DAB project is the **single source of truth** for all project documentation. It must be kept in sync with the codebase at all times.
+
+## When to Update Documentation
+
+After completing any change that falls into the categories below, **you must update the relevant `doc/` file before declaring the task done**.
+
+| Change Made | Doc File to Update |
+|---|---|
+| New entity added or modified | `doc/architecture.md` → Domain Entities table |
+| New API controller or endpoint added | `doc/api.md` → Controllers Reference table |
+| New provider connector added | `doc/api.md` → Provider Roadmap + `doc/architecture.md` → Data Flow |
+| New view or route added to the app | `doc/app.md` → Application Views table |
+| Infrastructure change (DB schema, Redis, Docker) | `doc/infrastructure.md` |
+| New naming convention established | `doc/conventions.md` |
+| New package dependency added | `doc/conventions.md` → Tech Stack & Packages |
+| Architectural pattern changed | `doc/architecture.md` + relevant package doc |
+| Any change to how layers interact | `doc/architecture.md` |
+
+## How to Update
+
+1. Open the relevant `doc/*.md` file.
+2. Update only the sections affected by your change — do not rewrite unrelated sections.
+3. Keep the same structure and tone. Use the existing tables, headers, and code blocks as templates.
+4. If a Linear document is the canonical source for the section you are changing, note the update is needed in Linear too and flag it to the user.
+
+## What Not to Do
+
+- **Do not create new ad-hoc documentation files** outside `doc/`. If a topic doesn't fit an existing file, add a new section to the most relevant existing file, or ask the user whether a new file is warranted.
+- **Do not use `doc/` for task tracking, walkthroughs, or implementation plans.** Those belong in `.agents/brain/` conversation artifacts.
+- **Do not store working files, scratch pads, or agent artifacts in `doc/`.** This folder is public-facing documentation only.
+
+## File Ownership
+
+| File | Primary Owner |
+|---|---|
+| `doc/README.md` | Index — update when adding/removing doc files |
+| `doc/overview.md` | Product — update when project goals or roadmap change |
+| `doc/architecture.md` | Cross-package — update on any layer or entity change |
+| `doc/api.md` | `dab_api` — update on any backend change |
+| `doc/app.md` | `dab_app` — update on any client change |
+| `doc/infrastructure.md` | Ops/infra — update on DB schema, Redis, Docker changes |
+| `doc/conventions.md` | Both packages — update when naming or patterns change |

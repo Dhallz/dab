@@ -1,0 +1,29 @@
+meta {
+  name: Test Provider Config
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/admin/configs/test
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "{{targetProviderId}}",
+    "name": "{{targetProviderId}}",
+    "baseUrl": "{{targetProviderUrl}}",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{targetProviderToken}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

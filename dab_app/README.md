@@ -1,16 +1,33 @@
-# dab_app
+# DAB App (Flutter Client)
 
-A new Flutter project.
+The cross-platform client for the Dev Activity Board, built with Flutter and following strict Clean Architecture principles.
 
-## Getting Started
+## 🏗️ Architecture
+The app uses **Cubit** for state management and follows the `Presentation -> Application -> Domain` hierarchy. For a deep dive into the client structure, see:
+- **[App Reference](file:///Users/dhallz/git/dab/doc/app.md)**
+- **[Code Conventions](file:///Users/dhallz/git/dab/doc/conventions.md)**
 
-This project is a starting point for a Flutter application.
+## 🚀 Getting Started
 
-A few resources to get you started if this is your first Flutter project:
+1. **Install Dependencies**:
+   ```bash
+   flutter pub get
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. **Run Code Generation**:
+   ```bash
+   flutter pub run build_runner build --delete-conflicting-outputs
+   ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. **Launch the App**:
+   ```bash
+   flutter run
+   ```
+
+## 🛠️ Tech Stack
+- **State Management**: Bloc/Cubit
+- **Persistence**: Drift (SQLite)
+- **Dependency Injection**: GetIt
+- **UI Components**: Material 3 / Custom Design System
+
+*Powered by Clean Architecture.*

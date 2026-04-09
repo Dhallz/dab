@@ -1,0 +1,29 @@
+meta {
+  name: Get Users
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.length > 0) {
+    const firstUser = res.body.data[0];
+    bru.setEnvVar("targetUserId", firstUser.id);
+    bru.setVar("targetUserId", firstUser.id);
+    console.log("Automatically populated targetUserId with: " + firstUser.id);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns users array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

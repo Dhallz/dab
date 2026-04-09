@@ -1,0 +1,17 @@
+meta {
+  name: Get Identities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/admin/identities
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,21 @@
+# Copy this file to local.bru and fill in your values.
+# local.bru is gitignored to prevent accidental credential leaks.
+
+vars {
+  baseUrl: http://localhost:8080
+  accessToken: 
+  refreshToken: 
+  adminEmail: your@email.com
+  adminPassword: yourpassword
+  targetUserId: system
+  targetGroupId: 1
+  targetGroupName: Test Group
+  targetProviderId: phorge
+  targetProviderUrl: https://phabricator.example.com
+  targetProviderToken: cli-YOURTOKEN
+}
+
+vars:secret [
+  accessToken,
+  refreshToken
+]

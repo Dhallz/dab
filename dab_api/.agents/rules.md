@@ -1,0 +1,109 @@
+# DAB API — Package-Specific Agent Rules
+
+> These rules supplement (not replace) the global rules in `/.agents/rules.md`.  
+> Always read the global rules first.
+
+**Stack**: Dart `^3.9.2` · Relic (HTTP framework) · PostgreSQL + Drift · Redis · GetIt DI
+
+---
+
+## 🗂️ Package Layer Map
+
+```
+dab_api/lib/src/
+├── domain/            ← Entities, interfaces (I*), domain mappers — ZERO external imports
+├── application/       ← Use cases, services, ConnectorRegistry
+│   ├── services/
+│   ├── usecases/
+│   └── containers/
+├── infrastructure/    ← DB, HTTP, connectors, DTOs, security
+│   ├── connectors/    ← IActivitySource implementations (one per provider)
+│   ├── database/      ← Drift schemas and DAOs
+│   ├── repositories/  ← Implements domain IRepository interfaces
+│   ├── sources/       ← Raw data fetchers (one per provider/data type)
+│   ├── dtos/          ← Provider-specific DTOs (never leak into domain)
+│   ├── http/          ← HTTP client helpers
+│   ├── security/      ← JWT, bcrypt helpers
+│   └── config/        ← AppConfig, env loading
+├── presentation/      ← Relic controllers and middleware — thin delegation only
+└── service_locator.dart  ← Single registration file for all GetIt bindings
+```
+
+---
+
+## ⚙️ Key Architectural Patterns
+
+### Source / Mapper Pattern
+New provider integrations must follow this pattern precisely:
+
+1. **`IActivitySource`** (Infrastructure) — fetches raw DTOs from a provider API.
+2. **`IActivityMapper`** (Domain) — converts the DTO to a `DAB Activity` using pure business logic.
+3. **`ConnectorRegistry`** — pairs one Source with one Mapper at app boot via `service_locator.dart`.
+
+Never merge source and mapper logic into a single class.
+
+### Vegas Sync Protocol
+- Every write increments the Redis `syncToken`.
+- Clients send `X-Sync-Token` headers; the **Vegas Middleware** returns `304 Not Modified` on no-op reads.
+- Do not bypass or short-circuit the Vegas Middleware — it is a performance-critical guardrail.
+
+### Table-Per-Type (TBT) Persistence
+- **`activities`** table holds shared fields for all activity types.
+- Per-provider child tables (e.g., `activity_phorge`) hold provider-specific metadata.
+- Repository hydration uses `leftOuterJoin` — do not duplicate shared fields in child tables.
+- Never use a "big JSON blob" column as a lazy substitute for proper TBT columns.
+
+### GetIt Service Locator
+- **All** registrations live in `service_locator.dart`.
+- Use `sl<T>()` to resolve — never instantiate services manually inside controllers or use cases.
+- Register as `singleton` for stateful services, `factory` for stateless use cases.
+
+---
+
+## 🗄️ Database Rules (Drift + PostgreSQL)
+
+- Schema changes require a Drift migration — never edit the generated `*.g.dart` files.
+- After any Drift schema change run:  
+  `dart run build_runner build --delete-conflicting-outputs`
+- Column naming: `snake_case`. Table naming: plural `snake_case` (e.g., `provider_configs`).
+- Every table must have a `created_at` and `updated_at` column using Drift's `dateTime()`.
+
+---
+
+## 🌐 HTTP / Controller Rules
+
+- Controllers are **thin**: parse request → call one use case → map result to response. Nothing else.
+- Return `Either<Failure, T>` from use cases; map `Left` to appropriate HTTP status codes in the controller.
+- Use Relic's middleware pipeline for cross-cutting concerns (auth, Vegas, logging). Do not inline them in controllers.
+- Endpoint paths: `kebab-case` (e.g., `/auth/refresh-token`).
+
+---
+
+## 🔐 Security Rules (API-Specific)
+
+- JWT signing/verification lives exclusively in `infrastructure/security/`.
+- Passwords are hashed with `bcrypt` — no SHA/MD5 substitutes.
+- Token expiry and secret configuration come from `AppConfig` (env-sourced) — never hardcoded.
+- Refresh tokens must be stored in the DB and validated on every use (no stateless refresh logic).
+
+---
+
+## 🧪 Testing Rules (API-Specific)
+
+- Test file mirrors source path: `lib/src/application/usecases/foo.dart` → `test/application/usecases/foo_test.dart`.
+- Use `mocktail` for all mocks. Mock at repository / source **interfaces**, not concrete classes.
+- Use `TestData` factories from `test/helpers/test_data.dart` for all fixture data.
+- Integration tests (real DB/Redis) must be tagged `@Tags(['integration'])` and excluded from CI unit runs.
+- Always run `dart analyze && dart test` before declaring a task complete.
+
+---
+
+## 🤖 Agent Quick-Reference
+
+| Action | Command |
+|---|---|
+| Analyze | `dart analyze` |
+| Run tests | `dart test` |
+| Run single test | `dart test test/path/to/foo_test.dart` |
+| Rebuild generated code | `dart run build_runner build --delete-conflicting-outputs` |
+| Start API (dev) | `dart run bin/server.dart` (or via docker-compose) |

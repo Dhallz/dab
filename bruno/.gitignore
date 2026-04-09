@@ -1,0 +1,8 @@
+# Bruno runtime state — never commit
+.bruno/
+
+# Local environment with real credentials — never commit
+environments/local.bru
+
+# The .example file IS safe to commit (no real secrets)
+!environments/local.bru.example

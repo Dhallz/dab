@@ -1,0 +1,23 @@
+meta {
+  name: Search Activities
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/activities/search
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: 2025-01-01
+  endDate: 2025-12-31
+  authoredOnly: false
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

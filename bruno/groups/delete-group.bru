@@ -1,0 +1,17 @@
+meta {
+  name: Delete Group
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/groups/{{targetGroupId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

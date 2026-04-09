@@ -1,0 +1,29 @@
+meta {
+  name: Save Provider Config
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "{{targetProviderId}}",
+    "name": "{{targetProviderId}}",
+    "baseUrl": "{{targetProviderUrl}}",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{targetProviderToken}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

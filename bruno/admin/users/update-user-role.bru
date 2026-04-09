@@ -1,0 +1,24 @@
+meta {
+  name: Update User Role
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/admin/users/role
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "role": "admin"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

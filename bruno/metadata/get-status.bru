@@ -1,0 +1,20 @@
+meta {
+  name: System Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/metadata/status
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns isSystemConfigured", function() {
+    expect(res.body.data).to.have.property("isSystemConfigured");
+  });
+}

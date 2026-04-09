@@ -1,0 +1,28 @@
+meta {
+  name: Get Provider Configs (Admin)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/admin/configs
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.length > 0) {
+    const firstConfig = res.body.data[0];
+    bru.setEnvVar("targetProviderId", firstConfig.id);
+    bru.setVar("targetProviderId", firstConfig.id);
+    bru.setEnvVar("targetProviderUrl", firstConfig.baseUrl);
+    bru.setVar("targetProviderUrl", firstConfig.baseUrl);
+    console.log("Automatically populated targetProviderId with: " + firstConfig.id);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
