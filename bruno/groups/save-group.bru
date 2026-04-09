@@ -4,6 +4,20 @@ meta {
   seq: 2
 }
 
+docs {
+  Creates or updates an activity group.
+  
+  **Request Body**:
+  - `name`: Human-readable name (e.g., 'Daily Sync', 'Production Alerts').
+  - `memberIds`: List of user UUIDs belonging to this group.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `name` | `groups` | `name` | Group record |
+  | `memberIds` | `group_members` | `user_id` | Linked via join table |
+}
+
 post {
   url: {{baseUrl}}/groups
   body: json
@@ -20,5 +34,10 @@ body:json {
 tests {
   test("Status 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("Returns saved group structure", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data.name).to.equal(bru.getVar("targetGroupName"));
   });
 }

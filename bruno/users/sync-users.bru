@@ -4,6 +4,17 @@ meta {
   seq: 3
 }
 
+docs {
+  Triggers a manual synchronization of users from the configured Phorge instance.
+  This will create new users in the DAB system if they exist in Phorge but not in DAB.
+  
+  ### Database Mapping
+  | Action | DB Table | Logic |
+  | :--- | :--- | :--- |
+  | INSERT | `users` | Created if email/phid not found |
+  | UPDATE | `users` | Metadata updated if existing |
+}
+
 post {
   url: {{baseUrl}}/users/sync
   body: none

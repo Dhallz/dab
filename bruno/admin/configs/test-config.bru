@@ -4,6 +4,19 @@ meta {
   seq: 3
 }
 
+docs {
+  Administrative endpoint to test connectivity for a provider configuration without saving it.
+  
+  **Request Body**: Identical to `Save Provider Config`.
+  
+  Returns a status message indicating whether the connection was successful.
+  
+  ### Database Mapping
+  | Action | DB Table | Role |
+  | :--- | :--- | :--- |
+  | N/A | N/A | Stateless (No DB mutations) |
+}
+
 post {
   url: {{baseUrl}}/admin/configs/test
   body: json
@@ -17,7 +30,7 @@ body:json {
     "baseUrl": "{{targetProviderUrl}}",
     "isActive": true,
     "settings": {
-      "api.token": "{{targetProviderToken}}"
+      "apiToken": "{{targetProviderToken}}"
     }
   }
 }
@@ -25,5 +38,11 @@ body:json {
 tests {
   test("Status 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("Connectivity report is returned", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("success");
+    expect(res.body.data).to.have.property("message");
   });
 }

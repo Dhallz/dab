@@ -1,6 +1,12 @@
+---
+trigger: always_on
+glob: "dab_app/**/*"
+description: Package-specific rules for DAB App
+---
+
 # DAB App — Package-Specific Agent Rules
 
-> These rules supplement (not replace) the global rules in `/.agents/rules.md`.  
+> These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
 > Always read the global rules first.
 
 **Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_bloc · go_router · ObjectBox · Dio · dart_mappable

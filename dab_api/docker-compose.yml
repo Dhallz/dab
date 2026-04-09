@@ -53,7 +53,7 @@ services:
     ports:
       - "${SWAGGER_PUBLIC_PORT:-8081}:8080"
     volumes:
-      - ./openapi.yaml:/usr/share/nginx/html/openapi.yaml
+      - ../doc/openapi.yaml:/usr/share/nginx/html/openapi.yaml
     environment:
       - API_URL=openapi.yaml
     depends_on:

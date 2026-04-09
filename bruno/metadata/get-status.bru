@@ -4,6 +4,11 @@ meta {
   seq: 1
 }
 
+docs {
+  Returns the current initialization state of the DAB system.
+  Used by the client to determine if the first-run configuration wizard should be displayed.
+}
+
 get {
   url: {{baseUrl}}/metadata/status
   body: none

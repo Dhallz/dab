@@ -4,6 +4,13 @@ meta {
   seq: 3
 }
 
+docs {
+  Permanently deletes an activity group by ID.
+  
+  **Path parameters**:
+  - `targetGroupId`: UUID of the group to delete.
+}
+
 delete {
   url: {{baseUrl}}/groups/{{targetGroupId}}
   body: none

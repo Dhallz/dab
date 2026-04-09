@@ -4,6 +4,20 @@ meta {
   seq: 1
 }
 
+docs {
+  Retrieves alphabetical list of all activity groups.
+  Used for filtering and bulk viewing in the UI.
+  
+  Automatically scripts the extraction of a `targetGroupId` into the environment for use in subsequent requests (Delete/Modify).
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `groups` | `id` | Primary Key |
+  | `name` | `groups` | `name` | Display label |
+  | `description` | `groups` | `description` | Metadata |
+}
+
 get {
   url: {{baseUrl}}/groups
   body: none
@@ -22,5 +36,9 @@ script:post-response {
 tests {
   test("Status 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("Returns array of groups", function() {
+    expect(res.body.data).to.be.an("array");
   });
 }

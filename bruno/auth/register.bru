@@ -4,6 +4,19 @@ meta {
   seq: 1
 }
 
+docs {
+  Registers a new user in the DAB system.
+  Returns an `accessToken` and `refreshToken` upon success.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `name` | `users` | `name` | User's full name |
+  | `email` | `users` | `email` | Unique login identifier |
+  | `password` | `users` | `password_hash` | Stored as Argon2 hash |
+  | `id` (res) | `users` | `id` | Generated UUID |
+}
+
 post {
   url: {{baseUrl}}/auth/register
   body: json

@@ -4,6 +4,18 @@ meta {
   seq: 2
 }
 
+docs {
+  Retrieves the profile details for a specific user.
+  Requires a valid `targetUserId` variable.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `users` | `id` | Lookup identifier |
+  | `name` | `users` | `name` | Value from user record |
+  | `role` | `users` | `role` | User role |
+}
+
 get {
   url: {{baseUrl}}/users/{{targetUserId}}
   body: none

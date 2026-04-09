@@ -4,6 +4,11 @@ meta {
   seq: 1
 }
 
+docs {
+  Basic availability check for the DAB API.
+  Returns "healthy" if the server is running and accepting requests.
+}
+
 get {
   url: {{baseUrl}}/health
   body: none

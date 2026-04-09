@@ -32,19 +32,21 @@ class ActivityProviderIcon extends StatelessWidget {
       customIconUrl = config.iconUrl;
     }
 
-    Widget icon = Icon(
+    Widget fallbackIcon = Icon(
       iconData,
       size: 16,
       color: iconColor.withValues(alpha: 0.6),
     );
+
+    Widget icon = fallbackIcon;
 
     if (customIconUrl != null && customIconUrl.isNotEmpty) {
       icon = CachedNetworkImage(
         imageUrl: customIconUrl,
         width: 16,
         height: 16,
-        placeholder: (context, url) => icon,
-        errorWidget: (context, url, error) => icon,
+        placeholder: (context, url) => fallbackIcon,
+        errorWidget: (context, url, error) => fallbackIcon,
       );
     }
 

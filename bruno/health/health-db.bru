@@ -4,6 +4,16 @@ meta {
   seq: 2
 }
 
+docs {
+  Checks the connectivity and health of the infrastructure dependencies (PostgreSQL and Redis).
+  
+  ### Database Mapping
+  | Component | DB Table | Method |
+  | :--- | :--- | :--- |
+  | `database` | `pg_catalog.pg_database` | Drift ping (SELECT 1) |
+  | `cache` | N/A | Redis PING command |
+}
+
 get {
   url: {{baseUrl}}/health/db
   body: none

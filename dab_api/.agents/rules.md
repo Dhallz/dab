@@ -1,6 +1,12 @@
+---
+trigger: always_on
+glob: "dab_api/**/*"
+description: Package-specific rules for DAB API
+---
+
 # DAB API — Package-Specific Agent Rules
 
-> These rules supplement (not replace) the global rules in `/.agents/rules.md`.  
+> These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
 > Always read the global rules first.
 
 **Stack**: Dart `^3.9.2` · Relic (HTTP framework) · PostgreSQL + Drift · Redis · GetIt DI

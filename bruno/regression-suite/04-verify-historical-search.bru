@@ -1,0 +1,23 @@
+meta {
+  name: 4. Verify Historical Search
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/activities/search?startDate=2026-04-06&endDate=2026-04-07&authoredOnly=false&users={{targetUserId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    if (res.status !== 200) {
+      console.log("Error Response: " + JSON.stringify(res.body));
+    }
+    expect(res.status).to.equal(200);
+  });
+  test("Historical data returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+}

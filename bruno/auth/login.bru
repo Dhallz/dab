@@ -4,6 +4,18 @@ meta {
   seq: 2
 }
 
+docs {
+  Authenticates a user and returns a JWT pair (`accessToken` and `refreshToken`).
+  The tokens are automatically saved to the active environment upon a successful 200 OK response.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `email` | `users` | `email` | Lookup identifier |
+  | `password` | `users` | `password_hash` | Validated against stored hash |
+  | `token` (res) | `sessions` | `id` | Session record entry |
+}
+
 post {
   url: {{baseUrl}}/auth/login
   body: json

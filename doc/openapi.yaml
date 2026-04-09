@@ -1,0 +1,716 @@
+openapi: 3.0.3
+info:
+  title: Dev Activity Board (DAB) API
+  description: High-performance aggregator of developer activities, featuring real-time caching and the Vegas Sync Pattern.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        phorgePhid:
+          type: string
+          nullable: true
+        phorgeUsername:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user in the DAB system.
+      description: |
+        Registers a new user account. Returns a JWT pair (accessToken and refreshToken).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `name` | `users` | `name` | Profile name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `password` | `users` | `password_hash` | Irreversible hash |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Created
+  /auth/refresh:
+    post:
+      summary: rotate the user's authentication tokens.
+      description: |
+        Rotates the user's authentication tokens. Validates the refreshToken and returns a new session.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `refreshToken` | `sessions` | `refresh_token` | Token verification |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Success
+  /auth/login:
+    post:
+      summary: Authenticate a user and return JWT tokens.
+      description: |
+        Authenticates a user with email and password. Returns a JWT pair.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `email` | `users` | `email` | Lookup identifier |
+        | `password` | `users` | `password_hash` | Hash comparison |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK with JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+  /activities:
+    get:
+      summary: Get latest activities (Envelope + Vegas Pattern)
+      description: |
+        Retrieves the latest activities across all registered providers.
+        Uses the **Envelope Pattern** for response consistency and support the **Vegas Sync Pattern** via the `X-Sync-Token` header.
+        
+        If the provided `X-Sync-Token` matches the server's current version, a `304 Not Modified` response is returned.
+
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `activities` | `id` | Primary Key |
+        | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+        | `provider` | `activities` | `provider` | Source identifier |
+        | `title` | `activities` | `title` | Activity summary |
+        | `content` | `activities` | `content` | Detailed description |
+        | `url` | `activities` | `url` | Source link |
+        | `createdAt` | `activities` | `created_at` | Audit timestamp |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Sync-Token
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Client's version clock to detect staleness
+      responses:
+        '200':
+          description: Successful data envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                      syncToken:
+                        type: string
+        '304':
+          description: Not Modified. The client's sync token matches the server version.
+  /activities/search:
+    get:
+      summary: Search for activities within a date range.
+      description: |
+        Searches for activities within a specified date range, scoped to the current sprint project.
+        
+        **Parameters**:
+        - `startDate`: ISO 8601 start date (e.g., `2026-04-06`).
+        - `endDate`: ISO 8601 end date.
+        - `authoredOnly`: 
+          - `true`: Returns only transactions **authored by** the target users.
+          - `false`: Returns transactions **authored by** OR **addressed to** (@mentions) the target users.
+        - `users`: (Optional) Comma-separated list of User UUIDs. Defaults to current caller.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `activities` | `id` | Primary Key |
+        | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+        | `title` | `activities` | `title` | Search keyword matches here |
+        | `date` | `activities` | `date` | Actual activity occurrence date |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: ISO 8601 start date (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: ISO 8601 end date (YYYY-MM-DD)
+        - name: users
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of User UUIDs to query. Defaults to the requesting user.
+        - name: authoredOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: If true, only returns activities directly authored by the specified users. If false, includes mentions and tags addressed to them.
+      responses:
+        '200':
+          description: Successful data envelope with historical activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+        '400':
+          description: Bad request (missing or invalid date parameter)
+  /ws:
+    get:
+      summary: WebSocket Connection for real-time broadcasts
+      description: This endpoint upgrades the connection to WebSocket.
+      responses:
+        '101':
+          description: Switching Protocols
+  /health:
+    get:
+      summary: API availability health check.
+      description: |
+        Simple check to verify the API server is up and running.
+        
+        ### Database Mapping
+        | Action | Status | Role |
+        | :--- | :--- | :--- |
+        | N/A | N/A | No DB interaction |
+      responses:
+        '200':
+          description: API is healthy
+  /health/db:
+    get:
+      summary: Infrastructure (DB + Redis) health check.
+      description: |
+        Verifies connectivity to the PostgreSQL database and Redis cache.
+        
+        ### Database Mapping
+        | Target | Action | Role |
+        | :--- | :--- | :--- |
+        | PostgreSQL | Ping | Connectivity Test |
+        | Redis | Ping | Connectivity Test |
+      responses:
+        '200':
+          description: Databases connected
+  /metadata/providers:
+    get:
+      summary: Get available provider metadata (e.g., Phorge projects/tags)
+      description: |
+        Retrieves metadata for configured providers (e.g., Phorge projects, repository tags).
+        This is used to populate filters and categories in the UI.
+        
+        ### Database Mapping
+        | Action | Source | Logic |
+        | :--- | :--- | :--- |
+        | READ | `provider_configs` | Fetches active providers |
+        | CACHE | Redis | Merged with provider-specific cached metadata |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing ProviderMetadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        provider:
+                          type: string
+                        type:
+                          type: string
+                        color:
+                          type: string
+                          nullable: true
+                        icon:
+                          type: string
+                          nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_metadata']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/configs:
+    get:
+      summary: Get public provider configurations.
+      description: Returns base URLs and icon URLs for active providers, used for deep-linking in the UI.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing ProviderConfig
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        baseUrl:
+                          type: string
+                        iconUrl:
+                          type: string
+                          nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_config']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /users:
+    get:
+      summary: List all registered users.
+      description: |
+        Returns a list of all registered users in the system.
+        The first user's ID is automatically captured into the `targetUserId` variable for use in other requests.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Primary Key |
+        | `name` | `users` | `name` | Display name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `role` | `users` | `role` | Permissions group |
+        | `avatarUrl` | `users` | `avatar_url` | Profile image |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope with user list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+  /users/{id}:
+    get:
+      summary: Get a specific user by ID
+      description: |
+        Retrieves the profile details for a specific user.
+        Requires a valid `targetUserId` variable.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Lookup identifier |
+        | `name` | `users` | `name` | Value from user record |
+        | `role` | `users` | `role` | User role |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful data envelope with user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+        '404':
+          description: User not found
+  /users/sync:
+    post:
+      summary: Synchronize users from Phorge
+      description: |
+        Triggers a manual synchronization of users from the configured Phorge instance.
+        This will create new users in the DAB system if they exist in Phorge but not in DAB.
+        
+        ### Database Mapping
+        | Action | DB Table | Logic |
+        | :--- | :--- | :--- |
+        | INSERT | `users` | Created if email/phid not found |
+        | UPDATE | `users` | Metadata updated if existing |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sync completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      createdCount:
+                        type: integer
+                  meta:
+                    type: object
+  /admin/users:
+    get:
+      summary: Administrative endpoint to retrieve all users.
+      description: |
+        Administrative endpoint to retrieve all users with full metadata.
+        Requires administrator privileges.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Primary Key |
+        | `name` | `users` | `name` | Full name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `role` | `users` | `role` | Access level |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /admin/users/role:
+    post:
+      summary: Update a user's role.
+      description: |
+        Administrative endpoint to modify a user's role (e.g., 'user', 'admin').
+        
+        **Request Body**:
+        - `userId`: UUID of the target user.
+        - `role`: The new role to assign.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `userId` | `users` | `id` | Target record |
+        | `role` | `users` | `role` | Value to update |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, role]
+              properties:
+                userId:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Role updated
+  /admin/configs:
+    get:
+      summary: Get internal provider configurations.
+      description: |
+        Administrative endpoint to retrieve all internal provider configurations including sensitive settings.
+        
+        Returns a list of `ProviderConfig` objects. It also automatically scripts the extraction of a `targetProviderId` and `targetProviderUrl` into the environment for use in subsequent requests (Save/Test/Link).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `provider_configs` | `id` | Provider slug |
+        | `name` | `provider_configs` | `name` | Display label |
+        | `baseUrl` | `provider_configs` | `base_url` | API endpoint |
+        | `isActive` | `provider_configs` | `is_active` | Sync status |
+        | `settings` | `provider_configs` | `settings` | JSONB config |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Save or update a provider configuration.
+      description: |
+        Administrative endpoint to create or update a provider configuration.
+        
+        **Request Body**:
+        - `id`: Unique identifier for the provider (e.g., 'github', 'jira').
+        - `name`: Display name.
+        - `baseUrl`: Root URL of the provider API.
+        - `isActive`: Boolean toggle for syncing.
+        - `settings`: Map of provider-specific sensitive settings (e.g., `apiToken`).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `provider_configs` | `id` | Target record |
+        | `name` | `provider_configs` | `name` | Update value |
+        | `baseUrl` | `provider_configs` | `base_url` | Update value |
+        | `isActive` | `provider_configs` | `is_active` | Update value |
+        | `settings` | `provider_configs` | `settings` | Merged JSONB |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, baseUrl, isActive]
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                baseUrl:
+                  type: string
+                isActive:
+                  type: boolean
+                settings:
+                  type: object
+      responses:
+        '200':
+          description: Config saved
+  /admin/configs/test:
+    post:
+      summary: Test provider connectivity.
+      description: Verifies connection to a provider without saving the config. Requires admin privileges.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Connectivity test result
+  /admin/identities:
+    get:
+      summary: List all linked identity records.
+      description: |
+        Administrative endpoint to retrieve all linked user identities across all providers.
+        Requires administrator privileges.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `user_identities` | `id` | Primary Key |
+        | `userId` | `user_identities` | `user_id` | Foreign Key |
+        | `providerId` | `user_identities` | `provider_id` | Provider name |
+        | `externalId` | `user_identities` | `external_id` | Provider PHID/ID |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /admin/identities/link:
+    post:
+      summary: Manually link a user identity.
+      description: |
+        Administrative endpoint to manually link a DAB user to an external provider's unique ID.
+        
+        **Request Body**:
+        - `userId`: UUID of the DAB user.
+        - `providerId`: ID of the provider (e.g., 'phorge', 'github').
+        - `externalId`: The unique identifier in the provider's system (e.g., PHID-USER-xxx).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `userId` | `user_identities` | `user_id` | Link target |
+        | `providerId` | `user_identities` | `provider_id` | Source system |
+        | `externalId` | `user_identities` | `external_id` | Remote ID |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, providerId, externalId]
+      responses:
+        '200':
+          description: Identity linked
+  /groups:
+    get:
+      summary: List all activity groups.
+      description: |
+        Retrieves alphabetical list of all activity groups.
+        Used for filtering and bulk viewing in the UI.
+        
+        Automatically scripts the extraction of a `targetGroupId` into the environment for use in subsequent requests (Delete/Modify).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `groups` | `id` | Primary Key |
+        | `name` | `groups` | `name` | Display label |
+        | `description` | `groups` | `description` | Metadata |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Save or update an activity group.
+      description: |
+        Creates or updates an activity group.
+        
+        **Request Body**:
+        - `name`: Human-readable name (e.g., 'Daily Sync', 'Production Alerts').
+        - `memberIds`: List of user UUIDs belonging to this group.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `name` | `groups` | `name` | Group record |
+        | `memberIds` | `group_members` | `user_id` | Linked via join table |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                memberIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Group saved
+  /groups/{id}:
+    delete:
+      summary: Delete an activity group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group deleted
+  /mock/activity:
+    post:
+      summary: Create a mock activity.
+      description: Development endpoint to manually trigger activity broadcasts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, provider, type, title]
+      responses:
+        '200':
+          description: Mock activity broadcasted
+

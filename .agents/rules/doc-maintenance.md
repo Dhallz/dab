@@ -1,6 +1,6 @@
 ---
 trigger: always_on
-glob: "**/*.dart,**/pubspec.yaml,**/openapi.yaml,**/*.g.dart"
+glob: "**/*.dart,**/pubspec.yaml,**/*.g.dart,doc/openapi.yaml"
 description: Keep doc/ in sync with codebase changes
 ---
 
@@ -18,6 +18,7 @@ After completing any change that falls into the categories below, **you must upd
 | New API controller or endpoint added | `doc/api.md` → Controllers Reference table |
 | New provider connector added | `doc/api.md` → Provider Roadmap + `doc/architecture.md` → Data Flow |
 | New view or route added to the app | `doc/app.md` → Application Views table |
+| **Bruno definition changed** | `doc/openapi.yaml` → Sync with Bruno requests |
 | Infrastructure change (DB schema, Redis, Docker) | `doc/infrastructure.md` |
 | New naming convention established | `doc/conventions.md` |
 | New package dependency added | `doc/conventions.md` → Tech Stack & Packages |

@@ -4,6 +4,22 @@ meta {
   seq: 2
 }
 
+docs {
+  Administrative endpoint to manually link a DAB user to an external provider's unique ID.
+  
+  **Request Body**:
+  - `userId`: UUID of the DAB user.
+  - `providerId`: ID of the provider (e.g., 'phorge', 'github').
+  - `externalId`: The unique identifier in the provider's system (e.g., PHID-USER-xxx).
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `userId` | `user_identities` | `user_id` | Link target |
+  | `providerId` | `user_identities` | `provider_id` | Source system |
+  | `externalId` | `user_identities` | `external_id` | Remote ID |
+}
+
 post {
   url: {{baseUrl}}/admin/identities/link
   body: json
@@ -21,5 +37,10 @@ body:json {
 tests {
   test("Status 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("Returns linked identity", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data.externalId).to.equal("PHID-USER-xxxxxxxxxxxx");
   });
 }

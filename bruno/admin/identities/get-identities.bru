@@ -4,6 +4,19 @@ meta {
   seq: 1
 }
 
+docs {
+  Administrative endpoint to retrieve all linked user identities across all providers.
+  Requires administrator privileges.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `user_identities` | `id` | Primary Key |
+  | `userId` | `user_identities` | `user_id` | Foreign Key |
+  | `providerId` | `user_identities` | `provider_id` | Provider name |
+  | `externalId` | `user_identities` | `external_id` | Provider PHID/ID |
+}
+
 get {
   url: {{baseUrl}}/admin/identities
   body: none
@@ -13,5 +26,9 @@ get {
 tests {
   test("Status 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("Returns array of identities", function() {
+    expect(res.body.data).to.be.an("array");
   });
 }
