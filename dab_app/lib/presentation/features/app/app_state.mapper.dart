@@ -44,12 +44,20 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: const [],
   );
+  static bool _$isSystemConfigured(AppState v) => v.isSystemConfigured;
+  static const Field<AppState, bool> _f$isSystemConfigured = Field(
+    'isSystemConfigured',
+    _$isSystemConfigured,
+    opt: true,
+    def: false,
+  );
 
   @override
   final MappableFields<AppState> fields = const {
     #settings: _f$settings,
     #isLoading: _f$isLoading,
     #configs: _f$configs,
+    #isSystemConfigured: _f$isSystemConfigured,
   };
 
   static AppState _instantiate(DecodingData data) {
@@ -57,6 +65,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       settings: data.dec(_f$settings),
       isLoading: data.dec(_f$isLoading),
       configs: data.dec(_f$configs),
+      isSystemConfigured: data.dec(_f$isSystemConfigured),
     );
   }
 
@@ -128,6 +137,7 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     AppSettings? settings,
     bool? isLoading,
     List<ProviderConfig>? configs,
+    bool? isSystemConfigured,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -159,11 +169,13 @@ class _AppStateCopyWithImpl<$R, $Out>
     AppSettings? settings,
     bool? isLoading,
     List<ProviderConfig>? configs,
+    bool? isSystemConfigured,
   }) => $apply(
     FieldCopyWithData({
       if (settings != null) #settings: settings,
       if (isLoading != null) #isLoading: isLoading,
       if (configs != null) #configs: configs,
+      if (isSystemConfigured != null) #isSystemConfigured: isSystemConfigured,
     }),
   );
   @override
@@ -171,6 +183,10 @@ class _AppStateCopyWithImpl<$R, $Out>
     settings: data.get(#settings, or: $value.settings),
     isLoading: data.get(#isLoading, or: $value.isLoading),
     configs: data.get(#configs, or: $value.configs),
+    isSystemConfigured: data.get(
+      #isSystemConfigured,
+      or: $value.isSystemConfigured,
+    ),
   );
 
   @override

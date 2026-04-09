@@ -31,7 +31,11 @@ class RegisterNewUser {
     }
 
     final user = registerResult.getRight().toNullable()!;
-    final accessToken = _jwtProvider.generateToken({'sub': user.id, 'email': user.email});
+    final accessToken = _jwtProvider.generateToken({
+      'sub': user.id,
+      'email': user.email,
+      'role': user.role,
+    });
     final refreshToken = _uuid.v4();
 
     final session = Session(
@@ -54,6 +58,7 @@ class RegisterNewUser {
       'name': user.name,
       'email': user.email,
       'avatarUrl': user.avatarUrl ?? '',
+      'role': user.role,
     });
   }
 }

@@ -268,28 +268,57 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     if (event.activity is! Activity) return;
     final activity = event.activity as Activity;
 
-    final lowerSelected = state.selectedProviders
-        .map((e) => e.toLowerCase())
-        .toSet();
+    final lowerSelected =
+        state.selectedProviders.map((e) => e.toLowerCase()).toSet();
     if (!lowerSelected.contains(activity.provider.name.toLowerCase())) {
       return;
     }
 
-    final allActivities = <Activity>[];
-    for (final item in state.items) {
-      if (item is SingleActivityItem) {
-        allActivities.add(item.activity);
-      } else if (item is TaskActivityItem) {
-        allActivities.addAll(item.activities);
+    // Optimization: Add to existing groups or insert at correct position
+    // instead of fully re-grouping and re-sorting.
+    final List<ExplorerItem> updatedItems = List.from(state.items);
+
+    // If it's a Phorge task, check if a group already exists
+    if (activity.provider is PhorgeTaskProvider) {
+      final provider = activity.provider as PhorgeTaskProvider;
+      final existingIndex = updatedItems.indexWhere(
+        (item) => item is TaskActivityItem && item.taskId == provider.taskPhid,
+      );
+
+      if (existingIndex != -1) {
+        final existingItem = updatedItems[existingIndex] as TaskActivityItem;
+        updatedItems[existingIndex] = TaskActivityItem(
+          activities: [activity, ...existingItem.activities]
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+          taskId: existingItem.taskId,
+          userId: existingItem.userId,
+        );
+        emit(state.copyWith(items: updatedItems));
+        return;
       }
     }
 
-    final updatedActivities = [activity, ...allActivities];
-    // Sort by creation date descending
-    updatedActivities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // Otherwise, insert at the correct position to maintain sort order
+    final newItem = SingleActivityItem(activity);
+    int insertIndex = updatedItems.indexWhere((item) {
+      final itemDate = item is SingleActivityItem
+          ? item.activity.createdAt
+          : (item as TaskActivityItem).activities.first.createdAt;
+      return activity.createdAt.isAfter(itemDate);
+    });
 
-    final items = groupActivities(updatedActivities.take(200).toList());
-    emit(state.copyWith(items: items));
+    if (insertIndex == -1) {
+      updatedItems.add(newItem);
+    } else {
+      updatedItems.insert(insertIndex, newItem);
+    }
+
+    // Limit to 200 items
+    if (updatedItems.length > 200) {
+      updatedItems.removeLast();
+    }
+
+    emit(state.copyWith(items: updatedItems));
   }
 
   void _onStackToggled(

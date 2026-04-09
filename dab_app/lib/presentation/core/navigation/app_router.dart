@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/app/app_cubit.dart';
 import '../../features/auth/auth_cubit.dart';
 import 'app_route.dart';
 
@@ -21,6 +22,14 @@ class AppRouter {
       if (!isLoggedIn && !isAuthRoute) {
         return AppRoute.auth.path;
       }
+
+      // Bootstrap Redirect: If system is not configured, redirect admin to setup.
+      final appState = context.read<AppCubit>().state;
+      final isAdminRoute = state.matchedLocation == AppRoute.homeAdmin.path;
+      if (isLoggedIn && !appState.isSystemConfigured && !isAdminRoute) {
+        return AppRoute.homeAdmin.path;
+      }
+
       if (isLoggedIn && isAuthRoute) {
         return AppRoute.homeDashboard.path;
       }

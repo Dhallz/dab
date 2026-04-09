@@ -9,4 +9,10 @@ import '../entities/provider_config.dart';
 abstract interface class AbsIProviderConfigRepository {
   /// Fetches the static configurations for all supported providers.
   Future<Either<Failure, List<ProviderConfig>>> getConfigs();
+
+  /// Counts the total number of active configurations in the database.
+  Future<Either<Failure, int>> countActiveConfigs();
+
+  /// Saves or updates a provider configuration.
+  Future<Either<Failure, ProviderConfig>> saveConfig(ProviderConfig config);
 }

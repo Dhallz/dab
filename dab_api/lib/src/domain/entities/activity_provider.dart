@@ -19,8 +19,8 @@ class SprintContext with SprintContextMappable {
 /// CONTRACT: Defines the Identity (Provider) and Nature (Category) of an activity.
 /// CONSTRAINTS: Must be a sealed class for type-safe exhaustive matching.
 ///
-/// This hierarchy is the Domain representation of the **Table-Per-Type (TBT)** 
-/// database pattern. Each subclass corresponds to a specific relational table 
+/// This hierarchy is the Domain representation of the **Table-Per-Type (TBT)**
+/// database pattern. Each subclass corresponds to a specific relational table
 /// (e.g. `activity_phorge_task`) that holds metadata unique to that platform.
 @MappableClass()
 sealed class ActivityProvider with ActivityProviderMappable {
@@ -28,9 +28,9 @@ sealed class ActivityProvider with ActivityProviderMappable {
 
   /// The name of the entire platform element (e.g., "Phorge", "GitHub").
   String get name;
-  
+
   /// The nature of the activity (e.g., "task", "revision", "commit").
-  String get category; 
+  String get category;
 }
 
 /// [ARCH: DOMAIN_MODEL]

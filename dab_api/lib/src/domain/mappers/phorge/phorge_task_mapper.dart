@@ -25,12 +25,17 @@ class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
   /// ROLE: High-level transformation entry point.
   /// CONTRACT: Iterates over transactions and filters out irrelevant noise (VCS/Edits).
   List<Activity> mapToActivities(PhorgeTaskBundle bundle, List<User> users) {
+    if (bundle.transactions.isEmpty) return [];
+
     final activities = <Activity>[];
+    
+    // Create an O(1) lookup map for authors
+    final userMap = {for (final u in users) u.phorgePhid: u};
 
     for (final tx in bundle.transactions) {
       if (tx.type == 'vcs' || tx.type == 'edit') continue;
 
-      final activity = _mapTransaction(tx, bundle, users);
+      final activity = _mapTransaction(tx, bundle, userMap, users.firstOrNull);
       if (activity != null) {
         activities.add(activity);
       }
@@ -45,7 +50,8 @@ class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
   Activity? _mapTransaction(
     PhorgeTransactionData tx,
     PhorgeTaskBundle bundle,
-    List<User> users,
+    Map<String?, User> authorMap,
+    User? defaultUser,
   ) {
     String content = 'Updated task';
     SprintContext? sprintContext;
@@ -73,10 +79,8 @@ class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
     }
 
     // Resolve author
-    final author = users.firstWhere(
-      (u) => u.phorgePhid == tx.authorPHID,
-      orElse: () => users.first,
-    );
+    final author = authorMap[tx.authorPHID] ?? defaultUser;
+    if (author == null) return null;
 
     return Activity(
       id: _generateUuid('phorge-tx-${tx.id}'),

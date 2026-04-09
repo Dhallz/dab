@@ -24,7 +24,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(1, 4753593989117032601),
     name: 'UserRecord',
-    lastPropertyId: const obx_int.IdUid(4, 8005673301360801686),
+    lastPropertyId: const obx_int.IdUid(5, 1630436793089971423),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -49,6 +49,12 @@ final _entities = <obx_int.ModelEntity>[
       obx_int.ModelProperty(
         id: const obx_int.IdUid(4, 8005673301360801686),
         name: 'name',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 1630436793089971423),
+        name: 'role',
         type: 9,
         flags: 0,
       ),
@@ -180,11 +186,13 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final nameOffset = object.name == null
             ? null
             : fbb.writeString(object.name!);
-        fbb.startTable(5);
+        final roleOffset = fbb.writeString(object.role);
+        fbb.startTable(6);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, remoteIdOffset);
         fbb.addOffset(2, emailOffset);
         fbb.addOffset(3, nameOffset);
+        fbb.addOffset(4, roleOffset);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -197,12 +205,16 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final emailParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 8, '');
+        final roleParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
         final nameParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGetNullable(buffer, rootOffset, 10);
         final object = UserRecord(
           remoteId: remoteIdParam,
           email: emailParam,
+          role: roleParam,
           name: nameParam,
         )..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
@@ -320,6 +332,11 @@ class UserRecord_ {
   /// See [UserRecord.name].
   static final name = obx.QueryStringProperty<UserRecord>(
     _entities[0].properties[3],
+  );
+
+  /// See [UserRecord.role].
+  static final role = obx.QueryStringProperty<UserRecord>(
+    _entities[0].properties[4],
   );
 }
 

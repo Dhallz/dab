@@ -23,10 +23,19 @@ class ProviderConfigMapper extends ClassMapperBase<ProviderConfig> {
 
   static String _$id(ProviderConfig v) => v.id;
   static const Field<ProviderConfig, String> _f$id = Field('id', _$id);
+  static String _$name(ProviderConfig v) => v.name;
+  static const Field<ProviderConfig, String> _f$name = Field('name', _$name);
   static String _$baseUrl(ProviderConfig v) => v.baseUrl;
   static const Field<ProviderConfig, String> _f$baseUrl = Field(
     'baseUrl',
     _$baseUrl,
+  );
+  static bool _$isActive(ProviderConfig v) => v.isActive;
+  static const Field<ProviderConfig, bool> _f$isActive = Field(
+    'isActive',
+    _$isActive,
+    opt: true,
+    def: true,
   );
   static String? _$iconUrl(ProviderConfig v) => v.iconUrl;
   static const Field<ProviderConfig, String> _f$iconUrl = Field(
@@ -34,19 +43,32 @@ class ProviderConfigMapper extends ClassMapperBase<ProviderConfig> {
     _$iconUrl,
     opt: true,
   );
+  static Map<String, dynamic> _$settings(ProviderConfig v) => v.settings;
+  static const Field<ProviderConfig, Map<String, dynamic>> _f$settings = Field(
+    'settings',
+    _$settings,
+    opt: true,
+    def: const {},
+  );
 
   @override
   final MappableFields<ProviderConfig> fields = const {
     #id: _f$id,
+    #name: _f$name,
     #baseUrl: _f$baseUrl,
+    #isActive: _f$isActive,
     #iconUrl: _f$iconUrl,
+    #settings: _f$settings,
   };
 
   static ProviderConfig _instantiate(DecodingData data) {
     return ProviderConfig(
       id: data.dec(_f$id),
+      name: data.dec(_f$name),
       baseUrl: data.dec(_f$baseUrl),
+      isActive: data.dec(_f$isActive),
       iconUrl: data.dec(_f$iconUrl),
+      settings: data.dec(_f$settings),
     );
   }
 
@@ -112,7 +134,16 @@ extension ProviderConfigValueCopy<$R, $Out>
 
 abstract class ProviderConfigCopyWith<$R, $In extends ProviderConfig, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? id, String? baseUrl, String? iconUrl});
+  MapCopyWith<$R, String, dynamic, ObjectCopyWith<$R, dynamic, dynamic>>
+  get settings;
+  $R call({
+    String? id,
+    String? name,
+    String? baseUrl,
+    bool? isActive,
+    String? iconUrl,
+    Map<String, dynamic>? settings,
+  });
   ProviderConfigCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -127,18 +158,38 @@ class _ProviderConfigCopyWithImpl<$R, $Out>
   late final ClassMapperBase<ProviderConfig> $mapper =
       ProviderConfigMapper.ensureInitialized();
   @override
-  $R call({String? id, String? baseUrl, Object? iconUrl = $none}) => $apply(
+  MapCopyWith<$R, String, dynamic, ObjectCopyWith<$R, dynamic, dynamic>>
+  get settings => MapCopyWith(
+    $value.settings,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(settings: v),
+  );
+  @override
+  $R call({
+    String? id,
+    String? name,
+    String? baseUrl,
+    bool? isActive,
+    Object? iconUrl = $none,
+    Map<String, dynamic>? settings,
+  }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
+      if (name != null) #name: name,
       if (baseUrl != null) #baseUrl: baseUrl,
+      if (isActive != null) #isActive: isActive,
       if (iconUrl != $none) #iconUrl: iconUrl,
+      if (settings != null) #settings: settings,
     }),
   );
   @override
   ProviderConfig $make(CopyWithData data) => ProviderConfig(
     id: data.get(#id, or: $value.id),
+    name: data.get(#name, or: $value.name),
     baseUrl: data.get(#baseUrl, or: $value.baseUrl),
+    isActive: data.get(#isActive, or: $value.isActive),
     iconUrl: data.get(#iconUrl, or: $value.iconUrl),
+    settings: data.get(#settings, or: $value.settings),
   );
 
   @override

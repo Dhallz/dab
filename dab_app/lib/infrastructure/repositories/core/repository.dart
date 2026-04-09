@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures.dart';
@@ -13,11 +14,15 @@ abstract class Repository {
       final result = await call();
       return Right(result);
     } on DioException catch (e) {
-      print('DEBUG: guardedCall DioException: $e');
+      debugPrint(
+        'DEBUG: guardedCall DioException ${e.response?.statusCode} '
+        '${e.requestOptions.uri}'
+        '${e.response?.data['error']}',
+      );
       return Left(e.toAppFailure);
     } catch (e, stack) {
-      print('DEBUG: guardedCall Unknown Error: $e');
-      print('DEBUG: StackTrace: $stack');
+      debugPrint('DEBUG: guardedCall Unknown Error: $e');
+      debugPrint('DEBUG: StackTrace: $stack');
       return Left(UnknownFailure(originalError: e));
     }
   }

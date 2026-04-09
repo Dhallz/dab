@@ -19,9 +19,9 @@ class PhorgeClient {
   final String _apiToken;
   final http.Client _client;
 
-  PhorgeClient({http.Client? client})
-    : _baseUrl = Config().phorgeUrl,
-      _apiToken = Config().phorgeApiToken,
+  PhorgeClient({http.Client? client, String? baseUrl, String? apiToken})
+    : _baseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(RegExp(r'/+$'), ''),
+      _apiToken = (apiToken ?? Config().phorgeApiToken).trim(),
       _client = client ?? _createInsecureClient();
 
   // Accept self-signed or internal corporate certificates
@@ -77,21 +77,50 @@ class PhorgeClient {
         );
       }
 
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (json['error_code'] != null) {
+      final dynamic decoded = jsonDecode(response.body);
+      
+      if (decoded is! Map<String, dynamic>) {
         throw Exception(
-          'Phorge API Error: ${json['error_code']} - ${json['error_info']}',
+          'Phorge API returned unexpected JSON format (expected Map, got ${decoded.runtimeType}): ${response.body}',
         );
       }
 
-      return json['result'] as Map<String, dynamic>;
-    } catch (e) {
+      final json = decoded;
+
+      if (json['error_code'] != null) {
+        throw PhorgeException(
+          code: json['error_code'].toString(),
+          info: json['error_info']?.toString() ?? 'Unknown error informational message',
+        );
+      }
+
+      final result = json['result'];
+      if (result is Map<String, dynamic>) {
+        return result;
+      } else if (result is List) {
+        return {'data': result}; // Wrap list results to maintain Map return type
+      } else {
+        return {'value': result};
+      }
+    } on PhorgeException {
       rethrow;
+    } catch (e) {
+      print('[CRITICAL] Phorge Client Unexpected Exception: $e');
+      throw PhorgeException(code: 'CLIENT_ERROR', info: e.toString());
     }
   }
 
   void dispose() {
     _client.close();
   }
+}
+
+class PhorgeException implements Exception {
+  final String code;
+  final String info;
+
+  PhorgeException({required this.code, required this.info});
+
+  @override
+  String toString() => 'PhorgeException: [$code] $info';
 }

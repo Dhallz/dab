@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift_postgres/drift_postgres.dart';
 
 class ActivitiesTable extends Table {
   @override
@@ -16,7 +17,8 @@ class ActivitiesTable extends Table {
       text().nullable().named('author_avatar_url')();
   IntColumn get commentCount =>
       integer().withDefault(const Constant(0)).named('comment_count')();
-  DateTimeColumn get createdAt => dateTime().named('created_at')();
+  TimestampColumn get createdAt =>
+      customType(PgTypes.timestampWithTimezone).named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};

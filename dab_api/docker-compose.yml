@@ -24,6 +24,7 @@ services:
     build:
       context: .
       target: build
+    env_file: .env
     # dart run / dartdev resolve the package from cwd; bind mounts + sh -c can
     # leave the process without a valid getcwd() unless this is explicit.
     working_dir: /app
@@ -40,6 +41,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - JWT_SECRET=dev_secret_key_for_dab
+      # Self-signed / internal-CA Phorge in dev (see phorge_tls_overrides.dart)
+      - PHORGE_TLS_INSECURE=true
     depends_on:
       - db
       - redis

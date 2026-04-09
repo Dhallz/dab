@@ -1,10 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../domain/core/failure.dart';
 import '../../domain/entities/activity.dart';
 import '../../domain/entities/activity_provider.dart';
 import '../../domain/repositories/abs_i_activity_repository.dart';
 import '../database/app_database.dart';
+import '../database/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence implementation for the Unified Activity Feed.
@@ -40,7 +42,7 @@ class ActivityRepository implements AbsIActivityRepository {
                 authorName: activity.authorName,
                 authorAvatarUrl: Value(activity.authorAvatarUrl),
                 commentCount: Value(activity.commentCount),
-                createdAt: activity.createdAt,
+                createdAt: toPgDateTime(activity.createdAt),
               ),
             );
 
@@ -166,7 +168,7 @@ class ActivityRepository implements AbsIActivityRepository {
       authorName: activityData.authorName,
       authorAvatarUrl: activityData.authorAvatarUrl,
       commentCount: activityData.commentCount,
-      createdAt: activityData.createdAt,
+      createdAt: activityData.createdAt.dateTime,
     );
   }
 }

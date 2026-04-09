@@ -7,7 +7,7 @@ import 'package:dab_api/src/domain/entities/user.dart';
 /// CONTRACT: Aggregates activities from all registered [ConnectorPair]s.
 /// CONSTRAINTS: Must parallelize requests and handle individual source failures gracefully.
 ///
-/// This service is the high-level entry point for fetching data from multiple 
+/// This service is the high-level entry point for fetching data from multiple
 /// external platforms (GitHub, Phorge) by coordinating their specific Sources.
 class UnifiedActivityFetcher {
   final ConnectorRegistry _registry;
@@ -15,7 +15,7 @@ class UnifiedActivityFetcher {
   UnifiedActivityFetcher(this._registry);
 
   /// Aggregates and synchronizes activities from all registered sources.
-  /// 
+  ///
   /// Flow:
   /// 1. Filters [users] for source-specific identifiers.
   /// 2. Iterates over all [ConnectorPair]s in the [_registry].
@@ -40,7 +40,7 @@ class UnifiedActivityFetcher {
           end,
           authoredOnly,
         );
-        
+
         // Transform the raw DTOs into high-level Domain Activities.
         return rawDataList
             .expand((item) => pair.mapper.mapToActivities(item, validUsers))
@@ -48,7 +48,9 @@ class UnifiedActivityFetcher {
       } catch (e) {
         // Individual source failure SHOULD NOT break the entire aggregation.
         // We log the error and return an empty list for this pair.
-        print('UnifiedActivityFetcher: Error fetching from ${pair.mapper.providerName}: $e');
+        print(
+          'UnifiedActivityFetcher: Error fetching from ${pair.mapper.providerName}: $e',
+        );
         return <Activity>[];
       }
     });

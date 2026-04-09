@@ -35,12 +35,17 @@
 - [ ] Phase 3: Admin Console & Team Management
 - [x] Phase 4: Phorge Connector Integration
 - [ ] 🚀 Future Roadmap: Personal Workspace
+- [x] 🚀 Future Roadmap: Personal Workspace
 - [x] Phase 24: Local Relic ORM Migration
 - [x] Phase 25: Drift ORM Prototype
 - [x] Phase 26: Infrastructure Refactoring
 - [x] Phase 27: Schema Reorganization & Refinement
 - [x] Phase 28: Infrastructure Hierarchy Refinement
 - [x] Phase 29: Dependency Injection Refactor
+- [x] Update `AppDatabase` schema version to 6
+- [x] Implement SQL migration in `onUpgrade` for all bigint -> timestamptz columns
+- [x] Run build_runner to regenerate drift code
+- [x] Create walkthrough for the user
 - [x] Phase 30: Native Drift Migrations 🧬
 - [x] Phase 31: Functional Error Handling (fpdart) 🛡️
 - [x] Phase 32: GetIt Service Locator 💉

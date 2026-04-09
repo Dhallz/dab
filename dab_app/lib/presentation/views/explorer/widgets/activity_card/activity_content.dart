@@ -60,7 +60,14 @@ class ActivityContent extends StatelessWidget {
   }
 
   String _getPlainText(String markdown) {
-    return markdown
+    if (markdown.isEmpty) return '';
+    
+    // Truncate first to avoid expensive regex on large strings
+    final effectiveContent = markdown.length > 300 
+        ? markdown.substring(0, 300) 
+        : markdown;
+
+    return effectiveContent
         .replaceAll(RegExp(r'\*\*|__'), '') // Bold
         .replaceAll(RegExp(r'\*|_'), '') // Italic
         .replaceAll(RegExp(r'\[([^\]]+)\]\([^\)]+\)'), r'$1') // Links

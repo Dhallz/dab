@@ -9,15 +9,54 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor(this._tokenStorage, {this.onRefreshToken});
 
+  /// Dio sometimes leaves [RequestOptions.path] without a leading `/` while
+  /// [RequestOptions.uri.path] is correct — and `metadata/configs` does **not**
+  /// contain the substring `/metadata/configs`, so we would attach a stale
+  /// Bearer token and the API correctly returns 401.
+  static String _normalizePath(String raw) {
+    var p = raw.trim();
+    if (p.isEmpty) return '/';
+    if (!p.startsWith('/')) p = '/$p';
+    while (p.contains('//')) {
+      p = p.replaceAll('//', '/');
+    }
+    if (p.length > 1 && p.endsWith('/')) {
+      p = p.substring(0, p.length - 1);
+    }
+    return p;
+  }
+
+  /// No `Authorization` header (login/register/refresh + public metadata/health).
+  static bool _isPublicApiPath(String rawPath) {
+    final p = _normalizePath(rawPath);
+    if (p == '/health' || p.startsWith('/health/')) return true;
+    if (p.endsWith('/metadata/configs') || p.endsWith('/metadata/status')) {
+      return true;
+    }
+    if (p.endsWith('/auth/login') ||
+        p.endsWith('/auth/register') ||
+        p.endsWith('/auth/refresh')) {
+      return true;
+    }
+    return false;
+  }
+
+  static bool _skipBearer(RequestOptions options) {
+    return _isPublicApiPath(options.uri.path) ||
+        _isPublicApiPath(options.path);
+  }
+
+  static bool _isRefreshRequest(RequestOptions options) {
+    return _normalizePath(options.uri.path).endsWith('/auth/refresh') ||
+        _normalizePath(options.path).endsWith('/auth/refresh');
+  }
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth for login, register, and refresh endpoints
-    if (options.path.contains('/auth/login') ||
-        options.path.contains('/auth/register') ||
-        options.path.contains('/auth/refresh')) {
+    if (_skipBearer(options)) {
       return handler.next(options);
     }
 
@@ -34,11 +73,16 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    final isRefreshRequest = err.requestOptions.path.contains('/auth/refresh');
+    final ro = err.requestOptions;
 
     if (err.response?.statusCode == 401 &&
         onRefreshToken != null &&
-        !isRefreshRequest) {
+        !_isRefreshRequest(ro) &&
+        !_skipBearer(ro)) {
+      final existing = await _tokenStorage.readTokens();
+      if (existing == null || existing['refreshToken'] == null) {
+        return handler.next(err);
+      }
       try {
         _refreshFuture ??= onRefreshToken!();
         await _refreshFuture;

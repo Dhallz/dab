@@ -9,10 +9,12 @@ class AppState with AppStateMappable {
   final AppSettings settings;
   final bool isLoading;
   final List<ProviderConfig> configs;
+  final bool isSystemConfigured;
 
   const AppState({
     this.settings = const AppSettings(),
     this.isLoading = false,
     this.configs = const [],
+    this.isSystemConfigured = false,
   });
 }

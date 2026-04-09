@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart' hide Group;
 import '../../domain/core/failures.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/entities/user_identity.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../core/remote/rest_api_client.dart';
 import './core/repository.dart';
@@ -70,6 +71,56 @@ class UserRepository extends Repository implements IUserRepository {
   Future<Either<AppFailure, void>> deleteGroup(String id) async {
     return guardedCall(() async {
       await _client.dio.delete('/groups/$id');
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<UserIdentity>>> getIdentities() async {
+    return guardedCall(() async {
+      final response = await _client.get('/admin/identities');
+      final data = _getEnvelopeData(response);
+      if (data is List) {
+        return data
+            .map((e) => UserIdentityMapper.fromMap(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, UserIdentity>> linkIdentity({
+    required String userId,
+    required String providerId,
+    required String externalId,
+  }) async {
+    return guardedCall(() async {
+      final response = await _client.dio.post(
+        '/admin/identities/link',
+        data: {
+          'userId': userId,
+          'providerId': providerId,
+          'externalId': externalId,
+        },
+      );
+      final data = _getEnvelopeData(response);
+      return UserIdentityMapper.fromMap(data as Map<String, dynamic>);
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> updateUserRole({
+    required String userId,
+    required String role,
+  }) async {
+    return guardedCall(() async {
+      await _client.dio.post(
+        '/admin/users/role',
+        data: {
+          'userId': userId,
+          'role': role,
+        },
+      );
     });
   }
 

@@ -1,8 +1,10 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../domain/core/failure.dart';
 import '../../../domain/entities/user.dart';
+import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
@@ -17,17 +19,27 @@ import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 /// manual intervention.
 class SyncPhorgeUsers {
   final IUserRepository _repo;
+  final AbsIProviderConfigRepository _configRepo;
   final PhorgeUserSource _phorgeUserSource;
   final Config _config;
+  /// When non-null (e.g. in tests), used instead of [Config.allowedDomain].
+  final String? _allowedDomainOverride;
   final _uuid = const Uuid();
 
-  SyncPhorgeUsers(this._repo, this._phorgeUserSource) : _config = Config();
+  SyncPhorgeUsers(
+    this._repo,
+    this._phorgeUserSource,
+    this._configRepo, {
+    String? allowedDomainOverride,
+  })  : _config = Config(),
+        _allowedDomainOverride = allowedDomainOverride;
 
   /// Executes the synchronization process.
   /// 
-  /// 1. Fetches the complete employee list from Phorge via [PhorgeUserSource].
-  /// 2. Compares against existing DAB users by email.
-  /// 3. For new employees:
+  /// 1. Checks if the Phorge provider is active via [_configRepo].
+  /// 2. Fetches the complete employee list from Phorge via [PhorgeUserSource].
+  /// 3. Compares against existing DAB users by email.
+  /// 4. For new employees:
   ///    - Generates a standard corporate email (username@domain).
   ///    - Hashes a temporary password for initial login.
   ///    - Links the Phorge PHID for immediate activity tracking.
@@ -36,6 +48,22 @@ class SyncPhorgeUsers {
   /// Returns the count of newly synced users.
   Future<Either<DatabaseFailure, int>> execute() async {
     try {
+      // Kill-switch (DAB-40): Check if Phorge provider is active.
+      final configsResult = await _configRepo.getConfigs();
+      final configs = configsResult.getOrElse((_) => []);
+      final phorgeConfig = configs.firstWhere((c) => c.id == 'phorge', 
+          orElse: () => throw Exception('Phorge provider configuration not found'));
+      
+      if (!phorgeConfig.isActive) {
+        return const Right(0); // Deactivated, skip sync.
+      }
+
+      final allowedDomain =
+          _allowedDomainOverride ?? _config.allowedDomain;
+      if (allowedDomain.isEmpty) {
+        return const Right(0);
+      }
+
       final phorgeUsers = await _phorgeUserSource.fetchAllUsers();
       int syncedCount = 0;
 
@@ -50,7 +78,8 @@ class SyncPhorgeUsers {
 
       for (final pUser in phorgeUsers) {
         final phorgeUsername = pUser.userName;
-        final generatedEmail = '${phorgeUsername.toLowerCase()}@${_config.allowedDomain}';
+        final generatedEmail =
+            '${phorgeUsername.toLowerCase()}@$allowedDomain';
 
         // Idempotency Check: Only create if the account doesn't exist.
         if (!existingUsersMap.containsKey(generatedEmail)) {

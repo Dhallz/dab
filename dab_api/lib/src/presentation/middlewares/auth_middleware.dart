@@ -5,10 +5,13 @@ import '../../service_locator.dart';
 /// [ARCH: PRESENTATION_CONTEXT]
 /// ROLE: Cross-cutting Identity Property for the Request context.
 final userIdProperty = ContextProperty<String>('userId');
+final userRoleProperty = ContextProperty<String>('userRole');
 
 extension AuthContext on Request {
   String get userId => userIdProperty.get(this);
   String? get userIdOrNull => userIdProperty[this];
+  String get userRole => userRoleProperty.get(this);
+  String? get userRoleOrNull => userRoleProperty[this];
 }
 
 /// [ARCH: PRESENTATION_MIDDLEWARE]
@@ -18,9 +21,28 @@ extension AuthContext on Request {
 class AuthMiddleware extends MiddlewareObject {
   final JwtProvider _jwtProvider = sl<JwtProvider>();
 
+  /// Bootstrap endpoints that must work before login. Relic [Router.use] composes
+  /// middleware along path prefixes; this bypass guarantees no accidental wrap.
+  static bool _anonymousGetAllowed(Request request) {
+    if (request.method != Method.get) return false;
+    var path = Uri.decodeFull(request.url.path);
+    while (path.contains('//')) {
+      path = path.replaceAll('//', '/');
+    }
+    if (path.isEmpty) path = '/';
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    return path == '/metadata/configs' || path == '/metadata/status';
+  }
+
   @override
   Handler call(Handler next) {
     return (request) async {
+      if (_anonymousGetAllowed(request)) {
+        return await next(request);
+      }
+
       final authHeaders = request.headers['Authorization'];
       final authHeader = authHeaders?.isNotEmpty == true
           ? authHeaders!.first
@@ -39,8 +61,9 @@ class AuthMiddleware extends MiddlewareObject {
         return Response.unauthorized(body: Body.fromString('Invalid token'));
       }
 
-      // Store the userId in the context property
+      // Store the userId and userRole in the context property
       userIdProperty[request] = jwt.payload['sub'] as String;
+      userRoleProperty[request] = jwt.payload['role'] as String? ?? 'Standard';
 
       return await next(request);
     };

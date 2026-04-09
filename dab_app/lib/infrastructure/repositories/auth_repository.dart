@@ -1,6 +1,7 @@
 import 'package:dab_app/domain/entities/user.dart';
 import 'package:dab_app/infrastructure/core/local/records/user_record.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../domain/core/failures.dart';
 import '../../domain/entities/auth_response.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
@@ -48,6 +49,7 @@ class AuthRepository extends Repository implements IAuthRepository {
           remoteId: response.userId,
           email: response.email,
           name: response.name,
+          role: response.role,
         ),
       );
 
@@ -72,7 +74,12 @@ class AuthRepository extends Repository implements IAuthRepository {
       tokenResult.getOrElse((f) => throw f);
 
       _localDataSource.saveUser(
-        UserRecord(remoteId: response.userId, email: email, name: name),
+        UserRecord(
+          remoteId: response.userId,
+          email: email,
+          name: name,
+          role: response.role,
+        ),
       );
       return response;
     });
@@ -88,15 +95,15 @@ class AuthRepository extends Repository implements IAuthRepository {
   }
 
   @override
-  Future<Either<AppFailure, Unit>> refreshToken() {
+  Future<Either<AppFailure, Unit>> refreshToken() async {
+    final tokens = await _tokenStorage.readTokens();
+    if (tokens == null || tokens['refreshToken'] == null) {
+      return const Left(AuthFailure('No refresh token available'));
+    }
+    final refreshToken = tokens['refreshToken']!;
     return guardedCall(() async {
-      final tokens = await _tokenStorage.readTokens();
-      if (tokens == null || tokens['refreshToken'] == null) {
-        throw const AuthFailure('No refresh token available');
-      }
-
       final json = await _remoteDataSource.refresh(
-        refreshToken: tokens['refreshToken']!,
+        refreshToken: refreshToken,
       );
 
       final response = AuthResponseMapper.fromMap(json);

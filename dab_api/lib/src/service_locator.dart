@@ -1,48 +1,56 @@
-import 'package:get_it/get_it.dart';
-
-// domain
-import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_health_repository.dart';
-
+import 'package:dab_api/src/application/containers/activity_usecases.dart';
+// containers
+import 'package:dab_api/src/application/containers/auth_usecases.dart';
+import 'package:dab_api/src/application/containers/group_usecases.dart';
+import 'package:dab_api/src/application/containers/health_usecases.dart';
+import 'package:dab_api/src/application/containers/metadata_usecases.dart';
+import 'package:dab_api/src/application/containers/user_usecases.dart';
+import 'package:dab_api/src/domain/entities/provider_config.dart';
+import 'package:dab_api/src/application/services/connector_registry.dart';
+import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
-import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
-
-import 'package:dab_api/src/application/usecases/auth/login_user.dart';
-import 'package:dab_api/src/application/usecases/auth/register_user.dart';
+import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
-import 'package:dab_api/src/application/usecases/auth/register_new_user.dart';
-import 'package:dab_api/src/application/usecases/auth/refresh_token.dart';
+import 'package:dab_api/src/application/usecases/auth/get_all_identities.dart';
+import 'package:dab_api/src/application/usecases/auth/link_user_identity.dart';
+import 'package:dab_api/src/application/usecases/auth/login_user.dart';
 import 'package:dab_api/src/application/usecases/auth/logout_user.dart';
-
-import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
-import 'package:dab_api/src/application/usecases/user/get_users.dart';
-import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
-import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
-
+import 'package:dab_api/src/application/usecases/auth/refresh_token.dart';
+import 'package:dab_api/src/application/usecases/auth/register_new_user.dart';
+import 'package:dab_api/src/application/usecases/auth/register_user.dart';
+import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
+import 'package:dab_api/src/application/usecases/auth/update_user_role.dart';
+import 'package:dab_api/src/application/usecases/group/delete_group.dart';
 import 'package:dab_api/src/application/usecases/group/get_groups.dart';
 import 'package:dab_api/src/application/usecases/group/save_group.dart';
-import 'package:dab_api/src/application/usecases/group/delete_group.dart';
-
-import 'package:dab_api/src/application/usecases/metadata/get_provider_metadata.dart';
-import 'package:dab_api/src/application/usecases/metadata/get_provider_configs.dart';
-
 import 'package:dab_api/src/application/usecases/health/check_database_health.dart';
-
-// containers
-import 'package:dab_api/src/application/containers/auth_usecases.dart';
-import 'package:dab_api/src/application/containers/activity_usecases.dart';
-import 'package:dab_api/src/application/containers/user_usecases.dart';
-import 'package:dab_api/src/application/containers/group_usecases.dart';
-import 'package:dab_api/src/application/containers/metadata_usecases.dart';
-import 'package:dab_api/src/application/containers/health_usecases.dart';
-
+import 'package:dab_api/src/application/usecases/metadata/get_provider_configs.dart';
+import 'package:dab_api/src/application/usecases/metadata/get_provider_metadata.dart';
+import 'package:dab_api/src/application/usecases/metadata/get_system_status.dart';
+import 'package:dab_api/src/application/usecases/metadata/save_provider_config.dart';
+import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
+import 'package:dab_api/src/application/usecases/user/get_users.dart';
+import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
+import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
+import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
+import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
+import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
+import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
+import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
+import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
+import 'package:dab_api/src/domain/mappers/teams/teams_message_mapper.dart';
+// domain
+import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_health_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+// Activity Architecture
+import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 // infrastructure
 import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
@@ -51,38 +59,25 @@ import 'package:dab_api/src/infrastructure/database/postgres_client.dart';
 import 'package:dab_api/src/infrastructure/database/postgres_health_repository.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_client.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
+import 'package:dab_api/src/infrastructure/notifications/push_notification_service.dart';
 import 'package:dab_api/src/infrastructure/repositories/activity_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/security/jwt_provider.dart';
-import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
-import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
-import 'package:dab_api/src/infrastructure/notifications/push_notification_service.dart';
-
-// Activity Architecture
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
-
-import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
-import 'package:dab_api/src/domain/mappers/teams/teams_message_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/teams/teams_message_source.dart';
-import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
-import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
-import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
-
-import 'package:dab_api/src/application/services/connector_registry.dart';
-import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
+import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
+import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/teams/teams_message_source.dart';
+import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
+import 'package:get_it/get_it.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -179,7 +174,7 @@ Future<void> serviceLocator() async {
     ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(
-    ProviderConfigRepository(config: sl<Config>()),
+    ProviderConfigRepository(db),
   );
 
   // -----------------------------------------------------
@@ -194,8 +189,12 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<RegisterUser>(RegisterUser(sl<AbsIAuthRepository>(), sl<PhorgeUserSource>()));
   sl.registerSingleton<AuthenticateUser>(AuthenticateUser(sl<AbsIAuthRepository>(), sl<LoginUser>(), sl<JwtProvider>()));
   sl.registerSingleton<RegisterNewUser>(RegisterNewUser(sl<AbsIAuthRepository>(), sl<RegisterUser>(), sl<JwtProvider>()));
+  sl.registerSingleton<LinkUserIdentity>(LinkUserIdentity(sl<IUserRepository>()));
   sl.registerSingleton<RefreshToken>(RefreshToken(sl<AbsIAuthRepository>(), sl<JwtProvider>()));
   sl.registerSingleton<LogoutUser>(LogoutUser(sl<AbsIAuthRepository>()));
+  sl.registerSingleton<GetAllIdentities>(GetAllIdentities(sl<IUserRepository>()));
+  sl.registerSingleton<FindAllUsers>(FindAllUsers(sl<AbsIAuthRepository>()));
+  sl.registerSingleton<UpdateUserRole>(UpdateUserRole(sl<AbsIAuthRepository>()));
 
   // Activity
   sl.registerSingleton<FetchRemoteActivities>(FetchRemoteActivities(sl<UnifiedActivityFetcher>()));
@@ -204,7 +203,13 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<LogActivity>(LogActivity(sl<AbsIActivityRepository>(), sl<AbsIAuthRepository>(), sl<PresenceService>(), sl<RedisService>()));
 
   // User
-  sl.registerSingleton<SyncPhorgeUsers>(SyncPhorgeUsers(sl<IUserRepository>(), sl<PhorgeUserSource>()));
+  sl.registerLazySingleton<SyncPhorgeUsers>(
+    () => SyncPhorgeUsers(
+      sl<IUserRepository>(),
+      sl<PhorgeUserSource>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
   sl.registerSingleton<GetUsers>(GetUsers(sl<IUserRepository>()));
   sl.registerSingleton<GetUserById>(GetUserById(sl<IUserRepository>()));
   sl.registerSingleton<GetUsersByGroup>(GetUsersByGroup(sl<IUserRepository>()));
@@ -217,6 +222,8 @@ Future<void> serviceLocator() async {
   // Metadata
   sl.registerSingleton<GetProviderMetadata>(GetProviderMetadata(sl<AbsIProviderMetadataRepository>()));
   sl.registerSingleton<GetProviderConfigs>(GetProviderConfigs(sl<AbsIProviderConfigRepository>()));
+  sl.registerSingleton<SaveProviderConfig>(SaveProviderConfig(sl<AbsIProviderConfigRepository>()));
+  sl.registerSingleton<GetSystemStatus>(GetSystemStatus(sl<AbsIAuthRepository>(), sl<AbsIProviderConfigRepository>()));
 
   // Health
   sl.registerSingleton<CheckDatabaseHealth>(CheckDatabaseHealth(sl<AbsIHealthRepository>()));
@@ -234,6 +241,10 @@ Future<void> serviceLocator() async {
     refreshToken: sl<RefreshToken>(),
     registerNewUser: sl<RegisterNewUser>(),
     registerUser: sl<RegisterUser>(),
+    linkUserIdentity: sl<LinkUserIdentity>(),
+    getAllIdentities: sl<GetAllIdentities>(),
+    findAllUsers: sl<FindAllUsers>(),
+    updateUserRole: sl<UpdateUserRole>(),
   ));
 
   sl.registerSingleton<ActivityUseCases>(ActivityUseCases(
@@ -259,9 +270,52 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<MetadataUseCases>(MetadataUseCases(
     getProviderConfigs: sl<GetProviderConfigs>(),
     getProviderMetadata: sl<GetProviderMetadata>(),
+    getSystemStatus: sl<GetSystemStatus>(),
+    saveProviderConfig: sl<SaveProviderConfig>(),
   ));
 
   sl.registerSingleton<HealthUseCases>(HealthUseCases(
     checkDatabaseHealth: sl<CheckDatabaseHealth>(),
   ));
+
+  // 6. Seed Data
+  await _seedProviders();
+}
+
+Future<void> _seedProviders() async {
+  final repo = sl<AbsIProviderConfigRepository>();
+  final result = await repo.getConfigs();
+  
+  await result.fold(
+    (l) async => print('❌ Error checking providers: $l'),
+    (configs) async {
+      if (configs.isEmpty) {
+        print('🌱 Seeding default provider configurations...');
+        final defaultProviders = [
+          ('phorge', 'Phorge', 'https://phorge.example.com', 'https://phorge.it/favicon.ico'),
+          ('linear', 'Linear', 'https://linear.app', 'https://linear.app/favicon.ico'),
+          ('jira', 'Jira', 'https://atlassian.net', 'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png'),
+          ('teams', 'Microsoft Teams', 'https://teams.microsoft.com', 'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico'),
+          ('slack', 'Slack', 'https://slack.com', 'https://a.slack-edge.com/80588/img/favicon-32.png'),
+          ('discord', 'Discord', 'https://discord.com', 'https://discord.com/favicon.ico'),
+          ('github', 'GitHub', 'https://github.com', 'https://github.githubassets.com/favicons/favicon.svg'),
+          ('gitlab', 'GitLab', 'https://gitlab.com', 'https://gitlab.com/favicon.ico'),
+        ];
+
+        for (final p in defaultProviders) {
+          await repo.saveConfig(
+            ProviderConfig(
+              id: p.$1,
+              name: p.$2,
+              baseUrl: p.$3,
+              isActive: true,
+              iconUrl: p.$4,
+              settings: {},
+            ),
+          );
+        }
+        print('✅ Seeding complete.');
+      }
+    },
+  );
 }

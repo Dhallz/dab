@@ -1,11 +1,14 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:uuid/uuid.dart';
+
 import '../../domain/core/failure.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/user.dart';
+import '../../domain/entities/user_identity.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../database/app_database.dart';
+import '../database/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence implementation for User directory and Team Groupings.
@@ -20,8 +23,8 @@ class UserRepository implements IUserRepository {
   @override
   Future<Either<DatabaseFailure, List<User>>> getUsers() async {
     try {
-      final users = await _db.select(_db.usersTable).get();
-      return right(users);
+      final rows = await _db.select(_db.usersTable).get();
+      return right(rows.map(userFromUsersRow).toList());
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -31,10 +34,10 @@ class UserRepository implements IUserRepository {
   @override
   Future<Either<DatabaseFailure, User>> getUser(String id) async {
     try {
-      final user = await (_db.select(
+      final row = await (_db.select(
         _db.usersTable,
       )..where((t) => t.id.equals(id))).getSingle();
-      return right(user);
+      return right(userFromUsersRow(row));
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -44,10 +47,10 @@ class UserRepository implements IUserRepository {
   @override
   Future<Either<DatabaseFailure, User?>> findByEmail(String email) async {
     try {
-      final user = await (_db.select(_db.usersTable)
-            ..where((t) => t.email.equals(email)))
-          .getSingleOrNull();
-      return right(user);
+      final row = await (_db.select(
+        _db.usersTable,
+      )..where((t) => t.email.equals(email))).getSingleOrNull();
+      return right(row != null ? userFromUsersRow(row) : null);
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -67,7 +70,11 @@ class UserRepository implements IUserRepository {
       ])..where(_db.groupMembersTable.groupId.equals(groupId));
 
       final rows = await query.get();
-      return right(rows.map((row) => row.readTable(_db.usersTable)).toList());
+      return right(
+        rows
+            .map((row) => userFromUsersRow(row.readTable(_db.usersTable)))
+            .toList(),
+      );
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -77,7 +84,9 @@ class UserRepository implements IUserRepository {
   @override
   Future<Either<DatabaseFailure, void>> saveUser(User user) async {
     try {
-      await _db.into(_db.usersTable).insertOnConflictUpdate(
+      await _db
+          .into(_db.usersTable)
+          .insertOnConflictUpdate(
             UsersTableCompanion.insert(
               id: user.id,
               name: user.name,
@@ -86,8 +95,8 @@ class UserRepository implements IUserRepository {
               role: Value(user.role),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
-              createdAt: user.createdAt,
-              updatedAt: Value(DateTime.now()),
+              createdAt: toPgDateTime(user.createdAt),
+              updatedAt: Value(toPgDateTime(DateTime.now())),
               avatarUrl: Value(user.avatarUrl),
             ),
           );
@@ -178,5 +187,79 @@ class UserRepository implements IUserRepository {
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, UserIdentity>> linkIdentity(
+    UserIdentity identity,
+  ) async {
+    try {
+      final companion = UserIdentitiesTableCompanion.insert(
+        id: identity.id,
+        userId: identity.userId,
+        providerId: identity.providerId,
+        externalId: identity.externalId,
+        status: Value(identity.status),
+        createdAt: Value(toPgDateTime(identity.createdAt)),
+        updatedAt: Value(toPgDateTimeOrNull(identity.updatedAt)),
+      );
+      await _db.into(_db.userIdentitiesTable).insertOnConflictUpdate(companion);
+      return right(identity);
+    } catch (e) {
+      return left(DatabaseFailure('Failed to link identity: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, List<UserIdentity>>> getIdentities(
+    String userId,
+  ) async {
+    try {
+      final query = _db.select(_db.userIdentitiesTable)
+        ..where((t) => t.userId.equals(userId));
+      final rows = await query.get();
+      return right(rows.map(_mapToIdentity).toList());
+    } catch (e) {
+      return left(DatabaseFailure('Failed to fetch user identities: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, UserIdentity?>> getIdentity(
+    String userId,
+    String providerId,
+  ) async {
+    try {
+      final query = _db.select(_db.userIdentitiesTable)
+        ..where((t) => t.userId.equals(userId))
+        ..where((t) => t.providerId.equals(providerId));
+      final row = await query.getSingleOrNull();
+      return right(row != null ? _mapToIdentity(row) : null);
+    } catch (e) {
+      return left(DatabaseFailure('Failed to fetch user identity: $e'));
+    }
+  }
+
+  @override
+  Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities() async {
+    try {
+      final query = _db.select(_db.userIdentitiesTable);
+      final rows = await query.get();
+      return right(rows.map(_mapToIdentity).toList());
+    } catch (e) {
+      return left(DatabaseFailure('Failed to fetch all identities: $e'));
+    }
+  }
+
+  UserIdentity _mapToIdentity(UserIdentitiesTableData row) {
+    return UserIdentity(
+      id: row.id,
+      userId: row.userId,
+      providerId: row.providerId,
+      externalId: row.externalId,
+      status: row.status,
+      createdAt: row.createdAt.dateTime,
+      updatedAt: row.updatedAt?.dateTime,
+    );
   }
 }

@@ -1,53 +1,76 @@
+import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../domain/core/failure.dart';
 import '../../domain/entities/provider_config.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../config/config.dart';
+import '../database/app_database.dart';
+import '../database/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
-/// ROLE: Source of truth for external platform configurations.
+/// ROLE: Implementation of Platform Configuration retrieval in the API.
 /// CONTRACT: Implements [AbsIProviderConfigRepository].
-/// CONSTRAINTS: Mixes environment-derived (Phorge) and static-defined (GitHub/Slack) configs.
-/// 
-/// This repository provides the necessary URLs and metadata for the client 
-/// to interact with external providers.
+/// CONSTRAINTS: Directly queries [AppDatabase]. Performs Drift-to-Entity mapping.
 class ProviderConfigRepository implements AbsIProviderConfigRepository {
-  final Config _config;
+  final AppDatabase _db;
 
-  ProviderConfigRepository({required Config config}) : _config = config;
+  ProviderConfigRepository(this._db);
 
-  /// Retrieves the current set of supported provider configurations.
-  /// 
-  /// 1. Dynamically adds Phorge if the environment [phorgeUrl] is present.
-  /// 2. Includes static placeholder configs for UI consistency (Slack, GitHub).
   @override
   Future<Either<Failure, List<ProviderConfig>>> getConfigs() async {
     try {
-      final List<ProviderConfig> configs = [];
-
-      // Add Phorge configuration if URL is available (Environment-driven)
-      if (_config.phorgeUrl.isNotEmpty) {
-        configs.add(
-          ProviderConfig(
-            id: 'Phorge',
-            baseUrl: _config.phorgeUrl,
-            iconUrl: null,
-          ),
-        );
-      }
-
-      // Add default providers for UI presentation (Static identifiers)
-      configs.addAll([
-        const ProviderConfig(id: 'GitHub', baseUrl: 'https://github.com'),
-        const ProviderConfig(id: 'Slack', baseUrl: 'https://slack.com'),
-        const ProviderConfig(id: 'Jira', baseUrl: 'https://jira.atlassian.com'),
-      ]);
-
-      return right(configs);
+      final configs = await _db.select(_db.providerConfigsTable).get();
+      return Right(configs.map<ProviderConfig>(_mapToEntity).toList());
     } catch (e) {
-      return left(
-        DatabaseFailure('Failed to load provider configurations: $e'),
-      );
+      return Left(DatabaseFailure('Failed to fetch provider configs: $e'));
     }
+  }
+
+  @override
+  Future<Either<Failure, int>> countActiveConfigs() async {
+    try {
+      final query = _db.select(_db.providerConfigsTable)
+        ..where((t) => t.isActive.equals(1));
+      final configs = await query.get();
+      return Right(configs.length);
+    } catch (e) {
+      return Left(DatabaseFailure('Failed to count active configs: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProviderConfig>> saveConfig(
+    ProviderConfig config,
+  ) async {
+    try {
+      await (_db
+          .into(_db.providerConfigsTable)
+          .insertOnConflictUpdate(
+            ProviderConfigsTableCompanion(
+              id: Value(config.id),
+              name: Value(config.name),
+              baseUrl: Value(config.baseUrl),
+              isActive: Value(config.isActive ? 1 : 0),
+              iconUrl: Value(config.iconUrl),
+              settings: Value(jsonEncode(config.settings)),
+              updatedAt: Value(toPgDateTime(DateTime.now())),
+            ),
+          ));
+      return Right(config);
+    } catch (e) {
+      return Left(DatabaseFailure('Failed to save provider config: $e'));
+    }
+  }
+
+  ProviderConfig _mapToEntity(ProviderConfigsTableData record) {
+    return ProviderConfig(
+      id: record.id,
+      name: record.name,
+      baseUrl: record.baseUrl,
+      isActive: record.isActive != 0,
+      iconUrl: record.iconUrl,
+      settings: jsonDecode(record.settings) as Map<String, dynamic>,
+    );
   }
 }

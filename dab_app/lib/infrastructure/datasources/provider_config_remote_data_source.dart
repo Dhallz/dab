@@ -13,4 +13,16 @@ class ProviderConfigRemoteDataSource {
   Future<Response> getProviderConfigs() async {
     return await _restClient.get('/metadata/configs');
   }
+
+  Future<Response> getSystemStatus() async {
+    return await _restClient.get('/metadata/status');
+  }
+
+  Future<Response> saveProviderConfig(Map<String, dynamic> config) async {
+    return await _restClient.post('/admin/configs', data: config);
+  }
+
+  Future<Response> testProviderConfig(Map<String, dynamic> config) async {
+    return await _restClient.post('/admin/configs/test', data: config);
+  }
 }
