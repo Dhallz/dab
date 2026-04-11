@@ -6,7 +6,7 @@ import '../explorer_bloc.dart';
 import '../explorer_item.dart';
 import '../explorer_state.dart';
 import '../widgets/activity_card/activity_card.dart';
-import '../widgets/explorer_calendar_bar.dart';
+import '../widgets/explorer_island_bar_content.dart';
 
 class ExplorerViewMobile extends StatelessWidget {
   const ExplorerViewMobile({super.key});
@@ -19,10 +19,7 @@ class ExplorerViewMobile extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: ExplorerCalendarBar(),
-            ),
+            const ExplorerIslandBarContent(),
             Expanded(
               child: state.status == ViewStatus.loading
                   ? const Center(child: CircularProgressIndicator())

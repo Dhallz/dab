@@ -14,13 +14,15 @@ class AppIcons {
   static const IconData delete = Icons.delete_outline;
   static const IconData search = Icons.search;
   static const IconData filter = Icons.filter_list;
+  static const IconData refresh = Icons.refresh_rounded;
 
   // Feedback
   static const IconData success = Icons.check_circle_outline;
   static const IconData error = Icons.error_outline;
   static const IconData info = Icons.info_outline;
   static const IconData warning = Icons.warning_amber_outlined;
-  static const IconData emptyState = Icons.dashboard_customize_rounded; // Placeholder icon
+  static const IconData emptyState =
+      Icons.dashboard_customize_rounded; // Placeholder icon
 
   // Auth
   static const IconData login = Icons.login;

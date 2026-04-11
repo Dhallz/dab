@@ -7,11 +7,13 @@ import '../explorer_event.dart';
 class ExplorerJumpToDateButton extends StatelessWidget {
   final DateTime selectedDate;
   final ExplorerBloc bloc;
+  final bool compact;
 
   const ExplorerJumpToDateButton({
     super.key,
     required this.selectedDate,
     required this.bloc,
+    this.compact = false,
   });
 
   @override
@@ -43,28 +45,33 @@ class ExplorerJumpToDateButton extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 16,
+          vertical: compact ? 8 : 12,
+        ),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.calendar_month_rounded,
-              color: Color(0xFFCBD5E1),
-              size: 18,
+              color: const Color(0xFFCBD5E1),
+              size: compact ? 20 : 18,
             ),
-            SizedBox(width: 8),
-            Text(
-              'Jump to date',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFFCBD5E1),
+            if (!compact) ...[
+              const SizedBox(width: 8),
+              const Text(
+                'Jump to date',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFFCBD5E1),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

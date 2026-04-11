@@ -2,7 +2,8 @@ import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/dab_app_bar.dart';
+import '../../../core/widgets/island_bar.dart';
+import '../widgets/dashboard_island_bar_content.dart';
 import '../dashboard_bloc.dart';
 import '../dashboard_state.dart';
 
@@ -23,10 +24,7 @@ class DashboardViewDesktop extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(32, 32, 32, 16),
-                      child: DabAppBar(),
-                    ),
+                    const IslandBar(content: DashboardIslandBarContent()),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

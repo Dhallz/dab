@@ -5,7 +5,7 @@ part 'admin_section.mapper.dart';
 @MappableEnum()
 enum AdminSection { providers, identities, security }
 
-extension AdminSectionX on AdminSection {
+extension OnAdminSection on AdminSection {
   String get title => switch (this) {
         AdminSection.providers => 'Provider Config',
         AdminSection.identities => 'Identity Management',

@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/app_bloc_consumer.dart';
-import '../../../core/widgets/dab_app_bar.dart';
+import '../../../core/widgets/island_bar.dart';
 import '../explorer_bloc.dart';
-import '../explorer_state.dart';
 import '../explorer_event.dart';
+import '../explorer_state.dart';
 import 'explorer_calendar_header.dart';
 import 'explorer_date_selector.dart';
 import 'explorer_jump_to_date_button.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Top bar for the explorer view, providing date navigation and context.
-class ExplorerCalendarBar extends StatefulWidget {
-  const ExplorerCalendarBar({super.key});
+/// ROLE: Explorer top chrome — [IslandBar] holds only the date strip (full island height); title row sits below like the pre–Island Bar layout.
+class ExplorerIslandBarContent extends StatefulWidget {
+  const ExplorerIslandBarContent({super.key});
 
   @override
-  State<ExplorerCalendarBar> createState() => _ExplorerCalendarBarState();
+  State<ExplorerIslandBarContent> createState() =>
+      _ExplorerIslandBarContentState();
 }
 
-class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
+class _ExplorerIslandBarContentState extends State<ExplorerIslandBarContent> {
   late PageController _pageController;
   static const int _initialPage = 10000;
   DateTime? _anchorDate;
@@ -97,33 +98,50 @@ class _ExplorerCalendarBarState extends State<ExplorerCalendarBar> {
         }
 
         final displayDate = _previewDate ?? state.selectedDate;
+        final headerHorizontalPadding = MediaQuery.sizeOf(context).width > 800
+            ? 32.0
+            : 16.0;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DabAppBar(
-              actions: [
-                ExplorerJumpToDateButton(
-                  selectedDate: displayDate,
-                  bloc: bloc,
-                ),
-              ],
-              child: ExplorerDateSelector(
-                state: state,
-                bloc: bloc,
-                pageController: _pageController,
-                anchorDate: _anchorDate!,
-                displayDate: displayDate,
-                initialPage: _initialPage,
-                onPageChanged: (page) =>
-                    _onPageChanged(page, bloc, state.selectedDate),
+            IslandBar(
+              content: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ExplorerDateSelector(
+                      state: state,
+                      bloc: bloc,
+                      pageController: _pageController,
+                      anchorDate: _anchorDate!,
+                      displayDate: displayDate,
+                      initialPage: _initialPage,
+                      onPageChanged: (page) =>
+                          _onPageChanged(page, bloc, state.selectedDate),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Align(
+                    alignment: Alignment.center,
+                    child: ExplorerJumpToDateButton(
+                      selectedDate: displayDate,
+                      bloc: bloc,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
-            ExplorerCalendarHeader(
-              displayDate: displayDate,
-              state: state,
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: headerHorizontalPadding,
+              ),
+              child: ExplorerCalendarHeader(
+                displayDate: displayDate,
+                state: state,
+              ),
             ),
           ],
         );

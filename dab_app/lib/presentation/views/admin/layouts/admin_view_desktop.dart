@@ -1,7 +1,8 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
-import 'package:dab_app/presentation/core/widgets/dab_app_bar.dart';
+import 'package:dab_app/presentation/core/widgets/island_bar.dart';
+import 'package:dab_app/presentation/views/admin/widgets/admin_island_bar_content.dart';
 import 'package:dab_app/presentation/features/app/app_cubit.dart';
 import 'package:dab_app/presentation/features/auth/auth_cubit.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
@@ -72,10 +73,7 @@ class AdminViewDesktop extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(32, 24, 32, 16),
-                      child: DabAppBar(),
-                    ),
+                    const IslandBar(content: AdminIslandBarContent()),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -91,13 +89,13 @@ class AdminViewDesktop extends StatelessWidget {
                               child: switch (section) {
                                 AdminSection.providers => const ProvidersTab(),
                                 AdminSection.identities => IdentitiesTab(
-                                    identities: state.identities,
-                                    bloc: bloc,
-                                  ),
+                                  identities: state.identities,
+                                  bloc: bloc,
+                                ),
                                 AdminSection.security => SecurityTab(
-                                    users: state.users,
-                                    bloc: bloc,
-                                  ),
+                                  users: state.users,
+                                  bloc: bloc,
+                                ),
                               },
                             ),
                           ],

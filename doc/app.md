@@ -111,6 +111,8 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 
 #### Application Views
 
+Home branches (**Dashboard**, **Explorer**, **Admin**) use the shared **Island Bar** shell (`IslandBar` in `lib/presentation/core/widgets/island_bar.dart`) with identical padding and height where applicable. **Dashboard** and **Admin** pass branch **content** widgets (`DashboardIslandBarContent`, `AdminIslandBarContent`). **Explorer** uses `ExplorerIslandBarContent`, which wraps `IslandBar` around the date strip only and keeps the calendar title row (`ExplorerCalendarHeader`) below the bar, matching the legacy layout. **Admin** metrics are projected from `AdminState` via `OnAdminState.islandBarModel` (co-located in `admin_state.dart`) into `AdminIslandBarModel` (`views/admin/models/`), with one widget per file under `views/admin/widgets/` for each island tile type.
+
 | View | Role | State Pattern |
 |---|---|---|
 | **Login** | Auth gate | Form bound to `AuthCubit` |
