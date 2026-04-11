@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:relic/relic.dart';
 
 import '../../application/containers/auth_usecases.dart';
+import '../../domain/core/failure.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]
@@ -31,12 +32,16 @@ class AuthController {
     final result = await _auth.registerNewUser.execute(name, email, password);
 
     return result.match(
-      (failure) => Response.badRequest(
-        body: Body.fromString(
+      (failure) {
+        final body = Body.fromString(
           jsonEncode({'error': failure.message, 'details': failure.toMap()}),
           mimeType: MimeType.json,
-        ),
-      ),
+        );
+        if (failure is BootstrapLockFailure) {
+          return Response.forbidden(body: body);
+        }
+        return Response.badRequest(body: body);
+      },
       (tokens) => Response.ok(
         body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
       ),
@@ -62,12 +67,16 @@ class AuthController {
     final result = await _auth.authenticateUser.execute(email, password);
 
     return result.match(
-      (failure) => Response.unauthorized(
-        body: Body.fromString(
+      (failure) {
+        final body = Body.fromString(
           jsonEncode({'error': failure.message, 'details': failure.toMap()}),
           mimeType: MimeType.json,
-        ),
-      ),
+        );
+        if (failure is BootstrapLockFailure) {
+          return Response.forbidden(body: body);
+        }
+        return Response.unauthorized(body: body);
+      },
       (tokens) => Response.ok(
         body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
       ),

@@ -87,6 +87,7 @@ Domain  →  Application  →  Infrastructure  →  Presentation
 7. **Check folder-specific rules.** Before working in `dab_api/` or `dab_app/`, read that package's `.agents/rules.md`.
 8. **Update documentation when changing behaviour.** The `doc/` folder at the project root is the single source of truth for all documentation. See `.agents/rules/doc-maintenance.md` for details.
 9. **Update the Bruno collection when changing the API.** The `bruno/` folder contains the canonical API collection. See `.agents/rules/bruno-maintenance.md` for details.
+10. **Git commits.** When you commit, follow `.agents/rules/commit.md`: **one commit per completed task**, subject lines that include the active issue key (e.g. `DAB-40: …`), and **no** Cursor/AI attribution or meta footers in the message.
 
 ---
 

@@ -56,7 +56,11 @@ class RefreshToken {
     // Token Rotation: Always invalidate the old token after single use.
     await _repo.deleteSession(refreshToken);
     
-    final newAccessToken = _jwtProvider.generateToken({'sub': user.id, 'email': user.email});
+    final newAccessToken = _jwtProvider.generateToken({
+      'sub': user.id,
+      'email': user.email,
+      'role': user.role.name,
+    });
     final newRefreshToken = _uuid.v4();
 
     final newSession = Session(
@@ -79,6 +83,7 @@ class RefreshToken {
       'name': user.name,
       'email': user.email,
       'avatarUrl': user.avatarUrl ?? '',
+      'role': user.role.name,
     });
   }
 }

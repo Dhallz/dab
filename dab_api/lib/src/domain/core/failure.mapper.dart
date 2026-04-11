@@ -185,6 +185,7 @@ class AuthFailureMapper extends ClassMapperBase<AuthFailure> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AuthFailureMapper._());
       FailureMapper.ensureInitialized();
+      BootstrapLockFailureMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -289,6 +290,134 @@ class _AuthFailureCopyWithImpl<$R, $Out>
   AuthFailureCopyWith<$R2, AuthFailure, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _AuthFailureCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class BootstrapLockFailureMapper extends ClassMapperBase<BootstrapLockFailure> {
+  BootstrapLockFailureMapper._();
+
+  static BootstrapLockFailureMapper? _instance;
+  static BootstrapLockFailureMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = BootstrapLockFailureMapper._());
+      AuthFailureMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'BootstrapLockFailure';
+
+  static String _$message(BootstrapLockFailure v) => v.message;
+  static const Field<BootstrapLockFailure, String> _f$message = Field(
+    'message',
+    _$message,
+  );
+
+  @override
+  final MappableFields<BootstrapLockFailure> fields = const {
+    #message: _f$message,
+  };
+
+  static BootstrapLockFailure _instantiate(DecodingData data) {
+    return BootstrapLockFailure(data.dec(_f$message));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static BootstrapLockFailure fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<BootstrapLockFailure>(map);
+  }
+
+  static BootstrapLockFailure fromJson(String json) {
+    return ensureInitialized().decodeJson<BootstrapLockFailure>(json);
+  }
+}
+
+mixin BootstrapLockFailureMappable {
+  String toJson() {
+    return BootstrapLockFailureMapper.ensureInitialized()
+        .encodeJson<BootstrapLockFailure>(this as BootstrapLockFailure);
+  }
+
+  Map<String, dynamic> toMap() {
+    return BootstrapLockFailureMapper.ensureInitialized()
+        .encodeMap<BootstrapLockFailure>(this as BootstrapLockFailure);
+  }
+
+  BootstrapLockFailureCopyWith<
+    BootstrapLockFailure,
+    BootstrapLockFailure,
+    BootstrapLockFailure
+  >
+  get copyWith =>
+      _BootstrapLockFailureCopyWithImpl<
+        BootstrapLockFailure,
+        BootstrapLockFailure
+      >(this as BootstrapLockFailure, $identity, $identity);
+  @override
+  String toString() {
+    return BootstrapLockFailureMapper.ensureInitialized().stringifyValue(
+      this as BootstrapLockFailure,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return BootstrapLockFailureMapper.ensureInitialized().equalsValue(
+      this as BootstrapLockFailure,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return BootstrapLockFailureMapper.ensureInitialized().hashValue(
+      this as BootstrapLockFailure,
+    );
+  }
+}
+
+extension BootstrapLockFailureValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, BootstrapLockFailure, $Out> {
+  BootstrapLockFailureCopyWith<$R, BootstrapLockFailure, $Out>
+  get $asBootstrapLockFailure => $base.as(
+    (v, t, t2) => _BootstrapLockFailureCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class BootstrapLockFailureCopyWith<
+  $R,
+  $In extends BootstrapLockFailure,
+  $Out
+>
+    implements AuthFailureCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? message});
+  BootstrapLockFailureCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _BootstrapLockFailureCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, BootstrapLockFailure, $Out>
+    implements BootstrapLockFailureCopyWith<$R, BootstrapLockFailure, $Out> {
+  _BootstrapLockFailureCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<BootstrapLockFailure> $mapper =
+      BootstrapLockFailureMapper.ensureInitialized();
+  @override
+  $R call({String? message}) =>
+      $apply(FieldCopyWithData({if (message != null) #message: message}));
+  @override
+  BootstrapLockFailure $make(CopyWithData data) =>
+      BootstrapLockFailure(data.get(#message, or: $value.message));
+
+  @override
+  BootstrapLockFailureCopyWith<$R2, BootstrapLockFailure, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _BootstrapLockFailureCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class NotFoundFailureMapper extends ClassMapperBase<NotFoundFailure> {

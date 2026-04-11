@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/app_bloc_consumer.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_state.dart';
@@ -13,8 +13,10 @@ class ExplorerSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ExplorerBloc, ExplorerState>(
-      builder: (context, state) {
+    return AppBlocConsumer<ExplorerBloc, ExplorerState>(
+      listenWhen: (previous, current) => false,
+      listener: (context, state, bloc) {},
+      builder: (context, state, _) {
         return AppSidebar(
           children: [
             DirectoryToggle(directoryType: state.directoryType),

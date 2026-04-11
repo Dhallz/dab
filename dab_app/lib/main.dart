@@ -19,7 +19,11 @@ void main() async {
   // Initialize all dependencies via the transversal ServiceLocator
   await sl.init();
 
-  final appCubit = AppCubit(sl.systemUseCases, sl.metadataUseCases)..init();
+  final appCubit = AppCubit(
+    sl.systemUseCases,
+    sl.metadataUseCases,
+    sl.userRepository,
+  )..init();
 
   // Initialize base class resolvers
   AbsBloc.appCubit = appCubit;

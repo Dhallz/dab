@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/views/home/home_view.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,10 +24,14 @@ class AppRouter {
         return AppRoute.auth.path;
       }
 
-      // Bootstrap Redirect: If system is not configured, redirect admin to setup.
+      // Bootstrap redirect: only admins are sent to Admin setup when the system is not configured.
       final appState = context.read<AppCubit>().state;
       final isAdminRoute = state.matchedLocation == AppRoute.homeAdmin.path;
-      if (isLoggedIn && !appState.isSystemConfigured && !isAdminRoute) {
+      final isAdminUser = authState.user?.role == UserRole.admin;
+      if (isLoggedIn &&
+          isAdminUser &&
+          !appState.isSystemConfigured &&
+          !isAdminRoute) {
         return AppRoute.homeAdmin.path;
       }
 

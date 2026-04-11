@@ -10,11 +10,13 @@ import 'home_right_section.dart';
 class HomeTopNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final int adminTabBadgeCount;
 
   const HomeTopNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.adminTabBadgeCount = 0,
   });
 
   @override
@@ -40,6 +42,7 @@ class HomeTopNav extends StatelessWidget {
                   HomeNavLinks(
                     currentIndex: currentIndex,
                     onTap: onTap,
+                    adminTabBadgeCount: adminTabBadgeCount,
                   ),
                 ],
               ),

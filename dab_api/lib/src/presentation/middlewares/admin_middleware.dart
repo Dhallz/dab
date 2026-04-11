@@ -1,10 +1,10 @@
+import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:relic/relic.dart';
 
 import '../../domain/entities/user/user_role.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
 import '../../infrastructure/config/config.dart';
 import '../../service_locator.dart';
-import 'auth_middleware.dart';
 
 /// [ARCH: PRESENTATION_MIDDLEWARE]
 /// ROLE: Authorization Guard for Administrative routes.
@@ -18,7 +18,6 @@ class AdminMiddleware extends MiddlewareObject {
   @override
   Handler call(Handler next) {
     return (request) async {
-      final role = request.userRoleOrNull;
       final userId = request.userIdOrNull;
 
       if (userId == null) {
@@ -27,19 +26,22 @@ class AdminMiddleware extends MiddlewareObject {
         );
       }
 
-      // 1. Check for Bootstrap Lock
+      final userResult = await _authRepo.findById(userId);
+      final user = userResult.getRight().toNullable();
+      if (user == null) {
+        return Response.unauthorized(
+          body: Body.fromString('Authentication required'),
+        );
+      }
+
+      // 1. Bootstrap lock: zero admins — only the configured initial admin email may access /admin.
       final adminCountResult = await _authRepo.countAdmins();
       final adminCount = adminCountResult.getOrElse((_) => 0);
 
       if (adminCount == 0) {
-        // If system is unconfigured, verify current user matches initial admin email
-        final userResult = await _authRepo.findById(userId);
-        final user = userResult.getRight().toNullable();
-
-        if (user != null &&
-            user.email.toLowerCase() ==
-                _config.initialAdminEmail.toLowerCase()) {
-          return await next(request); // Permit setup by initial admin
+        if (user.email.toLowerCase() ==
+            _config.initialAdminEmail.toLowerCase()) {
+          return await next(request);
         }
 
         return Response.forbidden(
@@ -49,8 +51,8 @@ class AdminMiddleware extends MiddlewareObject {
         );
       }
 
-      // 2. Standard Admin Check
-      if (role != UserRole.admin.name) {
+      // 2. Authorize from DB role so promotions/demotions apply without waiting for JWT expiry.
+      if (user.role != UserRole.admin) {
         return Response.forbidden(
           body: Body.fromString('Admin privileges required'),
         );

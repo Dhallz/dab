@@ -126,6 +126,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                   configs: configs,
                   identities: identities,
                   users: users,
+                  errorMessage: null,
                 ),
               ),
             );
@@ -160,7 +161,9 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
           }
           return u;
         }).toList();
-        emit(state.copyWith(users: newUsers));
+        emit(
+          state.copyWith(users: newUsers, errorMessage: null),
+        );
       },
     );
   }
@@ -176,7 +179,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         final newConfigs = state.configs
             .map((c) => c.id == event.config.id ? event.config : c)
             .toList();
-        emit(state.copyWith(configs: newConfigs));
+        emit(state.copyWith(configs: newConfigs, errorMessage: null));
       },
     );
   }
@@ -205,12 +208,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     result.fold(
       (failure) => emit(
         state.copyWith(
-          status: ViewStatus.success,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
       (newIdentity) {
-        // Refresh identities list or update local state
         final newIdentities = state.identities.map((i) {
           if (i.providerId == event.providerId &&
               i.externalId == event.externalId) {
@@ -220,7 +222,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         }).toList();
 
         emit(
-          state.copyWith(status: ViewStatus.success, identities: newIdentities),
+          state.copyWith(
+            status: ViewStatus.success,
+            identities: newIdentities,
+            errorMessage: null,
+          ),
         );
       },
     );
@@ -241,7 +247,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     result.fold(
       (failure) => emit(
         state.copyWith(
-          status: ViewStatus.success,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
@@ -254,7 +260,11 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         }).toList();
 
         emit(
-          state.copyWith(status: ViewStatus.success, identities: newIdentities),
+          state.copyWith(
+            status: ViewStatus.success,
+            identities: newIdentities,
+            errorMessage: null,
+          ),
         );
       },
     );

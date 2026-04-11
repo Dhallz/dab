@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
+import '../../../domain/entities/user/user_role.dart';
+import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../core/abs_cubit.dart';
 import '../../core/models/view_status.dart';
+import '../auth/auth_state.dart';
 import 'app_state.dart';
 
 /// [ARCH: PRESENTATION_BLOC]
@@ -12,9 +16,13 @@ import 'app_state.dart';
 class AppCubit extends AbsCubit<AppState> {
   final SystemUseCases _systemUseCases;
   final MetadataUseCases _metadataUseCases;
+  final IUserRepository _userRepository;
 
-  AppCubit(this._systemUseCases, this._metadataUseCases)
-    : super(const AppState());
+  AppCubit(
+    this._systemUseCases,
+    this._metadataUseCases,
+    this._userRepository,
+  ) : super(const AppState());
 
   Future<void> init() async {
     emit(state.copyWith(status: ViewStatus.loading));
@@ -35,6 +43,19 @@ class AppCubit extends AbsCubit<AppState> {
         isSystemConfigured: statusResult.getOrElse((failure) => true),
         status: ViewStatus.success,
       ),
+    );
+  }
+
+  /// Refreshes admin identity-resolution badge count (no-op on API failure).
+  Future<void> refreshIdentityResolutionBadge(AuthState authState) async {
+    if (authState.user?.role != UserRole.admin) {
+      emit(state.copyWith(unresolvedIdentityCount: 0));
+      return;
+    }
+    final result = await _userRepository.getIdentityResolutionSummary();
+    result.fold(
+      (_) => null,
+      (count) => emit(state.copyWith(unresolvedIdentityCount: count)),
     );
   }
 

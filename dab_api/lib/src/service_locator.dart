@@ -15,6 +15,7 @@ import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
 import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
+import 'package:dab_api/src/application/usecases/auth/count_unresolved_identities.dart';
 import 'package:dab_api/src/application/usecases/auth/get_all_identities.dart';
 import 'package:dab_api/src/application/usecases/auth/link_user_identity.dart';
 import 'package:dab_api/src/application/usecases/auth/login_user.dart';
@@ -215,7 +216,11 @@ Future<void> serviceLocator() async {
   // Auth
   sl.registerSingleton<LoginUser>(LoginUser(sl<AbsIAuthRepository>()));
   sl.registerSingleton<RegisterUser>(
-    RegisterUser(sl<AbsIAuthRepository>(), sl<PhorgeUserSource>()),
+    RegisterUser(
+      sl<AbsIAuthRepository>(),
+      sl<IUserRepository>(),
+      sl<PhorgeUserSource>(),
+    ),
   );
   sl.registerSingleton<AuthenticateUser>(
     AuthenticateUser(
@@ -239,7 +244,10 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<LogoutUser>(LogoutUser(sl<AbsIAuthRepository>()));
   sl.registerSingleton<GetAllIdentities>(
-    GetAllIdentities(sl<IUserRepository>()),
+    GetAllIdentities(sl<IUserRepository>(), sl<AbsIAuthRepository>()),
+  );
+  sl.registerSingleton<CountUnresolvedIdentities>(
+    CountUnresolvedIdentities(sl<GetAllIdentities>()),
   );
   sl.registerSingleton<FindAllUsers>(FindAllUsers(sl<AbsIAuthRepository>()));
   sl.registerSingleton<UpdateUserRole>(
@@ -287,7 +295,10 @@ Future<void> serviceLocator() async {
 
   // Metadata
   sl.registerSingleton<GetProviderMetadata>(
-    GetProviderMetadata(sl<AbsIProviderMetadataRepository>()),
+    GetProviderMetadata(
+      sl<AbsIProviderMetadataRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
   );
   sl.registerSingleton<GetProviderConfigs>(
     GetProviderConfigs(sl<AbsIProviderConfigRepository>()),
@@ -323,6 +334,7 @@ Future<void> serviceLocator() async {
       registerUser: sl<RegisterUser>(),
       linkUserIdentity: sl<LinkUserIdentity>(),
       getAllIdentities: sl<GetAllIdentities>(),
+      countUnresolvedIdentities: sl<CountUnresolvedIdentities>(),
       findAllUsers: sl<FindAllUsers>(),
       updateUserRole: sl<UpdateUserRole>(),
       resolveUserIdentity: sl<ResolveUserIdentity>(),

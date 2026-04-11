@@ -52,6 +52,13 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: false,
   );
+  static int _$unresolvedIdentityCount(AppState v) => v.unresolvedIdentityCount;
+  static const Field<AppState, int> _f$unresolvedIdentityCount = Field(
+    'unresolvedIdentityCount',
+    _$unresolvedIdentityCount,
+    opt: true,
+    def: 0,
+  );
 
   @override
   final MappableFields<AppState> fields = const {
@@ -59,6 +66,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #settings: _f$settings,
     #configs: _f$configs,
     #isSystemConfigured: _f$isSystemConfigured,
+    #unresolvedIdentityCount: _f$unresolvedIdentityCount,
   };
 
   static AppState _instantiate(DecodingData data) {
@@ -67,6 +75,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       settings: data.dec(_f$settings),
       configs: data.dec(_f$configs),
       isSystemConfigured: data.dec(_f$isSystemConfigured),
+      unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
     );
   }
 
@@ -139,6 +148,7 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     AppSettings? settings,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
+    int? unresolvedIdentityCount,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -171,12 +181,15 @@ class _AppStateCopyWithImpl<$R, $Out>
     AppSettings? settings,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
+    int? unresolvedIdentityCount,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
       if (settings != null) #settings: settings,
       if (configs != null) #configs: configs,
       if (isSystemConfigured != null) #isSystemConfigured: isSystemConfigured,
+      if (unresolvedIdentityCount != null)
+        #unresolvedIdentityCount: unresolvedIdentityCount,
     }),
   );
   @override
@@ -187,6 +200,10 @@ class _AppStateCopyWithImpl<$R, $Out>
     isSystemConfigured: data.get(
       #isSystemConfigured,
       or: $value.isSystemConfigured,
+    ),
+    unresolvedIdentityCount: data.get(
+      #unresolvedIdentityCount,
+      or: $value.unresolvedIdentityCount,
     ),
   );
 

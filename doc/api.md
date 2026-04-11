@@ -109,7 +109,7 @@ Thin entry points only. No business logic.
 | Controller | Path | Key Responsibilities |
 |---|---|---|
 | `ActivityController` | `GET /activities` | Paginated activity feed, user filtering |
-| `AdminController` | `/admin/*` | Bootstrap lock, user management, provider config CRUD, **Identity Resolution (`POST /identities/resolve`)** |
+| `AdminController` | `/admin/*` | Bootstrap lock, user management, provider config CRUD, identity list (`GET /identities`), **unresolved count (`GET /identities/summary`)**, link/resolve |
 | `AuthController` | `/auth/*` | Login, logout, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
@@ -121,6 +121,8 @@ Thin entry points only. No business logic.
 - **Vegas Middleware:** Compares client `X-Sync-Token` against Redis version. Returns `304 Not Modified` on fresh token.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
 - **Domain Lockdown:** Rejects registrations outside `DAB_ALLOWED_DOMAIN`.
+- **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
+- **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
 
 ---
 

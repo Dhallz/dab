@@ -91,6 +91,18 @@ class UserRepository extends Repository implements IUserRepository {
   }
 
   @override
+  Future<Either<AppFailure, int>> getIdentityResolutionSummary() async {
+    return guardedCall(() async {
+      final response = await _client.get('/admin/identities/summary');
+      final data = _getEnvelopeData(response);
+      if (data is Map<String, dynamic>) {
+        return (data['unresolvedCount'] as num?)?.toInt() ?? 0;
+      }
+      return 0;
+    });
+  }
+
+  @override
   Future<Either<AppFailure, UserIdentity>> linkIdentity({
     required String userId,
     required String providerId,

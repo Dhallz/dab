@@ -4,8 +4,11 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failure.dart';
 import '../../../domain/entities/user/user.dart';
+import '../../../domain/entities/user/user_identity.dart';
+import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 
@@ -16,10 +19,12 @@ import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 class RegisterUser {
   final Config _config;
   final AbsIAuthRepository _repo;
+  final IUserRepository _userRepository;
   final PhorgeUserSource _phorgeUserSource;
   final _uuid = const Uuid();
 
-  RegisterUser(this._repo, this._phorgeUserSource) : _config = Config();
+  RegisterUser(this._repo, this._userRepository, this._phorgeUserSource)
+    : _config = Config();
 
   /// Hashes a plain-text password for secure storage.
   String _hashPassword(String password) {
@@ -79,7 +84,7 @@ class RegisterUser {
 
     if (adminCount == 0 && !isInitialAdmin) {
       return Left(
-        AuthFailure(
+        BootstrapLockFailure(
           'Bootstrap Lock: System not configured. Only the initial admin (${_config.initialAdminEmail}) can register.',
         ),
       );
@@ -106,6 +111,22 @@ class RegisterUser {
       final f = createResult.getLeft().toNullable()!;
       return Left(AuthFailure('Error creating user: ${f.message}'));
     }
+
+    final phid = user.phorgePhid;
+    if (phid != null && phid.isNotEmpty) {
+      final linkRes = await _userRepository.linkIdentity(
+        UserIdentity(
+          id: '${user.id}_phorge',
+          userId: user.id,
+          providerId: 'phorge',
+          externalId: phid,
+          status: UserIdentityStatus.linked,
+          createdAt: DateTime.now(),
+        ),
+      );
+      linkRes.fold((_) => null, (_) => null);
+    }
+
     return Right(user);
   }
 }

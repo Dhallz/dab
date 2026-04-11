@@ -1,3 +1,4 @@
+import '../usecases/auth/count_unresolved_identities.dart';
 import '../usecases/auth/get_all_identities.dart';
 import '../usecases/auth/authenticate_user.dart';
 import '../usecases/auth/find_all_users.dart';
@@ -19,6 +20,7 @@ class AuthUseCases {
   final RegisterUser registerUser;
   final LinkUserIdentity linkUserIdentity;
   final GetAllIdentities getAllIdentities;
+  final CountUnresolvedIdentities countUnresolvedIdentities;
   final FindAllUsers findAllUsers;
   final UpdateUserRole updateUserRole;
   final ResolveUserIdentity resolveUserIdentity;
@@ -32,6 +34,7 @@ class AuthUseCases {
     required this.registerUser,
     required this.linkUserIdentity,
     required this.getAllIdentities,
+    required this.countUnresolvedIdentities,
     required this.findAllUsers,
     required this.updateUserRole,
     required this.resolveUserIdentity,

@@ -36,6 +36,13 @@ class AppIcons {
 
   // Providers
   static const IconData github = Icons.hub_rounded;
-  static const IconData phorge = Icons.bolt_rounded;
+  static const IconData gitlab = Icons.account_tree_outlined;
+  static const IconData phorge = Icons.hub_outlined;
+  static const IconData linear = Icons.linear_scale;
+  static const IconData jira = Icons.task_alt;
+  static const IconData teams = Icons.groups_outlined;
+  static const IconData slack = Icons.chat_bubble_outline;
+  static const IconData discord = Icons.forum_outlined;
   static const IconData unknownProvider = Icons.help_outline_rounded;
+  static const IconData testConnection = Icons.bolt_rounded;
 }

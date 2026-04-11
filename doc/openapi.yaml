@@ -584,6 +584,27 @@ paths:
       responses:
         '200':
           description: Connectivity test result
+  /admin/identities/summary:
+    get:
+      summary: Unresolved identity count for admin UI badge.
+      description: |
+        Returns `data.unresolvedCount` — identities in `pending` or `failed` state.
+        Requires administrator privileges.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      unresolvedCount:
+                        type: integer
   /admin/identities:
     get:
       summary: List all linked identity records.

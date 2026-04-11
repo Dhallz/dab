@@ -66,7 +66,8 @@ Future<void> main() async {
     ..get('/admin/configs', MetadataController().getConfigs)
     ..post('/admin/configs', MetadataController().saveConfig)
     ..post('/admin/configs/test', MetadataController().testConfig)
-    // Identity Resolution
+    // Identity Resolution (specific paths before list route)
+    ..get('/admin/identities/summary', AdminController().getIdentitiesSummary)
     ..get('/admin/identities', AdminController().getIdentities)
     ..post('/admin/identities/link', AdminController().linkIdentity)
     ..post('/admin/identities/resolve', AdminController().resolveIdentity)

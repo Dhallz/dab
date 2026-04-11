@@ -14,6 +14,40 @@ import '../../service_locator.dart';
 class AdminController {
   final AuthUseCases _auth = sl<AuthUseCases>();
 
+  Future<Response> getIdentitiesSummary(Request request) async {
+    try {
+      final result = await _auth.countUnresolvedIdentities.execute();
+
+      return result.fold(
+        (failure) => Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        ),
+        (count) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({
+              'data': {'unresolvedCount': count},
+              'meta': {
+                'dataType': 'identity_resolution_summary',
+                'timestamp': DateTime.now().toIso8601String(),
+              },
+            }),
+            mimeType: MimeType.json,
+          ),
+        ),
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': e.toString()}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
   Future<Response> getIdentities(Request request) async {
     try {
       final result = await _auth.getAllIdentities.execute();

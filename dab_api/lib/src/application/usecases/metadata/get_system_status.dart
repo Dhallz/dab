@@ -21,7 +21,9 @@ class GetSystemStatus {
         (f) => Left(f),
         (adminCount) => configCountResult.fold(
           (f) => Left(f),
-          (configCount) => Right(adminCount > 0),
+          (activeConfigCount) => Right(
+            adminCount > 0 && activeConfigCount > 0,
+          ),
         ),
       );
     } catch (e) {

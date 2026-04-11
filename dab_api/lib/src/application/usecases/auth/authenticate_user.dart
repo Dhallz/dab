@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../domain/core/failure.dart';
 import '../../../domain/entities/session.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../infrastructure/config/config.dart';
 import '../../../infrastructure/security/jwt_provider.dart';
 import 'login_user.dart';
 
@@ -23,6 +24,24 @@ class AuthenticateUser {
     }
 
     final user = loginResult.getRight().toNullable()!;
+
+    // Bootstrap lock: with zero admins, only the configured initial admin may obtain a session.
+    final adminCountResult = await _repo.countAdmins();
+    final adminCount = adminCountResult.getOrElse((_) => 0);
+    if (adminCount == 0) {
+      final config = Config();
+      final isInitialAdmin =
+          user.email.toLowerCase() == config.initialAdminEmail.toLowerCase();
+      if (!isInitialAdmin) {
+        return Left(
+          BootstrapLockFailure(
+            'Bootstrap Lock: System not configured. Only the initial admin '
+            '(${config.initialAdminEmail}) can log in.',
+          ),
+        );
+      }
+    }
+
     final accessToken = _jwtProvider.generateToken({
       'sub': user.id,
       'email': user.email,

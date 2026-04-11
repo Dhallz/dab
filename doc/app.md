@@ -118,7 +118,7 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Statistics** | Behavior analytics | Area/Donut charts built from ObjectBox data |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
-| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), and Security. |
+| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
 ---
 

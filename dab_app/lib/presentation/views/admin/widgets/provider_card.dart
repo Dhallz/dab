@@ -1,11 +1,15 @@
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
+import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
+import 'package:dab_app/presentation/core/styles/app_layout.dart';
+import 'package:dab_app/presentation/core/styles/app_spacing.dart';
+import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_event.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_config_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'live_pulsing_icon.dart';
 
@@ -59,64 +63,96 @@ class _ProviderCardState extends State<ProviderCard> {
   @override
   Widget build(BuildContext context) {
     final icon = _getProviderIcon(widget.config.id);
-    final isExpanded = widget.config.isActive;
 
-    return BlocBuilder<AdminBloc, AdminState>(
-      buildWhen: (prev, next) =>
-          prev.connectionStatuses[widget.config.id] !=
-          next.connectionStatuses[widget.config.id],
-      builder: (context, state) {
+    return AppBlocConsumer<AdminBloc, AdminState>(
+      listenWhen: (previous, current) => false,
+      listener: (context, state, bloc) {},
+      buildWhen: (prev, next) {
+        final id = widget.config.id;
+        ProviderConfig? cfg(AdminState s) {
+          try {
+            return s.configs.firstWhere((c) => c.id == id);
+          } catch (_) {
+            return null;
+          }
+        }
+
+        final a = cfg(prev);
+        final b = cfg(next);
+        if (a?.isActive != b?.isActive) return true;
+        if (a?.baseUrl != b?.baseUrl) return true;
+        if (a?.settings != b?.settings) return true;
+        return prev.connectionStatuses[id] != next.connectionStatuses[id];
+      },
+      builder: (context, state, _) {
         final status = state.connectionStatuses[widget.config.id];
+        ProviderConfig config;
+        try {
+          config = state.configs.firstWhere((c) => c.id == widget.config.id);
+        } catch (_) {
+          config = widget.config;
+        }
+        final isExpanded = config.isActive;
 
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.08)),
+            color: AppColors.surfaceContainerLow,
+            borderRadius: AppLayout.borderLarge,
+            border: Border.all(
+              color: AppColors.outline.withValues(alpha: 0.45),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadow.withValues(alpha: 0.25),
+                blurRadius: AppLayout.glassBlur,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.l),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.s),
                       decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppColors.surfaceContainer.withValues(
+                          alpha: 0.9,
+                        ),
+                        borderRadius: AppLayout.borderMedium,
+                        border: Border.all(
+                          color: AppColors.outline.withValues(alpha: 0.35),
+                        ),
                       ),
                       child: Icon(
                         icon,
                         color: AppColors.onSurfaceVariant,
-                        size: 24,
+                        size: AppLayout.iconMedium,
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    SizedBox(width: AppSpacing.m),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.config.name,
-                            style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
+                            config.name,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.onSurfaceHighlight,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.25,
                             ),
                           ),
+                          const SizedBox(height: AppSpacing.xxs),
                           Text(
-                            widget.config.id.toUpperCase(),
-                            style: TextStyle(
-                              color: AppColors.onSurfaceVariantLow.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
+                            config.id.toUpperCase(),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.onSurfaceVariantLow,
+                              letterSpacing: 1.2,
                             ),
                           ),
                         ],
@@ -124,13 +160,13 @@ class _ProviderCardState extends State<ProviderCard> {
                     ),
                     if (isExpanded) ...[
                       LivePulsingIcon(status: status),
-                      const SizedBox(width: 8),
+                      SizedBox(width: AppSpacing.xs),
                       TextButton.icon(
                         onPressed: status?.status.isLoading == true
                             ? null
                             : () {
                                 final Map<String, dynamic> currentSettings =
-                                    Map.from(widget.config.settings);
+                                    Map.from(config.settings);
                                 _controllers.forEach((key, controller) {
                                   currentSettings[key] = controller.text;
                                 });
@@ -138,9 +174,9 @@ class _ProviderCardState extends State<ProviderCard> {
                                 final newBaseUrl =
                                     _controllers['baseUrl']?.text ??
                                     _controllers['instanceUrl']?.text ??
-                                    widget.config.baseUrl;
+                                    config.baseUrl;
 
-                                final configToTest = widget.config.copyWith(
+                                final configToTest = config.copyWith(
                                   settings: currentSettings,
                                   baseUrl: newBaseUrl.trim(),
                                 );
@@ -154,38 +190,44 @@ class _ProviderCardState extends State<ProviderCard> {
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.accentIndigo,
+                                  color: AppColors.primary,
                                 ),
                               )
-                            : const Icon(Icons.bolt, size: 16),
-                        label: const Text(
+                            : Icon(
+                                AppIcons.testConnection,
+                                size: AppLayout.iconSmall,
+                              ),
+                        label: Text(
                           'Try',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.primary,
+                          ),
                         ),
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.accentIndigo,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          foregroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.m,
+                          ),
                         ),
                       ),
                     ],
                     Transform.scale(
-                      scale: 0.8,
+                      scale: 0.85,
                       child: Switch(
-                        value: widget.config.isActive,
+                        value: config.isActive,
                         onChanged: (val) => widget.bloc.add(
                           AdminProviderToggled(
-                            id: widget.config.id,
+                            id: config.id,
                             isActive: val,
                           ),
                         ),
-                        activeThumbColor: AppColors.accentIndigo,
-                        activeTrackColor: AppColors.accentIndigo.withValues(
-                          alpha: 0.3,
+                        activeThumbColor: AppColors.primary,
+                        activeTrackColor: AppColors.primary.withValues(
+                          alpha: 0.35,
                         ),
                         inactiveThumbColor: AppColors.onSurfaceVariantLow,
-                        inactiveTrackColor: AppColors.white.withValues(
-                          alpha: 0.1,
-                        ),
+                        inactiveTrackColor: AppColors.surfaceContainerHigh
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -199,66 +241,70 @@ class _ProviderCardState extends State<ProviderCard> {
                 child: !isExpanded
                     ? const SizedBox(width: double.infinity)
                     : Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.l,
+                          0,
+                          AppSpacing.l,
+                          AppSpacing.l,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Divider(
-                              color: AppColors.white,
+                            Divider(
                               height: 1,
-                              thickness: 0.05,
+                              thickness: 1,
+                              color: AppColors.outline.withValues(alpha: 0.4),
                             ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: AppSpacing.l),
                             ..._fields.map((field) {
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.m,
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       field.label.toUpperCase(),
-                                      style: const TextStyle(
+                                      style: AppTextStyles.labelSmall.copyWith(
                                         color: AppColors.onSurfaceVariantLow,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1,
+                                        letterSpacing: 1.1,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: AppSpacing.xs),
                                     TextField(
                                       controller: _controllers[field.key],
                                       obscureText: field.isSecret,
-                                      style: const TextStyle(
-                                        color: AppColors.white,
-                                        fontSize: 14,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.onSurfaceHighlight,
                                       ),
                                       decoration: InputDecoration(
                                         filled: true,
-                                        fillColor: AppColors.white.withValues(
-                                          alpha: 0.05,
-                                        ),
+                                        fillColor: AppColors.surfaceContainer
+                                            .withValues(alpha: 0.65),
                                         hintText: 'Enter ${field.label}...',
-                                        hintStyle: TextStyle(
-                                          color: AppColors.onSurfaceVariantLow
-                                              .withValues(alpha: 0.3),
-                                        ),
+                                        hintStyle:
+                                            AppTextStyles.bodyMedium.copyWith(
+                                              color: AppColors
+                                                  .onSurfaceVariantLow
+                                                  .withValues(alpha: 0.35),
+                                            ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
-                                              horizontal: 20,
-                                              vertical: 16,
+                                              horizontal: AppSpacing.m,
+                                              vertical: AppSpacing.m,
                                             ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
+                                          borderRadius:
+                                              AppLayout.borderMedium,
                                           borderSide: BorderSide.none,
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
+                                          borderRadius:
+                                              AppLayout.borderMedium,
                                           borderSide: const BorderSide(
-                                            color: AppColors.accentIndigo,
+                                            color: AppColors.primary,
                                             width: 1.5,
                                           ),
                                         ),
@@ -268,24 +314,24 @@ class _ProviderCardState extends State<ProviderCard> {
                                 ),
                               );
                             }),
-                            const SizedBox(height: 8),
+                            SizedBox(height: AppSpacing.xs),
                             SizedBox(
                               width: double.infinity,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.accentIndigo,
-                                  foregroundColor: Colors.white,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: AppColors.onPrimary,
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
+                                    vertical: AppSpacing.m,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: AppLayout.borderMedium,
                                   ),
                                   elevation: 0,
                                 ),
                                 onPressed: () {
                                   final Map<String, dynamic> newSettings =
-                                      Map.from(widget.config.settings);
+                                      Map.from(config.settings);
                                   _controllers.forEach((key, controller) {
                                     newSettings[key] = controller.text;
                                   });
@@ -293,9 +339,9 @@ class _ProviderCardState extends State<ProviderCard> {
                                   final newBaseUrl =
                                       _controllers['baseUrl']?.text ??
                                       _controllers['instanceUrl']?.text ??
-                                      widget.config.baseUrl;
+                                      config.baseUrl;
 
-                                  final updatedConfig = widget.config.copyWith(
+                                  final updatedConfig = config.copyWith(
                                     settings: newSettings,
                                     baseUrl: newBaseUrl.trim(),
                                   );
@@ -303,9 +349,12 @@ class _ProviderCardState extends State<ProviderCard> {
                                     AdminConfigUpdated(updatedConfig),
                                   );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Save Provider Credentials',
-                                  style: TextStyle(fontWeight: FontWeight.w900),
+                                  style: AppTextStyles.labelLarge.copyWith(
+                                    color: AppColors.onPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
@@ -322,15 +371,15 @@ class _ProviderCardState extends State<ProviderCard> {
 
   IconData _getProviderIcon(String id) {
     final lowerId = id.toLowerCase();
-    if (lowerId.contains('phorge')) return Icons.hub_outlined;
-    if (lowerId.contains('linear')) return Icons.linear_scale;
-    if (lowerId.contains('jira')) return Icons.task_alt;
-    if (lowerId.contains('teams')) return Icons.groups_outlined;
-    if (lowerId.contains('slack')) return Icons.chat_bubble_outline;
-    if (lowerId.contains('discord')) return Icons.forum_outlined;
-    if (lowerId.contains('github')) return Icons.code;
-    if (lowerId.contains('gitlab')) return Icons.account_tree_outlined;
-    return Icons.hub_outlined;
+    if (lowerId.contains('phorge')) return AppIcons.phorge;
+    if (lowerId.contains('linear')) return AppIcons.linear;
+    if (lowerId.contains('jira')) return AppIcons.jira;
+    if (lowerId.contains('teams')) return AppIcons.teams;
+    if (lowerId.contains('slack')) return AppIcons.slack;
+    if (lowerId.contains('discord')) return AppIcons.discord;
+    if (lowerId.contains('github')) return AppIcons.github;
+    if (lowerId.contains('gitlab')) return AppIcons.gitlab;
+    return AppIcons.unknownProvider;
   }
 
   List<AdminConfigField> _getFieldsForProvider(String id) {

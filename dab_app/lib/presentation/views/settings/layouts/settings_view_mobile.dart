@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/app_bloc_builder.dart';
+import '../../../core/app_bloc_consumer.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
@@ -18,7 +18,9 @@ class SettingsViewMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBlocBuilder<SettingsBloc, SettingsState>(
+    return AppBlocConsumer<SettingsBloc, SettingsState>(
+      listenWhen: (previous, current) => false,
+      listener: (context, state, bloc) {},
       builder: (context, state, bloc) {
         if (state.status == ViewStatus.loading) {
           return const Center(child: CircularProgressIndicator());

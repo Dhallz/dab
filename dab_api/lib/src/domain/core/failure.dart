@@ -25,6 +25,12 @@ class AuthFailure extends Failure with AuthFailureMappable {
   const AuthFailure(super.message);
 }
 
+/// Bootstrap lock: login/register forbidden for this identity until an admin exists.
+@MappableClass()
+class BootstrapLockFailure extends AuthFailure with BootstrapLockFailureMappable {
+  const BootstrapLockFailure(super.message);
+}
+
 /// Failure when a requested resource is not found.
 @MappableClass()
 class NotFoundFailure extends Failure with NotFoundFailureMappable {
