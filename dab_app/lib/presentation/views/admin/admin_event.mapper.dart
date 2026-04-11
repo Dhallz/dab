@@ -743,12 +743,20 @@ class AdminIdentityLinkedMapper extends ClassMapperBase<AdminIdentityLinked> {
     'externalId',
     _$externalId,
   );
+  static String? _$externalUsername(AdminIdentityLinked v) =>
+      v.externalUsername;
+  static const Field<AdminIdentityLinked, String> _f$externalUsername = Field(
+    'externalUsername',
+    _$externalUsername,
+    opt: true,
+  );
 
   @override
   final MappableFields<AdminIdentityLinked> fields = const {
     #userId: _f$userId,
     #providerId: _f$providerId,
     #externalId: _f$externalId,
+    #externalUsername: _f$externalUsername,
   };
 
   static AdminIdentityLinked _instantiate(DecodingData data) {
@@ -756,6 +764,7 @@ class AdminIdentityLinkedMapper extends ClassMapperBase<AdminIdentityLinked> {
       userId: data.dec(_f$userId),
       providerId: data.dec(_f$providerId),
       externalId: data.dec(_f$externalId),
+      externalUsername: data.dec(_f$externalUsername),
     );
   }
 
@@ -830,7 +839,12 @@ abstract class AdminIdentityLinkedCopyWith<
 >
     implements AdminEventCopyWith<$R, $In, $Out> {
   @override
-  $R call({String? userId, String? providerId, String? externalId});
+  $R call({
+    String? userId,
+    String? providerId,
+    String? externalId,
+    String? externalUsername,
+  });
   AdminIdentityLinkedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -845,11 +859,17 @@ class _AdminIdentityLinkedCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AdminIdentityLinked> $mapper =
       AdminIdentityLinkedMapper.ensureInitialized();
   @override
-  $R call({String? userId, String? providerId, String? externalId}) => $apply(
+  $R call({
+    String? userId,
+    String? providerId,
+    String? externalId,
+    Object? externalUsername = $none,
+  }) => $apply(
     FieldCopyWithData({
       if (userId != null) #userId: userId,
       if (providerId != null) #providerId: providerId,
       if (externalId != null) #externalId: externalId,
+      if (externalUsername != $none) #externalUsername: externalUsername,
     }),
   );
   @override
@@ -857,6 +877,7 @@ class _AdminIdentityLinkedCopyWithImpl<$R, $Out>
     userId: data.get(#userId, or: $value.userId),
     providerId: data.get(#providerId, or: $value.providerId),
     externalId: data.get(#externalId, or: $value.externalId),
+    externalUsername: data.get(#externalUsername, or: $value.externalUsername),
   );
 
   @override

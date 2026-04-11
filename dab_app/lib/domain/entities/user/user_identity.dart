@@ -9,6 +9,7 @@ class UserIdentity with UserIdentityMappable {
   final String userId;
   final String providerId;
   final String externalId;
+  final String? externalUsername;
   final UserIdentityStatus status;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -18,6 +19,7 @@ class UserIdentity with UserIdentityMappable {
     required this.userId,
     required this.providerId,
     required this.externalId,
+    this.externalUsername,
     this.status = UserIdentityStatus.pending,
     required this.createdAt,
     this.updatedAt,

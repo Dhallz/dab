@@ -25,6 +25,7 @@ abstract class IUserRepository {
     required String userId,
     required String providerId,
     required String externalId,
+    String? externalUsername,
   });
 
   /// Admin: Approve or reject a candidate identity (DAB-40).

@@ -10,11 +10,15 @@ import 'activity_status_summary_chip.dart';
 class ActivityFooter extends StatelessWidget {
   final Activity activity;
   final List<Activity>? activities;
+  final String displayAuthorName;
+  final String providerAuthorName;
 
   const ActivityFooter({
     super.key,
     required this.activity,
     this.activities,
+    required this.displayAuthorName,
+    required this.providerAuthorName,
   });
 
   @override
@@ -26,12 +30,12 @@ class ActivityFooter extends StatelessWidget {
       children: [
         // Author Avatar
         ActivityAvatar(
-          authorName: activity.authorName,
+          authorName: displayAuthorName,
           avatarUrl: activity.authorAvatarUrl,
         ),
         const SizedBox(width: 8),
         Text(
-          activity.authorName,
+          _formatAuthorLabel(),
           style: const TextStyle(
             fontSize: 12,
             color: AppColors.onSurfaceVariant,
@@ -56,6 +60,20 @@ class ActivityFooter extends StatelessWidget {
           _buildSingleActivityChips(context),
       ],
     );
+  }
+
+  String _formatAuthorLabel() {
+    if (providerAuthorName.isEmpty) {
+      return displayAuthorName;
+    }
+
+    final sameName =
+        providerAuthorName.toLowerCase() == displayAuthorName.toLowerCase();
+    if (sameName) {
+      return displayAuthorName;
+    }
+
+    return '$displayAuthorName (${providerAuthorName.trim()})';
   }
 
   Widget _buildSingleActivityChips(BuildContext context) {

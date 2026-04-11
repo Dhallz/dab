@@ -176,12 +176,17 @@ Client request  ──►  Vegas Middleware
 ```
 activities               ← shared fields (id, userId, title, content, createdAt)
 activity_phorge          ← Phorge-specific metadata (phid, tags, revisionId)
-activity_github          ← GitHub-specific metadata (sha, repo, prNumber) [planned]
+activity_github_commit   ← GitHub commit metadata (repo, branch)
 ```
 
 - Child tables reference `activities.id` with `CASCADE DELETE`.
 - Hydration uses `leftOuterJoin` in SQL repositories.
 - Never use JSON blob columns as a substitute for proper TBT columns.
+
+Provider participation is identity-driven: connectors execute only for DAB users
+with a linked `user_identities` row for that provider id (`status: linked`).
+This keeps onboarding provider-agnostic (Jira-only / GitHub-only / Phorge-only
+tenants).
 
 ### Envelope Response Pattern
 

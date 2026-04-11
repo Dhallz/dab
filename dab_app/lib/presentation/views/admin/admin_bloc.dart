@@ -203,6 +203,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
       userId: event.userId,
       providerId: event.providerId,
       externalId: event.externalId,
+      externalUsername: event.externalUsername,
     );
 
     result.fold(
@@ -213,13 +214,18 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         ),
       ),
       (newIdentity) {
+        var replaced = false;
         final newIdentities = state.identities.map((i) {
           if (i.providerId == event.providerId &&
               i.externalId == event.externalId) {
+            replaced = true;
             return newIdentity;
           }
           return i;
         }).toList();
+        if (!replaced) {
+          newIdentities.add(newIdentity);
+        }
 
         emit(
           state.copyWith(

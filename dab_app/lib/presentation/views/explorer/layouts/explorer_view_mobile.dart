@@ -16,6 +16,9 @@ class ExplorerViewMobile extends StatelessWidget {
     return AppBlocConsumer<ExplorerBloc, ExplorerState>(
       listener: (context, state, bloc) {},
       builder: (context, state, bloc) {
+        final userNameById = {
+          for (final user in state.users) user.id: user.name,
+        };
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -58,10 +61,13 @@ class ExplorerViewMobile extends StatelessWidget {
                           child: switch (item) {
                             SingleActivityItem(:final activity) => ActivityCard(
                               activity: activity,
+                              resolvedAuthorName: userNameById[activity.userId],
                             ),
                             TaskActivityItem(:final activities) => ActivityCard(
                               activity: item.latestActivity,
                               activities: activities,
+                              resolvedAuthorName:
+                                  userNameById[item.latestActivity.userId],
                             ),
                           },
                         );

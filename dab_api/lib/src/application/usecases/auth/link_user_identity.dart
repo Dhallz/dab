@@ -17,12 +17,16 @@ class LinkUserIdentity {
     required String userId,
     required String providerId,
     required String externalId,
+    String? externalUsername,
   }) async {
     final identity = UserIdentity(
       id: '${userId}_$providerId',
       userId: userId,
       providerId: providerId,
       externalId: externalId,
+      externalUsername: externalUsername?.trim().isEmpty == true
+          ? null
+          : externalUsername?.trim(),
       status: UserIdentityStatus.linked,
       createdAt: DateTime.now(),
     );

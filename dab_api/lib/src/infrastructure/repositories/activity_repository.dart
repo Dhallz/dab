@@ -67,6 +67,16 @@ class ActivityRepository implements AbsIActivityRepository {
                   revisionId: Value(provider.revisionId),
                 ),
               );
+        } else if (provider is GitHubCommitProvider) {
+          await _db
+              .into(_db.activityGithubCommitTable)
+              .insert(
+                ActivityGithubCommitTableCompanion.insert(
+                  activityId: activity.id,
+                  repo: Value(provider.repo),
+                  branch: Value(provider.branch),
+                ),
+              );
         }
         // Add more providers here (GitHub, Slack, etc.)
 
@@ -87,6 +97,10 @@ class ActivityRepository implements AbsIActivityRepository {
         leftOuterJoin(
           _db.activityPhorgeTable,
           _db.activityPhorgeTable.activityId.equalsExp(_db.activitiesTable.id),
+        ),
+        leftOuterJoin(
+          _db.activityGithubCommitTable,
+          _db.activityGithubCommitTable.activityId.equalsExp(_db.activitiesTable.id),
         ),
         // INNER JOIN with provider_configs to enforce "Deep Deactivation"
         // We filter out any activity whose provider is currently disabled.
@@ -124,6 +138,10 @@ class ActivityRepository implements AbsIActivityRepository {
           _db.activityPhorgeTable,
           _db.activityPhorgeTable.activityId.equalsExp(_db.activitiesTable.id),
         ),
+        leftOuterJoin(
+          _db.activityGithubCommitTable,
+          _db.activityGithubCommitTable.activityId.equalsExp(_db.activitiesTable.id),
+        ),
         // ENFORCE Deep Deactivation filtering for user-specific feeds too
         innerJoin(
           _db.providerConfigsTable,
@@ -156,6 +174,7 @@ class ActivityRepository implements AbsIActivityRepository {
   Activity _mapRowToActivity(TypedResult row) {
     final activityData = row.readTable(_db.activitiesTable);
     final phorgeData = row.readTableOrNull(_db.activityPhorgeTable);
+    final githubData = row.readTableOrNull(_db.activityGithubCommitTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -171,6 +190,11 @@ class ActivityRepository implements AbsIActivityRepository {
       } else {
         provider = const GenericProvider(name: 'Phorge', category: 'unknown');
       }
+    } else if (pName == 'github' && githubData != null) {
+      provider = GitHubCommitProvider(
+        repo: githubData.repo,
+        branch: githubData.branch,
+      );
     } else if (pName == 'github') {
       provider = const GitHubCommitProvider();
     } else {

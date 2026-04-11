@@ -1594,6 +1594,287 @@ class ActivityPhorgeTableCompanion
   }
 }
 
+class $ActivityGithubCommitTableTable extends ActivityGithubCommitTable
+    with
+        TableInfo<
+          $ActivityGithubCommitTableTable,
+          ActivityGithubCommitTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityGithubCommitTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _repoMeta = const VerificationMeta('repo');
+  @override
+  late final GeneratedColumn<String> repo = GeneratedColumn<String>(
+    'repo',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _branchMeta = const VerificationMeta('branch');
+  @override
+  late final GeneratedColumn<String> branch = GeneratedColumn<String>(
+    'branch',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [activityId, repo, branch];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_github_commit';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityGithubCommitTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('repo')) {
+      context.handle(
+        _repoMeta,
+        repo.isAcceptableOrUnknown(data['repo']!, _repoMeta),
+      );
+    }
+    if (data.containsKey('branch')) {
+      context.handle(
+        _branchMeta,
+        branch.isAcceptableOrUnknown(data['branch']!, _branchMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityGithubCommitTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityGithubCommitTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      repo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repo'],
+      ),
+      branch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityGithubCommitTableTable createAlias(String alias) {
+    return $ActivityGithubCommitTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityGithubCommitTableData extends DataClass
+    implements Insertable<ActivityGithubCommitTableData> {
+  final String activityId;
+  final String? repo;
+  final String? branch;
+  const ActivityGithubCommitTableData({
+    required this.activityId,
+    this.repo,
+    this.branch,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    if (!nullToAbsent || repo != null) {
+      map['repo'] = Variable<String>(repo);
+    }
+    if (!nullToAbsent || branch != null) {
+      map['branch'] = Variable<String>(branch);
+    }
+    return map;
+  }
+
+  ActivityGithubCommitTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityGithubCommitTableCompanion(
+      activityId: Value(activityId),
+      repo: repo == null && nullToAbsent ? const Value.absent() : Value(repo),
+      branch: branch == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branch),
+    );
+  }
+
+  factory ActivityGithubCommitTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityGithubCommitTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      repo: serializer.fromJson<String?>(json['repo']),
+      branch: serializer.fromJson<String?>(json['branch']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'repo': serializer.toJson<String?>(repo),
+      'branch': serializer.toJson<String?>(branch),
+    };
+  }
+
+  ActivityGithubCommitTableData copyWith({
+    String? activityId,
+    Value<String?> repo = const Value.absent(),
+    Value<String?> branch = const Value.absent(),
+  }) => ActivityGithubCommitTableData(
+    activityId: activityId ?? this.activityId,
+    repo: repo.present ? repo.value : this.repo,
+    branch: branch.present ? branch.value : this.branch,
+  );
+  ActivityGithubCommitTableData copyWithCompanion(
+    ActivityGithubCommitTableCompanion data,
+  ) {
+    return ActivityGithubCommitTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      repo: data.repo.present ? data.repo.value : this.repo,
+      branch: data.branch.present ? data.branch.value : this.branch,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityGithubCommitTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('repo: $repo, ')
+          ..write('branch: $branch')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(activityId, repo, branch);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityGithubCommitTableData &&
+          other.activityId == this.activityId &&
+          other.repo == this.repo &&
+          other.branch == this.branch);
+}
+
+class ActivityGithubCommitTableCompanion
+    extends UpdateCompanion<ActivityGithubCommitTableData> {
+  final Value<String> activityId;
+  final Value<String?> repo;
+  final Value<String?> branch;
+  final Value<int> rowid;
+  const ActivityGithubCommitTableCompanion({
+    this.activityId = const Value.absent(),
+    this.repo = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityGithubCommitTableCompanion.insert({
+    required String activityId,
+    this.repo = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId);
+  static Insertable<ActivityGithubCommitTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? repo,
+    Expression<String>? branch,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (repo != null) 'repo': repo,
+      if (branch != null) 'branch': branch,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityGithubCommitTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String?>? repo,
+    Value<String?>? branch,
+    Value<int>? rowid,
+  }) {
+    return ActivityGithubCommitTableCompanion(
+      activityId: activityId ?? this.activityId,
+      repo: repo ?? this.repo,
+      branch: branch ?? this.branch,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (repo.present) {
+      map['repo'] = Variable<String>(repo.value);
+    }
+    if (branch.present) {
+      map['branch'] = Variable<String>(branch.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityGithubCommitTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('repo: $repo, ')
+          ..write('branch: $branch, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SessionsTableTable extends SessionsTable
     with TableInfo<$SessionsTableTable, SessionsTableData> {
   @override
@@ -3067,6 +3348,17 @@ class $UserIdentitiesTableTable extends UserIdentitiesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _externalUsernameMeta = const VerificationMeta(
+    'externalUsername',
+  );
+  @override
+  late final GeneratedColumn<String> externalUsername = GeneratedColumn<String>(
+    'external_username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -3108,6 +3400,7 @@ class $UserIdentitiesTableTable extends UserIdentitiesTable
     userId,
     providerId,
     externalId,
+    externalUsername,
     status,
     createdAt,
     updatedAt,
@@ -3152,6 +3445,15 @@ class $UserIdentitiesTableTable extends UserIdentitiesTable
       );
     } else if (isInserting) {
       context.missing(_externalIdMeta);
+    }
+    if (data.containsKey('external_username')) {
+      context.handle(
+        _externalUsernameMeta,
+        externalUsername.isAcceptableOrUnknown(
+          data['external_username']!,
+          _externalUsernameMeta,
+        ),
+      );
     }
     if (data.containsKey('status')) {
       context.handle(
@@ -3199,6 +3501,10 @@ class $UserIdentitiesTableTable extends UserIdentitiesTable
         DriftSqlType.string,
         data['${effectivePrefix}external_id'],
       )!,
+      externalUsername: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_username'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -3226,6 +3532,7 @@ class UserIdentitiesTableData extends DataClass
   final String userId;
   final String providerId;
   final String externalId;
+  final String? externalUsername;
   final String status;
   final PgDateTime createdAt;
   final PgDateTime? updatedAt;
@@ -3234,6 +3541,7 @@ class UserIdentitiesTableData extends DataClass
     required this.userId,
     required this.providerId,
     required this.externalId,
+    this.externalUsername,
     required this.status,
     required this.createdAt,
     this.updatedAt,
@@ -3245,6 +3553,9 @@ class UserIdentitiesTableData extends DataClass
     map['user_id'] = Variable<String>(userId);
     map['provider_id'] = Variable<String>(providerId);
     map['external_id'] = Variable<String>(externalId);
+    if (!nullToAbsent || externalUsername != null) {
+      map['external_username'] = Variable<String>(externalUsername);
+    }
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<PgDateTime>(
       createdAt,
@@ -3265,6 +3576,9 @@ class UserIdentitiesTableData extends DataClass
       userId: Value(userId),
       providerId: Value(providerId),
       externalId: Value(externalId),
+      externalUsername: externalUsername == null && nullToAbsent
+          ? const Value.absent()
+          : Value(externalUsername),
       status: Value(status),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
@@ -3283,6 +3597,7 @@ class UserIdentitiesTableData extends DataClass
       userId: serializer.fromJson<String>(json['userId']),
       providerId: serializer.fromJson<String>(json['providerId']),
       externalId: serializer.fromJson<String>(json['externalId']),
+      externalUsername: serializer.fromJson<String?>(json['externalUsername']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
@@ -3296,6 +3611,7 @@ class UserIdentitiesTableData extends DataClass
       'userId': serializer.toJson<String>(userId),
       'providerId': serializer.toJson<String>(providerId),
       'externalId': serializer.toJson<String>(externalId),
+      'externalUsername': serializer.toJson<String?>(externalUsername),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<PgDateTime>(createdAt),
       'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
@@ -3307,6 +3623,7 @@ class UserIdentitiesTableData extends DataClass
     String? userId,
     String? providerId,
     String? externalId,
+    Value<String?> externalUsername = const Value.absent(),
     String? status,
     PgDateTime? createdAt,
     Value<PgDateTime?> updatedAt = const Value.absent(),
@@ -3315,6 +3632,9 @@ class UserIdentitiesTableData extends DataClass
     userId: userId ?? this.userId,
     providerId: providerId ?? this.providerId,
     externalId: externalId ?? this.externalId,
+    externalUsername: externalUsername.present
+        ? externalUsername.value
+        : this.externalUsername,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -3329,6 +3649,9 @@ class UserIdentitiesTableData extends DataClass
       externalId: data.externalId.present
           ? data.externalId.value
           : this.externalId,
+      externalUsername: data.externalUsername.present
+          ? data.externalUsername.value
+          : this.externalUsername,
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -3342,6 +3665,7 @@ class UserIdentitiesTableData extends DataClass
           ..write('userId: $userId, ')
           ..write('providerId: $providerId, ')
           ..write('externalId: $externalId, ')
+          ..write('externalUsername: $externalUsername, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3355,6 +3679,7 @@ class UserIdentitiesTableData extends DataClass
     userId,
     providerId,
     externalId,
+    externalUsername,
     status,
     createdAt,
     updatedAt,
@@ -3367,6 +3692,7 @@ class UserIdentitiesTableData extends DataClass
           other.userId == this.userId &&
           other.providerId == this.providerId &&
           other.externalId == this.externalId &&
+          other.externalUsername == this.externalUsername &&
           other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -3378,6 +3704,7 @@ class UserIdentitiesTableCompanion
   final Value<String> userId;
   final Value<String> providerId;
   final Value<String> externalId;
+  final Value<String?> externalUsername;
   final Value<String> status;
   final Value<PgDateTime> createdAt;
   final Value<PgDateTime?> updatedAt;
@@ -3387,6 +3714,7 @@ class UserIdentitiesTableCompanion
     this.userId = const Value.absent(),
     this.providerId = const Value.absent(),
     this.externalId = const Value.absent(),
+    this.externalUsername = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3397,6 +3725,7 @@ class UserIdentitiesTableCompanion
     required String userId,
     required String providerId,
     required String externalId,
+    this.externalUsername = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3410,6 +3739,7 @@ class UserIdentitiesTableCompanion
     Expression<String>? userId,
     Expression<String>? providerId,
     Expression<String>? externalId,
+    Expression<String>? externalUsername,
     Expression<String>? status,
     Expression<PgDateTime>? createdAt,
     Expression<PgDateTime>? updatedAt,
@@ -3420,6 +3750,7 @@ class UserIdentitiesTableCompanion
       if (userId != null) 'user_id': userId,
       if (providerId != null) 'provider_id': providerId,
       if (externalId != null) 'external_id': externalId,
+      if (externalUsername != null) 'external_username': externalUsername,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3432,6 +3763,7 @@ class UserIdentitiesTableCompanion
     Value<String>? userId,
     Value<String>? providerId,
     Value<String>? externalId,
+    Value<String?>? externalUsername,
     Value<String>? status,
     Value<PgDateTime>? createdAt,
     Value<PgDateTime?>? updatedAt,
@@ -3442,6 +3774,7 @@ class UserIdentitiesTableCompanion
       userId: userId ?? this.userId,
       providerId: providerId ?? this.providerId,
       externalId: externalId ?? this.externalId,
+      externalUsername: externalUsername ?? this.externalUsername,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3463,6 +3796,9 @@ class UserIdentitiesTableCompanion
     }
     if (externalId.present) {
       map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (externalUsername.present) {
+      map['external_username'] = Variable<String>(externalUsername.value);
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
@@ -3492,6 +3828,7 @@ class UserIdentitiesTableCompanion
           ..write('userId: $userId, ')
           ..write('providerId: $providerId, ')
           ..write('externalId: $externalId, ')
+          ..write('externalUsername: $externalUsername, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3510,6 +3847,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ActivityPhorgeTableTable activityPhorgeTable =
       $ActivityPhorgeTableTable(this);
+  late final $ActivityGithubCommitTableTable activityGithubCommitTable =
+      $ActivityGithubCommitTableTable(this);
   late final $SessionsTableTable sessionsTable = $SessionsTableTable(this);
   late final $GroupsTableTable groupsTable = $GroupsTableTable(this);
   late final $GroupMembersTableTable groupMembersTable =
@@ -3526,6 +3865,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     usersTable,
     activitiesTable,
     activityPhorgeTable,
+    activityGithubCommitTable,
     sessionsTable,
     groupsTable,
     groupMembersTable,
@@ -3540,6 +3880,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('activity_phorge', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('activity_github_commit', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -4040,6 +4387,34 @@ final class $$ActivitiesTableTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $ActivityGithubCommitTableTable,
+    List<ActivityGithubCommitTableData>
+  >
+  _activityGithubCommitTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityGithubCommitTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityGithubCommitTable.activityId,
+        ),
+      );
+
+  $$ActivityGithubCommitTableTableProcessedTableManager
+  get activityGithubCommitTableRefs {
+    final manager = $$ActivityGithubCommitTableTableTableManager(
+      $_db,
+      $_db.activityGithubCommitTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityGithubCommitTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ActivitiesTableTableFilterComposer
@@ -4123,6 +4498,33 @@ class $$ActivitiesTableTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> activityGithubCommitTableRefs(
+    Expression<bool> Function($$ActivityGithubCommitTableTableFilterComposer f)
+    f,
+  ) {
+    final $$ActivityGithubCommitTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityGithubCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityGithubCommitTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityGithubCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -4259,6 +4661,33 @@ class $$ActivitiesTableTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> activityGithubCommitTableRefs<T extends Object>(
+    Expression<T> Function($$ActivityGithubCommitTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$ActivityGithubCommitTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityGithubCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityGithubCommitTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityGithubCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ActivitiesTableTableTableManager
@@ -4274,7 +4703,10 @@ class $$ActivitiesTableTableTableManager
           $$ActivitiesTableTableUpdateCompanionBuilder,
           (ActivitiesTableData, $$ActivitiesTableTableReferences),
           ActivitiesTableData,
-          PrefetchHooks Function({bool activityPhorgeTableRefs})
+          PrefetchHooks Function({
+            bool activityPhorgeTableRefs,
+            bool activityGithubCommitTableRefs,
+          })
         > {
   $$ActivitiesTableTableTableManager(
     _$AppDatabase db,
@@ -4349,38 +4781,67 @@ class $$ActivitiesTableTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({activityPhorgeTableRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (activityPhorgeTableRefs) db.activityPhorgeTable,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (activityPhorgeTableRefs)
-                    await $_getPrefetchedData<
-                      ActivitiesTableData,
-                      $ActivitiesTableTable,
-                      ActivityPhorgeTableData
-                    >(
-                      currentTable: table,
-                      referencedTable: $$ActivitiesTableTableReferences
-                          ._activityPhorgeTableRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$ActivitiesTableTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).activityPhorgeTableRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.activityId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                activityPhorgeTableRefs = false,
+                activityGithubCommitTableRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (activityPhorgeTableRefs) db.activityPhorgeTable,
+                    if (activityGithubCommitTableRefs)
+                      db.activityGithubCommitTable,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (activityPhorgeTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityPhorgeTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityPhorgeTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityPhorgeTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (activityGithubCommitTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityGithubCommitTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityGithubCommitTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityGithubCommitTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4397,7 +4858,10 @@ typedef $$ActivitiesTableTableProcessedTableManager =
       $$ActivitiesTableTableUpdateCompanionBuilder,
       (ActivitiesTableData, $$ActivitiesTableTableReferences),
       ActivitiesTableData,
-      PrefetchHooks Function({bool activityPhorgeTableRefs})
+      PrefetchHooks Function({
+        bool activityPhorgeTableRefs,
+        bool activityGithubCommitTableRefs,
+      })
     >;
 typedef $$ActivityPhorgeTableTableCreateCompanionBuilder =
     ActivityPhorgeTableCompanion Function({
@@ -4721,6 +5185,318 @@ typedef $$ActivityPhorgeTableTableProcessedTableManager =
       $$ActivityPhorgeTableTableUpdateCompanionBuilder,
       (ActivityPhorgeTableData, $$ActivityPhorgeTableTableReferences),
       ActivityPhorgeTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
+typedef $$ActivityGithubCommitTableTableCreateCompanionBuilder =
+    ActivityGithubCommitTableCompanion Function({
+      required String activityId,
+      Value<String?> repo,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+typedef $$ActivityGithubCommitTableTableUpdateCompanionBuilder =
+    ActivityGithubCommitTableCompanion Function({
+      Value<String> activityId,
+      Value<String?> repo,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+
+final class $$ActivityGithubCommitTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityGithubCommitTableTable,
+          ActivityGithubCommitTableData
+        > {
+  $$ActivityGithubCommitTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityGithubCommitTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityGithubCommitTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityGithubCommitTableTable> {
+  $$ActivityGithubCommitTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get repo => $composableBuilder(
+    column: $table.repo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGithubCommitTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityGithubCommitTableTable> {
+  $$ActivityGithubCommitTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get repo => $composableBuilder(
+    column: $table.repo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGithubCommitTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityGithubCommitTableTable> {
+  $$ActivityGithubCommitTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get repo =>
+      $composableBuilder(column: $table.repo, builder: (column) => column);
+
+  GeneratedColumn<String> get branch =>
+      $composableBuilder(column: $table.branch, builder: (column) => column);
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGithubCommitTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityGithubCommitTableTable,
+          ActivityGithubCommitTableData,
+          $$ActivityGithubCommitTableTableFilterComposer,
+          $$ActivityGithubCommitTableTableOrderingComposer,
+          $$ActivityGithubCommitTableTableAnnotationComposer,
+          $$ActivityGithubCommitTableTableCreateCompanionBuilder,
+          $$ActivityGithubCommitTableTableUpdateCompanionBuilder,
+          (
+            ActivityGithubCommitTableData,
+            $$ActivityGithubCommitTableTableReferences,
+          ),
+          ActivityGithubCommitTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityGithubCommitTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityGithubCommitTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityGithubCommitTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityGithubCommitTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityGithubCommitTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String?> repo = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityGithubCommitTableCompanion(
+                activityId: activityId,
+                repo: repo,
+                branch: branch,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                Value<String?> repo = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityGithubCommitTableCompanion.insert(
+                activityId: activityId,
+                repo: repo,
+                branch: branch,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityGithubCommitTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityGithubCommitTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityGithubCommitTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityGithubCommitTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityGithubCommitTableTable,
+      ActivityGithubCommitTableData,
+      $$ActivityGithubCommitTableTableFilterComposer,
+      $$ActivityGithubCommitTableTableOrderingComposer,
+      $$ActivityGithubCommitTableTableAnnotationComposer,
+      $$ActivityGithubCommitTableTableCreateCompanionBuilder,
+      $$ActivityGithubCommitTableTableUpdateCompanionBuilder,
+      (
+        ActivityGithubCommitTableData,
+        $$ActivityGithubCommitTableTableReferences,
+      ),
+      ActivityGithubCommitTableData,
       PrefetchHooks Function({bool activityId})
     >;
 typedef $$SessionsTableTableCreateCompanionBuilder =
@@ -5874,6 +6650,7 @@ typedef $$UserIdentitiesTableTableCreateCompanionBuilder =
       required String userId,
       required String providerId,
       required String externalId,
+      Value<String?> externalUsername,
       Value<String> status,
       Value<PgDateTime> createdAt,
       Value<PgDateTime?> updatedAt,
@@ -5885,6 +6662,7 @@ typedef $$UserIdentitiesTableTableUpdateCompanionBuilder =
       Value<String> userId,
       Value<String> providerId,
       Value<String> externalId,
+      Value<String?> externalUsername,
       Value<String> status,
       Value<PgDateTime> createdAt,
       Value<PgDateTime?> updatedAt,
@@ -5917,6 +6695,11 @@ class $$UserIdentitiesTableTableFilterComposer
 
   ColumnFilters<String> get externalId => $composableBuilder(
     column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalUsername => $composableBuilder(
+    column: $table.externalUsername,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5965,6 +6748,11 @@ class $$UserIdentitiesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get externalUsername => $composableBuilder(
+    column: $table.externalUsername,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -6003,6 +6791,11 @@ class $$UserIdentitiesTableTableAnnotationComposer
 
   GeneratedColumn<String> get externalId => $composableBuilder(
     column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get externalUsername => $composableBuilder(
+    column: $table.externalUsername,
     builder: (column) => column,
   );
 
@@ -6063,6 +6856,7 @@ class $$UserIdentitiesTableTableTableManager
                 Value<String> userId = const Value.absent(),
                 Value<String> providerId = const Value.absent(),
                 Value<String> externalId = const Value.absent(),
+                Value<String?> externalUsername = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<PgDateTime> createdAt = const Value.absent(),
                 Value<PgDateTime?> updatedAt = const Value.absent(),
@@ -6072,6 +6866,7 @@ class $$UserIdentitiesTableTableTableManager
                 userId: userId,
                 providerId: providerId,
                 externalId: externalId,
+                externalUsername: externalUsername,
                 status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -6083,6 +6878,7 @@ class $$UserIdentitiesTableTableTableManager
                 required String userId,
                 required String providerId,
                 required String externalId,
+                Value<String?> externalUsername = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<PgDateTime> createdAt = const Value.absent(),
                 Value<PgDateTime?> updatedAt = const Value.absent(),
@@ -6092,6 +6888,7 @@ class $$UserIdentitiesTableTableTableManager
                 userId: userId,
                 providerId: providerId,
                 externalId: externalId,
+                externalUsername: externalUsername,
                 status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -6136,6 +6933,11 @@ class $AppDatabaseManager {
       $$ActivitiesTableTableTableManager(_db, _db.activitiesTable);
   $$ActivityPhorgeTableTableTableManager get activityPhorgeTable =>
       $$ActivityPhorgeTableTableTableManager(_db, _db.activityPhorgeTable);
+  $$ActivityGithubCommitTableTableTableManager get activityGithubCommitTable =>
+      $$ActivityGithubCommitTableTableTableManager(
+        _db,
+        _db.activityGithubCommitTable,
+      );
   $$SessionsTableTableTableManager get sessionsTable =>
       $$SessionsTableTableTableManager(_db, _db.sessionsTable);
   $$GroupsTableTableTableManager get groupsTable =>

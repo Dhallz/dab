@@ -17,6 +17,9 @@ class ExplorerViewDesktop extends StatelessWidget {
     return AppBlocConsumer<ExplorerBloc, ExplorerState>(
       listener: (context, state, bloc) {},
       builder: (context, state, bloc) {
+        final userNameById = {
+          for (final user in state.users) user.id: user.name,
+        };
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -70,11 +73,17 @@ class ExplorerViewDesktop extends StatelessWidget {
                                 ),
                                 child: switch (item) {
                                   SingleActivityItem(:final activity) =>
-                                    ActivityCard(activity: activity),
+                                    ActivityCard(
+                                      activity: activity,
+                                      resolvedAuthorName:
+                                          userNameById[activity.userId],
+                                    ),
                                   TaskActivityItem(:final activities) =>
                                     ActivityCard(
                                       activity: activities.first,
                                       activities: activities,
+                                      resolvedAuthorName: userNameById[
+                                          activities.first.userId],
                                     ),
                                 },
                               );

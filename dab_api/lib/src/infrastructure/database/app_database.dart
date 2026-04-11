@@ -1,4 +1,5 @@
 import 'package:dab_api/src/infrastructure/database/tables/activities_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_github_commit_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
@@ -17,6 +18,7 @@ part 'app_database.g.dart';
     UsersTable,
     ActivitiesTable,
     ActivityPhorgeTable,
+    ActivityGithubCommitTable,
     SessionsTable,
     GroupsTable,
     GroupMembersTable,
@@ -28,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -104,6 +106,45 @@ END \$\$;
       }
       if (from < 7) {
         await m.addColumn(providerConfigsTable, providerConfigsTable.settings);
+      }
+      if (from < 8) {
+        await m.createTable(activityGithubCommitTable);
+      }
+      if (from < 9) {
+        await m.database.customStatement(r'''
+INSERT INTO user_identities (id, user_id, provider_id, external_id, status, created_at, updated_at)
+SELECT
+  users.id || '_phorge' AS id,
+  users.id AS user_id,
+  'phorge' AS provider_id,
+  users.phorge_phid AS external_id,
+  'linked' AS status,
+  users.created_at AS created_at,
+  NOW() AS updated_at
+FROM users
+WHERE users.phorge_phid IS NOT NULL
+  AND users.phorge_phid <> ''
+  AND NOT EXISTS (
+    SELECT 1
+    FROM user_identities ui
+    WHERE ui.user_id = users.id
+      AND ui.provider_id = 'phorge'
+  );
+''');
+      }
+      if (from < 10) {
+        await m.addColumn(userIdentitiesTable, userIdentitiesTable.externalUsername);
+        await m.database.customStatement(r'''
+UPDATE user_identities ui
+SET external_username = users.phorge_username,
+    updated_at = NOW()
+FROM users
+WHERE ui.user_id = users.id
+  AND ui.provider_id = 'phorge'
+  AND users.phorge_username IS NOT NULL
+  AND users.phorge_username <> ''
+  AND (ui.external_username IS NULL OR ui.external_username = '');
+''');
       }
     },
     beforeOpen: (details) async {

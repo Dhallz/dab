@@ -30,34 +30,49 @@ class _ProviderCardState extends State<ProviderCard> {
   @override
   void initState() {
     super.initState();
-    _fields = _getFieldsForProvider(widget.config.id);
-    for (final field in _fields) {
-      _controllers[field.key] = TextEditingController(
-        text: widget.config.settings[field.key]?.toString() ?? '',
-      );
-    }
+    _syncControllersFromConfig(widget.config, replaceExisting: true);
   }
 
   @override
   void didUpdateWidget(ProviderCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.config.id != widget.config.id) {
-      _fields = _getFieldsForProvider(widget.config.id);
-      _controllers.clear();
-      for (final field in _fields) {
-        _controllers[field.key] = TextEditingController(
-          text: widget.config.settings[field.key]?.toString() ?? '',
-        );
-      }
+    final configChanged = oldWidget.config.id != widget.config.id ||
+        oldWidget.config.settings != widget.config.settings ||
+        oldWidget.config.baseUrl != widget.config.baseUrl;
+    if (configChanged) {
+      _syncControllersFromConfig(widget.config, replaceExisting: true);
     }
   }
 
   @override
   void dispose() {
+    _disposeControllers();
+    super.dispose();
+  }
+
+  void _disposeControllers() {
     for (final controller in _controllers.values) {
       controller.dispose();
     }
-    super.dispose();
+    _controllers.clear();
+  }
+
+  void _syncControllersFromConfig(
+    ProviderConfig config, {
+    required bool replaceExisting,
+  }) {
+    if (replaceExisting) {
+      _disposeControllers();
+    }
+
+    _fields = _getFieldsForProvider(config.id);
+    for (final field in _fields) {
+      final rawValue = config.settings[field.key];
+      final initialValue = field.key == 'repos' && rawValue is List
+          ? rawValue.map((e) => e.toString()).join('\n')
+          : rawValue?.toString() ?? '';
+      _controllers[field.key] = TextEditingController(text: initialValue);
+    }
   }
 
   @override
@@ -165,16 +180,12 @@ class _ProviderCardState extends State<ProviderCard> {
                         onPressed: status?.status.isLoading == true
                             ? null
                             : () {
-                                final Map<String, dynamic> currentSettings =
-                                    Map.from(config.settings);
-                                _controllers.forEach((key, controller) {
-                                  currentSettings[key] = controller.text;
-                                });
-
-                                final newBaseUrl =
-                                    _controllers['baseUrl']?.text ??
-                                    _controllers['instanceUrl']?.text ??
-                                    config.baseUrl;
+                                      final currentSettings = _buildSettings(
+                                        config,
+                                      );
+                                      final newBaseUrl = _resolveBaseUrl(
+                                        config,
+                                      );
 
                                 final configToTest = config.copyWith(
                                   settings: currentSettings,
@@ -330,16 +341,8 @@ class _ProviderCardState extends State<ProviderCard> {
                                   elevation: 0,
                                 ),
                                 onPressed: () {
-                                  final Map<String, dynamic> newSettings =
-                                      Map.from(config.settings);
-                                  _controllers.forEach((key, controller) {
-                                    newSettings[key] = controller.text;
-                                  });
-
-                                  final newBaseUrl =
-                                      _controllers['baseUrl']?.text ??
-                                      _controllers['instanceUrl']?.text ??
-                                      config.baseUrl;
+                                  final newSettings = _buildSettings(config);
+                                  final newBaseUrl = _resolveBaseUrl(config);
 
                                   final updatedConfig = config.copyWith(
                                     settings: newSettings,
@@ -429,11 +432,24 @@ class _ProviderCardState extends State<ProviderCard> {
     }
     if (lowerId.contains('github')) {
       return [
-        AdminConfigField(key: 'clientId', label: 'Client ID'),
         AdminConfigField(
-          key: 'clientSecret',
-          label: 'Client Secret',
+          key: 'api.token',
+          label: 'Personal Access Token',
           isSecret: true,
+        ),
+        AdminConfigField(key: 'owner', label: 'Repository Owner'),
+        AdminConfigField(key: 'repo', label: 'Repository Name'),
+        AdminConfigField(
+          key: 'branch',
+          label: 'Branch (optional, defaults to repository default)',
+        ),
+        AdminConfigField(
+          key: 'repos',
+          label: 'Repositories (one owner/repo per line, optional)',
+        ),
+        AdminConfigField(
+          key: 'apiBaseUrl',
+          label: 'API Base URL (optional, defaults to https://api.github.com)',
         ),
       ];
     }
@@ -453,5 +469,35 @@ class _ProviderCardState extends State<ProviderCard> {
         isSecret: true,
       ),
     ];
+  }
+
+  Map<String, dynamic> _buildSettings(ProviderConfig config) {
+    final Map<String, dynamic> settings = Map.from(config.settings);
+    _controllers.forEach((key, controller) {
+      final value = controller.text.trim();
+      if (key == 'repos') {
+        if (value.isEmpty) {
+          settings.remove('repos');
+        } else {
+          settings['repos'] = value
+              .split(RegExp(r'[\n,]+'))
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+        }
+      } else if (key == 'apiBaseUrl' && value.isEmpty) {
+        settings.remove('apiBaseUrl');
+      } else {
+        settings[key] = value;
+      }
+    });
+    return settings;
+  }
+
+  String _resolveBaseUrl(ProviderConfig config) {
+    return (_controllers['baseUrl']?.text ??
+            _controllers['instanceUrl']?.text ??
+            config.baseUrl)
+        .trim();
   }
 }

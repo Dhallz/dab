@@ -90,6 +90,7 @@ class AdminController {
       final userId = data['userId'] as String?;
       final providerId = data['providerId'] as String?;
       final externalId = data['externalId'] as String?;
+      final externalUsername = data['externalUsername'] as String?;
 
       if (userId == null || providerId == null || externalId == null) {
         return Response.badRequest(
@@ -106,6 +107,7 @@ class AdminController {
         userId: userId,
         providerId: providerId,
         externalId: externalId,
+        externalUsername: externalUsername,
       );
 
       return result.fold(

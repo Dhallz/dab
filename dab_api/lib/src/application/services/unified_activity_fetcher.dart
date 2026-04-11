@@ -2,6 +2,8 @@ import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Orchestrator for multi-source activity synchronization.
@@ -13,8 +15,9 @@ import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository
 class UnifiedActivityFetcher {
   final ConnectorRegistry _registry;
   final AbsIProviderConfigRepository _configRepo;
+  final IUserRepository _userRepo;
 
-  UnifiedActivityFetcher(this._registry, this._configRepo);
+  UnifiedActivityFetcher(this._registry, this._configRepo, this._userRepo);
 
   /// Aggregates and synchronizes activities from all registered sources.
   ///
@@ -30,8 +33,7 @@ class UnifiedActivityFetcher {
     required DateTime end,
     required bool authoredOnly,
   }) async {
-    final validUsers = users.where((u) => u.phorgePhid != null).toList();
-    if (validUsers.isEmpty) return [];
+    if (users.isEmpty) return [];
 
     // Fetch all provider configurations to check for active status.
     final configsResult = await _configRepo.getConfigs();
@@ -48,8 +50,37 @@ class UnifiedActivityFetcher {
         })
         .map((pair) async {
           try {
+            final identitiesResult = await _userRepo
+                .getIdentitiesForUsersAndProvider(
+                  users.map((u) => u.id),
+                  pair.mapper.providerName,
+                );
+            final identities = identitiesResult.getOrElse((_) => []);
+            final linkedIdentitiesByUserId = {
+              for (final identity in identities)
+                if (identity.status == UserIdentityStatus.linked)
+                  identity.userId: identity,
+            };
+
+            final usersForConnector = users
+                .where((u) => linkedIdentitiesByUserId.containsKey(u.id))
+                .map((u) {
+                  final identity = linkedIdentitiesByUserId[u.id]!;
+                  if (pair.mapper.providerName == 'phorge') {
+                    return u.copyWith(
+                      phorgePhid: identity.externalId,
+                      phorgeUsername: identity.externalUsername,
+                    );
+                  }
+                  return u;
+                })
+                .toList();
+            if (usersForConnector.isEmpty) {
+              return <Activity>[];
+            }
+
             final rawDataList = await pair.source.fetchRawData(
-              validUsers,
+              usersForConnector,
               start,
               end,
               authoredOnly,
@@ -57,7 +88,9 @@ class UnifiedActivityFetcher {
 
             // Transform the raw DTOs into high-level Domain Activities.
             return rawDataList
-                .expand((item) => pair.mapper.mapToActivities(item, validUsers))
+                .expand(
+                  (item) => pair.mapper.mapToActivities(item, usersForConnector),
+                )
                 .toList();
           } catch (e) {
             // Individual source failure SHOULD NOT break the entire aggregation.

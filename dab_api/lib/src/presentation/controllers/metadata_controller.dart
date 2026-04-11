@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:relic/relic.dart';
+import 'package:http/http.dart' as http;
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
 import '../../service_locator.dart';
@@ -207,6 +208,84 @@ class MetadataController {
               jsonEncode({
                 'error': 'Connection failed',
                 'details': details,
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
+      if (config.id == 'github') {
+        final token =
+            (config.settings['api.token'] ?? config.settings['token'] ?? '')
+                .toString()
+                .trim();
+        if (token.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'GitHub token is missing',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        final configuredApiBaseUrl = (config.settings['apiBaseUrl'] ?? '')
+            .toString()
+            .trim();
+        final apiBaseUrl = (configuredApiBaseUrl.isEmpty
+                ? 'https://api.github.com'
+                : configuredApiBaseUrl)
+            .replaceAll(RegExp(r'/+$'), '');
+        final uri = Uri.parse('$apiBaseUrl/user');
+
+        try {
+          final response = await http
+              .get(
+                uri,
+                headers: {
+                  'Accept': 'application/vnd.github+json',
+                  'Authorization': 'Bearer $token',
+                  'User-Agent': 'dab-api',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+              )
+              .timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            final login = body['login']?.toString() ?? 'unknown';
+            return Response.ok(
+              body: Body.fromString(
+                jsonEncode({
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected as $login',
+                  },
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details':
+                    'GitHub API returned ${response.statusCode}. Verify token and API base URL.',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'GitHub connectivity test failed: $e',
               }),
               mimeType: MimeType.json,
             ),

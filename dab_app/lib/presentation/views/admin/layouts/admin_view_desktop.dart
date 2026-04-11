@@ -90,6 +90,8 @@ class AdminViewDesktop extends StatelessWidget {
                                 AdminSection.providers => const ProvidersTab(),
                                 AdminSection.identities => IdentitiesTab(
                                   identities: state.identities,
+                                  users: state.users,
+                                  providerIds: state.configs.map((c) => c.id).toList(),
                                   bloc: bloc,
                                 ),
                                 AdminSection.security => SecurityTab(

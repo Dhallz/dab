@@ -39,6 +39,7 @@ import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
+import 'package:dab_api/src/domain/mappers/github/github_commit_mapper.dart';
 import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
 import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
 import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
@@ -71,6 +72,7 @@ import 'package:dab_api/src/infrastructure/repositories/provider_metadata_reposi
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/security/jwt_provider.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
@@ -117,12 +119,17 @@ Future<void> serviceLocator() async {
   // Domain Services & Mappers
   final phorgeSprintService = PhorgeSprintService();
   sl.registerSingleton<PhorgeSprintService>(phorgeSprintService);
+  final userRepository = UserRepository(db);
+  final providerConfigRepository = ProviderConfigRepository(db);
 
   final phorgeTaskMapper = PhorgeTaskMapper();
   final phorgeRevisionMapper = PhorgeRevisionMapper();
 
   // Infrastructure Sources (Raw I/O)
-  final phorgeTaskSource = PhorgeTaskSource(phorgeClient, phorgeSprintService);
+  final phorgeTaskSource = PhorgeTaskSource(
+    phorgeClient,
+    phorgeSprintService,
+  );
   final phorgeRevisionSource = PhorgeRevisionSource(phorgeClient);
   final phorgeUserSource = PhorgeUserSource(phorgeClient);
   final phorgeProjectSource = PhorgeProjectSource(
@@ -141,6 +148,11 @@ Future<void> serviceLocator() async {
   final linearSource = LinearIssueSource();
   final discordMapper = DiscordMessageMapper();
   final discordSource = DiscordMessageSource();
+  final githubMapper = GitHubCommitMapper();
+  final githubSource = GitHubCommitSource(
+    providerConfigRepository,
+    userRepository,
+  );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
   sl.registerSingleton<PhorgeProjectSource>(phorgeProjectSource);
@@ -148,6 +160,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<TeamsMessageSource>(teamsSource);
   sl.registerSingleton<JiraIssueSource>(jiraSource);
   sl.registerSingleton<LinearIssueSource>(linearSource);
+  sl.registerSingleton<GitHubCommitSource>(githubSource);
 
   // Application Orchestration: Mapping Sources to Mappers
   final registry = ConnectorRegistry();
@@ -160,13 +173,14 @@ Future<void> serviceLocator() async {
   registry.register(jiraSource, jiraMapper);
   registry.register(linearSource, linearMapper);
   registry.register(discordSource, discordMapper);
+  registry.register(githubSource, githubMapper);
 
   sl.registerSingleton<ConnectorRegistry>(registry);
 
   // Repositories
   sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
   sl.registerSingleton<AbsIActivityRepository>(ActivityRepository(db));
-  sl.registerSingleton<IUserRepository>(UserRepository(db));
+  sl.registerSingleton<IUserRepository>(userRepository);
   sl.registerSingleton<AbsIHealthRepository>(
     PostgresHealthRepository(sl<PostgresClient>()),
   );
@@ -174,7 +188,7 @@ Future<void> serviceLocator() async {
     ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(
-    ProviderConfigRepository(db),
+    providerConfigRepository,
   );
 
   // -----------------------------------------------------
@@ -189,6 +203,7 @@ Future<void> serviceLocator() async {
   final fetcher = UnifiedActivityFetcher(
     registry,
     sl<AbsIProviderConfigRepository>(),
+    sl<IUserRepository>(),
   );
   sl.registerSingleton<UnifiedActivityFetcher>(fetcher);
 

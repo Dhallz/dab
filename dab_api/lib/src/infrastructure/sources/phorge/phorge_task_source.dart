@@ -49,7 +49,15 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     DateTime end,
     String sprintTag,
   ) async {
-    final userPhids = users.map((u) => u.phorgePhid!).toList();
+    final userPhids = users
+        .map((u) => u.phorgePhid?.trim())
+        .whereType<String>()
+        .where((phid) => phid.isNotEmpty)
+        .toSet()
+        .toList();
+    if (userPhids.isEmpty) {
+      return [];
+    }
 
     // 1. PERFORMANCE: Single Transaction Sweep for Authored Activities
     final txResult = await _client.call('transaction.search', {
@@ -116,7 +124,6 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
         .toList();
 
     if (allTransactions.isEmpty) return [];
-
     final taskPhids = allTransactions.map((tx) => tx.objectPHID).toSet().toList();
     final taskResult = await _client.call('maniphest.search', {
       'constraints': {'phids': taskPhids},

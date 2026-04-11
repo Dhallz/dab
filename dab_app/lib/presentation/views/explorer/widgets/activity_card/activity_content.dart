@@ -23,6 +23,9 @@ class ActivityContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasHistory = activities != null && activities!.length > 1;
+    final displayContent = _resolveDisplayContent(activity);
+    final plainPreview = _getPlainText(displayContent);
+    final hasDisplayContent = plainPreview.isNotEmpty;
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 300),
@@ -34,29 +37,54 @@ class ActivityContent extends StatelessWidget {
               accentColor: accentColor,
             )
           : (isExpanded
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: MarkdownBody(
-                    data: _processMarkdown(activity.content),
-                    styleSheet: _getMarkdownStyleSheet(isExpanded, accentColor),
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrl(Uri.parse(href));
-                      }
-                    },
-                  ),
-                )
-              : Text(
-                  _getPlainText(activity.content),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.onSurfaceVariantLow,
-                    height: 1.5,
-                  ),
-                )),
+              ? (hasDisplayContent
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: MarkdownBody(
+                        data: _processMarkdown(displayContent),
+                        styleSheet: _getMarkdownStyleSheet(
+                          isExpanded,
+                          accentColor,
+                        ),
+                        onTapLink: (text, href, title) {
+                          if (href != null) {
+                            launchUrl(Uri.parse(href));
+                          }
+                        },
+                      ),
+                    )
+                  : const SizedBox.shrink())
+              : (hasDisplayContent
+                  ? Text(
+                      plainPreview,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.onSurfaceVariantLow,
+                        height: 1.5,
+                      ),
+                    )
+                  : const SizedBox.shrink())),
     );
+  }
+
+  String _resolveDisplayContent(Activity activity) {
+    if (activity.provider is! GitHubCommitProvider) {
+      return activity.content;
+    }
+
+    final content = activity.content.trim();
+    if (content.isEmpty) {
+      return '';
+    }
+
+    final lines = content.split('\n');
+    if (lines.length <= 1) {
+      return '';
+    }
+
+    return lines.skip(1).join('\n').trim();
   }
 
   String _getPlainText(String markdown) {

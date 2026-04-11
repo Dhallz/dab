@@ -25,11 +25,19 @@ class PhorgeRevisionSource implements IActivitySource<PhorgeRevisionData> {
     DateTime end,
     bool authoredOnly,
   ) async {
-    final userPhids = users.map((u) => u.phorgePhid!).toList();
+    final userPhids = users
+        .map((u) => u.phorgePhid?.trim())
+        .whereType<String>()
+        .where((phid) => phid.isNotEmpty)
+        .toSet()
+        .toList();
+    if (authoredOnly && userPhids.isEmpty) {
+      return [];
+    }
     
     final result = await _client.call('differential.revision.search', {
       'constraints': {
-        if (authoredOnly) 'authorPHIDs': userPhids,
+        if (authoredOnly && userPhids.isNotEmpty) 'authorPHIDs': userPhids,
         'modifiedStart': start.millisecondsSinceEpoch ~/ 1000,
         'modifiedEnd': end.millisecondsSinceEpoch ~/ 1000,
       },

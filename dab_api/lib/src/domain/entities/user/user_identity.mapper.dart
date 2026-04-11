@@ -39,6 +39,12 @@ class UserIdentityMapper extends ClassMapperBase<UserIdentity> {
     'externalId',
     _$externalId,
   );
+  static String? _$externalUsername(UserIdentity v) => v.externalUsername;
+  static const Field<UserIdentity, String> _f$externalUsername = Field(
+    'externalUsername',
+    _$externalUsername,
+    opt: true,
+  );
   static UserIdentityStatus _$status(UserIdentity v) => v.status;
   static const Field<UserIdentity, UserIdentityStatus> _f$status = Field(
     'status',
@@ -62,6 +68,7 @@ class UserIdentityMapper extends ClassMapperBase<UserIdentity> {
     #userId: _f$userId,
     #providerId: _f$providerId,
     #externalId: _f$externalId,
+    #externalUsername: _f$externalUsername,
     #status: _f$status,
     #createdAt: _f$createdAt,
     #updatedAt: _f$updatedAt,
@@ -73,6 +80,7 @@ class UserIdentityMapper extends ClassMapperBase<UserIdentity> {
       userId: data.dec(_f$userId),
       providerId: data.dec(_f$providerId),
       externalId: data.dec(_f$externalId),
+      externalUsername: data.dec(_f$externalUsername),
       status: data.dec(_f$status),
       createdAt: data.dec(_f$createdAt),
       updatedAt: data.dec(_f$updatedAt),
@@ -146,6 +154,7 @@ abstract class UserIdentityCopyWith<$R, $In extends UserIdentity, $Out>
     String? userId,
     String? providerId,
     String? externalId,
+    String? externalUsername,
     UserIdentityStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -167,6 +176,7 @@ class _UserIdentityCopyWithImpl<$R, $Out>
     String? userId,
     String? providerId,
     String? externalId,
+    Object? externalUsername = $none,
     UserIdentityStatus? status,
     DateTime? createdAt,
     Object? updatedAt = $none,
@@ -176,6 +186,7 @@ class _UserIdentityCopyWithImpl<$R, $Out>
       if (userId != null) #userId: userId,
       if (providerId != null) #providerId: providerId,
       if (externalId != null) #externalId: externalId,
+      if (externalUsername != $none) #externalUsername: externalUsername,
       if (status != null) #status: status,
       if (createdAt != null) #createdAt: createdAt,
       if (updatedAt != $none) #updatedAt: updatedAt,
@@ -187,6 +198,7 @@ class _UserIdentityCopyWithImpl<$R, $Out>
     userId: data.get(#userId, or: $value.userId),
     providerId: data.get(#providerId, or: $value.providerId),
     externalId: data.get(#externalId, or: $value.externalId),
+    externalUsername: data.get(#externalUsername, or: $value.externalUsername),
     status: data.get(#status, or: $value.status),
     createdAt: data.get(#createdAt, or: $value.createdAt),
     updatedAt: data.get(#updatedAt, or: $value.updatedAt),

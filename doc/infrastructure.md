@@ -53,7 +53,7 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 ```
 activities                  ← Base table: id, userId, title, content, provider, createdAt, updatedAt
   └── activity_phorge       ← Phorge metadata: phid, tags, revisionId, transactionType
-  └── activity_github       ← [planned] GitHub metadata: sha, repo, prNumber, eventType
+  └── activity_github_commit← GitHub commit metadata: repo, branch
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -66,11 +66,17 @@ activities                  ← Base table: id, userId, title, content, provider
 |---|---|
 | `activities` | Normalized activity base |
 | `activity_phorge` | Phorge-specific metadata |
+| `activity_github_commit` | GitHub commit-specific metadata |
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration |
+
+Identity linkage (`user_identities`) is the runtime source of provider
+participation for activity fetchers. Legacy tenants with historical
+`users.phorge_phid` data should run a one-time backfill into
+`user_identities(provider_id='phorge')` before enabling identity-only fetch.
 
 ---
 

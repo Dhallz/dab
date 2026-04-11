@@ -20,8 +20,14 @@ import 'activity_provider_icon.dart';
 class ActivityCard extends StatefulWidget {
   final Activity activity;
   final List<Activity>? activities;
+  final String? resolvedAuthorName;
 
-  const ActivityCard({super.key, required this.activity, this.activities});
+  const ActivityCard({
+    super.key,
+    required this.activity,
+    this.activities,
+    this.resolvedAuthorName,
+  });
 
   @override
   State<ActivityCard> createState() => _ActivityCardState();
@@ -70,6 +76,16 @@ class _ActivityCardState extends State<ActivityCard> {
       builder: (context, state, _) {
         final style = widget.activity.style(context);
         final brandColor = widget.activity.brandColor(context);
+        final isGitHubCommit = widget.activity.provider is GitHubCommitProvider;
+        final displayTitle = _displayTitle(
+          widget.activity,
+          isGitHubCommit: isGitHubCommit,
+        );
+        final commitSha = isGitHubCommit ? _extractSha(widget.activity.title) : null;
+        final displayAuthorName =
+            widget.resolvedAuthorName?.trim().isNotEmpty == true
+            ? widget.resolvedAuthorName!.trim()
+            : widget.activity.authorName;
 
         return MouseRegion(
           onEnter: (_) => setState(() => _isHovering = true),
@@ -178,7 +194,7 @@ class _ActivityCardState extends State<ActivityCard> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      widget.activity.title,
+                                      displayTitle,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -188,6 +204,19 @@ class _ActivityCardState extends State<ActivityCard> {
                                         letterSpacing: -0.2,
                                       ),
                                     ),
+                                    if (commitSha != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        commitSha,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.onSurfaceVariantLow,
+                                          fontFamily: 'Roboto Mono',
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -228,6 +257,8 @@ class _ActivityCardState extends State<ActivityCard> {
                               ActivityFooter(
                                 activity: widget.activity,
                                 activities: widget.activities,
+                                displayAuthorName: displayAuthorName,
+                                providerAuthorName: widget.activity.authorName,
                               ),
                             ],
                           ),
@@ -273,5 +304,23 @@ class _ActivityCardState extends State<ActivityCard> {
       return DateFormat('MMM d, y').format(date);
     }
     return timeago.format(date);
+  }
+
+  String _displayTitle(Activity activity, {required bool isGitHubCommit}) {
+    if (!isGitHubCommit) {
+      return activity.title;
+    }
+
+    final commitMessage = activity.content.trim();
+    if (commitMessage.isEmpty) {
+      return activity.title;
+    }
+
+    return commitMessage.split('\n').first.trim();
+  }
+
+  String? _extractSha(String input) {
+    final match = RegExp(r'\b[0-9a-fA-F]{7,40}\b').firstMatch(input);
+    return match?.group(0);
   }
 }

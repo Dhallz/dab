@@ -50,10 +50,12 @@ class AdminIdentityLinked extends AdminEvent with AdminIdentityLinkedMappable {
   final String userId;
   final String providerId;
   final String externalId;
+  final String? externalUsername;
   const AdminIdentityLinked({
     required this.userId,
     required this.providerId,
     required this.externalId,
+    this.externalUsername,
   });
 }
 

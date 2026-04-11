@@ -87,7 +87,9 @@ class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
     return Activity(
       id: _generateUuid('phorge-tx-${tx.id}'),
       userId: author.id,
-      authorName: author.name,
+      authorName: (author.phorgeUsername ?? '').trim().isNotEmpty
+          ? author.phorgeUsername!.trim()
+          : author.name,
       commentCount: tx.type == 'comment' ? 1 : 0,
       provider: PhorgeTaskProvider(
         taskPhid: bundle.task.phid,

@@ -50,6 +50,13 @@ abstract class IUserRepository {
     String providerId,
   );
 
+  /// Fetches linked identities for many users under one provider.
+  Future<Either<DatabaseFailure, List<UserIdentity>>>
+  getIdentitiesForUsersAndProvider(
+    Iterable<String> userIds,
+    String providerId,
+  );
+
   /// Fetches all identities (for admin overview).
   Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities();
 }

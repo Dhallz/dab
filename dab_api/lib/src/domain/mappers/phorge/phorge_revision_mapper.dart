@@ -33,7 +33,9 @@ class PhorgeRevisionMapper implements IActivityMapper<PhorgeRevisionData> {
       Activity(
         id: _generateUuid('phorge-rev-${data.id}'),
         userId: author.id,
-        authorName: author.name,
+        authorName: (author.phorgeUsername ?? '').trim().isNotEmpty
+            ? author.phorgeUsername!.trim()
+            : author.name,
         commentCount: 0,
         provider: PhorgeRevisionProvider(revisionId: data.phid),
         title: 'D${data.id}: ${data.title}',

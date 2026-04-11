@@ -20,10 +20,19 @@ class IdentityLinkDialog extends StatefulWidget {
 
 class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
   final controller = TextEditingController();
+  final usernameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    controller.text = widget.identity.userId;
+    usernameController.text = widget.identity.externalUsername ?? '';
+  }
 
   @override
   void dispose() {
     controller.dispose();
+    usernameController.dispose();
     super.dispose();
   }
 
@@ -72,6 +81,27 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: usernameController,
+              style: const TextStyle(color: AppColors.white),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.white.withValues(alpha: 0.05),
+                labelText: 'Provider Username (optional)',
+                labelStyle: const TextStyle(
+                  color: AppColors.onSurfaceVariantLow,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(
+                  Icons.alternate_email,
+                  color: AppColors.onSurfaceVariantLow,
+                ),
+              ),
+            ),
           ],
         ),
         actionsPadding: const EdgeInsets.symmetric(
@@ -97,9 +127,12 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
             onPressed: () {
               widget.bloc.add(
                 AdminIdentityLinked(
-                  userId: controller.text,
+                  userId: controller.text.trim().isEmpty
+                      ? widget.identity.userId
+                      : controller.text.trim(),
                   providerId: widget.identity.providerId,
                   externalId: widget.identity.externalId,
+                  externalUsername: usernameController.text.trim(),
                 ),
               );
               Navigator.pop(context);

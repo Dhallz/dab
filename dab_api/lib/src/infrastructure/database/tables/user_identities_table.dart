@@ -11,6 +11,7 @@ class UserIdentitiesTable extends Table {
       .customConstraint('NOT NULL REFERENCES users(id) ON DELETE CASCADE')();
   TextColumn get providerId => text().named('provider_id')();
   TextColumn get externalId => text().named('external_id')();
+  TextColumn get externalUsername => text().nullable().named('external_username')();
   TextColumn get status => text().withDefault(
     const Constant('Pending'),
   )(); // Linked, Pending, Failed

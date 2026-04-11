@@ -201,6 +201,7 @@ class UserRepository implements IUserRepository {
         userId: identity.userId,
         providerId: identity.providerId,
         externalId: identity.externalId,
+        externalUsername: Value(identity.externalUsername),
         status: Value(identity.status.name),
         createdAt: Value(toPgDateTime(identity.createdAt)),
         updatedAt: Value(toPgDateTimeOrNull(identity.updatedAt)),
@@ -243,6 +244,32 @@ class UserRepository implements IUserRepository {
   }
 
   @override
+  Future<Either<DatabaseFailure, List<UserIdentity>>>
+  getIdentitiesForUsersAndProvider(
+    Iterable<String> userIds,
+    String providerId,
+  ) async {
+    try {
+      final ids = userIds.toSet().toList();
+      if (ids.isEmpty) {
+        return right(const <UserIdentity>[]);
+      }
+
+      final query = _db.select(_db.userIdentitiesTable)
+        ..where((t) => t.providerId.equals(providerId))
+        ..where((t) => t.userId.isIn(ids));
+      final rows = await query.get();
+      return right(rows.map(_mapToIdentity).toList());
+    } catch (e) {
+      return left(
+        DatabaseFailure(
+          'Failed to fetch identities for users/provider: $e',
+        ),
+      );
+    }
+  }
+
+  @override
   Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities() async {
     try {
       final query = _db.select(_db.userIdentitiesTable);
@@ -259,6 +286,7 @@ class UserRepository implements IUserRepository {
       userId: row.userId,
       providerId: row.providerId,
       externalId: row.externalId,
+      externalUsername: row.externalUsername,
       status: UserIdentityStatus.values.firstWhere(
         (e) => e.name.toLowerCase() == row.status.toLowerCase(),
         orElse: () => UserIdentityStatus.pending,

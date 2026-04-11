@@ -107,6 +107,7 @@ class UserRepository extends Repository implements IUserRepository {
     required String userId,
     required String providerId,
     required String externalId,
+    String? externalUsername,
   }) async {
     return guardedCall(() async {
       final response = await _client.dio.post(
@@ -115,6 +116,7 @@ class UserRepository extends Repository implements IUserRepository {
           'userId': userId,
           'providerId': providerId,
           'externalId': externalId,
+          'externalUsername': externalUsername,
         },
       );
       final data = _getEnvelopeData(response);
