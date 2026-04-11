@@ -8,6 +8,8 @@ description: Main entry point for DAB project agent rules
 
 This is the primary entry point for AI agent rules in the DAB repository. To maintain manageable file sizes and clear boundaries, rules are organized into modular files within the `.agents/rules/` directory.
 
+**Cursor:** The same rules are mirrored for Cursor as `.mdc` files under `.cursor/rules/` (see `dab-manifest.mdc` for the index). Edit here if you treat `.agents/` as source; re-copy or sync to `.cursor/rules/` when you change content.
+
 ## 📋 Rule Hierarchy
 
 ### 1. Global Project Rules
