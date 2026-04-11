@@ -1,28 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../domain/containers/auth_usecases.dart';
-import '../../../../domain/entities/user.dart';
-
-/// [ARCH: PRESENTATION_STATE]
-/// ROLE: Discrete status of the Authentication lifecycle.
-enum AuthStatus { initial, authenticated, unauthenticated, error }
-
-/// [ARCH: PRESENTATION_STATE]
-/// ROLE: Immutable state for Authentication features.
-class AuthState {
-  final AuthStatus status;
-  final User? user;
-  final String? errorMessage;
-
-  const AuthState({required this.status, this.user, this.errorMessage});
-
-  factory AuthState.initial() => const AuthState(status: AuthStatus.initial);
-  factory AuthState.authenticated(User user) =>
-      AuthState(status: AuthStatus.authenticated, user: user);
-  factory AuthState.unauthenticated() =>
-      const AuthState(status: AuthStatus.unauthenticated);
-  factory AuthState.error(String message) =>
-      AuthState(status: AuthStatus.error, errorMessage: message);
-}
+import '../../../../domain/entities/user/user.dart';
+import '../../../../domain/entities/user/user_role.dart';
+import '../../core/models/view_status.dart';
+import 'auth_state.dart';
 
 /// [ARCH: PRESENTATION_BLOC]
 /// ROLE: State Manager for Authentication and Session lifecycle.
@@ -34,27 +16,38 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._usecases) : super(AuthState.initial());
 
   Future<void> checkAuth() async {
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await _usecases.checkAuthStatus.execute();
     result.fold(
-      (failure) => emit(AuthState.unauthenticated()),
-      (user) => emit(AuthState.authenticated(user)),
+      (failure) => emit(state.copyWith(status: ViewStatus.success, user: null)),
+      (user) => emit(state.copyWith(status: ViewStatus.success, user: user)),
     );
   }
 
   Future<void> login(String email, String password) async {
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await _usecases.login.execute(
       email: email,
       password: password,
     );
     result.fold(
-      (failure) => emit(AuthState.error(failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (response) => emit(
-        AuthState.authenticated(
-          User(
+        state.copyWith(
+          status: ViewStatus.success,
+          user: User(
             id: response.userId,
             name: response.name,
             email: response.email,
-            role: response.role,
+            role: UserRole.values.firstWhere(
+              (e) => e.name == response.role,
+              orElse: () => UserRole.standard,
+            ),
             avatarUrl: response.avatarUrl,
           ),
         ),
@@ -63,20 +56,30 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> register(String email, String password, String name) async {
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await _usecases.register.execute(
       email: email,
       password: password,
       name: name,
     );
     result.fold(
-      (failure) => emit(AuthState.error(failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (response) => emit(
-        AuthState.authenticated(
-          User(
+        state.copyWith(
+          status: ViewStatus.success,
+          user: User(
             id: response.userId,
             name: response.name,
             email: response.email,
-            role: response.role,
+            role: UserRole.values.firstWhere(
+              (e) => e.name == response.role,
+              orElse: () => UserRole.standard,
+            ),
             avatarUrl: response.avatarUrl,
           ),
         ),
@@ -85,7 +88,8 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    emit(state.copyWith(status: ViewStatus.loading));
     await _usecases.logout.execute();
-    emit(AuthState.unauthenticated());
+    emit(state.copyWith(status: ViewStatus.success, user: null));
   }
 }

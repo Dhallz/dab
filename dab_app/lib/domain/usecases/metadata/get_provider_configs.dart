@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures.dart';
-import '../../entities/provider_config.dart';
+import '../../entities/provider/provider_config.dart';
 import '../../repositories/abs_i_provider_config_repository.dart';
 
 class GetProviderConfigs {

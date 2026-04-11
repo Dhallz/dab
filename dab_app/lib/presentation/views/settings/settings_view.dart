@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'layout/settings_view_desktop.dart';
-import 'layout/settings_view_mobile.dart';
+import 'layouts/settings_view_desktop.dart';
+import 'layouts/settings_view_mobile.dart';
 import 'settings_bloc.dart';
 import 'settings_event.dart';
 

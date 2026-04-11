@@ -1,6 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
-import '../../../../domain/entities/activity.dart';
+import '../../../../domain/entities/activity/activity.dart';
 
 part 'explorer_item.mapper.dart';
 

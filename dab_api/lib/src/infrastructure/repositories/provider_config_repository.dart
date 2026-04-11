@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failure.dart';
-import '../../domain/entities/provider_config.dart';
+import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../database/app_database.dart';
 import '../database/drift_row_mappers.dart';

@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../../domain/entities/activity.dart';
-import '../../../../../domain/entities/provider_config.dart';
+import '../../../../../domain/entities/activity/activity.dart';
+import '../../../../../domain/entities/provider/provider_config.dart';
 import '../../../../../presentation/core/extensions/activity_provider_extensions.dart';
 
 class ActivityProviderIcon extends StatelessWidget {

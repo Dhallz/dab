@@ -1,5 +1,6 @@
 import 'package:dab_api/src/domain/entities/session.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/entities/user/user_role.dart';
 import 'package:dab_api/src/infrastructure/database/app_database.dart';
 import 'package:drift_postgres/drift_postgres.dart';
 
@@ -10,7 +11,10 @@ User userFromUsersRow(UsersTableData row) {
     email: row.email,
     avatarUrl: row.avatarUrl,
     passwordHash: row.passwordHash,
-    role: row.role,
+    role: UserRole.values.firstWhere(
+      (e) => e.name.toLowerCase() == row.role.toLowerCase(),
+      orElse: () => UserRole.standard,
+    ),
     phorgePhid: row.phorgePhid,
     phorgeUsername: row.phorgeUsername,
     createdAt: row.createdAt.dateTime,

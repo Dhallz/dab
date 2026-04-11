@@ -1,6 +1,10 @@
 import 'dart:convert';
+
 import 'package:relic/relic.dart';
+
 import '../../application/containers/auth_usecases.dart';
+import '../../domain/entities/user/user_identity_status.dart';
+import '../../domain/entities/user/user_role.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]
@@ -13,7 +17,7 @@ class AdminController {
   Future<Response> getIdentities(Request request) async {
     try {
       final result = await _auth.getAllIdentities.execute();
-      
+
       return result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
@@ -56,7 +60,9 @@ class AdminController {
       if (userId == null || providerId == null || externalId == null) {
         return Response.badRequest(
           body: Body.fromString(
-            jsonEncode({'error': 'userId, providerId, and externalId are required'}),
+            jsonEncode({
+              'error': 'userId, providerId, and externalId are required',
+            }),
             mimeType: MimeType.json,
           ),
         );
@@ -66,6 +72,61 @@ class AdminController {
         userId: userId,
         providerId: providerId,
         externalId: externalId,
+      );
+
+      return result.fold(
+        (failure) => Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        ),
+        (identity) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({'data': identity.toMap()}),
+            mimeType: MimeType.json,
+          ),
+        ),
+      );
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': e.toString()}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
+  Future<Response> resolveIdentity(Request request) async {
+    try {
+      final bodyStr = await request.readAsString();
+      final data = jsonDecode(bodyStr) as Map<String, dynamic>;
+
+      final userId = data['userId'] as String?;
+      final providerId = data['providerId'] as String?;
+      final statusStr = data['status'] as String?;
+
+      if (userId == null || providerId == null || statusStr == null) {
+        return Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({
+              'error': 'userId, providerId, and status are required',
+            }),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
+
+      final status = UserIdentityStatus.values.firstWhere(
+        (s) => s.name.toLowerCase() == statusStr.toLowerCase(),
+        orElse: () => UserIdentityStatus.pending,
+      );
+
+      final result = await _auth.resolveUserIdentity.execute(
+        userId: userId,
+        providerId: providerId,
+        status: status,
       );
 
       return result.fold(
@@ -143,7 +204,12 @@ class AdminController {
         );
       }
 
-      final result = await _auth.updateUserRole.execute(userId, role);
+      final userRole = UserRole.values.firstWhere(
+        (e) => e.name.toLowerCase() == role.toLowerCase(),
+        orElse: () => UserRole.standard,
+      );
+
+      final result = await _auth.updateUserRole.execute(userId, userRole);
 
       return result.fold(
         (failure) => Response.internalServerError(

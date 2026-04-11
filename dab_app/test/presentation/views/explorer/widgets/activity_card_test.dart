@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:dab_app/domain/entities/activity.dart';
+import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/presentation/features/app/app_cubit.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/explorer/widgets/activity_card/activity_card.dart';

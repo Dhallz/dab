@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../core/failures.dart';
 import '../entities/auth_response.dart';
-import '../entities/user.dart';
+import '../entities/user/user.dart';
 import 'core/abs_i_repository.dart';
 
 abstract interface class IAuthRepository extends IRepository {

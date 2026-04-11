@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../core/failure.dart';
-import '../entities/activity.dart';
+import '../entities/activity/activity.dart';
 
 abstract class AbsIActivityRepository {
   Future<Either<DatabaseFailure, void>> createActivity(Activity activity);

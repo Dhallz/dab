@@ -8,6 +8,7 @@ import '../usecases/auth/refresh_token.dart';
 import '../usecases/auth/register_new_user.dart';
 import '../usecases/auth/register_user.dart';
 import '../usecases/auth/update_user_role.dart';
+import '../usecases/auth/resolve_user_identity.dart';
 
 class AuthUseCases {
   final AuthenticateUser authenticateUser;
@@ -20,6 +21,7 @@ class AuthUseCases {
   final GetAllIdentities getAllIdentities;
   final FindAllUsers findAllUsers;
   final UpdateUserRole updateUserRole;
+  final ResolveUserIdentity resolveUserIdentity;
 
   AuthUseCases({
     required this.authenticateUser,
@@ -32,5 +34,6 @@ class AuthUseCases {
     required this.getAllIdentities,
     required this.findAllUsers,
     required this.updateUserRole,
+    required this.resolveUserIdentity,
   });
 }

@@ -1,4 +1,4 @@
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 import '../../dtos/discord/discord_message_dto.dart';
 

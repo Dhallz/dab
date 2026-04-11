@@ -14,6 +14,7 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
   static SettingsStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = SettingsStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       AppSettingsMapper.ensureInitialized();
     }
     return _instance!;
@@ -22,6 +23,13 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
   @override
   final String id = 'SettingsState';
 
+  static ViewStatus _$status(SettingsState v) => v.status;
+  static const Field<SettingsState, ViewStatus> _f$status = Field(
+    'status',
+    _$status,
+    opt: true,
+    def: ViewStatus.initial,
+  );
   static AppSettings _$settings(SettingsState v) => v.settings;
   static const Field<SettingsState, AppSettings> _f$settings = Field(
     'settings',
@@ -29,24 +37,17 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
     opt: true,
     def: const AppSettings(),
   );
-  static bool _$isLoading(SettingsState v) => v.isLoading;
-  static const Field<SettingsState, bool> _f$isLoading = Field(
-    'isLoading',
-    _$isLoading,
-    opt: true,
-    def: false,
-  );
 
   @override
   final MappableFields<SettingsState> fields = const {
+    #status: _f$status,
     #settings: _f$settings,
-    #isLoading: _f$isLoading,
   };
 
   static SettingsState _instantiate(DecodingData data) {
     return SettingsState(
+      status: data.dec(_f$status),
       settings: data.dec(_f$settings),
-      isLoading: data.dec(_f$isLoading),
     );
   }
 
@@ -113,7 +114,7 @@ extension SettingsStateValueCopy<$R, $Out>
 abstract class SettingsStateCopyWith<$R, $In extends SettingsState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings;
-  $R call({AppSettings? settings, bool? isLoading});
+  $R call({ViewStatus? status, AppSettings? settings});
   SettingsStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -129,16 +130,16 @@ class _SettingsStateCopyWithImpl<$R, $Out>
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings =>
       $value.settings.copyWith.$chain((v) => call(settings: v));
   @override
-  $R call({AppSettings? settings, bool? isLoading}) => $apply(
+  $R call({ViewStatus? status, AppSettings? settings}) => $apply(
     FieldCopyWithData({
+      if (status != null) #status: status,
       if (settings != null) #settings: settings,
-      if (isLoading != null) #isLoading: isLoading,
     }),
   );
   @override
   SettingsState $make(CopyWithData data) => SettingsState(
+    status: data.get(#status, or: $value.status),
     settings: data.get(#settings, or: $value.settings),
-    isLoading: data.get(#isLoading, or: $value.isLoading),
   );
 
   @override

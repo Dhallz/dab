@@ -1,6 +1,6 @@
 import 'package:uuid/uuid.dart';
-import '../../../domain/entities/activity.dart';
-import '../../../domain/entities/activity_provider.dart';
+import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/entities/activity/activity_provider.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';

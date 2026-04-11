@@ -1,11 +1,14 @@
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:dab_api/src/domain/core/failure.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Infrastructure Source for Phorge User identities and profile data.
 /// CONTRACT: Fetches raw User PHIDs and DTOs from the Phorge Conduit API.
 /// CONSTRAINTS: Must be READ-ONLY. Implements heuristic identity resolution.
-class PhorgeUserSource {
+class PhorgeUserSource implements IDiscoverySource {
   final PhorgeClient _client;
 
   PhorgeUserSource(this._client);
@@ -35,6 +38,16 @@ class PhorgeUserSource {
     }
 
     return null;
+  }
+
+  @override
+  Future<Either<Failure, String?>> lookupExternalId(String name, String email) async {
+    try {
+      final phid = await lookupUserPhid(name, email);
+      return Right(phid);
+    } catch (e) {
+      return Left(DatabaseFailure('Phorge discovery failed: $e'));
+    }
   }
 
   /// Fetches all active users from Phorge.

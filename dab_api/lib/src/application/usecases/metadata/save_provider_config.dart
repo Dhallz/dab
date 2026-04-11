@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failure.dart';
-import '../../../domain/entities/provider_config.dart';
+import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]

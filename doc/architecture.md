@@ -35,13 +35,13 @@ dab/
 ```
 dab_api/lib/src/
 ├── domain/
-│   ├── entities/        ← Activity, User, Group, Session, ProviderConfig, UserIdentity, ProviderMetadata
+│   ├── entities/        ← Subject Folders: activity/, group/, provider/, user/
 │   ├── repositories/    ← Abstract interfaces prefixed I*
 │   ├── mappers/         ← IActivityMapper — transforms provider DTOs to domain Activity
 │   └── services/        ← Domain-level service contracts
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
-│   ├── services/        ← ActivityService, AuthService, PresenceService, ConnectorRegistry
+│   ├── services/        ← ActivityService, AuthService, PresenceService, ConnectorRegistry, IdentityDiscoveryService
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
 │   ├── connectors/      ← IActivitySource implementations (one per provider)
@@ -64,7 +64,7 @@ dab_api/lib/src/
 ```
 dab_app/lib/
 ├── domain/
-│   ├── entities/        ← Activity, ActivityProvider (sealed), User, Group, ProviderConfig, Presence, AuthResponse, UserIdentity
+│   ├── entities/        ← Subject Folders: activity/, group/, provider/, user/
 │   ├── repositories/    ← Abstract I*Repository interfaces
 │   ├── usecases/        ← Atomic use cases per feature
 │   ├── containers/      ← Use case aggregators (AuthUseCases, etc.)
@@ -91,8 +91,8 @@ dab_app/lib/
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. |
 | `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (e.g., Phorge tasks, revisions) |
-| `User` | DAB user — `id`, `email`, `role`, `groupId`, `isActive`, linked `UserIdentity` records |
-| `UserIdentity` | Maps a DAB user to an external provider account (PHID, GitHub ID, etc.) |
+| `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
+| `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |

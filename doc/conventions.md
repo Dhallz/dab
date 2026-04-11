@@ -40,7 +40,7 @@
 | Cubit | `AuthCubit` | `auth_cubit.dart` | `[view]/` or `features/[feature]/` |
 | Cubit State | `AuthState` | `auth_state.dart` | Same folder — always isolated file |
 | View | `AuthView` | `auth_view.dart` | `lib/presentation/views/auth/` |
-| Layout | `AuthViewMobile` | `auth_view_mobile.dart` | `lib/presentation/views/auth/layout/` |
+| Layout | `AuthViewMobile` | `auth_view_mobile.dart` | `lib/presentation/views/auth/layouts/` |
 | Controller (API) | `AuthController` | `auth_controller.dart` | `lib/src/presentation/controllers/` |
 | Service Locator | `ServiceLocator` | `service_locator.dart` | `lib/services/` (app) / root `lib/src/` (api) |
 
@@ -124,13 +124,18 @@
   ```
   [view_name]/
   ├── [name]_view.dart      ← BlocProvider + LayoutBuilder switcher
-  ├── layout/
+  ├── layouts/              ← device-specific layouts (mobile, desktop)
   │   ├── [name]_view_mobile.dart
   │   └── [name]_view_desktop.dart
   ├── [name]_cubit.dart     ← extends AbsCubit or AbsBloc
-  ├── [name]_state.dart     ← always a separate, isolated file
-  └── widgets/              ← private local widgets, one per file
+  ├── [name]_state.dart     ← uses ViewStatus, always isolated file
+  ├── models/               ← feature-local enums and data classes
+  └── widgets/              ← extracted UI components, strictly one per file
   ```
+
+- **One Widget Per File:** Strictly enforced. No private widgets (`_MyWidget`) or functions returning `Widget` in layout files.
+
+- **Status Management:** Use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) in all states.
 
 - **Base classes:** Every Cubit must extend `AbsCubit`. Every Bloc must extend `AbsBloc`.
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../../domain/entities/activity.dart';
+import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import 'activity_history_list.dart';
 

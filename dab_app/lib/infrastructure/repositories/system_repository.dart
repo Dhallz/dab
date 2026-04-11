@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../../domain/core/failures.dart';
 import '../../domain/entities/system/app_settings.dart';
 import '../../domain/repositories/abs_i_system_repository.dart';

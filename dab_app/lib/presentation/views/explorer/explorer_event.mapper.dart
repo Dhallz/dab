@@ -442,6 +442,7 @@ class ExplorerDirectoryTypeChangedMapper
         _instance = ExplorerDirectoryTypeChangedMapper._(),
       );
       ExplorerEventMapper.ensureInitialized();
+      DirectoryTypeMapper.ensureInitialized();
     }
     return _instance!;
   }

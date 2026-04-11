@@ -2,6 +2,7 @@ import 'package:dab_app/presentation/core/abs_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../domain/containers/auth_usecases.dart';
+import '../../core/models/view_status.dart';
 import '../../features/auth/auth_cubit.dart' as auth;
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -36,9 +37,7 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
   }
 
   void _onModeToggled(AuthModeToggled event, Emitter<AuthState> emit) {
-    emit(
-      state.copyWith(isLogin: !state.isLogin, status: AuthViewStatus.initial),
-    );
+    emit(state.copyWith(isLogin: !state.isLogin, status: ViewStatus.initial));
   }
 
   void _onEmailChanged(AuthEmailChanged event, Emitter<AuthState> emit) {
@@ -57,9 +56,9 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
     AuthSubmitted event,
     Emitter<AuthState> emit,
   ) async {
-    if (state.status == AuthViewStatus.loading) return;
+    if (state.status == ViewStatus.loading) return;
 
-    emit(state.copyWith(status: AuthViewStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
 
     if (state.isLogin) {
       final result = await _usecases.login.execute(
@@ -70,7 +69,7 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
         (failure) async {
           emit(
             state.copyWith(
-              status: AuthViewStatus.failure,
+              status: ViewStatus.failure,
               errorMessage: failure.message,
             ),
           );
@@ -81,7 +80,7 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
             password: state.password,
           );
           authCubit?.checkAuth();
-          emit(state.copyWith(status: AuthViewStatus.success));
+          emit(state.copyWith(status: ViewStatus.success));
         },
       );
     } else {
@@ -93,7 +92,7 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
       await result.fold(
         (failure) async => emit(
           state.copyWith(
-            status: AuthViewStatus.failure,
+            status: ViewStatus.failure,
             errorMessage: failure.message,
           ),
         ),
@@ -103,7 +102,7 @@ class AuthBloc extends AbsBloc<AuthEvent, AuthState> {
             password: state.password,
           );
           authCubit?.checkAuth();
-          emit(state.copyWith(status: AuthViewStatus.success));
+          emit(state.copyWith(status: ViewStatus.success));
         },
       );
     }

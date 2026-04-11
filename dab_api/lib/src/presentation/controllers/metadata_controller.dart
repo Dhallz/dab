@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:relic/relic.dart';
-import '../../domain/entities/provider_config.dart';
+import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
 import '../../service_locator.dart';
 import '../../infrastructure/connectors/phorge/phorge_client.dart';

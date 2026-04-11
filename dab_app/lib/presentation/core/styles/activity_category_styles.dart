@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../domain/entities/activity.dart';
+import '../../../../domain/entities/activity/activity_category.dart';
 import 'app_colors.dart';
 import 'app_icons.dart';
 

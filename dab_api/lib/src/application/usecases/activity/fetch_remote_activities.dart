@@ -2,8 +2,8 @@ import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failure.dart';
-import '../../../domain/entities/activity.dart';
-import '../../../domain/entities/user.dart';
+import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/entities/user/user.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Orchestrates the parallel fetching and aggregation of activities.

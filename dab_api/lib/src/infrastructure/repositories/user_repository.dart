@@ -3,9 +3,11 @@ import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:uuid/uuid.dart';
 
 import '../../domain/core/failure.dart';
-import '../../domain/entities/group.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/entities/user_identity.dart';
+import '../../domain/entities/group/group.dart';
+import '../../domain/entities/group/group_type.dart';
+import '../../domain/entities/user/user.dart';
+import '../../domain/entities/user/user_identity.dart';
+import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../database/app_database.dart';
 import '../database/drift_row_mappers.dart';
@@ -92,7 +94,7 @@ class UserRepository implements IUserRepository {
               name: user.name,
               email: user.email,
               passwordHash: user.passwordHash,
-              role: Value(user.role),
+              role: Value(user.role.name),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
               createdAt: toPgDateTime(user.createdAt),
@@ -199,7 +201,7 @@ class UserRepository implements IUserRepository {
         userId: identity.userId,
         providerId: identity.providerId,
         externalId: identity.externalId,
-        status: Value(identity.status),
+        status: Value(identity.status.name),
         createdAt: Value(toPgDateTime(identity.createdAt)),
         updatedAt: Value(toPgDateTimeOrNull(identity.updatedAt)),
       );
@@ -257,7 +259,10 @@ class UserRepository implements IUserRepository {
       userId: row.userId,
       providerId: row.providerId,
       externalId: row.externalId,
-      status: row.status,
+      status: UserIdentityStatus.values.firstWhere(
+        (e) => e.name.toLowerCase() == row.status.toLowerCase(),
+        orElse: () => UserIdentityStatus.pending,
+      ),
       createdAt: row.createdAt.dateTime,
       updatedAt: row.updatedAt?.dateTime,
     );

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../domain/entities/group.dart';
-import '../../../../domain/entities/user.dart';
+import '../../../../domain/entities/group/group.dart';
+import '../../../../domain/entities/group/group_type.dart';
+import '../../../../domain/entities/user/user.dart';
 import '../explorer_bloc.dart';
 import '../explorer_event.dart';
 

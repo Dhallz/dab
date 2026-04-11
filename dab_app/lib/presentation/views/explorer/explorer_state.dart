@@ -1,18 +1,18 @@
+import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
-import '../../../../domain/entities/group.dart';
-import '../../../../domain/entities/user.dart';
+import '../../../../domain/entities/group/group.dart';
+import '../../../../domain/entities/user/user.dart';
 import 'explorer_item.dart';
+import 'models/directory_type.dart';
 
 part 'explorer_state.mapper.dart';
 
-enum ExplorerStatus { initial, loading, success, failure }
-
-enum DirectoryType { users, groups }
-
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Snapshot of the Explorer screen state.
 @MappableClass()
 class ExplorerState with ExplorerStateMappable {
-  final ExplorerStatus status;
+  final ViewStatus status;
   final List<ExplorerItem> items;
   final String? errorMessage;
   final DateTime selectedDate;
@@ -29,7 +29,7 @@ class ExplorerState with ExplorerStateMappable {
   final Set<String> selectedProviders;
 
   const ExplorerState({
-    this.status = ExplorerStatus.initial,
+    this.status = ViewStatus.initial,
     this.items = const [],
     this.errorMessage,
     required this.selectedDate,

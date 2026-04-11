@@ -14,7 +14,9 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   static ExplorerStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExplorerStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       ExplorerItemMapper.ensureInitialized();
+      DirectoryTypeMapper.ensureInitialized();
       UserMapper.ensureInitialized();
       GroupMapper.ensureInitialized();
     }
@@ -24,12 +26,12 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   @override
   final String id = 'ExplorerState';
 
-  static ExplorerStatus _$status(ExplorerState v) => v.status;
-  static const Field<ExplorerState, ExplorerStatus> _f$status = Field(
+  static ViewStatus _$status(ExplorerState v) => v.status;
+  static const Field<ExplorerState, ViewStatus> _f$status = Field(
     'status',
     _$status,
     opt: true,
-    def: ExplorerStatus.initial,
+    def: ViewStatus.initial,
   );
   static List<ExplorerItem> _$items(ExplorerState v) => v.items;
   static const Field<ExplorerState, List<ExplorerItem>> _f$items = Field(
@@ -201,7 +203,7 @@ abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get availableProviders;
   $R call({
-    ExplorerStatus? status,
+    ViewStatus? status,
     List<ExplorerItem>? items,
     String? errorMessage,
     DateTime? selectedDate,
@@ -254,7 +256,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
   );
   @override
   $R call({
-    ExplorerStatus? status,
+    ViewStatus? status,
     List<ExplorerItem>? items,
     Object? errorMessage = $none,
     DateTime? selectedDate,

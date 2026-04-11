@@ -1,4 +1,4 @@
-import '../../../domain/entities/user.dart';
+import '../../../domain/entities/user/user.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]

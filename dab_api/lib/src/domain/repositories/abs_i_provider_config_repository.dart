@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../core/failure.dart';
-import '../entities/provider_config.dart';
+import '../entities/provider/provider_config.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for Platform Configuration retrieval.

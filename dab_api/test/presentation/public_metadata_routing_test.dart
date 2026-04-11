@@ -13,19 +13,19 @@ void main() {
       'GET /metadata/configs and /metadata/status skip auth under '
       '/metadata/providers middleware',
       () async {
-        Handler authReject(Handler next) {
+        Handler authRejectHandler(Handler next) {
           return (Request req) => Response.unauthorized(
                 body: Body.fromString('auth'),
               );
         }
 
-        Handler ok = (Request req) => Response.ok(body: Body.fromString('ok'));
+        Response okHandler(Request req) => Response.ok(body: Body.fromString('ok'));
 
         final router = RelicRouter()
-          ..get('/metadata/status', ok)
-          ..get('/metadata/configs', ok)
-          ..use('/metadata/providers', authReject)
-          ..get('/metadata/providers', ok);
+          ..get('/metadata/status', okHandler)
+          ..get('/metadata/configs', okHandler)
+          ..use('/metadata/providers', authRejectHandler)
+          ..get('/metadata/providers', okHandler);
 
         final configsReq = TestRequest.create(
           url: Uri.parse('http://localhost/metadata/configs'),

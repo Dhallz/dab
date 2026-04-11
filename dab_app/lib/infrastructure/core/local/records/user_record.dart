@@ -1,4 +1,5 @@
-import 'package:dab_app/domain/entities/user.dart';
+import 'package:dab_app/domain/entities/user/user.dart';
+import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:objectbox/objectbox.dart';
 
 @Entity()
@@ -21,6 +22,13 @@ class UserRecord {
 }
 
 extension OnUserRecord on UserRecord {
-  User get toDomain =>
-      User(id: remoteId, name: name ?? 'Unknown', email: email, role: role);
+  User get toDomain => User(
+        id: remoteId,
+        name: name ?? 'Unknown',
+        email: email,
+        role: UserRole.values.firstWhere(
+          (e) => e.name == role,
+          orElse: () => UserRole.standard,
+        ),
+      );
 }

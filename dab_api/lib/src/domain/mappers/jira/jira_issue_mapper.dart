@@ -1,5 +1,5 @@
-import 'package:dab_api/src/domain/entities/activity.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
 import '../../../infrastructure/dtos/jira/jira_issue_dto.dart';
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:redis/redis.dart';
 
-import '../../../domain/entities/activity.dart';
+import '../../../domain/entities/activity/activity.dart';
 import 'redis_client.dart';
 
 class RedisService {

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:relic/relic.dart';
 import '../../application/containers/activity_usecases.dart';
 import '../../infrastructure/websockets/presence_service.dart';
-import '../../domain/entities/activity_provider.dart';
+import '../../domain/entities/activity/activity_provider.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';

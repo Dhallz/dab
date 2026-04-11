@@ -1,6 +1,8 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../../../domain/core/failure.dart';
-import '../../../domain/entities/user_identity.dart';
+import '../../../domain/entities/user/user_identity.dart';
+import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 
 /// [ARCH: APPLICATION_USE_CASE]
@@ -17,11 +19,11 @@ class LinkUserIdentity {
     required String externalId,
   }) async {
     final identity = UserIdentity(
-      id: '${userId}_$providerId', // Simple composite ID or UUID
+      id: '${userId}_$providerId',
       userId: userId,
       providerId: providerId,
       externalId: externalId,
-      status: 'Linked',
+      status: UserIdentityStatus.linked,
       createdAt: DateTime.now(),
     );
 

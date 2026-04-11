@@ -2,8 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failure.dart';
-import '../../domain/entities/activity.dart';
-import '../../domain/entities/activity_provider.dart';
+import '../../domain/entities/activity/activity.dart';
+import '../../domain/entities/activity/activity_provider.dart';
 import '../../domain/repositories/abs_i_activity_repository.dart';
 import '../database/app_database.dart';
 import '../database/drift_row_mappers.dart';
@@ -83,11 +83,21 @@ class ActivityRepository implements AbsIActivityRepository {
   }) async {
     try {
       final query = _db.select(_db.activitiesTable).join([
+        // Join with specific metadata
         leftOuterJoin(
           _db.activityPhorgeTable,
           _db.activityPhorgeTable.activityId.equalsExp(_db.activitiesTable.id),
         ),
+        // INNER JOIN with provider_configs to enforce "Deep Deactivation"
+        // We filter out any activity whose provider is currently disabled.
+        innerJoin(
+          _db.providerConfigsTable,
+          _db.providerConfigsTable.id.equalsExp(_db.activitiesTable.providerName.lower()),
+        ),
       ]);
+
+      // Apply the deactivation filter
+      query.where(_db.providerConfigsTable.isActive.equals(1));
 
       query.orderBy([
         OrderingTerm(
@@ -114,9 +124,18 @@ class ActivityRepository implements AbsIActivityRepository {
           _db.activityPhorgeTable,
           _db.activityPhorgeTable.activityId.equalsExp(_db.activitiesTable.id),
         ),
+        // ENFORCE Deep Deactivation filtering for user-specific feeds too
+        innerJoin(
+          _db.providerConfigsTable,
+          _db.providerConfigsTable.id.equalsExp(_db.activitiesTable.providerName.lower()),
+        ),
       ]);
 
-      query.where(_db.activitiesTable.userId.equals(userId));
+      query.where(
+        _db.activitiesTable.userId.equals(userId) &
+        _db.providerConfigsTable.isActive.equals(1),
+      );
+      
       query.orderBy([
         OrderingTerm(
           expression: _db.activitiesTable.createdAt,

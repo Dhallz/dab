@@ -3,7 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failure.dart';
-import '../../../domain/entities/user.dart';
+import '../../../domain/entities/user/user.dart';
+import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/config/config.dart';
@@ -90,7 +91,7 @@ class SyncPhorgeUsers {
              name: pUser.realName ?? phorgeUsername,
              email: generatedEmail,
              passwordHash: passwordHash,
-             role: 'Standard',
+             role: UserRole.standard,
              phorgePhid: pUser.phid,
              phorgeUsername: phorgeUsername,
              createdAt: DateTime.now(),

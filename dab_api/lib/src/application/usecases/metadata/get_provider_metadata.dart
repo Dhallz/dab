@@ -1,4 +1,4 @@
-import '../../../domain/entities/provider_metadata.dart';
+import '../../../domain/entities/provider/provider_metadata.dart';
 import '../../../domain/repositories/abs_i_provider_metadata_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]

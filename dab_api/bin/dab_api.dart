@@ -69,6 +69,7 @@ Future<void> main() async {
     // Identity Resolution
     ..get('/admin/identities', AdminController().getIdentities)
     ..post('/admin/identities/link', AdminController().linkIdentity)
+    ..post('/admin/identities/resolve', AdminController().resolveIdentity)
     // User Management
     ..get('/admin/users', AdminController().getUsers)
     ..post('/admin/users/role', AdminController().postUpdateUserRole)

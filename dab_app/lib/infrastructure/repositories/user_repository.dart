@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
 import '../../domain/core/failures.dart';
-import '../../domain/entities/group.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/entities/user_identity.dart';
+import '../../domain/entities/group/group.dart';
+import '../../domain/entities/user/user.dart';
+import '../../domain/entities/user/user_role.dart';
+import '../../domain/entities/user/user_identity.dart';
+import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../core/remote/rest_api_client.dart';
 import './core/repository.dart';
@@ -111,16 +113,36 @@ class UserRepository extends Repository implements IUserRepository {
   @override
   Future<Either<AppFailure, void>> updateUserRole({
     required String userId,
-    required String role,
+    required UserRole role,
   }) async {
     return guardedCall(() async {
       await _client.dio.post(
         '/admin/users/role',
         data: {
           'userId': userId,
-          'role': role,
+          'role': role.name,
         },
       );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, UserIdentity>> resolveIdentity({
+    required String userId,
+    required String providerId,
+    required UserIdentityStatus status,
+  }) async {
+    return guardedCall(() async {
+      final response = await _client.dio.post(
+        '/admin/identities/resolve',
+        data: {
+          'userId': userId,
+          'providerId': providerId,
+          'status': status.name,
+        },
+      );
+      final data = _getEnvelopeData(response);
+      return UserIdentityMapper.fromMap(data as Map<String, dynamic>);
     });
   }
 

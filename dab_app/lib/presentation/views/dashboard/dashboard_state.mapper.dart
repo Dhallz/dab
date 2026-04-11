@@ -14,6 +14,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
   static DashboardStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = DashboardStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       ActivityMapper.ensureInitialized();
     }
     return _instance!;
@@ -22,12 +23,12 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
   @override
   final String id = 'DashboardState';
 
-  static DashboardStatus _$status(DashboardState v) => v.status;
-  static const Field<DashboardState, DashboardStatus> _f$status = Field(
+  static ViewStatus _$status(DashboardState v) => v.status;
+  static const Field<DashboardState, ViewStatus> _f$status = Field(
     'status',
     _$status,
     opt: true,
-    def: DashboardStatus.initial,
+    def: ViewStatus.initial,
   );
   static List<Activity> _$activities(DashboardState v) => v.activities;
   static const Field<DashboardState, List<Activity>> _f$activities = Field(
@@ -123,7 +124,7 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
   ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
   get activities;
   $R call({
-    DashboardStatus? status,
+    ViewStatus? status,
     List<Activity>? activities,
     String? errorMessage,
   });
@@ -149,7 +150,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
   );
   @override
   $R call({
-    DashboardStatus? status,
+    ViewStatus? status,
     List<Activity>? activities,
     Object? errorMessage = $none,
   }) => $apply(

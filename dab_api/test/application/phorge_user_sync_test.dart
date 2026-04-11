@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
-import 'package:dab_api/src/domain/entities/provider_config.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
@@ -10,8 +10,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 class MockUserRepository extends Mock implements IUserRepository {}
+
 class MockPhorgeUserSource extends Mock implements PhorgeUserSource {}
-class MockProviderConfigRepository extends Mock implements AbsIProviderConfigRepository {}
+
+class MockProviderConfigRepository extends Mock
+    implements AbsIProviderConfigRepository {}
 
 void main() {
   late SyncPhorgeUsers syncUseCase;
@@ -50,14 +53,16 @@ void main() {
         ),
       ];
 
-      when(() => mockConfigRepo.getConfigs()).thenAnswer((_) async => Right([
-        const ProviderConfig(
-          id: 'phorge',
-          name: 'Phorge',
-          baseUrl: 'https://phorge.example.com',
-          isActive: true,
-        ),
-      ]));
+      when(() => mockConfigRepo.getConfigs()).thenAnswer(
+        (_) async => Right([
+          const ProviderConfig(
+            id: 'phorge',
+            name: 'Phorge',
+            baseUrl: 'https://phorge.example.com',
+            isActive: true,
+          ),
+        ]),
+      );
 
       when(() => mockSource.fetchAllUsers()).thenAnswer((_) async => pUsers);
 

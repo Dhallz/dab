@@ -1,6 +1,7 @@
-import 'package:dab_app/domain/entities/system/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:objectbox/objectbox.dart';
+
+import '../../../../domain/entities/system/app_settings.dart';
 
 @Entity()
 class AppSettingsRecord {

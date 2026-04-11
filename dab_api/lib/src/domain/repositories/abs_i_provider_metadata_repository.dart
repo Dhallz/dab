@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../core/failure.dart';
-import '../entities/provider_metadata.dart';
+import '../entities/provider/provider_metadata.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for User-specific Platform Metadata retrieval.

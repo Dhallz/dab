@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../auth_state.dart';
+import 'auth_text_field.dart';
 
 class AuthForm extends StatefulWidget {
   final AuthState state;
@@ -61,7 +62,7 @@ class _AuthFormState extends State<AuthForm> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = widget.state.status == AuthViewStatus.loading;
+    final isLoading = widget.state.status.isLoading;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -118,7 +119,7 @@ class _AuthFormState extends State<AuthForm> {
         const SizedBox(height: 24),
 
         if (!widget.state.isLogin) ...[
-          _AuthTextField(
+          AuthTextField(
             label: 'Name',
             hint: 'Your full name',
             icon: Icons.person_outline,
@@ -128,7 +129,7 @@ class _AuthFormState extends State<AuthForm> {
           const SizedBox(height: 16),
         ],
 
-        _AuthTextField(
+        AuthTextField(
           label: 'Email',
           hint: 'you@company.com',
           icon: Icons.email_outlined,
@@ -138,7 +139,7 @@ class _AuthFormState extends State<AuthForm> {
         ),
         const SizedBox(height: 16),
 
-        _AuthTextField(
+        AuthTextField(
           label: 'Password',
           hint: '••••••••',
           icon: Icons.lock_outline,
@@ -187,74 +188,6 @@ class _AuthFormState extends State<AuthForm> {
             style: TextStyle(
               color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AuthTextField extends StatelessWidget {
-  final String label;
-  final String hint;
-  final IconData icon;
-  final bool obscureText;
-  final TextEditingController controller;
-  final ValueChanged<String>? onChanged;
-  final TextInputType? keyboardType;
-
-  const _AuthTextField({
-    required this.label,
-    required this.hint,
-    required this.icon,
-    required this.controller,
-    this.obscureText = false,
-    this.onChanged,
-    this.keyboardType,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFFF8FAFC),
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          onChanged: onChanged,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
-            ),
-            prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20),
-            filled: true,
-            fillColor: const Color(0xFF0F172A).withValues(alpha: 0.3),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF6366F1),
-                width: 1.5,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
       ],

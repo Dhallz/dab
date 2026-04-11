@@ -1,7 +1,7 @@
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
-import 'package:dab_app/domain/entities/activity.dart';
+import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_bloc.dart';
@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockActivityRepository extends Mock implements IActivityRepository {}
+
 class MockUserRepository extends Mock implements IUserRepository {}
+
 class MockMetadataUseCases extends Mock implements MetadataUseCases {}
 
 void main() {

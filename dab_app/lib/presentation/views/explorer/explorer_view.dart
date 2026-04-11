@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../services/service_locator.dart';
 import 'explorer_bloc.dart';
 import 'explorer_event.dart';
-import 'layout/explorer_view_desktop.dart';
-import 'layout/explorer_view_mobile.dart';
+import 'layouts/explorer_view_desktop.dart';
+import 'layouts/explorer_view_mobile.dart';
 
 class ExplorerView extends StatelessWidget {
   const ExplorerView({super.key});

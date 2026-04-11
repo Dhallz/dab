@@ -1,19 +1,23 @@
+import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dart_mappable/dart_mappable.dart';
+
+import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/system/app_settings.dart';
-import '../../../../domain/entities/provider_config.dart';
 
 part 'app_state.mapper.dart';
 
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Snapshot of the Global App state.
 @MappableClass()
 class AppState with AppStateMappable {
+  final ViewStatus status;
   final AppSettings settings;
-  final bool isLoading;
   final List<ProviderConfig> configs;
   final bool isSystemConfigured;
 
   const AppState({
+    this.status = ViewStatus.initial,
     this.settings = const AppSettings(),
-    this.isLoading = false,
     this.configs = const [],
     this.isSystemConfigured = false,
   });

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures.dart';
-import '../../../domain/entities/activity.dart';
+import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../datasources/activity_remote_data_source.dart';
 import '../repositories/core/repository.dart';

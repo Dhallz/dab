@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../domain/entities/activity.dart';
+import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import 'activity_avatar.dart';
 import 'activity_intensity_bar.dart';
+import 'activity_status_summary_chip.dart';
 
 class ActivityFooter extends StatelessWidget {
   final Activity activity;
@@ -63,7 +64,7 @@ class ActivityFooter extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Primary Activity Chip
-        _SummaryChip(
+        ActivityStatusSummaryChip(
           count: 1,
           label: style.label.toLowerCase(),
           icon: activity.granularIcon(context),
@@ -78,7 +79,7 @@ class ActivityFooter extends StatelessWidget {
     final groupedCount = <String, int>{};
     final groupedIcon = <String, IconData>{};
     final groupedColor = <String, Color>{};
-    
+
     for (final act in activities!) {
       final label = act.granularLabel(context);
       groupedCount[label] = (groupedCount[label] ?? 0) + 1;
@@ -95,24 +96,24 @@ class ActivityFooter extends StatelessWidget {
         // Total Activities Chip (Synced with Heat Bar)
         Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: _SummaryChip(
+          child: ActivityStatusSummaryChip(
             count: totalCount,
             label: totalCount == 1 ? 'activity' : 'activities',
             icon: Icons.bolt_rounded,
             color: heatColor,
           ),
         ),
-        
+
         // Granular Chips (Original Category Colors)
         ...groupedCount.entries.map((entry) {
           final label = entry.key;
           final count = entry.value;
           final icon = groupedIcon[label]!;
           final color = groupedColor[label]!;
-          
+
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: _SummaryChip(
+            child: ActivityStatusSummaryChip(
               count: count,
               label: count == 1 ? label : '${label}s',
               icon: icon,
@@ -120,7 +121,6 @@ class ActivityFooter extends StatelessWidget {
             ),
           );
         }),
-        
       ],
     );
   }
@@ -134,50 +134,3 @@ class ActivityFooter extends StatelessWidget {
   }
 }
 
-class _SummaryChip extends StatelessWidget {
-  final int count;
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  const _SummaryChip({
-    required this.count,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 0.5,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-extension ColorSchemeExtension on BuildContext {
-  ColorScheme get colorScheme => Theme.of(this).colorScheme;
-}

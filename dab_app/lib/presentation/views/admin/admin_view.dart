@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dab_app/services/service_locator.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_event.dart';
-import 'package:dab_app/presentation/views/admin/layout/admin_view_desktop.dart';
+import 'package:dab_app/presentation/views/admin/layouts/admin_view_desktop.dart';
 
 /// [ARCH: PRESENTATION_VIEW]
 /// ROLE: Entry point for the Admin Console.

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_event.dart';
 import '../../explorer_state.dart';
+import '../../models/directory_type.dart';
 import 'create_group_button.dart';
 import 'selection_tile.dart';
 

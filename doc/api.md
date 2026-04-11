@@ -51,8 +51,8 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 - **Entities:** Pure data classes using `dart_mappable`. Current entities:
   - `Activity` — normalized event with `ActivityProvider` sealed metadata
   - `ActivityProvider` — sealed hierarchy for provider-specific payloads
-  - `User` — DAB user with role (`viewer`, `standard`, `teamLead`, `admin`), group, and active state
-  - `UserIdentity` — maps a DAB user to an external provider account (e.g., Phorge PHID)
+  - `User` — DAB user with role (`admin`, `manager`, `standard`), group, and active state
+  - `UserIdentity` — Maps a DAB user to an external platform. States: `linked`, `pending`, `failed`.
   - `Group` — organizational grouping
   - `Session` — active auth session (JWT + refresh token)
   - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
@@ -109,7 +109,7 @@ Thin entry points only. No business logic.
 | Controller | Path | Key Responsibilities |
 |---|---|---|
 | `ActivityController` | `GET /activities` | Paginated activity feed, user filtering |
-| `AdminController` | `/admin/*` | Bootstrap lock, user management, provider config CRUD |
+| `AdminController` | `/admin/*` | Bootstrap lock, user management, provider config CRUD, **Identity Resolution (`POST /identities/resolve`)** |
 | `AuthController` | `/auth/*` | Login, logout, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |

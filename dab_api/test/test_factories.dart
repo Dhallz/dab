@@ -1,6 +1,7 @@
-import 'package:dab_api/src/domain/entities/activity.dart';
-import 'package:dab_api/src/domain/entities/activity_provider.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/entities/user/user_role.dart';
 import 'package:uuid/uuid.dart';
 
 /// A central location for generating realistic test data (Object Mother pattern).
@@ -12,7 +13,7 @@ class TestData {
     String? id,
     String name = 'John Doe',
     String email = 'john.doe@example.com',
-    String role = 'Standard',
+    UserRole role = UserRole.standard,
     String? phorgeUsername = 'jdoe',
   }) {
     return User(

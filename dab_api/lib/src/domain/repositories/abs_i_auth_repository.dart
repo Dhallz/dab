@@ -2,7 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../core/failure.dart';
 import '../entities/session.dart';
-import '../entities/user.dart';
+import '../entities/user/user.dart';
+import '../entities/user/user_role.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for Authentication and User persistence.
@@ -40,6 +41,6 @@ abstract class AbsIAuthRepository {
   /// Used for Admin Console user management.
   Future<Either<Failure, List<User>>> findAllUsers();
 
-  /// Updates a user's role (e.g., 'Admin' or 'Standard').
-  Future<Either<Failure, void>> updateUserRole(String userId, String role);
+  /// Updates a user's role (e.g., [UserRole.admin] or [UserRole.standard]).
+  Future<Either<Failure, void>> updateUserRole(String userId, UserRole role);
 }

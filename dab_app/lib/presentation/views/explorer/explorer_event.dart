@@ -1,6 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
-import 'explorer_state.dart';
+import 'models/directory_type.dart';
 
 part 'explorer_event.mapper.dart';
 

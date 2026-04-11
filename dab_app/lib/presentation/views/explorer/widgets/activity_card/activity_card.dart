@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../../domain/entities/activity.dart';
-import '../../../../../domain/entities/provider_config.dart';
+import '../../../../../domain/entities/activity/activity.dart';
+import '../../../../../domain/entities/provider/provider_config.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/features/app/app_cubit.dart';

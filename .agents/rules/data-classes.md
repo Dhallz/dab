@@ -115,7 +115,23 @@ Activity.fromJson(json);  // forbidden — do not add this factory manually
 - **Never edit `*.mapper.dart` files** — they are 100% generated. All changes go into the source entity file.
 - **Never add non-final fields** to an entity class.
 - **Never place networking or persistence logic** inside an entity (no `Dio`, `ObjectBox`, `Box`, etc.).
-- **Never combine two unrelated entities** in the same file.
+- **Never combine two different classes or enums in the same file.** The only exception is for `sealed class` hierarchies where all subclasses may stay in the same file.
+- Unrelated enums used by a class must live in their own file (e.g., `user_role.dart` instead of being inside `user.dart`).
+
+---
+
+## 📂 Folder-Based Subject Grouping
+
+To maintain organization under the "one-class-per-file" rule, related data classes must be grouped into subdirectories based on their business subject.
+
+### Required Pattern for Presentation Models:
+1. **Feature-Local Models**: Data classes specifically for one view belong in `lib/presentation/views/[feature]/models/`.
+2. **Shared UI models**: Generic UI models (like `ViewStatus`) belong in `lib/presentation/core/models/`.
+3. **One Model per File**: Each enum or data class must have its own file, satisfying the `@MappableClass` requirements.
+1. **Mandatory for Entities**: In both `dab_api` and `dab_app`, the `domain/entities/` folder must use subject-based subdirectories (e.g., `user/`, `activity/`, `group/`) whenever more than one file relates to that subject.
+2. **Subject Consistency & Prefixing**: Files within a subject folder **must** share a common prefix matching the folder name (e.g., `user.dart`, `user_role.dart`, `user_identity.dart` in `entities/user/`). If a related class disappears from this naming scheme (e.g., `sprint_context.dart`), it must remain in the root `entities/` folder even if logically related to the subject.
+3. **Exclusion (Events & States)**: This grouping rule does **not** apply to Bloc/Cubit `Events` or `States`. These should remain co-located with their respective logic components as per standard feature-folder patterns.
+
 
 ---
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../core/abs_cubit.dart';
+import '../../core/models/view_status.dart';
 import 'app_state.dart';
 
 /// [ARCH: PRESENTATION_BLOC]
@@ -16,7 +17,7 @@ class AppCubit extends AbsCubit<AppState> {
     : super(const AppState());
 
   Future<void> init() async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(status: ViewStatus.loading));
 
     // Fetch settings
     final settingsResult = await _systemUseCases.getAppSettings.execute();
@@ -32,7 +33,7 @@ class AppCubit extends AbsCubit<AppState> {
         settings: settingsResult.getOrElse((failure) => state.settings),
         configs: configsResult.getOrElse((failure) => []),
         isSystemConfigured: statusResult.getOrElse((failure) => true),
-        isLoading: false,
+        status: ViewStatus.success,
       ),
     );
   }

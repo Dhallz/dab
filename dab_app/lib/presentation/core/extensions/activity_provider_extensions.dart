@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../domain/entities/activity.dart';
+import '../../../../domain/entities/activity/activity.dart';
 import '../styles/activity_category_styles.dart';
 import '../styles/provider_styles.dart';
 

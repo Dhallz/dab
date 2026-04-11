@@ -20,6 +20,7 @@ class AdminEventMapper extends ClassMapperBase<AdminEvent> {
       AdminSectionChangedMapper.ensureInitialized();
       AdminUserRoleUpdatedMapper.ensureInitialized();
       AdminIdentityLinkedMapper.ensureInitialized();
+      AdminIdentityResolvedMapper.ensureInitialized();
       AdminTestConnectionMapper.ensureInitialized();
     }
     return _instance!;
@@ -576,6 +577,7 @@ class AdminUserRoleUpdatedMapper extends ClassMapperBase<AdminUserRoleUpdated> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AdminUserRoleUpdatedMapper._());
       AdminEventMapper.ensureInitialized();
+      UserRoleMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -588,8 +590,8 @@ class AdminUserRoleUpdatedMapper extends ClassMapperBase<AdminUserRoleUpdated> {
     'userId',
     _$userId,
   );
-  static String _$role(AdminUserRoleUpdated v) => v.role;
-  static const Field<AdminUserRoleUpdated, String> _f$role = Field(
+  static UserRole _$role(AdminUserRoleUpdated v) => v.role;
+  static const Field<AdminUserRoleUpdated, UserRole> _f$role = Field(
     'role',
     _$role,
   );
@@ -678,7 +680,7 @@ abstract class AdminUserRoleUpdatedCopyWith<
 >
     implements AdminEventCopyWith<$R, $In, $Out> {
   @override
-  $R call({String? userId, String? role});
+  $R call({String? userId, UserRole? role});
   AdminUserRoleUpdatedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -693,7 +695,7 @@ class _AdminUserRoleUpdatedCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AdminUserRoleUpdated> $mapper =
       AdminUserRoleUpdatedMapper.ensureInitialized();
   @override
-  $R call({String? userId, String? role}) => $apply(
+  $R call({String? userId, UserRole? role}) => $apply(
     FieldCopyWithData({
       if (userId != null) #userId: userId,
       if (role != null) #role: role,
@@ -861,6 +863,159 @@ class _AdminIdentityLinkedCopyWithImpl<$R, $Out>
   AdminIdentityLinkedCopyWith<$R2, AdminIdentityLinked, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _AdminIdentityLinkedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class AdminIdentityResolvedMapper
+    extends ClassMapperBase<AdminIdentityResolved> {
+  AdminIdentityResolvedMapper._();
+
+  static AdminIdentityResolvedMapper? _instance;
+  static AdminIdentityResolvedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = AdminIdentityResolvedMapper._());
+      AdminEventMapper.ensureInitialized();
+      UserIdentityStatusMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'AdminIdentityResolved';
+
+  static String _$userId(AdminIdentityResolved v) => v.userId;
+  static const Field<AdminIdentityResolved, String> _f$userId = Field(
+    'userId',
+    _$userId,
+  );
+  static String _$providerId(AdminIdentityResolved v) => v.providerId;
+  static const Field<AdminIdentityResolved, String> _f$providerId = Field(
+    'providerId',
+    _$providerId,
+  );
+  static UserIdentityStatus _$status(AdminIdentityResolved v) => v.status;
+  static const Field<AdminIdentityResolved, UserIdentityStatus> _f$status =
+      Field('status', _$status);
+
+  @override
+  final MappableFields<AdminIdentityResolved> fields = const {
+    #userId: _f$userId,
+    #providerId: _f$providerId,
+    #status: _f$status,
+  };
+
+  static AdminIdentityResolved _instantiate(DecodingData data) {
+    return AdminIdentityResolved(
+      userId: data.dec(_f$userId),
+      providerId: data.dec(_f$providerId),
+      status: data.dec(_f$status),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static AdminIdentityResolved fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<AdminIdentityResolved>(map);
+  }
+
+  static AdminIdentityResolved fromJson(String json) {
+    return ensureInitialized().decodeJson<AdminIdentityResolved>(json);
+  }
+}
+
+mixin AdminIdentityResolvedMappable {
+  String toJson() {
+    return AdminIdentityResolvedMapper.ensureInitialized()
+        .encodeJson<AdminIdentityResolved>(this as AdminIdentityResolved);
+  }
+
+  Map<String, dynamic> toMap() {
+    return AdminIdentityResolvedMapper.ensureInitialized()
+        .encodeMap<AdminIdentityResolved>(this as AdminIdentityResolved);
+  }
+
+  AdminIdentityResolvedCopyWith<
+    AdminIdentityResolved,
+    AdminIdentityResolved,
+    AdminIdentityResolved
+  >
+  get copyWith =>
+      _AdminIdentityResolvedCopyWithImpl<
+        AdminIdentityResolved,
+        AdminIdentityResolved
+      >(this as AdminIdentityResolved, $identity, $identity);
+  @override
+  String toString() {
+    return AdminIdentityResolvedMapper.ensureInitialized().stringifyValue(
+      this as AdminIdentityResolved,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return AdminIdentityResolvedMapper.ensureInitialized().equalsValue(
+      this as AdminIdentityResolved,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return AdminIdentityResolvedMapper.ensureInitialized().hashValue(
+      this as AdminIdentityResolved,
+    );
+  }
+}
+
+extension AdminIdentityResolvedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, AdminIdentityResolved, $Out> {
+  AdminIdentityResolvedCopyWith<$R, AdminIdentityResolved, $Out>
+  get $asAdminIdentityResolved => $base.as(
+    (v, t, t2) => _AdminIdentityResolvedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class AdminIdentityResolvedCopyWith<
+  $R,
+  $In extends AdminIdentityResolved,
+  $Out
+>
+    implements AdminEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? userId, String? providerId, UserIdentityStatus? status});
+  AdminIdentityResolvedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _AdminIdentityResolvedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, AdminIdentityResolved, $Out>
+    implements AdminIdentityResolvedCopyWith<$R, AdminIdentityResolved, $Out> {
+  _AdminIdentityResolvedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<AdminIdentityResolved> $mapper =
+      AdminIdentityResolvedMapper.ensureInitialized();
+  @override
+  $R call({String? userId, String? providerId, UserIdentityStatus? status}) =>
+      $apply(
+        FieldCopyWithData({
+          if (userId != null) #userId: userId,
+          if (providerId != null) #providerId: providerId,
+          if (status != null) #status: status,
+        }),
+      );
+  @override
+  AdminIdentityResolved $make(CopyWithData data) => AdminIdentityResolved(
+    userId: data.get(#userId, or: $value.userId),
+    providerId: data.get(#providerId, or: $value.providerId),
+    status: data.get(#status, or: $value.status),
+  );
+
+  @override
+  AdminIdentityResolvedCopyWith<$R2, AdminIdentityResolved, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _AdminIdentityResolvedCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class AdminTestConnectionMapper extends ClassMapperBase<AdminTestConnection> {

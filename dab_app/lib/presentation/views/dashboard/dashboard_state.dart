@@ -1,20 +1,23 @@
+import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
-import '../../../domain/entities/activity.dart';
+import '../../../domain/entities/activity/activity.dart';
 
 part 'dashboard_state.mapper.dart';
 
-enum DashboardStatus { initial, loading, success, failure }
-
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Snapshot of the Dashboard screen state.
 @MappableClass()
 class DashboardState with DashboardStateMappable {
-  final DashboardStatus status;
+  final ViewStatus status;
   final List<Activity> activities;
   final String? errorMessage;
 
   const DashboardState({
-    this.status = DashboardStatus.initial,
+    this.status = ViewStatus.initial,
     this.activities = const [],
     this.errorMessage,
   });
+
+  factory DashboardState.initial() => const DashboardState();
 }

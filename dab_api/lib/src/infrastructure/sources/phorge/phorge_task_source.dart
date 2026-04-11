@@ -1,4 +1,4 @@
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
 import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_bundle.dart';

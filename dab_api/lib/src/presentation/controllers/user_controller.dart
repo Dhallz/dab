@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:relic/relic.dart';
 import '../../application/containers/user_usecases.dart';
+import '../../application/services/identity_discovery_service.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]
@@ -69,6 +71,10 @@ class UserController {
      try {
        final result = await _user.syncPhorgeUsers.execute();
        final count = result.getOrElse((l) => throw Exception(l.message));
+
+       // Trigger background discovery for all users (DAB-40)
+       unawaited(sl<IdentityDiscoveryService>().runFullDiscovery());
+
        return Response.ok(
          body: Body.fromString(
            jsonEncode({

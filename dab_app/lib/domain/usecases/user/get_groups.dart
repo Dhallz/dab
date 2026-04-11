@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart' hide Group;
 
 import '../../../domain/core/failures.dart';
-import '../../../domain/entities/group.dart';
+import '../../../domain/entities/group/group.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 
 class GetGroups {

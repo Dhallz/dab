@@ -1,4 +1,4 @@
-import 'package:dab_app/domain/entities/provider_config.dart';
+import 'package:dab_app/domain/entities/provider/provider_config.dart';
 import 'package:dab_app/infrastructure/datasources/provider_config_remote_data_source.dart';
 import 'package:dab_app/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dio/dio.dart';

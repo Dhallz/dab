@@ -22,11 +22,14 @@ views/
     ├── explorer_event.dart        ← Sealed event hierarchy (@MappableClass)
     ├── explorer_state.dart        ← Single state class (@MappableClass)
     ├── explorer_item.dart         ← Optional: local domain models for the view
-    ├── layout/
+    ├── layouts/
     │   ├── explorer_view_desktop.dart   ← Desktop layout widget
     │   └── explorer_view_mobile.dart    ← Mobile layout widget
-    └── widgets/
-        ├── activity_card.dart     ← Private local widgets, one per file
+    ├── widgets/
+    │   ├── activity_card.dart           ← Private local widgets, one per file
+    │   └── ...
+    └── models/
+        ├── explorer_filter.dart         ← UI-specific data classes
         └── ...
 ```
 
@@ -42,9 +45,10 @@ All files must be named in `snake_case` with the feature prefix.
 | `*_bloc.dart` / `*_cubit.dart` | Handle events, call use cases, emit state | Call HTTP, interact with DB, or build widgets |
 | `*_event.dart` | Sealed event hierarchy | Contain any logic |
 | `*_state.dart` | Single immutable snapshot of screen state | Contain computed logic — use getters or extensions |
-| `*_view_desktop.dart` | Build the desktop layout | Provide BLoC — the parent `_view.dart` already does this |
-| `*_view_mobile.dart` | Build the mobile layout | Provide BLoC — same as above |
-| `widgets/*.dart` | One small, focused, reusable widget per file | Depend on anything from `infrastructure` |
+| `*_view_desktop.dart` | Build the desktop layout | Provide BLoC. NEVER use widget helper functions or define private widgets here. |
+| `*_view_mobile.dart` | Build the mobile layout | Same as above. |
+| `widgets/*.dart` | **Exactly one** focused, reusable widget per file | Depend on anything from `infrastructure` |
+| `models/*.dart` | View-supporting enums or data classes | Contain business logic (move to domain instead) |
 
 ---
 
@@ -126,16 +130,16 @@ State is a **single immutable class** using `dart_mappable`, not a sealed hierar
 
 ```dart
 // ✅ Correct — explorer_state.dart
-enum ExplorerStatus { initial, loading, success, failure }
+import 'package:dab_app/presentation/core/models/view_status.dart';
 
 @MappableClass()
 class ExplorerState with ExplorerStateMappable {
-  final ExplorerStatus status;
+  final ViewStatus status;
   final List<Activity> items;
   final String? errorMessage;
 
   const ExplorerState({
-    this.status = ExplorerStatus.initial,
+    this.status = ViewStatus.initial,
     this.items = const [],
     this.errorMessage,
   });
@@ -144,7 +148,8 @@ class ExplorerState with ExplorerStateMappable {
 }
 ```
 
-- Always include a `status` field using the `[Feature]Status` enum with at minimum: `initial`, `loading`, `success`, `failure`.
+- Always include a `status` field using the generic `ViewStatus` enum from `presentation/core/models/view_status.dart`.
+- ViewStatus values: `initial`, `loading`, `success`, `failure`.
 - Always provide a `factory [State].initial()` constructor.
 - Always include `errorMessage` for the failure case.
 - Use `copyWith` (generated) for every state update — never construct a new state from scratch in the Bloc.
@@ -159,7 +164,7 @@ class ExplorerState with ExplorerStateMappable {
 
 ```dart
 // ✅ Correct — scoped to only the widget that needs the data
-BlocSelector<ExplorerBloc, ExplorerState, ExplorerStatus>(
+BlocSelector<ExplorerBloc, ExplorerState, ViewStatus>(
   selector: (state) => state.status,
   builder: (context, status) => StatusWidget(status: status),
 )
@@ -182,7 +187,7 @@ BlocBuilder<ExplorerBloc, ExplorerState>(
 | Event base | `[Feature]Event` | `ExplorerEvent` |
 | Event subclass | `[Feature][Action]` | `ExplorerDateChanged` |
 | State class | `[Feature]State` | `ExplorerState` |
-| Status enum | `[Feature]Status` | `ExplorerStatus` |
+| Status enum | `ViewStatus` | `ViewStatus.initial` |
 | Desktop layout | `[Feature]ViewDesktop` | `ExplorerViewDesktop` |
 | Mobile layout | `[Feature]ViewMobile` | `ExplorerViewMobile` |
 
@@ -190,8 +195,11 @@ BlocBuilder<ExplorerBloc, ExplorerState>(
 
 ## 🚫 What Not to Do
 
+- **Never use widget-returning functions** (e.g., `Widget _buildRow()`). Create a dedicated widget class instead.
+- **Never define private widgets** (`class _PrivateWidget`) in a layout file. Move them to the `widgets/` folder.
+- **Never include multiple classes** in a `_state.dart` or `_event.dart` file (except for `sealed` event hierarchies).
 - **Never call use cases or repositories directly from a widget.** All calls go through the BLoC/Cubit.
 - **Never `emit()` inside tests manually.** Use `bloc_test`'s `blocTest<>()`.
 - **Never use `BuildContext` across async gaps** without checking `mounted` first.
 - **Never combine two unrelated feature BLoCs** into one file or one class.
-- **Never use a state `sealed` hierarchy** (e.g., `Loading extends State`, `Success extends State`) — use a single class with a `status` enum instead.
+- **Never use a state `sealed` hierarchy** (e.g., `Loading extends State`, `Success extends State`) — use a single class with a `ViewStatus` enum instead.

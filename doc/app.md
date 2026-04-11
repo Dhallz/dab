@@ -100,12 +100,13 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 ```
 [view_name]/
 ├── [name]_view.dart           ← "Switcher": BlocProvider + LayoutBuilder routing
-├── layout/
+├── layouts/                   ← device-specific layouts (mobile, desktop)
 │   ├── [name]_view_mobile.dart
 │   └── [name]_view_desktop.dart
 ├── [name]_cubit.dart          ← extends AbsCubit (or AbsBloc)
-├── [name]_state.dart          ← immutable, isolated state file
-└── widgets/                   ← private local widgets (one per file)
+├── [name]_state.dart          ← immutable, isolated state file using ViewStatus
+├── models/                    ← feature-local enums and data classes
+└── widgets/                   ← private local widgets (strictly one per file)
 ```
 
 #### Application Views
@@ -117,7 +118,7 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Statistics** | Behavior analytics | Area/Donut charts built from ObjectBox data |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
-| **Admin Console** | System administration | List/action views gated by `Admin` role |
+| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), and Security. |
 
 ---
 
@@ -130,6 +131,8 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 ## State Management Rules
 
 - **Base Classes:** Every Cubit extends `AbsCubit`; every Bloc extends `AbsBloc`.
+- **ViewStatus:** All states must use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) for standardized status management.
+- **One Widget Per File:** View and Layout files must not contain private widgets or widget-returning functions. They must be extracted to the `widgets/` folder.
 - **Global AppCubit:** Accessible via the inherited `app` getter in any Bloc/Cubit, or via static `AbsBloc.appCubit` for constructor initializers.
 - **UI Builders:** Always use `AppBlocBuilder`, `AppBlocListener`, or `AppBlocConsumer`. Use the `onInit` callback for one-time initialization logic.
 - **Cubits call use cases only** — never datasources or repositories directly.
@@ -196,6 +199,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 ### Micro-Animations
 - **Staggered Entrances:** Dashboard cards animate in with a 50ms stagger.
 - **Provider Glow:** Hover reveals `BoxShadow` colored by provider glow roles (e.g., Slack Purple `#4A154B`).
+- **Pulsing Connection Icons:** Admin provider cards show real-time connection status (`ViewStatus`: Success/Failure/Loading) with smooth opacity pulsing.
 - **Entry Pulse:** Incoming WebSocket events trigger a spring-scale transition.
 
 ---

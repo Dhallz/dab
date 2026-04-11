@@ -1,8 +1,10 @@
 import 'package:fpdart/fpdart.dart' hide Group;
 
-import '../../domain/entities/group.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/entities/user_identity.dart';
+import '../../domain/entities/group/group.dart';
+import '../../domain/entities/user/user.dart';
+import '../../domain/entities/user/user_role.dart';
+import '../../domain/entities/user/user_identity.dart';
+import '../../domain/entities/user/user_identity_status.dart';
 import '../core/failures.dart';
 
 abstract class IUserRepository {
@@ -22,9 +24,16 @@ abstract class IUserRepository {
     required String externalId,
   });
 
+  /// Admin: Approve or reject a candidate identity (DAB-40).
+  Future<Either<AppFailure, UserIdentity>> resolveIdentity({
+    required String userId,
+    required String providerId,
+    required UserIdentityStatus status,
+  });
+
   /// Admin: Update a user's globally defined role.
   Future<Either<AppFailure, void>> updateUserRole({
     required String userId,
-    required String role,
+    required UserRole role,
   });
 }

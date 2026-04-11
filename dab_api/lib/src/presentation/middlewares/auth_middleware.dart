@@ -1,4 +1,6 @@
 import 'package:relic/relic.dart';
+
+import '../../domain/entities/user/user_role.dart';
 import '../../infrastructure/security/jwt_provider.dart';
 import '../../service_locator.dart';
 
@@ -63,7 +65,8 @@ class AuthMiddleware extends MiddlewareObject {
 
       // Store the userId and userRole in the context property
       userIdProperty[request] = jwt.payload['sub'] as String;
-      userRoleProperty[request] = jwt.payload['role'] as String? ?? 'Standard';
+      userRoleProperty[request] =
+          jwt.payload['role'] as String? ?? UserRole.standard.name;
 
       return await next(request);
     };

@@ -1,18 +1,20 @@
-import 'package:dab_api/src/domain/entities/activity.dart';
-import 'package:dab_api/src/domain/entities/activity_provider.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
 import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_bundle.dart';
 import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_transaction_data.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../entities/sprint_context.dart';
 
 /// [ARCH: DOMAIN_MAPPER]
 /// ROLE: Business Logic Transformer for Phorge Task data.
 /// CONTRACT: Implements [IActivityMapper] for [PhorgeTaskBundle].
 /// CONSTRAINTS: Pure Logic (No I/O). Must translate technical protocol data into human-readable Activities.
 ///
-/// This mapper contains the business rules for the Phorge platform. It decides 
-/// which technical transactions (status changes, columns moves) are relevant to 
+/// This mapper contains the business rules for the Phorge platform. It decides
+/// which technical transactions (status changes, columns moves) are relevant to
 /// the DAB users and how they should be described in the feed.
 class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
   final _uuid = const Uuid();
@@ -28,7 +30,7 @@ class PhorgeTaskMapper implements IActivityMapper<PhorgeTaskBundle> {
     if (bundle.transactions.isEmpty) return [];
 
     final activities = <Activity>[];
-    
+
     // Create an O(1) lookup map for authors
     final userMap = {for (final u in users) u.phorgePhid: u};
 

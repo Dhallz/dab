@@ -16,7 +16,7 @@ class AppRouter {
 
     redirect: (context, state) {
       final authState = context.read<AuthCubit>().state;
-      final isLoggedIn = authState.status == AuthStatus.authenticated;
+      final isLoggedIn = authState.isAuthenticated;
       final isAuthRoute = state.matchedLocation == AppRoute.auth.path;
 
       if (!isLoggedIn && !isAuthRoute) {

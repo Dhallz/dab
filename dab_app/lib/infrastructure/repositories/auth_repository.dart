@@ -1,4 +1,4 @@
-import 'package:dab_app/domain/entities/user.dart';
+import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/infrastructure/core/local/records/user_record.dart';
 import 'package:fpdart/fpdart.dart';
 

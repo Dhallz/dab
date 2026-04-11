@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../services/service_locator.dart';
 import 'dashboard_bloc.dart';
-import 'layout/dashboard_view_desktop.dart';
-import 'layout/dashboard_view_mobile.dart';
+import 'layouts/dashboard_view_desktop.dart';
+import 'layouts/dashboard_view_mobile.dart';
 
 /// [ARCH: PRESENTATION_VIEW]
 /// ROLE: Responsive entry point for the Activity Dashboard.

@@ -26,7 +26,7 @@ class AuthenticateUser {
     final accessToken = _jwtProvider.generateToken({
       'sub': user.id,
       'email': user.email,
-      'role': user.role,
+      'role': user.role.name,
     });
     final refreshToken = _uuid.v4();
 
@@ -50,7 +50,7 @@ class AuthenticateUser {
       'name': user.name,
       'email': user.email,
       'avatarUrl': user.avatarUrl ?? '',
-      'role': user.role,
+      'role': user.role.name,
     });
   }
 }

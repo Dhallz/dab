@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../domain/entities/activity.dart';
+import '../../../../domain/entities/activity/activity.dart';
 import '../styles/activity_category_styles.dart';
 import '../styles/provider_styles.dart';
 
@@ -32,30 +32,40 @@ extension OnActivity on Activity {
     final titleLower = title.toLowerCase();
 
     // Comment detection
-    if (contentLower.contains('comment') || titleLower.contains('comment') || commentCount > 0) {
+    if (contentLower.contains('comment') ||
+        titleLower.contains('comment') ||
+        commentCount > 0) {
       return Icons.chat_bubble_outline_rounded;
     }
 
     // Tag / Label detection
-    if (contentLower.contains('tag') || titleLower.contains('tag') || 
-        contentLower.contains('label') || titleLower.contains('label')) {
+    if (contentLower.contains('tag') ||
+        titleLower.contains('tag') ||
+        contentLower.contains('label') ||
+        titleLower.contains('label')) {
       return Icons.local_offer_outlined;
     }
 
     // Status / State detection
-    if (contentLower.contains('status') || titleLower.contains('status') || 
-        contentLower.contains('state') || titleLower.contains('state') ||
-        contentLower.contains('moved to') || contentLower.contains('changed to') ||
-        contentLower.contains('to done') || contentLower.contains('to in progress')) {
+    if (contentLower.contains('status') ||
+        titleLower.contains('status') ||
+        contentLower.contains('state') ||
+        titleLower.contains('state') ||
+        contentLower.contains('moved to') ||
+        contentLower.contains('changed to') ||
+        contentLower.contains('to done') ||
+        contentLower.contains('to in progress')) {
       return Icons.swap_horiz_rounded;
     }
 
     // Code Review detection
-    if (contentLower.contains('review') || titleLower.contains('review') || 
-        contentLower.contains('approved') || contentLower.contains('requested changes')) {
+    if (contentLower.contains('review') ||
+        titleLower.contains('review') ||
+        contentLower.contains('approved') ||
+        contentLower.contains('requested changes')) {
       return Icons.fact_check_outlined;
     }
-    
+
     // Assignment detection
     if (contentLower.contains('assigned') || titleLower.contains('assigned')) {
       return Icons.person_add_alt_1_outlined;
@@ -69,20 +79,29 @@ extension OnActivity on Activity {
     final contentLower = content.toLowerCase();
     final titleLower = title.toLowerCase();
 
-    if (contentLower.contains('comment') || titleLower.contains('comment') || commentCount > 0) {
+    if (contentLower.contains('comment') ||
+        titleLower.contains('comment') ||
+        commentCount > 0) {
       return 'comment';
     }
-    if (contentLower.contains('tag') || titleLower.contains('tag') || 
-        contentLower.contains('label') || titleLower.contains('label')) {
+    if (contentLower.contains('tag') ||
+        titleLower.contains('tag') ||
+        contentLower.contains('label') ||
+        titleLower.contains('label')) {
       return 'tag';
     }
-    if (contentLower.contains('status') || titleLower.contains('status') || 
-        contentLower.contains('state') || titleLower.contains('state') ||
-        contentLower.contains('moved to') || contentLower.contains('changed to')) {
+    if (contentLower.contains('status') ||
+        titleLower.contains('status') ||
+        contentLower.contains('state') ||
+        titleLower.contains('state') ||
+        contentLower.contains('moved to') ||
+        contentLower.contains('changed to')) {
       return 'status';
     }
-    if (contentLower.contains('review') || titleLower.contains('review') || 
-        contentLower.contains('approved') || contentLower.contains('requested changes')) {
+    if (contentLower.contains('review') ||
+        titleLower.contains('review') ||
+        contentLower.contains('approved') ||
+        contentLower.contains('requested changes')) {
       return 'review';
     }
     if (contentLower.contains('assigned') || titleLower.contains('assigned')) {

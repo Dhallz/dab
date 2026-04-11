@@ -9,7 +9,7 @@ class SettingsBloc extends AbsBloc<SettingsEvent, SettingsState> {
     : super(
         SettingsState(
           settings: AbsBloc.appCubit.state.settings,
-          isLoading: AbsBloc.appCubit.state.isLoading,
+          status: AbsBloc.appCubit.state.status,
         ),
       ) {
     on<SettingsStarted>(_onStarted);
@@ -22,10 +22,7 @@ class SettingsBloc extends AbsBloc<SettingsEvent, SettingsState> {
       app.stream,
       onData: (appState) {
         emit(
-          state.copyWith(
-            settings: appState.settings,
-            isLoading: appState.isLoading,
-          ),
+          state.copyWith(settings: appState.settings, status: appState.status),
         );
       },
     );

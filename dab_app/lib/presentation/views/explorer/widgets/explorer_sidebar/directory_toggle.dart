@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_event.dart';
-import '../../explorer_state.dart';
+import '../../models/directory_type.dart';
 import 'directory_tile.dart';
 
 class DirectoryToggle extends StatelessWidget {

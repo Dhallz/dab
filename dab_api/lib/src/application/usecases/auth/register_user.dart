@@ -3,7 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failure.dart';
-import '../../../domain/entities/user.dart';
+import '../../../domain/entities/user/user.dart';
+import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 import '../../../infrastructure/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
@@ -85,7 +86,7 @@ class RegisterUser {
     }
 
     // Role assignment logic based on configuration.
-    final role = isInitialAdmin ? 'Admin' : 'Standard';
+    final role = isInitialAdmin ? UserRole.admin : UserRole.standard;
 
     // Auto-link Phorge Account: Essential for immediate activity visibility.
     final phorgePhid = await _phorgeUserSource.lookupUserPhid(name, email);

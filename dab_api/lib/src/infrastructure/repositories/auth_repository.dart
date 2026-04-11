@@ -3,7 +3,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failure.dart';
 import '../../domain/entities/session.dart';
-import '../../domain/entities/user.dart';
+import '../../domain/entities/user/user.dart';
+import '../../domain/entities/user/user_role.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
 import '../database/app_database.dart';
 import '../database/drift_row_mappers.dart';
@@ -57,7 +58,7 @@ class AuthRepository implements AbsIAuthRepository {
               name: user.name,
               email: user.email,
               passwordHash: user.passwordHash,
-              role: Value(user.role),
+              role: Value(user.role.name),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
               createdAt: toPgDateTime(user.createdAt),
@@ -153,7 +154,7 @@ class AuthRepository implements AbsIAuthRepository {
   Future<Either<DatabaseFailure, int>> countAdmins() async {
     try {
       final query = _db.select(_db.usersTable)
-        ..where((u) => u.role.equals('Admin'));
+        ..where((u) => u.role.equals(UserRole.admin.name));
       final users = await query.get();
       return Right(users.length);
     } catch (e) {
@@ -174,12 +175,11 @@ class AuthRepository implements AbsIAuthRepository {
   @override
   Future<Either<DatabaseFailure, void>> updateUserRole(
     String userId,
-    String role,
+    UserRole role,
   ) async {
     try {
-      await (_db.update(_db.usersTable)..where((u) => u.id.equals(userId))).write(
-        UsersTableCompanion(role: Value(role)),
-      );
+      await (_db.update(_db.usersTable)..where((u) => u.id.equals(userId)))
+          .write(UsersTableCompanion(role: Value(role.name)));
       return const Right(null);
     } catch (e) {
       return Left(DatabaseFailure('Error updating user role: $e'));

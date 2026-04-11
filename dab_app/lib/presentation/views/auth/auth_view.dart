@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../services/service_locator.dart';
 import '../../features/auth/auth_cubit.dart';
 import 'auth_bloc.dart';
-import 'layout/auth_view_mobile.dart';
+import 'layouts/auth_view_mobile.dart';
 
 class AuthView extends StatelessWidget {
   const AuthView({super.key});

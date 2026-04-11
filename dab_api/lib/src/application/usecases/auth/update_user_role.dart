@@ -1,5 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../../../domain/core/failure.dart';
+import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -11,7 +13,7 @@ class UpdateUserRole {
 
   UpdateUserRole(this._repo);
 
-  Future<Either<Failure, void>> execute(String userId, String role) async {
+  Future<Either<Failure, void>> execute(String userId, UserRole role) async {
     return _repo.updateUserRole(userId, role);
   }
 }

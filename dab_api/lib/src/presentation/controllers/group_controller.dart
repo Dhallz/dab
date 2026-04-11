@@ -1,7 +1,9 @@
 import 'dart:convert';
+
 import 'package:relic/relic.dart';
+
 import '../../application/containers/group_usecases.dart';
-import '../../domain/entities/group.dart';
+import '../../domain/entities/group/group.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]

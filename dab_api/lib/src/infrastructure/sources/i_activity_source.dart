@@ -1,4 +1,4 @@
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Raw I/O Handler for external system integration.

@@ -1,7 +1,13 @@
-enum AuthViewStatus { initial, loading, success, failure }
+import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dart_mappable/dart_mappable.dart';
 
-class AuthState {
-  final AuthViewStatus status;
+part 'auth_state.mapper.dart';
+
+/// [ARCH: PRESENTATION_STATE]
+/// ROLE: Snapshot of the Auth screen state.
+@MappableClass()
+class AuthState with AuthStateMappable {
+  final ViewStatus status;
   final bool isLogin;
   final String? errorMessage;
   final String email;
@@ -9,7 +15,7 @@ class AuthState {
   final String name;
 
   const AuthState({
-    this.status = AuthViewStatus.initial,
+    this.status = ViewStatus.initial,
     this.isLogin = true,
     this.errorMessage,
     this.email = '',
@@ -19,21 +25,5 @@ class AuthState {
 
   bool get isRegister => !isLogin;
 
-  AuthState copyWith({
-    AuthViewStatus? status,
-    bool? isLogin,
-    String? errorMessage,
-    String? email,
-    String? password,
-    String? name,
-  }) {
-    return AuthState(
-      status: status ?? this.status,
-      isLogin: isLogin ?? this.isLogin,
-      errorMessage: errorMessage ?? this.errorMessage,
-      email: email ?? this.email,
-      password: password ?? this.password,
-      name: name ?? this.name,
-    );
-  }
+  factory AuthState.initial() => const AuthState();
 }

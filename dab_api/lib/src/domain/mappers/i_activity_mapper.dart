@@ -1,5 +1,5 @@
-import 'package:dab_api/src/domain/entities/activity.dart';
-import 'package:dab_api/src/domain/entities/user.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 
 /// [ARCH: DOMAIN]
 /// ROLE: Business Logic definer for external platform interpretation.

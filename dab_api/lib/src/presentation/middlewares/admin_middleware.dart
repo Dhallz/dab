@@ -1,4 +1,6 @@
 import 'package:relic/relic.dart';
+
+import '../../domain/entities/user/user_role.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
 import '../../infrastructure/config/config.dart';
 import '../../service_locator.dart';
@@ -20,7 +22,9 @@ class AdminMiddleware extends MiddlewareObject {
       final userId = request.userIdOrNull;
 
       if (userId == null) {
-        return Response.unauthorized(body: Body.fromString('Authentication required'));
+        return Response.unauthorized(
+          body: Body.fromString('Authentication required'),
+        );
       }
 
       // 1. Check for Bootstrap Lock
@@ -31,18 +35,22 @@ class AdminMiddleware extends MiddlewareObject {
         // If system is unconfigured, verify current user matches initial admin email
         final userResult = await _authRepo.findById(userId);
         final user = userResult.getRight().toNullable();
-        
-        if (user != null && user.email.toLowerCase() == _config.initialAdminEmail.toLowerCase()) {
+
+        if (user != null &&
+            user.email.toLowerCase() ==
+                _config.initialAdminEmail.toLowerCase()) {
           return await next(request); // Permit setup by initial admin
         }
 
         return Response.forbidden(
-          body: Body.fromString('Bootstrap Lock: System not configured. Only initial admin is permitted.'),
+          body: Body.fromString(
+            'Bootstrap Lock: System not configured. Only initial admin is permitted.',
+          ),
         );
       }
 
       // 2. Standard Admin Check
-      if (role != 'Admin') {
+      if (role != UserRole.admin.name) {
         return Response.forbidden(
           body: Body.fromString('Admin privileges required'),
         );

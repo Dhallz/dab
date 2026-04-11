@@ -6,8 +6,9 @@ import 'package:stream_transform/stream_transform.dart';
 import '../../../../domain/containers/activity_usecases.dart';
 import '../../../../domain/containers/metadata_usecases.dart';
 import '../../../../domain/containers/user_usecases.dart';
-import '../../../../domain/entities/activity.dart';
-import '../../../../domain/entities/group.dart';
+import '../../../../domain/entities/activity/activity.dart';
+import '../../../../domain/entities/group/group.dart';
+import '../../core/models/view_status.dart';
 import '../../core/abs_bloc.dart';
 import 'explorer_event.dart';
 import 'explorer_item.dart';
@@ -84,7 +85,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     Emitter<ExplorerState> emit,
   ) async {
     emit(
-      state.copyWith(selectedDate: event.date, status: ExplorerStatus.loading),
+      state.copyWith(selectedDate: event.date, status: ViewStatus.loading),
     );
     await _fetchActivities(emit, event.date);
   }
@@ -93,7 +94,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     Emitter<ExplorerState> emit,
     DateTime date,
   ) async {
-    emit(state.copyWith(status: ExplorerStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
 
     final Set<String> targetIds = {...state.selectedUserIds};
 
@@ -121,7 +122,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     result.fold(
       (failure) => emit(
         state.copyWith(
-          status: ExplorerStatus.failure,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
@@ -136,12 +137,14 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
 
         final items = groupActivities(filteredActivities);
 
-        emit(state.copyWith(status: ExplorerStatus.success, items: items));
+        emit(state.copyWith(status: ViewStatus.success, items: items));
 
         _activitySubscription?.cancel();
-        _activitySubscription = _activityUseCases.watchActivities.execute().listen((activity) {
-          add(ExplorerActivityReceived(activity));
-        });
+        _activitySubscription = _activityUseCases.watchActivities
+            .execute()
+            .listen((activity) {
+              add(ExplorerActivityReceived(activity));
+            });
       },
     );
   }
@@ -268,8 +271,9 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     if (event.activity is! Activity) return;
     final activity = event.activity as Activity;
 
-    final lowerSelected =
-        state.selectedProviders.map((e) => e.toLowerCase()).toSet();
+    final lowerSelected = state.selectedProviders
+        .map((e) => e.toLowerCase())
+        .toSet();
     if (!lowerSelected.contains(activity.provider.name.toLowerCase())) {
       return;
     }
@@ -342,14 +346,14 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     await result.fold(
       (failure) async => emit(
         state.copyWith(
-          status: ExplorerStatus.failure,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
       (savedGroup) async {
         final updatedGroups = [...state.groups, savedGroup];
         emit(
-          state.copyWith(groups: updatedGroups, status: ExplorerStatus.success),
+          state.copyWith(groups: updatedGroups, status: ViewStatus.success),
         );
       },
     );

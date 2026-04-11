@@ -14,6 +14,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
   static AppStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AppStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       AppSettingsMapper.ensureInitialized();
       ProviderConfigMapper.ensureInitialized();
     }
@@ -23,19 +24,19 @@ class AppStateMapper extends ClassMapperBase<AppState> {
   @override
   final String id = 'AppState';
 
+  static ViewStatus _$status(AppState v) => v.status;
+  static const Field<AppState, ViewStatus> _f$status = Field(
+    'status',
+    _$status,
+    opt: true,
+    def: ViewStatus.initial,
+  );
   static AppSettings _$settings(AppState v) => v.settings;
   static const Field<AppState, AppSettings> _f$settings = Field(
     'settings',
     _$settings,
     opt: true,
     def: const AppSettings(),
-  );
-  static bool _$isLoading(AppState v) => v.isLoading;
-  static const Field<AppState, bool> _f$isLoading = Field(
-    'isLoading',
-    _$isLoading,
-    opt: true,
-    def: false,
   );
   static List<ProviderConfig> _$configs(AppState v) => v.configs;
   static const Field<AppState, List<ProviderConfig>> _f$configs = Field(
@@ -54,16 +55,16 @@ class AppStateMapper extends ClassMapperBase<AppState> {
 
   @override
   final MappableFields<AppState> fields = const {
+    #status: _f$status,
     #settings: _f$settings,
-    #isLoading: _f$isLoading,
     #configs: _f$configs,
     #isSystemConfigured: _f$isSystemConfigured,
   };
 
   static AppState _instantiate(DecodingData data) {
     return AppState(
+      status: data.dec(_f$status),
       settings: data.dec(_f$settings),
-      isLoading: data.dec(_f$isLoading),
       configs: data.dec(_f$configs),
       isSystemConfigured: data.dec(_f$isSystemConfigured),
     );
@@ -134,8 +135,8 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
   >
   get configs;
   $R call({
+    ViewStatus? status,
     AppSettings? settings,
-    bool? isLoading,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
   });
@@ -166,22 +167,22 @@ class _AppStateCopyWithImpl<$R, $Out>
   );
   @override
   $R call({
+    ViewStatus? status,
     AppSettings? settings,
-    bool? isLoading,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
   }) => $apply(
     FieldCopyWithData({
+      if (status != null) #status: status,
       if (settings != null) #settings: settings,
-      if (isLoading != null) #isLoading: isLoading,
       if (configs != null) #configs: configs,
       if (isSystemConfigured != null) #isSystemConfigured: isSystemConfigured,
     }),
   );
   @override
   AppState $make(CopyWithData data) => AppState(
+    status: data.get(#status, or: $value.status),
     settings: data.get(#settings, or: $value.settings),
-    isLoading: data.get(#isLoading, or: $value.isLoading),
     configs: data.get(#configs, or: $value.configs),
     isSystemConfigured: data.get(
       #isSystemConfigured,

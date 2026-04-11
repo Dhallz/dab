@@ -5,8 +5,8 @@ import 'package:dab_api/src/application/containers/group_usecases.dart';
 import 'package:dab_api/src/application/containers/health_usecases.dart';
 import 'package:dab_api/src/application/containers/metadata_usecases.dart';
 import 'package:dab_api/src/application/containers/user_usecases.dart';
-import 'package:dab_api/src/domain/entities/provider_config.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
+import 'package:dab_api/src/application/services/identity_discovery_service.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
@@ -14,6 +14,7 @@ import 'package:dab_api/src/application/usecases/activity/get_recent_activities.
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
+import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
 import 'package:dab_api/src/application/usecases/auth/get_all_identities.dart';
 import 'package:dab_api/src/application/usecases/auth/link_user_identity.dart';
 import 'package:dab_api/src/application/usecases/auth/login_user.dart';
@@ -21,7 +22,7 @@ import 'package:dab_api/src/application/usecases/auth/logout_user.dart';
 import 'package:dab_api/src/application/usecases/auth/refresh_token.dart';
 import 'package:dab_api/src/application/usecases/auth/register_new_user.dart';
 import 'package:dab_api/src/application/usecases/auth/register_user.dart';
-import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
+import 'package:dab_api/src/application/usecases/auth/resolve_user_identity.dart';
 import 'package:dab_api/src/application/usecases/auth/update_user_role.dart';
 import 'package:dab_api/src/application/usecases/group/delete_group.dart';
 import 'package:dab_api/src/application/usecases/group/get_groups.dart';
@@ -35,6 +36,7 @@ import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
 import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
+import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
 import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
 import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
@@ -114,15 +116,18 @@ Future<void> serviceLocator() async {
   // Domain Services & Mappers
   final phorgeSprintService = PhorgeSprintService();
   sl.registerSingleton<PhorgeSprintService>(phorgeSprintService);
-  
+
   final phorgeTaskMapper = PhorgeTaskMapper();
   final phorgeRevisionMapper = PhorgeRevisionMapper();
-  
+
   // Infrastructure Sources (Raw I/O)
   final phorgeTaskSource = PhorgeTaskSource(phorgeClient, phorgeSprintService);
   final phorgeRevisionSource = PhorgeRevisionSource(phorgeClient);
   final phorgeUserSource = PhorgeUserSource(phorgeClient);
-  final phorgeProjectSource = PhorgeProjectSource(phorgeClient, phorgeSprintService);
+  final phorgeProjectSource = PhorgeProjectSource(
+    phorgeClient,
+    phorgeSprintService,
+  );
 
   // New Scaffolds (Slack, Teams, Jira, Linear, Discord)
   final slackMapper = SlackMessageMapper();
@@ -138,12 +143,16 @@ Future<void> serviceLocator() async {
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
   sl.registerSingleton<PhorgeProjectSource>(phorgeProjectSource);
+  sl.registerSingleton<SlackMessageSource>(slackSource);
+  sl.registerSingleton<TeamsMessageSource>(teamsSource);
+  sl.registerSingleton<JiraIssueSource>(jiraSource);
+  sl.registerSingleton<LinearIssueSource>(linearSource);
 
   // Application Orchestration: Mapping Sources to Mappers
   final registry = ConnectorRegistry();
   registry.register(phorgeTaskSource, phorgeTaskMapper);
   registry.register(phorgeRevisionSource, phorgeRevisionMapper);
-  
+
   // Registering new scaffolds
   registry.register(slackSource, slackMapper);
   registry.register(teamsSource, teamsMapper);
@@ -153,8 +162,19 @@ Future<void> serviceLocator() async {
 
   sl.registerSingleton<ConnectorRegistry>(registry);
 
-  final fetcher = UnifiedActivityFetcher(registry);
-  sl.registerSingleton<UnifiedActivityFetcher>(fetcher);
+  // Repositories
+  sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
+  sl.registerSingleton<AbsIActivityRepository>(ActivityRepository(db));
+  sl.registerSingleton<IUserRepository>(UserRepository(db));
+  sl.registerSingleton<AbsIHealthRepository>(
+    PostgresHealthRepository(sl<PostgresClient>()),
+  );
+  sl.registerSingleton<AbsIProviderMetadataRepository>(
+    ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
+  );
+  sl.registerSingleton<AbsIProviderConfigRepository>(
+    ProviderConfigRepository(db),
+  );
 
   // -----------------------------------------------------
   // 3. System Services
@@ -165,16 +185,24 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<LoggingService>(LoggingService());
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
 
-  // Repositories
-  sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
-  sl.registerSingleton<AbsIActivityRepository>(ActivityRepository(db));
-  sl.registerSingleton<IUserRepository>(UserRepository(db));
-  sl.registerSingleton<AbsIHealthRepository>(PostgresHealthRepository(sl<PostgresClient>()));
-  sl.registerSingleton<AbsIProviderMetadataRepository>(
-    ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
+  final fetcher = UnifiedActivityFetcher(
+    registry,
+    sl<AbsIProviderConfigRepository>(),
   );
-  sl.registerSingleton<AbsIProviderConfigRepository>(
-    ProviderConfigRepository(db),
+  sl.registerSingleton<UnifiedActivityFetcher>(fetcher);
+
+  sl.registerSingleton<IdentityDiscoveryService>(
+    IdentityDiscoveryService(
+      sl<IUserRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      {
+        'phorge': sl<PhorgeUserSource>(),
+        'slack': sl<SlackMessageSource>(),
+        'teams': sl<TeamsMessageSource>(),
+        'jira': sl<JiraIssueSource>(),
+        'linear': sl<LinearIssueSource>(),
+      },
+    ),
   );
 
   // -----------------------------------------------------
@@ -183,24 +211,62 @@ Future<void> serviceLocator() async {
   // ROLE: Encapsulates high-level business flows.
   // CONTRACT: Injects required Repositories and Services into UseCase instances.
   // -----------------------------------------------------
-  
+
   // Auth
   sl.registerSingleton<LoginUser>(LoginUser(sl<AbsIAuthRepository>()));
-  sl.registerSingleton<RegisterUser>(RegisterUser(sl<AbsIAuthRepository>(), sl<PhorgeUserSource>()));
-  sl.registerSingleton<AuthenticateUser>(AuthenticateUser(sl<AbsIAuthRepository>(), sl<LoginUser>(), sl<JwtProvider>()));
-  sl.registerSingleton<RegisterNewUser>(RegisterNewUser(sl<AbsIAuthRepository>(), sl<RegisterUser>(), sl<JwtProvider>()));
-  sl.registerSingleton<LinkUserIdentity>(LinkUserIdentity(sl<IUserRepository>()));
-  sl.registerSingleton<RefreshToken>(RefreshToken(sl<AbsIAuthRepository>(), sl<JwtProvider>()));
+  sl.registerSingleton<RegisterUser>(
+    RegisterUser(sl<AbsIAuthRepository>(), sl<PhorgeUserSource>()),
+  );
+  sl.registerSingleton<AuthenticateUser>(
+    AuthenticateUser(
+      sl<AbsIAuthRepository>(),
+      sl<LoginUser>(),
+      sl<JwtProvider>(),
+    ),
+  );
+  sl.registerSingleton<RegisterNewUser>(
+    RegisterNewUser(
+      sl<AbsIAuthRepository>(),
+      sl<RegisterUser>(),
+      sl<JwtProvider>(),
+    ),
+  );
+  sl.registerSingleton<LinkUserIdentity>(
+    LinkUserIdentity(sl<IUserRepository>()),
+  );
+  sl.registerSingleton<RefreshToken>(
+    RefreshToken(sl<AbsIAuthRepository>(), sl<JwtProvider>()),
+  );
   sl.registerSingleton<LogoutUser>(LogoutUser(sl<AbsIAuthRepository>()));
-  sl.registerSingleton<GetAllIdentities>(GetAllIdentities(sl<IUserRepository>()));
+  sl.registerSingleton<GetAllIdentities>(
+    GetAllIdentities(sl<IUserRepository>()),
+  );
   sl.registerSingleton<FindAllUsers>(FindAllUsers(sl<AbsIAuthRepository>()));
-  sl.registerSingleton<UpdateUserRole>(UpdateUserRole(sl<AbsIAuthRepository>()));
+  sl.registerSingleton<UpdateUserRole>(
+    UpdateUserRole(sl<AbsIAuthRepository>()),
+  );
+  sl.registerSingleton<ResolveUserIdentity>(
+    ResolveUserIdentity(sl<IUserRepository>()),
+  );
 
   // Activity
-  sl.registerSingleton<FetchRemoteActivities>(FetchRemoteActivities(sl<UnifiedActivityFetcher>()));
-  sl.registerSingleton<GetRecentActivities>(GetRecentActivities(sl<AbsIActivityRepository>()));
-  sl.registerSingleton<SearchActivities>(SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()));
-  sl.registerSingleton<LogActivity>(LogActivity(sl<AbsIActivityRepository>(), sl<AbsIAuthRepository>(), sl<PresenceService>(), sl<RedisService>()));
+  sl.registerSingleton<FetchRemoteActivities>(
+    FetchRemoteActivities(sl<UnifiedActivityFetcher>()),
+  );
+  sl.registerSingleton<GetRecentActivities>(
+    GetRecentActivities(sl<AbsIActivityRepository>()),
+  );
+  sl.registerSingleton<SearchActivities>(
+    SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
+  );
+  sl.registerSingleton<LogActivity>(
+    LogActivity(
+      sl<AbsIActivityRepository>(),
+      sl<AbsIAuthRepository>(),
+      sl<PresenceService>(),
+      sl<RedisService>(),
+    ),
+  );
 
   // User
   sl.registerLazySingleton<SyncPhorgeUsers>(
@@ -220,13 +286,26 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<DeleteGroup>(DeleteGroup(sl<IUserRepository>()));
 
   // Metadata
-  sl.registerSingleton<GetProviderMetadata>(GetProviderMetadata(sl<AbsIProviderMetadataRepository>()));
-  sl.registerSingleton<GetProviderConfigs>(GetProviderConfigs(sl<AbsIProviderConfigRepository>()));
-  sl.registerSingleton<SaveProviderConfig>(SaveProviderConfig(sl<AbsIProviderConfigRepository>()));
-  sl.registerSingleton<GetSystemStatus>(GetSystemStatus(sl<AbsIAuthRepository>(), sl<AbsIProviderConfigRepository>()));
+  sl.registerSingleton<GetProviderMetadata>(
+    GetProviderMetadata(sl<AbsIProviderMetadataRepository>()),
+  );
+  sl.registerSingleton<GetProviderConfigs>(
+    GetProviderConfigs(sl<AbsIProviderConfigRepository>()),
+  );
+  sl.registerSingleton<SaveProviderConfig>(
+    SaveProviderConfig(sl<AbsIProviderConfigRepository>()),
+  );
+  sl.registerSingleton<GetSystemStatus>(
+    GetSystemStatus(
+      sl<AbsIAuthRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
 
   // Health
-  sl.registerSingleton<CheckDatabaseHealth>(CheckDatabaseHealth(sl<AbsIHealthRepository>()));
+  sl.registerSingleton<CheckDatabaseHealth>(
+    CheckDatabaseHealth(sl<AbsIHealthRepository>()),
+  );
 
   // -----------------------------------------------------
   // 5. CONTAINERS
@@ -234,49 +313,60 @@ Future<void> serviceLocator() async {
   // ROLE: Aggregates related UseCases for clean injection into Controllers.
   // -----------------------------------------------------
 
-  sl.registerSingleton<AuthUseCases>(AuthUseCases(
-    authenticateUser: sl<AuthenticateUser>(),
-    loginUser: sl<LoginUser>(),
-    logoutUser: sl<LogoutUser>(),
-    refreshToken: sl<RefreshToken>(),
-    registerNewUser: sl<RegisterNewUser>(),
-    registerUser: sl<RegisterUser>(),
-    linkUserIdentity: sl<LinkUserIdentity>(),
-    getAllIdentities: sl<GetAllIdentities>(),
-    findAllUsers: sl<FindAllUsers>(),
-    updateUserRole: sl<UpdateUserRole>(),
-  ));
+  sl.registerSingleton<AuthUseCases>(
+    AuthUseCases(
+      authenticateUser: sl<AuthenticateUser>(),
+      loginUser: sl<LoginUser>(),
+      logoutUser: sl<LogoutUser>(),
+      refreshToken: sl<RefreshToken>(),
+      registerNewUser: sl<RegisterNewUser>(),
+      registerUser: sl<RegisterUser>(),
+      linkUserIdentity: sl<LinkUserIdentity>(),
+      getAllIdentities: sl<GetAllIdentities>(),
+      findAllUsers: sl<FindAllUsers>(),
+      updateUserRole: sl<UpdateUserRole>(),
+      resolveUserIdentity: sl<ResolveUserIdentity>(),
+    ),
+  );
 
-  sl.registerSingleton<ActivityUseCases>(ActivityUseCases(
-    fetchRemoteActivities: sl<FetchRemoteActivities>(),
-    getRecentActivities: sl<GetRecentActivities>(),
-    logActivity: sl<LogActivity>(),
-    searchActivities: sl<SearchActivities>(),
-  ));
+  sl.registerSingleton<ActivityUseCases>(
+    ActivityUseCases(
+      fetchRemoteActivities: sl<FetchRemoteActivities>(),
+      getRecentActivities: sl<GetRecentActivities>(),
+      logActivity: sl<LogActivity>(),
+      searchActivities: sl<SearchActivities>(),
+    ),
+  );
 
-  sl.registerSingleton<UserUseCases>(UserUseCases(
-    getUserById: sl<GetUserById>(),
-    getUsers: sl<GetUsers>(),
-    getUsersByGroup: sl<GetUsersByGroup>(),
-    syncPhorgeUsers: sl<SyncPhorgeUsers>(),
-  ));
+  sl.registerSingleton<UserUseCases>(
+    UserUseCases(
+      getUserById: sl<GetUserById>(),
+      getUsers: sl<GetUsers>(),
+      getUsersByGroup: sl<GetUsersByGroup>(),
+      syncPhorgeUsers: sl<SyncPhorgeUsers>(),
+    ),
+  );
 
-  sl.registerSingleton<GroupUseCases>(GroupUseCases(
-    deleteGroup: sl<DeleteGroup>(),
-    getGroups: sl<GetGroups>(),
-    saveGroup: sl<SaveGroup>(),
-  ));
+  sl.registerSingleton<GroupUseCases>(
+    GroupUseCases(
+      deleteGroup: sl<DeleteGroup>(),
+      getGroups: sl<GetGroups>(),
+      saveGroup: sl<SaveGroup>(),
+    ),
+  );
 
-  sl.registerSingleton<MetadataUseCases>(MetadataUseCases(
-    getProviderConfigs: sl<GetProviderConfigs>(),
-    getProviderMetadata: sl<GetProviderMetadata>(),
-    getSystemStatus: sl<GetSystemStatus>(),
-    saveProviderConfig: sl<SaveProviderConfig>(),
-  ));
+  sl.registerSingleton<MetadataUseCases>(
+    MetadataUseCases(
+      getProviderConfigs: sl<GetProviderConfigs>(),
+      getProviderMetadata: sl<GetProviderMetadata>(),
+      getSystemStatus: sl<GetSystemStatus>(),
+      saveProviderConfig: sl<SaveProviderConfig>(),
+    ),
+  );
 
-  sl.registerSingleton<HealthUseCases>(HealthUseCases(
-    checkDatabaseHealth: sl<CheckDatabaseHealth>(),
-  ));
+  sl.registerSingleton<HealthUseCases>(
+    HealthUseCases(checkDatabaseHealth: sl<CheckDatabaseHealth>()),
+  );
 
   // 6. Seed Data
   await _seedProviders();
@@ -285,37 +375,76 @@ Future<void> serviceLocator() async {
 Future<void> _seedProviders() async {
   final repo = sl<AbsIProviderConfigRepository>();
   final result = await repo.getConfigs();
-  
-  await result.fold(
-    (l) async => print('❌ Error checking providers: $l'),
-    (configs) async {
-      if (configs.isEmpty) {
-        print('🌱 Seeding default provider configurations...');
-        final defaultProviders = [
-          ('phorge', 'Phorge', 'https://phorge.example.com', 'https://phorge.it/favicon.ico'),
-          ('linear', 'Linear', 'https://linear.app', 'https://linear.app/favicon.ico'),
-          ('jira', 'Jira', 'https://atlassian.net', 'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png'),
-          ('teams', 'Microsoft Teams', 'https://teams.microsoft.com', 'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico'),
-          ('slack', 'Slack', 'https://slack.com', 'https://a.slack-edge.com/80588/img/favicon-32.png'),
-          ('discord', 'Discord', 'https://discord.com', 'https://discord.com/favicon.ico'),
-          ('github', 'GitHub', 'https://github.com', 'https://github.githubassets.com/favicons/favicon.svg'),
-          ('gitlab', 'GitLab', 'https://gitlab.com', 'https://gitlab.com/favicon.ico'),
-        ];
 
-        for (final p in defaultProviders) {
-          await repo.saveConfig(
-            ProviderConfig(
-              id: p.$1,
-              name: p.$2,
-              baseUrl: p.$3,
-              isActive: true,
-              iconUrl: p.$4,
-              settings: {},
-            ),
-          );
-        }
-        print('✅ Seeding complete.');
+  await result.fold((l) async => print('❌ Error checking providers: $l'), (
+    configs,
+  ) async {
+    if (configs.isEmpty) {
+      print('🌱 Seeding default provider configurations...');
+      final defaultProviders = [
+        (
+          'phorge',
+          'Phorge',
+          'https://phorge.example.com',
+          'https://phorge.it/favicon.ico',
+        ),
+        (
+          'linear',
+          'Linear',
+          'https://linear.app',
+          'https://linear.app/favicon.ico',
+        ),
+        (
+          'jira',
+          'Jira',
+          'https://atlassian.net',
+          'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png',
+        ),
+        (
+          'teams',
+          'Microsoft Teams',
+          'https://teams.microsoft.com',
+          'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico',
+        ),
+        (
+          'slack',
+          'Slack',
+          'https://slack.com',
+          'https://a.slack-edge.com/80588/img/favicon-32.png',
+        ),
+        (
+          'discord',
+          'Discord',
+          'https://discord.com',
+          'https://discord.com/favicon.ico',
+        ),
+        (
+          'github',
+          'GitHub',
+          'https://github.com',
+          'https://github.githubassets.com/favicons/favicon.svg',
+        ),
+        (
+          'gitlab',
+          'GitLab',
+          'https://gitlab.com',
+          'https://gitlab.com/favicon.ico',
+        ),
+      ];
+
+      for (final p in defaultProviders) {
+        await repo.saveConfig(
+          ProviderConfig(
+            id: p.$1,
+            name: p.$2,
+            baseUrl: p.$3,
+            isActive: true,
+            iconUrl: p.$4,
+            settings: {},
+          ),
+        );
       }
-    },
-  );
+      print('✅ Seeding complete.');
+    }
+  });
 }
