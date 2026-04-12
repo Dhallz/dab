@@ -31,7 +31,7 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
   const ProviderStyles({required this.styles});
 
   factory ProviderStyles.dark() {
-    return const ProviderStyles(
+    return ProviderStyles(
       styles: {
         'phorge': ProviderStyle(
           brandColor: AppColors.brandPhorge,
@@ -43,7 +43,7 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
         ),
         'gitlab': ProviderStyle(
           brandColor: AppColors.brandGitLab,
-          icon: AppIcons.github, // Fallback icon until gitlab icon added
+          icon: AppIcons.gitlab,
         ),
         'linear': ProviderStyle(
           brandColor: AppColors.brandLinear,
@@ -51,19 +51,23 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
         ),
         'jira': ProviderStyle(
           brandColor: AppColors.brandJira,
-          icon: AppIcons.task,
+          icon: AppIcons.jira,
+        ),
+        'jora': ProviderStyle(
+          brandColor: AppColors.brandJira,
+          icon: AppIcons.jira,
         ),
         'slack': ProviderStyle(
           brandColor: AppColors.brandSlack,
-          icon: AppIcons.genericActivity,
+          icon: AppIcons.slack,
         ),
         'teams': ProviderStyle(
           brandColor: AppColors.brandTeams,
-          icon: AppIcons.genericActivity,
+          icon: AppIcons.teams,
         ),
         'discord': ProviderStyle(
           brandColor: AppColors.brandDiscord,
-          icon: AppIcons.genericActivity,
+          icon: AppIcons.discord,
         ),
       },
     );
@@ -90,20 +94,22 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
   }
 
   ProviderStyle styleOf(String providerId) {
+    return tryStyleOf(providerId) ??
+        ProviderStyle(
+          brandColor: AppColors.onSurfaceVariantLow,
+          icon: AppIcons.unknownProvider,
+        );
+  }
+
+  ProviderStyle? tryStyleOf(String providerId) {
     final key = providerId.toLowerCase().trim();
-    // Try exact match then partial match
-    return styles[key] ??
-        styles.entries
-            .firstWhere(
-              (e) => key.contains(e.key),
-              orElse: () => MapEntry(
-                'unknown',
-                ProviderStyle(
-                  brandColor: AppColors.onSurfaceVariantLow,
-                  icon: AppIcons.unknownProvider,
-                ),
-              ),
-            )
-            .value;
+    final exact = styles[key];
+    if (exact != null) return exact;
+    for (final entry in styles.entries) {
+      if (key.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return null;
   }
 }

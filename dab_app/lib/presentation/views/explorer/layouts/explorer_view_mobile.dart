@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/app_bloc_consumer.dart';
 import '../../../core/models/view_status.dart';
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
 import '../explorer_bloc.dart';
 import '../explorer_item.dart';
 import '../explorer_state.dart';
@@ -32,9 +34,11 @@ class ExplorerViewMobile extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.history_rounded,
+                          AppIcons.history,
                           size: 48,
-                          color: const Color(0xFF94A3B8).withValues(alpha: 0.3),
+                          color: AppColors.onSurfaceVariantLow.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(

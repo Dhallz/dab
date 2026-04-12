@@ -113,16 +113,13 @@ class _ActivityCardState extends State<ActivityCard> {
         return MouseRegion(
           onEnter: (_) => setState(() => _isHovering = true),
           onExit: (_) => setState(() => _isHovering = false),
-          cursor: SystemMouseCursors.click,
           child: AnimatedScale(
             scale: _isHovering ? 1.02 : 1.0,
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            child: GestureDetector(
-              onTap: () => _launchUrl(state.configs),
-              child: Stack(
-                children: [
-                  Container(
+            child: Stack(
+              children: [
+                Container(
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: AppColors.surfaceContainerLow.withValues(alpha: _isHovering ? 0.6 : 0.4),
@@ -156,20 +153,23 @@ class _ActivityCardState extends State<ActivityCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // Category Icon (Functional Accent)
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: style.color.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: style.color.withValues(alpha: 0.2),
+                                  Tooltip(
+                                    message: 'Category: ${style.label}',
+                                    child: Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: style.color.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: style.color.withValues(alpha: 0.2),
+                                        ),
                                       ),
-                                    ),
-                                    child: Icon(
-                                      style.icon,
-                                      color: style.color,
-                                      size: 24,
+                                      child: Icon(
+                                        style.icon,
+                                        color: style.color,
+                                        size: 24,
+                                      ),
                                     ),
                                   ),
                               const SizedBox(width: 16),
@@ -289,30 +289,29 @@ class _ActivityCardState extends State<ActivityCard> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    left: 0,
-                    top: 32,
-                    bottom: 32,
-                    width: 3,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: brandColor.withValues(alpha: 0.8),
-                        borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: brandColor.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            spreadRadius: -2,
-                          ),
-                        ],
+                Positioned(
+                  left: 0,
+                  top: 32,
+                  bottom: 32,
+                  width: 3,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: brandColor.withValues(alpha: 0.8),
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(4),
+                        bottomRight: Radius.circular(4),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: brandColor.withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          spreadRadius: -2,
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

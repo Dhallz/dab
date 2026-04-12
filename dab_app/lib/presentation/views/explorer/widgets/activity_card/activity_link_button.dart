@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../presentation/core/styles/app_icons.dart';
 
 class ActivityLinkButton extends StatelessWidget {
   final Color accentColor;
@@ -41,7 +42,7 @@ class ActivityLinkButton extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.open_in_new_rounded, size: 14, color: accentColor),
+                Icon(AppIcons.openExternal, size: 14, color: accentColor),
               ],
             ),
           ),

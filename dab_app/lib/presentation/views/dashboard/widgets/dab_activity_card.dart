@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../presentation/core/styles/app_colors.dart';
+import '../../../../presentation/core/styles/app_icons.dart';
 import '../../auth/widgets/auth_glass_card.dart';
 import 'activity_provider_icon.dart';
 
@@ -107,7 +108,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      AppIcons.chevronRight,
                       color: style.color.withValues(alpha: 0.5),
                       size: 20,
                     ),

@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/styles/app_spacing.dart';
 import 'home_profile.dart';
-import 'home_search_bar.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Right-side section of the top navigation bar, containing search and profile.
 class HomeRightSection extends StatelessWidget {
-  const HomeRightSection({super.key});
+  final String userName;
+  final String userInitials;
+
+  const HomeRightSection({
+    super.key,
+    required this.userName,
+    required this.userInitials,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        HomeSearchBar(),
-        SizedBox(width: 24),
-        HomeProfile(),
+        // const HomeSearchBar(),
+        const SizedBox(width: AppSpacing.l),
+        HomeProfile(
+          showName: true,
+          userName: userName,
+          userInitials: userInitials,
+        ),
       ],
     );
   }

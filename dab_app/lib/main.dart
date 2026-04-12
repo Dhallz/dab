@@ -64,6 +64,7 @@ class DabApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'DAB App',
           routerConfig: appRouter.router,
+          debugShowCheckedModeBanner: false,
           theme: AppTheme.dark, // We can define a light theme later
           darkTheme: AppTheme.dark,
           themeMode: state.settings.themeMode,

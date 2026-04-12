@@ -33,27 +33,27 @@ class ActivityCategoryStyles extends ThemeExtension<ActivityCategoryStyles> {
   factory ActivityCategoryStyles.dark() {
     return ActivityCategoryStyles(
       styles: {
-        ActivityCategory.commit: const ActivityStyle(
+        ActivityCategory.commit: ActivityStyle(
           color: AppColors.engineering,
           icon: AppIcons.commit,
           label: 'COMMIT',
         ),
-        ActivityCategory.revision: const ActivityStyle(
+        ActivityCategory.revision: ActivityStyle(
           color: AppColors.revision,
           icon: AppIcons.revision,
           label: 'REVISION',
         ),
-        ActivityCategory.task: const ActivityStyle(
+        ActivityCategory.task: ActivityStyle(
           color: AppColors.product,
           icon: AppIcons.task,
           label: 'TASK',
         ),
-        ActivityCategory.message: const ActivityStyle(
+        ActivityCategory.message: ActivityStyle(
           color: AppColors.genericActivity,
           icon: AppIcons.slack,
           label: 'MESSAGE',
         ),
-        ActivityCategory.generic: const ActivityStyle(
+        ActivityCategory.generic: ActivityStyle(
           color: AppColors.genericActivity,
           icon: AppIcons.genericActivity,
           label: 'ACTIVITY',

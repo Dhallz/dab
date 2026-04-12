@@ -16,19 +16,18 @@ class AuthLocalDataSource {
       _credentialBox = store.store.box<AuthCredentialRecord>();
 
   void saveUser(UserRecord user) {
-    final existing = _userBox
-        .query(UserRecord_.remoteId.equals(user.remoteId))
-        .build()
-        .findFirst();
-
-    if (existing != null) {
-      user.id = existing.id;
-    }
+    // Keep exactly one active user identity in local session storage.
+    // This avoids stale users being returned by getUser() after account switches.
+    _userBox.removeAll();
     _userBox.put(user);
   }
 
   UserRecord? getUser() {
-    return _userBox.query().build().findFirst();
+    return _userBox
+        .query()
+        .order(UserRecord_.id, flags: Order.descending)
+        .build()
+        .findFirst();
   }
 
   void saveCredentials(String email, String password) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
+import '../../../../../presentation/core/styles/app_icons.dart';
 import 'activity_history_item.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -24,7 +25,7 @@ class ActivityHistoryList extends StatelessWidget {
         // Timeline Header
         Row(
           children: [
-            Icon(Icons.history_rounded, size: 16, color: accentColor),
+            Icon(AppIcons.history, size: 16, color: accentColor),
             const SizedBox(width: 8),
             Text(
               'ACTIVITY HISTORY',

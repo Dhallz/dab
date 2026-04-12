@@ -1,50 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutty_heroicons/flutty_heroicons.dart';
+import 'package:simple_icons/simple_icons.dart';
 
 class AppIcons {
   // Navigation
-  static const IconData dashboard = Icons.dashboard_outlined;
-  static const IconData history = Icons.history_rounded; // For Explorer
-  static const IconData projects = Icons.folder_open_outlined;
-  static const IconData settings = Icons.settings_outlined;
-  static const IconData profile = Icons.person_outline;
+  static final IconData dashboard = HeroIcons.squares2x2.outline;
+  static final IconData history = HeroIcons.clock.outline;
+  static final IconData projects = HeroIcons.folderOpen.outline;
+  static final IconData settings = HeroIcons.cog6Tooth.outline;
+  static final IconData profile = HeroIcons.user.outline;
+  static final IconData brand = HeroIcons.commandLine.solid;
 
   // Actions
-  static const IconData add = Icons.add;
-  static const IconData edit = Icons.edit_outlined;
-  static const IconData delete = Icons.delete_outline;
-  static const IconData search = Icons.search;
-  static const IconData filter = Icons.filter_list;
-  static const IconData refresh = Icons.refresh_rounded;
+  static final IconData add = HeroIcons.plus.solid;
+  static final IconData edit = HeroIcons.pencilSquare.outline;
+  static final IconData delete = HeroIcons.trash.outline;
+  static final IconData search = HeroIcons.magnifyingGlass.outline;
+  static final IconData filter = HeroIcons.funnel.outline;
+  static final IconData refresh = HeroIcons.arrowPath.outline;
 
   // Feedback
-  static const IconData success = Icons.check_circle_outline;
-  static const IconData error = Icons.error_outline;
-  static const IconData info = Icons.info_outline;
-  static const IconData warning = Icons.warning_amber_outlined;
-  static const IconData emptyState =
-      Icons.dashboard_customize_rounded; // Placeholder icon
+  static final IconData success = HeroIcons.checkCircle.outline;
+  static final IconData error = HeroIcons.exclamationCircle.outline;
+  static final IconData info = HeroIcons.informationCircle.outline;
+  static final IconData warning = HeroIcons.exclamationTriangle.outline;
+  static final IconData emptyState = HeroIcons.squares2x2.solid;
 
   // Auth
-  static const IconData login = Icons.login;
-  static const IconData logout = Icons.logout;
-  static const IconData visibility = Icons.visibility_outlined;
-  static const IconData visibilityOff = Icons.visibility_off_outlined;
+  static final IconData login = HeroIcons.arrowRightOnRectangle.outline;
+  static final IconData logout = HeroIcons.arrowLeftOnRectangle.outline;
+  static final IconData visibility = HeroIcons.eye.outline;
+  static final IconData visibilityOff = HeroIcons.eyeSlash.outline;
 
   // Activity Types
-  static const IconData commit = Icons.commit_rounded;
-  static const IconData revision = Icons.code_rounded;
-  static const IconData task = Icons.task_alt_rounded;
-  static const IconData genericActivity = Icons.bolt_rounded;
+  static final IconData commit = HeroIcons.commandLine.outline;
+  static final IconData revision = HeroIcons.codeBracket.outline;
+  static final IconData task = HeroIcons.clipboardDocumentCheck.outline;
+  static final IconData genericActivity = HeroIcons.bolt.outline;
 
   // Providers
-  static const IconData github = Icons.hub_rounded;
-  static const IconData gitlab = Icons.account_tree_outlined;
-  static const IconData phorge = Icons.hub_outlined;
-  static const IconData linear = Icons.linear_scale;
-  static const IconData jira = Icons.task_alt;
-  static const IconData teams = Icons.groups_outlined;
-  static const IconData slack = Icons.chat_bubble_outline;
-  static const IconData discord = Icons.forum_outlined;
-  static const IconData unknownProvider = Icons.help_outline_rounded;
-  static const IconData testConnection = Icons.bolt_rounded;
+  static final IconData github = SimpleIcons.github;
+  static final IconData gitlab = SimpleIcons.gitlab;
+  static final IconData phorge = HeroIcons.codeBracket.outline;
+  static final IconData linear = SimpleIcons.linear;
+  static final IconData jira = SimpleIcons.jira;
+  static final IconData teams = HeroIcons.userGroup.outline;
+  static final IconData slack = SimpleIcons.slack;
+  static final IconData discord = SimpleIcons.discord;
+  static final IconData unknownProvider = HeroIcons.questionMarkCircle.outline;
+  static final IconData testConnection = HeroIcons.bolt.outline;
+
+  // Utility
+  static final IconData chevronRight = HeroIcons.chevronRight.outline;
+  static final IconData chatMessage = HeroIcons.chatBubbleLeftRight.outline;
+  static final IconData users = HeroIcons.userGroup.outline;
+  static final IconData user = HeroIcons.user.outline;
+  static final IconData selected = HeroIcons.checkCircle.solid;
+  static final IconData openExternal = HeroIcons.arrowTopRightOnSquare.outline;
+  static final IconData calendar = HeroIcons.calendarDays.outline;
+  static final IconData insights = HeroIcons.chartBar.outline;
+  static final IconData admin = HeroIcons.shieldCheck.outline;
 }

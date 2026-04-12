@@ -1,30 +1,44 @@
 import 'package:flutter/material.dart';
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
+import '../../../core/styles/app_layout.dart';
+import '../../../core/styles/app_spacing.dart';
+import '../../../core/styles/app_text_styles.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Search input field for the application header.
 class HomeSearchBar extends StatelessWidget {
-  const HomeSearchBar({super.key});
+  final double width;
+
+  const HomeSearchBar({super.key, this.width = 256});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 256, // w-64
+      width: width,
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        color: AppColors.white.withValues(alpha: 0.05),
+        borderRadius: AppLayout.borderSmall,
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.1)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 18),
-          SizedBox(width: 8),
-          Text(
-            'Search archives...',
-            style: TextStyle(
-              color: Color(0xFF64748B), // slate-500
-              fontSize: 14,
+          Icon(
+            AppIcons.search,
+            color: AppColors.onSurfaceVariantLow,
+            size: 18,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              'Search archives...',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ),
         ],

@@ -1,50 +1,52 @@
 import 'package:flutter/material.dart';
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_spacing.dart';
+import 'home_logo.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Header display for the mobile version of the home view.
 class HomeMobileHeader extends StatelessWidget {
-  const HomeMobileHeader({super.key});
+  final String userInitials;
+
+  const HomeMobileHeader({super.key, required this.userInitials});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showExpandedName = constraints.maxWidth >= 380;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.l,
+            AppSpacing.m,
+            AppSpacing.l,
+            AppSpacing.m,
+          ),
+          child: Row(
             children: [
-              Icon(
-                Icons.history_edu_rounded,
-                color: Color(0xFF6366F1),
-                size: 28,
+              Expanded(
+                child: HomeLogo(
+                  showExpandedName: showExpandedName,
+                  iconSize: 24,
+                ),
               ),
-              SizedBox(width: 8),
-              Text(
-                'DAB',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  letterSpacing: -0.5,
+              const SizedBox(width: AppSpacing.m),
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                child: Text(
+                  userInitials,
+                  style: TextStyle(
+                    color: AppColors.onSurfaceHighlight,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFF6366F1).withOpacity(0.2),
-            child: const Text(
-              'AD',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

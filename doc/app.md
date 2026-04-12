@@ -112,6 +112,7 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 #### Application Views
 
 Home branches (**Dashboard**, **Explorer**, **Admin**) use the shared **Island Bar** shell (`IslandBar` in `lib/presentation/core/widgets/island_bar.dart`) with identical padding and height where applicable. **Dashboard** and **Admin** pass branch **content** widgets (`DashboardIslandBarContent`, `AdminIslandBarContent`). **Explorer** uses `ExplorerIslandBarContent`, which wraps `IslandBar` around the date strip only and keeps the calendar title row (`ExplorerCalendarHeader`) below the bar, matching the legacy layout. **Admin** metrics are projected from `AdminState` via `OnAdminState.islandBarModel` (co-located in `admin_state.dart`) into `AdminIslandBarModel` (`views/admin/models/`), with one widget per file under `views/admin/widgets/` for each island tile type.
+The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity Board` readable as secondary text on supported widths.
 
 | View | Role | State Pattern |
 |---|---|---|
@@ -168,7 +169,8 @@ All routes are declared in `AppRoute` and wired in `AppRouter`.
 1. **Bootstrap:** On init, `AppCubit` fetches `List<ProviderConfig>` from `/metadata/configs`.
 2. **Resolution:** `ActivityCard` matches `Activity.provider.name` against the loaded configs.
 3. **URL Joining:** If the backend provides a relative path (e.g., `/T123`), the card prepends `ProviderConfig.baseUrl`.
-4. **Icons:** Provider icons served via `ProviderConfig.iconUrl` — Material icons as fallback.
+4. **Icons:** Provider icon resolution is centralized in `ProviderIconResolver`:
+   `ProviderConfig.iconUrl` → `ProviderStyles` brand map → `simple_icons` fallback → `AppIcons.unknownProvider`.
 
 ---
 
@@ -191,7 +193,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 | **Spacing** | [app_spacing.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_spacing.dart) | Base 4px grid (tiny=4, small=8, medium=16, large=24) |
 | **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **Roboto Mono** for Monospace |
 | **Layout** | [app_layout.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_layout.dart) | Viewport constraints, standard border radii (12-24px) |
-| **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application |
+| **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application (`flutty_heroicons` for non-provider UI, `simple_icons` for provider brands) |
 
 ### Premium Glassmorphism
 - **Surface**: `AppColors.glassSurface` (low opacity slate) + backdrop blur `σ 8–12`.
@@ -214,4 +216,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 | Run tests | `flutter test` |
 | Run app | `flutter run` |
 | Regenerate code | `dart run build_runner build --delete-conflicting-outputs` |
+| Generate launcher icons | `flutter pub run flutter_launcher_icons` |
 | Generate l10n | Automatic via `l10n.yaml` (`flutter gen-l10n`) |
+
+Launcher icon source asset: `dab_app/assets/branding/app_icon.png`.

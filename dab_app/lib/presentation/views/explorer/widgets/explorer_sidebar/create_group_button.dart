@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_icons.dart';
 import '../../explorer_bloc.dart';
 import '../create_group_dialog.dart';
 
@@ -33,8 +34,8 @@ class CreateGroupButton extends StatelessWidget {
                 color: AppColors.accentIndigo.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(
-                Icons.add_rounded,
+              child: Icon(
+                AppIcons.add,
                 size: 14,
                 color: AppColors.accentIndigo,
               ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../domain/entities/provider/provider_config.dart';
-import '../../../../../presentation/core/extensions/activity_provider_extensions.dart';
+import '../../../../../presentation/core/styles/provider_icon_resolver.dart';
 
 class ActivityProviderIcon extends StatelessWidget {
   final Activity activity;
@@ -17,20 +17,10 @@ class ActivityProviderIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconData = activity.provider.icon(context);
-    final iconColor = activity.provider.brandColor(context);
-
-    String? customIconUrl;
-    final providerId = activity.provider.name.toLowerCase();
-    final config =
-        configs.where((c) => c.id.toLowerCase() == providerId).firstOrNull ??
-        configs
-            .where((c) => providerId.contains(c.id.toLowerCase()))
-            .firstOrNull;
-
-    if (config != null) {
-      customIconUrl = config.iconUrl;
-    }
+    final providerId = activity.provider.name;
+    final iconData = ProviderIconResolver.resolveFallbackIcon(context, providerId);
+    final iconColor = ProviderIconResolver.resolveBrandColor(context, providerId);
+    final customIconUrl = ProviderIconResolver.resolveIconUrl(providerId, configs);
 
     Widget fallbackIcon = Icon(
       iconData,
@@ -40,7 +30,7 @@ class ActivityProviderIcon extends StatelessWidget {
 
     Widget icon = fallbackIcon;
 
-    if (customIconUrl != null && customIconUrl.isNotEmpty) {
+    if (customIconUrl != null) {
       icon = CachedNetworkImage(
         imageUrl: customIconUrl,
         width: 16,

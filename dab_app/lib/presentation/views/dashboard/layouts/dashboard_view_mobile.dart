@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/app_bloc_consumer.dart';
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
 import '../../../core/widgets/island_bar.dart';
 import '../dashboard_bloc.dart';
 import '../dashboard_state.dart';
@@ -26,9 +28,11 @@ class DashboardViewMobile extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.dashboard_customize_rounded,
+                        AppIcons.emptyState,
                         size: 64,
-                        color: const Color(0xFF94A3B8).withOpacity(0.3),
+                        color: AppColors.onSurfaceVariantLow.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       const Text(

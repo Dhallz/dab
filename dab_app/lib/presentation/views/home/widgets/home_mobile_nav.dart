@@ -29,6 +29,7 @@ class HomeMobileNav extends StatelessWidget {
           final isAdminTab = index == 3;
           final showBadge = isAdminTab && adminTabBadgeCount > 0;
           return GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => onBranchSelected(index),
             child: Container(
               margin: const EdgeInsets.only(right: 16),

@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../core/styles/provider_styles.dart';
 import '../../../../core/extensions/color_extensions.dart';
+import '../../../../core/styles/provider_icon_resolver.dart';
 
 class EventChip extends StatelessWidget {
   final String provider;
@@ -17,11 +17,11 @@ class EventChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final providerStyle = theme.extension<ProviderStyles>()?.styleOf(provider) ??
-        ProviderStyles.dark().styleOf(provider);
-    
-    final color = providerStyle.brandColor.toAccessibleBrandColor;
+    final color = ProviderIconResolver.resolveBrandColor(
+      context,
+      provider,
+    ).toAccessibleBrandColor;
+    final iconData = ProviderIconResolver.resolveFallbackIcon(context, provider);
 
     final displayColor = isSelected
         ? color
@@ -59,7 +59,7 @@ class EventChip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  providerStyle.icon,
+                  iconData,
                   size: 12,
                   color: isSelected
                       ? displayColor

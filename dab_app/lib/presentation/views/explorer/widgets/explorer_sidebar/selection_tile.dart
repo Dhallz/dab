@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_icons.dart';
 
 class SelectionTile extends StatelessWidget {
   final String label;
@@ -87,8 +88,8 @@ class SelectionTile extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
-                Icons.check_circle_rounded,
+              Icon(
+                AppIcons.selected,
                 size: 16,
                 color: AppColors.accentIndigo,
               ),

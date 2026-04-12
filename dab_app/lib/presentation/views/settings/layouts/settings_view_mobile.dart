@@ -38,10 +38,10 @@ class SettingsViewMobile extends StatelessWidget {
             const Divider(height: 32, color: AppColors.outline),
             const SettingsSectionHeader(title: 'About'),
             const SizedBox(height: 8),
-            const ListTile(
+            ListTile(
               leading: Icon(AppIcons.info, color: AppColors.secondary),
-              title: Text('Version', style: AppTextStyles.bodyMedium),
-              trailing: Text('1.0.0', style: AppTextStyles.labelSmall),
+              title: const Text('Version', style: AppTextStyles.bodyMedium),
+              trailing: const Text('1.0.0', style: AppTextStyles.labelSmall),
             ),
           ],
         );

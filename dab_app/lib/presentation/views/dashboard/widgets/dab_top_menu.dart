@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../../../core/styles/app_icons.dart';
 
 import '../models/dab_view_tab.dart';
 import 'dab_tab_item.dart';
@@ -36,25 +37,25 @@ class DabTopMenu extends StatelessWidget {
               children: [
                 DabTabItem(
                   label: 'Feed',
-                  icon: Icons.dashboard_rounded,
+                  icon: AppIcons.dashboard,
                   isSelected: activeTab == DabViewTab.feed,
                   onTap: () => onTabChanged(DabViewTab.feed),
                 ),
                 DabTabItem(
                   label: 'Explorer',
-                  icon: Icons.history_rounded,
+                  icon: AppIcons.history,
                   isSelected: activeTab == DabViewTab.explorer,
                   onTap: () => onTabChanged(DabViewTab.explorer),
                 ),
                 DabTabItem(
                   label: 'Insights',
-                  icon: Icons.insights_rounded,
+                  icon: AppIcons.insights,
                   isSelected: activeTab == DabViewTab.insights,
                   onTap: () => onTabChanged(DabViewTab.insights),
                 ),
                 DabTabItem(
                   label: 'Admin',
-                  icon: Icons.admin_panel_settings_rounded,
+                  icon: AppIcons.admin,
                   isSelected: activeTab == DabViewTab.admin,
                   onTap: () => onTabChanged(DabViewTab.admin),
                 ),

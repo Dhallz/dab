@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
+import '../../../../../presentation/core/styles/app_icons.dart';
 import 'activity_avatar.dart';
 import 'activity_intensity_bar.dart';
 import 'activity_status_summary_chip.dart';
@@ -117,7 +118,7 @@ class ActivityFooter extends StatelessWidget {
           child: ActivityStatusSummaryChip(
             count: totalCount,
             label: totalCount == 1 ? 'activity' : 'activities',
-            icon: Icons.bolt_rounded,
+            icon: AppIcons.genericActivity,
             color: heatColor,
           ),
         ),

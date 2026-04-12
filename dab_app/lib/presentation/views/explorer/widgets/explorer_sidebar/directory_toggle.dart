@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_icons.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_event.dart';
 import '../../models/directory_type.dart';
@@ -31,7 +32,7 @@ class DirectoryToggle extends StatelessWidget {
           children: [
             DirectoryTile(
               label: 'Users',
-              icon: Icons.person_rounded,
+              icon: AppIcons.user,
               isSelected: directoryType == DirectoryType.users,
               onTap: () => context.read<ExplorerBloc>().add(
                 const ExplorerDirectoryTypeChanged(DirectoryType.users),
@@ -40,7 +41,7 @@ class DirectoryToggle extends StatelessWidget {
             const SizedBox(width: 12),
             DirectoryTile(
               label: 'Groups',
-              icon: Icons.group_rounded,
+              icon: AppIcons.users,
               isSelected: directoryType == DirectoryType.groups,
               onTap: () => context.read<ExplorerBloc>().add(
                 const ExplorerDirectoryTypeChanged(DirectoryType.groups),

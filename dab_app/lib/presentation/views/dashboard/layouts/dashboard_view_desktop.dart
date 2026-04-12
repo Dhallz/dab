@@ -2,6 +2,8 @@ import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
 import '../../../core/widgets/island_bar.dart';
 import '../widgets/dashboard_island_bar_content.dart';
 import '../dashboard_bloc.dart';
@@ -30,11 +32,11 @@ class DashboardViewDesktop extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.dashboard_customize_rounded,
+                            AppIcons.emptyState,
                             size: 64,
-                            color: const Color(
-                              0xFF94A3B8,
-                            ).withValues(alpha: 0.3),
+                            color: AppColors.onSurfaceVariantLow.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           const Text(

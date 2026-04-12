@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
 import '../explorer_bloc.dart';
 import '../explorer_event.dart';
 
@@ -29,10 +31,10 @@ class ExplorerJumpToDateButton extends StatelessWidget {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.dark(
-                  primary: Color(0xFF6366F1),
-                  onPrimary: Colors.white,
-                  surface: Color(0xFF1E293B),
-                  onSurface: Colors.white,
+                  primary: AppColors.primary,
+                  onPrimary: AppColors.onPrimary,
+                  surface: AppColors.surfaceContainer,
+                  onSurface: AppColors.onSurface,
                 ),
               ),
               child: child!,
@@ -57,8 +59,8 @@ class ExplorerJumpToDateButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.calendar_month_rounded,
-              color: const Color(0xFFCBD5E1),
+              AppIcons.calendar,
+              color: AppColors.onSurfaceVariantLow,
               size: compact ? 20 : 18,
             ),
             if (!compact) ...[
@@ -68,7 +70,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFFCBD5E1),
+                  color: AppColors.onSurfaceVariantLow,
                 ),
               ),
             ],

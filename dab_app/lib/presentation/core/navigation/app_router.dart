@@ -1,10 +1,8 @@
-import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/views/home/home_view.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/app/app_cubit.dart';
 import '../../features/auth/auth_cubit.dart';
 import 'app_route.dart';
 
@@ -24,29 +22,18 @@ class AppRouter {
         return AppRoute.auth.path;
       }
 
-      // Bootstrap redirect: only admins are sent to Admin setup when the system is not configured.
-      final appState = context.read<AppCubit>().state;
-      final isAdminRoute = state.matchedLocation == AppRoute.homeAdmin.path;
-      final isAdminUser = authState.user?.role == UserRole.admin;
-      if (isLoggedIn &&
-          isAdminUser &&
-          !appState.isSystemConfigured &&
-          !isAdminRoute) {
-        return AppRoute.homeAdmin.path;
-      }
-
       if (isLoggedIn && isAuthRoute) {
         return AppRoute.homeDashboard.path;
       }
 
-      var _redirectLog =
+      final redirectLog =
           '[${DateTime.timestamp()}] | [NAV] => ${state.matchedLocation}';
 
       debugPrint(
-        '$_redirectLog <===============================================================',
+        '$redirectLog <===============================================================',
       );
 
-      return state.matchedLocation;
+      return null;
     },
     routes: [
       GoRoute(

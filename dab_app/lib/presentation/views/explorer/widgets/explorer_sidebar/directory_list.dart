@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/styles/app_icons.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_event.dart';
 import '../../explorer_state.dart';
@@ -30,7 +31,7 @@ class DirectoryList extends StatelessWidget {
                   label: u.name,
                   isSelected: isSelected,
                   avatarUrl: u.avatarUrl,
-                  iconData: u.avatarUrl == null ? Icons.person_rounded : null,
+                  iconData: u.avatarUrl == null ? AppIcons.user : null,
                   onTap: () => context.read<ExplorerBloc>().add(
                     ExplorerUserToggled(u.id),
                   ),
@@ -45,7 +46,7 @@ class DirectoryList extends StatelessWidget {
                 child: SelectionTile(
                   label: g.name,
                   isSelected: isSelected,
-                  iconData: Icons.group_rounded,
+                  iconData: AppIcons.users,
                   onTap: () => context.read<ExplorerBloc>().add(
                     ExplorerGroupToggled(g.id),
                   ),
