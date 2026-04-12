@@ -7,6 +7,7 @@ import '../../../../domain/repositories/abs_i_user_repository.dart';
 import '../../core/models/view_status.dart';
 import 'admin_event.dart';
 import 'admin_state.dart';
+import 'models/admin_section.dart';
 import 'models/provider_connection_status.dart';
 
 /// [ARCH: PRESENTATION_BLOC]
@@ -29,7 +30,10 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     on<AdminSectionChanged>(_onSectionChanged);
     on<AdminUserRoleUpdated>(_onUserRoleUpdated);
     on<AdminTestConnection>(_onTestConnection);
+    on<AdminRefreshProviderStatuses>(_onRefreshProviderStatuses);
     on<AdminIdentityResolved>(_onIdentityResolved);
+    on<AdminIdentitySortChanged>(_onIdentitySortChanged);
+    on<AdminIdentitySearchChanged>(_onIdentitySearchChanged);
   }
 
   Future<void> _onTestConnection(
@@ -130,6 +134,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
                 ),
               ),
             );
+            add(const AdminRefreshProviderStatuses());
           },
         );
       },
@@ -141,6 +146,9 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     Emitter<AdminState> emit,
   ) async {
     emit(state.copyWith(selectedSection: event.section));
+    if (event.section == AdminSection.providers) {
+      add(const AdminRefreshProviderStatuses());
+    }
   }
 
   Future<void> _onUserRoleUpdated(
@@ -274,5 +282,67 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
         );
       },
     );
+  }
+
+  Future<void> _onIdentitySortChanged(
+    AdminIdentitySortChanged event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        identitySortField: event.sortField,
+        identitySortAscending: event.ascending,
+      ),
+    );
+  }
+
+  Future<void> _onIdentitySearchChanged(
+    AdminIdentitySearchChanged event,
+    Emitter<AdminState> emit,
+  ) async {
+    emit(state.copyWith(identitySearchQuery: event.query));
+  }
+
+  Future<void> _onRefreshProviderStatuses(
+    AdminRefreshProviderStatuses event,
+    Emitter<AdminState> emit,
+  ) async {
+    final activeConfigs = state.configs.where((c) => c.isActive).toList();
+    if (activeConfigs.isEmpty) {
+      return;
+    }
+
+    for (final config in activeConfigs) {
+      _updateStatus(emit, config.id, ViewStatus.loading);
+    }
+
+    for (final config in activeConfigs) {
+      try {
+        final result = await _providerRepo
+            .testProviderConfig(config)
+            .timeout(const Duration(seconds: 12));
+        result.fold(
+          (failure) => _updateStatus(
+            emit,
+            config.id,
+            ViewStatus.failure,
+            message: failure.message,
+          ),
+          (message) => _updateStatus(
+            emit,
+            config.id,
+            ViewStatus.success,
+            message: message,
+          ),
+        );
+      } catch (e) {
+        _updateStatus(
+          emit,
+          config.id,
+          ViewStatus.failure,
+          message: e is TimeoutException ? 'Connection timed out' : e.toString(),
+        );
+      }
+    }
   }
 }

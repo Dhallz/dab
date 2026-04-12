@@ -139,13 +139,15 @@ class ExplorerCalendarHeader extends StatelessWidget {
   String _buildStatusText() {
     final activityCount = state.items.fold<int>(
       0,
-      (sum, item) =>
-          sum +
-          (item is SingleActivityItem
-              ? 1
-              : (item as TaskActivityItem).activities.length),
+      (sum, item) => sum + _countActivities(item),
     );
 
     return 'Viewing $activityCount archived activities from this date.';
   }
+
+  int _countActivities(ExplorerItem item) => switch (item) {
+    SingleActivityItem() => 1,
+    TaskActivityItem(:final activities) => activities.length,
+    SlackConversationItem(:final activities) => activities.length,
+  };
 }

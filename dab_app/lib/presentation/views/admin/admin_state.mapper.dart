@@ -62,6 +62,29 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
     opt: true,
     def: const [],
   );
+  static String _$identitySearchQuery(AdminState v) => v.identitySearchQuery;
+  static const Field<AdminState, String> _f$identitySearchQuery = Field(
+    'identitySearchQuery',
+    _$identitySearchQuery,
+    opt: true,
+    def: '',
+  );
+  static IdentitySortField _$identitySortField(AdminState v) =>
+      v.identitySortField;
+  static const Field<AdminState, IdentitySortField> _f$identitySortField =
+      Field(
+        'identitySortField',
+        _$identitySortField,
+        opt: true,
+        def: IdentitySortField.fullName,
+      );
+  static bool _$identitySortAscending(AdminState v) => v.identitySortAscending;
+  static const Field<AdminState, bool> _f$identitySortAscending = Field(
+    'identitySortAscending',
+    _$identitySortAscending,
+    opt: true,
+    def: true,
+  );
   static Map<String, ProviderConnectionStatus> _$connectionStatuses(
     AdminState v,
   ) => v.connectionStatuses;
@@ -86,6 +109,9 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
     #configs: _f$configs,
     #identities: _f$identities,
     #users: _f$users,
+    #identitySearchQuery: _f$identitySearchQuery,
+    #identitySortField: _f$identitySortField,
+    #identitySortAscending: _f$identitySortAscending,
     #connectionStatuses: _f$connectionStatuses,
     #errorMessage: _f$errorMessage,
   };
@@ -97,6 +123,9 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
       configs: data.dec(_f$configs),
       identities: data.dec(_f$identities),
       users: data.dec(_f$users),
+      identitySearchQuery: data.dec(_f$identitySearchQuery),
+      identitySortField: data.dec(_f$identitySortField),
+      identitySortAscending: data.dec(_f$identitySortAscending),
       connectionStatuses: data.dec(_f$connectionStatuses),
       errorMessage: data.dec(_f$errorMessage),
     );
@@ -192,6 +221,9 @@ abstract class AdminStateCopyWith<$R, $In extends AdminState, $Out>
     List<ProviderConfig>? configs,
     List<UserIdentity>? identities,
     List<User>? users,
+    String? identitySearchQuery,
+    IdentitySortField? identitySortField,
+    bool? identitySortAscending,
     Map<String, ProviderConnectionStatus>? connectionStatuses,
     String? errorMessage,
   });
@@ -258,6 +290,9 @@ class _AdminStateCopyWithImpl<$R, $Out>
     List<ProviderConfig>? configs,
     List<UserIdentity>? identities,
     List<User>? users,
+    String? identitySearchQuery,
+    IdentitySortField? identitySortField,
+    bool? identitySortAscending,
     Map<String, ProviderConnectionStatus>? connectionStatuses,
     Object? errorMessage = $none,
   }) => $apply(
@@ -267,6 +302,11 @@ class _AdminStateCopyWithImpl<$R, $Out>
       if (configs != null) #configs: configs,
       if (identities != null) #identities: identities,
       if (users != null) #users: users,
+      if (identitySearchQuery != null)
+        #identitySearchQuery: identitySearchQuery,
+      if (identitySortField != null) #identitySortField: identitySortField,
+      if (identitySortAscending != null)
+        #identitySortAscending: identitySortAscending,
       if (connectionStatuses != null) #connectionStatuses: connectionStatuses,
       if (errorMessage != $none) #errorMessage: errorMessage,
     }),
@@ -278,6 +318,18 @@ class _AdminStateCopyWithImpl<$R, $Out>
     configs: data.get(#configs, or: $value.configs),
     identities: data.get(#identities, or: $value.identities),
     users: data.get(#users, or: $value.users),
+    identitySearchQuery: data.get(
+      #identitySearchQuery,
+      or: $value.identitySearchQuery,
+    ),
+    identitySortField: data.get(
+      #identitySortField,
+      or: $value.identitySortField,
+    ),
+    identitySortAscending: data.get(
+      #identitySortAscending,
+      or: $value.identitySortAscending,
+    ),
     connectionStatuses: data.get(
       #connectionStatuses,
       or: $value.connectionStatuses,

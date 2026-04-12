@@ -18,8 +18,6 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
   final ActivityUseCases _activityUseCases;
   final UserUseCases _userUseCases;
   final MetadataUseCases _metadataUseCases;
-  StreamSubscription? _activitySubscription;
-
   ExplorerBloc(
     this._activityUseCases,
     this._userUseCases,
@@ -31,7 +29,6 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       transformer: (events, mapper) =>
           events.debounce(const Duration(milliseconds: 300)).switchMap(mapper),
     );
-    on<ExplorerActivityReceived>(_onActivityReceived);
     on<ExplorerDirectoryTypeChanged>(_onDirectoryTypeChanged);
     on<ExplorerUserToggled>(_onUserToggled);
     on<ExplorerGroupToggled>(_onGroupToggled);
@@ -84,9 +81,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     ExplorerDateChanged event,
     Emitter<ExplorerState> emit,
   ) async {
-    emit(
-      state.copyWith(selectedDate: event.date, status: ViewStatus.loading),
-    );
+    emit(state.copyWith(selectedDate: event.date, status: ViewStatus.loading));
     await _fetchActivities(emit, event.date);
   }
 
@@ -138,13 +133,6 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         final items = groupActivities(filteredActivities);
 
         emit(state.copyWith(status: ViewStatus.success, items: items));
-
-        _activitySubscription?.cancel();
-        _activitySubscription = _activityUseCases.watchActivities
-            .execute()
-            .listen((activity) {
-              add(ExplorerActivityReceived(activity));
-            });
       },
     );
   }
@@ -160,51 +148,124 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     final cleanActivities = deduplicated.values.toList();
 
     final List<ExplorerItem> items = [];
-    final Map<String, List<Activity>> groups = {};
+    final Map<String, List<Activity>> taskGroups = {};
+    final Map<String, List<Activity>> slackConversationGroups = {};
+    final Map<String, List<Activity>> slackBurstGroups = {};
     final List<String> taskOrder = [];
+    final List<String> slackConversationOrder = [];
+    final List<String> slackBurstOrder = [];
 
     for (final activity in cleanActivities) {
       final provider = activity.provider;
       if (provider is PhorgeTaskProvider && provider.taskPhid != null) {
         final key = '${activity.userId}_${provider.taskPhid}';
-        if (!groups.containsKey(key)) {
-          groups[key] = [];
+        if (!taskGroups.containsKey(key)) {
+          taskGroups[key] = [];
           taskOrder.add(key);
         }
-        groups[key]!.add(activity);
+        taskGroups[key]!.add(activity);
+      } else if (provider is SlackMessageProvider &&
+          provider.channelId != null &&
+          provider.threadTs != null) {
+        final key = '${provider.channelId}:${provider.threadTs}';
+        if (!slackConversationGroups.containsKey(key)) {
+          slackConversationGroups[key] = [];
+          slackConversationOrder.add(key);
+        }
+        slackConversationGroups[key]!.add(activity);
+      } else if (provider is SlackMessageProvider &&
+          provider.channelId != null &&
+          provider.threadTs == null) {
+        final key = _buildSlackBurstKey(activity, provider);
+        if (!slackBurstGroups.containsKey(key)) {
+          slackBurstGroups[key] = [];
+          slackBurstOrder.add(key);
+        }
+        slackBurstGroups[key]!.add(activity);
       } else {
         items.add(SingleActivityItem(activity));
       }
     }
 
     for (final key in taskOrder) {
-      final groupActivities = groups[key]!;
-      if (groupActivities.length == 1) {
-        items.add(SingleActivityItem(groupActivities.first));
+      final groupedActivities = taskGroups[key]!;
+      if (groupedActivities.length == 1) {
+        items.add(SingleActivityItem(groupedActivities.first));
       } else {
         final taskPhid =
-            (groupActivities.first.provider as PhorgeTaskProvider).taskPhid!;
+            (groupedActivities.first.provider as PhorgeTaskProvider).taskPhid!;
         items.add(
           TaskActivityItem(
-            activities: groupActivities,
+            activities: groupedActivities,
             taskId: taskPhid,
-            userId: groupActivities.first.userId,
+            userId: groupedActivities.first.userId,
+          ),
+        );
+      }
+    }
+
+    for (final key in slackConversationOrder) {
+      final groupedActivities = slackConversationGroups[key]!;
+      if (groupedActivities.length == 1) {
+        items.add(SingleActivityItem(groupedActivities.first));
+      } else {
+        final provider =
+            groupedActivities.first.provider as SlackMessageProvider;
+        items.add(
+          SlackConversationItem(
+            activities: groupedActivities,
+            conversationKey: key,
+            channelId: provider.channelId!,
+            threadTs: provider.threadTs!,
+          ),
+        );
+      }
+    }
+
+    for (final key in slackBurstOrder) {
+      final groupedActivities = slackBurstGroups[key]!;
+      if (groupedActivities.length == 1) {
+        items.add(SingleActivityItem(groupedActivities.first));
+      } else {
+        final provider =
+            groupedActivities.first.provider as SlackMessageProvider;
+        final bucketId = _extractBucketIdFromSlackBurstKey(key);
+        items.add(
+          SlackConversationItem(
+            activities: groupedActivities,
+            conversationKey: key,
+            channelId: provider.channelId!,
+            threadTs: 'burst:$bucketId',
           ),
         );
       }
     }
 
     items.sort((a, b) {
-      final dateA = a is SingleActivityItem
-          ? a.activity.createdAt
-          : (a as TaskActivityItem).activities.first.createdAt;
-      final dateB = b is SingleActivityItem
-          ? b.activity.createdAt
-          : (b as TaskActivityItem).activities.first.createdAt;
+      final dateA = _itemCreatedAt(a);
+      final dateB = _itemCreatedAt(b);
       return dateB.compareTo(dateA);
     });
 
     return items;
+  }
+
+  DateTime _itemCreatedAt(ExplorerItem item) => switch (item) {
+    SingleActivityItem(:final activity) => activity.createdAt,
+    TaskActivityItem(:final activities) => activities.first.createdAt,
+    SlackConversationItem(:final activities) => activities.first.createdAt,
+  };
+
+  String _buildSlackBurstKey(Activity activity, SlackMessageProvider provider) {
+    final bucketEpoch =
+        activity.createdAt.toUtc().millisecondsSinceEpoch ~/
+        const Duration(minutes: 15).inMilliseconds;
+    return '${provider.channelId}:${activity.userId}:$bucketEpoch';
+  }
+
+  String _extractBucketIdFromSlackBurstKey(String key) {
+    final parts = key.split(':');
+    return parts.isNotEmpty ? parts.last : key;
   }
 
   void _onDirectoryTypeChanged(
@@ -264,73 +325,16 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     await _fetchActivities(emit, state.selectedDate);
   }
 
-  void _onActivityReceived(
-    ExplorerActivityReceived event,
-    Emitter<ExplorerState> emit,
-  ) {
-    if (event.activity is! Activity) return;
-    final activity = event.activity as Activity;
-
-    final lowerSelected = state.selectedProviders
-        .map((e) => e.toLowerCase())
-        .toSet();
-    if (!lowerSelected.contains(activity.provider.name.toLowerCase())) {
-      return;
-    }
-
-    // Optimization: Add to existing groups or insert at correct position
-    // instead of fully re-grouping and re-sorting.
-    final List<ExplorerItem> updatedItems = List.from(state.items);
-
-    // If it's a Phorge task, check if a group already exists
-    if (activity.provider is PhorgeTaskProvider) {
-      final provider = activity.provider as PhorgeTaskProvider;
-      final existingIndex = updatedItems.indexWhere(
-        (item) => item is TaskActivityItem && item.taskId == provider.taskPhid,
-      );
-
-      if (existingIndex != -1) {
-        final existingItem = updatedItems[existingIndex] as TaskActivityItem;
-        updatedItems[existingIndex] = TaskActivityItem(
-          activities: [activity, ...existingItem.activities]
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-          taskId: existingItem.taskId,
-          userId: existingItem.userId,
-        );
-        emit(state.copyWith(items: updatedItems));
-        return;
-      }
-    }
-
-    // Otherwise, insert at the correct position to maintain sort order
-    final newItem = SingleActivityItem(activity);
-    int insertIndex = updatedItems.indexWhere((item) {
-      final itemDate = item is SingleActivityItem
-          ? item.activity.createdAt
-          : (item as TaskActivityItem).activities.first.createdAt;
-      return activity.createdAt.isAfter(itemDate);
-    });
-
-    if (insertIndex == -1) {
-      updatedItems.add(newItem);
-    } else {
-      updatedItems.insert(insertIndex, newItem);
-    }
-
-    // Limit to 200 items
-    if (updatedItems.length > 200) {
-      updatedItems.removeLast();
-    }
-
-    emit(state.copyWith(items: updatedItems));
-  }
-
   void _onStackToggled(
     ExplorerStackToggled event,
     Emitter<ExplorerState> emit,
   ) {
     final updatedItems = state.items.map((item) {
       if (item is TaskActivityItem && item.taskId == event.taskId) {
+        return item.copyWith(isExpanded: !item.isExpanded);
+      }
+      if (item is SlackConversationItem &&
+          item.conversationKey == event.taskId) {
         return item.copyWith(isExpanded: !item.isExpanded);
       }
       return item;
@@ -352,16 +356,8 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       ),
       (savedGroup) async {
         final updatedGroups = [...state.groups, savedGroup];
-        emit(
-          state.copyWith(groups: updatedGroups, status: ViewStatus.success),
-        );
+        emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
       },
     );
-  }
-
-  @override
-  Future<void> close() {
-    _activitySubscription?.cancel();
-    return super.close();
   }
 }

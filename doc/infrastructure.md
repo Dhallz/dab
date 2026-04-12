@@ -14,7 +14,7 @@ graph TD
     subgraph "External Providers"
         S1[Phorge Provider]
         S2[GitHub Provider]
-        S3[Slack Webhook]
+        S3[Slack Web API]
     end
     subgraph "DAB Core Stack"
         API[Relic API]
@@ -54,6 +54,7 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 activities                  ← Base table: id, userId, title, content, provider, createdAt, updatedAt
   └── activity_phorge       ← Phorge metadata: phid, tags, revisionId, transactionType
   └── activity_github_commit← GitHub commit metadata: repo, branch
+  └── activity_slack_message← Slack metadata: workspaceId, channelId, threadTs, messageTs
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -67,6 +68,7 @@ activities                  ← Base table: id, userId, title, content, provider
 | `activities` | Normalized activity base |
 | `activity_phorge` | Phorge-specific metadata |
 | `activity_github_commit` | GitHub commit-specific metadata |
+| `activity_slack_message` | Slack message-specific metadata |
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `sessions` | Active auth sessions |
@@ -77,6 +79,11 @@ Identity linkage (`user_identities`) is the runtime source of provider
 participation for activity fetchers. Legacy tenants with historical
 `users.phorge_phid` data should run a one-time backfill into
 `user_identities(provider_id='phorge')` before enabling identity-only fetch.
+
+Slack ingestion is read-only and identity-gated: only messages authored by
+linked Slack identities (`provider_id='slack'`) are attributed. Provider
+credentials are stored in `provider_configs.settings` (`botToken`, optional
+`channels`, optional `apiBaseUrl`).
 
 ---
 

@@ -7,6 +7,7 @@ enum ActivityCategory {
   commit,
   revision,
   task,
+  message,
   generic;
 
   String get label {
@@ -16,6 +17,8 @@ enum ActivityCategory {
         return 'Engineering';
       case ActivityCategory.task:
         return 'Product';
+      case ActivityCategory.message:
+        return 'Communication';
       case ActivityCategory.generic:
         return 'Activity';
     }

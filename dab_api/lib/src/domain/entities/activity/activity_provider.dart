@@ -77,6 +77,31 @@ class GitHubCommitProvider extends ActivityProvider
   String get category => 'commit';
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Slack Messages.
+/// CONTRACT: Corresponds to the `activity_slack_message` SQL table.
+@MappableClass()
+class SlackMessageProvider extends ActivityProvider
+    with SlackMessageProviderMappable {
+  final String? workspaceId;
+  final String? channelId;
+  final String? threadTs;
+  final String? messageTs;
+
+  const SlackMessageProvider({
+    this.workspaceId,
+    this.channelId,
+    this.threadTs,
+    this.messageTs,
+  });
+
+  @override
+  String get name => 'Slack';
+
+  @override
+  String get category => 'message';
+}
+
 @MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override

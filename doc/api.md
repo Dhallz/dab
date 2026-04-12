@@ -157,6 +157,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 |---|---|---|
 | Phorge | ✅ Active | Conduit REST API |
 | GitHub | ✅ Active (Commits v1) | REST |
+| Slack | ✅ Active (Messages v1) | Slack Web API |
 | GitLab | 🔜 Planned | REST |
 | Bitbucket | 🔜 Planned | REST |
 
@@ -164,6 +165,12 @@ GitHub v1 ingestion is commits-only and uses provider-linked identities from
 `user_identities` (`provider_id: github`) to scope authored fetches. Bootstrap
 remains local-first for the first admin; teams can onboard with any provider
 afterward (no Phorge prerequisite).
+
+Slack v1 ingestion is message-only and strictly identity-based (`provider_id:
+slack`). Connector execution and attribution require linked Slack user IDs in
+`user_identities.external_id`; there is no email fallback during mapping. The
+admin test-connection endpoint validates Slack credentials using `auth.test`,
+and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
 
 ---
 

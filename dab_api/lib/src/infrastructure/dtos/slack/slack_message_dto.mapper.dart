@@ -21,32 +21,106 @@ class SlackMessageDtoMapper extends ClassMapperBase<SlackMessageDto> {
   @override
   final String id = 'SlackMessageDto';
 
+  static String _$channelId(SlackMessageDto v) => v.channelId;
+  static const Field<SlackMessageDto, String> _f$channelId = Field(
+    'channelId',
+    _$channelId,
+  );
   static String _$text(SlackMessageDto v) => v.text;
   static const Field<SlackMessageDto, String> _f$text = Field('text', _$text);
-  static String _$user(SlackMessageDto v) => v.user;
-  static const Field<SlackMessageDto, String> _f$user = Field('user', _$user);
+  static String _$userId(SlackMessageDto v) => v.userId;
+  static const Field<SlackMessageDto, String> _f$userId = Field(
+    'userId',
+    _$userId,
+  );
   static String _$ts(SlackMessageDto v) => v.ts;
   static const Field<SlackMessageDto, String> _f$ts = Field('ts', _$ts);
-  static String _$channel(SlackMessageDto v) => v.channel;
-  static const Field<SlackMessageDto, String> _f$channel = Field(
-    'channel',
-    _$channel,
+  static DateTime _$createdAt(SlackMessageDto v) => v.createdAt;
+  static const Field<SlackMessageDto, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+  );
+  static String? _$channelLabel(SlackMessageDto v) => v.channelLabel;
+  static const Field<SlackMessageDto, String> _f$channelLabel = Field(
+    'channelLabel',
+    _$channelLabel,
+    opt: true,
+  );
+  static String? _$workspaceId(SlackMessageDto v) => v.workspaceId;
+  static const Field<SlackMessageDto, String> _f$workspaceId = Field(
+    'workspaceId',
+    _$workspaceId,
+    opt: true,
+  );
+  static String? _$threadTs(SlackMessageDto v) => v.threadTs;
+  static const Field<SlackMessageDto, String> _f$threadTs = Field(
+    'threadTs',
+    _$threadTs,
+    opt: true,
+  );
+  static String? _$permalink(SlackMessageDto v) => v.permalink;
+  static const Field<SlackMessageDto, String> _f$permalink = Field(
+    'permalink',
+    _$permalink,
+    opt: true,
+  );
+  static String? _$userDisplayName(SlackMessageDto v) => v.userDisplayName;
+  static const Field<SlackMessageDto, String> _f$userDisplayName = Field(
+    'userDisplayName',
+    _$userDisplayName,
+    opt: true,
+  );
+  static String? _$userUsername(SlackMessageDto v) => v.userUsername;
+  static const Field<SlackMessageDto, String> _f$userUsername = Field(
+    'userUsername',
+    _$userUsername,
+    opt: true,
+  );
+  static String? _$userAvatarUrl(SlackMessageDto v) => v.userAvatarUrl;
+  static const Field<SlackMessageDto, String> _f$userAvatarUrl = Field(
+    'userAvatarUrl',
+    _$userAvatarUrl,
+    opt: true,
+  );
+  static String? _$dabUserId(SlackMessageDto v) => v.dabUserId;
+  static const Field<SlackMessageDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
   );
 
   @override
   final MappableFields<SlackMessageDto> fields = const {
+    #channelId: _f$channelId,
     #text: _f$text,
-    #user: _f$user,
+    #userId: _f$userId,
     #ts: _f$ts,
-    #channel: _f$channel,
+    #createdAt: _f$createdAt,
+    #channelLabel: _f$channelLabel,
+    #workspaceId: _f$workspaceId,
+    #threadTs: _f$threadTs,
+    #permalink: _f$permalink,
+    #userDisplayName: _f$userDisplayName,
+    #userUsername: _f$userUsername,
+    #userAvatarUrl: _f$userAvatarUrl,
+    #dabUserId: _f$dabUserId,
   };
 
   static SlackMessageDto _instantiate(DecodingData data) {
     return SlackMessageDto(
+      channelId: data.dec(_f$channelId),
       text: data.dec(_f$text),
-      user: data.dec(_f$user),
+      userId: data.dec(_f$userId),
       ts: data.dec(_f$ts),
-      channel: data.dec(_f$channel),
+      createdAt: data.dec(_f$createdAt),
+      channelLabel: data.dec(_f$channelLabel),
+      workspaceId: data.dec(_f$workspaceId),
+      threadTs: data.dec(_f$threadTs),
+      permalink: data.dec(_f$permalink),
+      userDisplayName: data.dec(_f$userDisplayName),
+      userUsername: data.dec(_f$userUsername),
+      userAvatarUrl: data.dec(_f$userAvatarUrl),
+      dabUserId: data.dec(_f$dabUserId),
     );
   }
 
@@ -112,7 +186,21 @@ extension SlackMessageDtoValueCopy<$R, $Out>
 
 abstract class SlackMessageDtoCopyWith<$R, $In extends SlackMessageDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? text, String? user, String? ts, String? channel});
+  $R call({
+    String? channelId,
+    String? text,
+    String? userId,
+    String? ts,
+    DateTime? createdAt,
+    String? channelLabel,
+    String? workspaceId,
+    String? threadTs,
+    String? permalink,
+    String? userDisplayName,
+    String? userUsername,
+    String? userAvatarUrl,
+    String? dabUserId,
+  });
   SlackMessageDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -127,20 +215,52 @@ class _SlackMessageDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<SlackMessageDto> $mapper =
       SlackMessageDtoMapper.ensureInitialized();
   @override
-  $R call({String? text, String? user, String? ts, String? channel}) => $apply(
+  $R call({
+    String? channelId,
+    String? text,
+    String? userId,
+    String? ts,
+    DateTime? createdAt,
+    Object? channelLabel = $none,
+    Object? workspaceId = $none,
+    Object? threadTs = $none,
+    Object? permalink = $none,
+    Object? userDisplayName = $none,
+    Object? userUsername = $none,
+    Object? userAvatarUrl = $none,
+    Object? dabUserId = $none,
+  }) => $apply(
     FieldCopyWithData({
+      if (channelId != null) #channelId: channelId,
       if (text != null) #text: text,
-      if (user != null) #user: user,
+      if (userId != null) #userId: userId,
       if (ts != null) #ts: ts,
-      if (channel != null) #channel: channel,
+      if (createdAt != null) #createdAt: createdAt,
+      if (channelLabel != $none) #channelLabel: channelLabel,
+      if (workspaceId != $none) #workspaceId: workspaceId,
+      if (threadTs != $none) #threadTs: threadTs,
+      if (permalink != $none) #permalink: permalink,
+      if (userDisplayName != $none) #userDisplayName: userDisplayName,
+      if (userUsername != $none) #userUsername: userUsername,
+      if (userAvatarUrl != $none) #userAvatarUrl: userAvatarUrl,
+      if (dabUserId != $none) #dabUserId: dabUserId,
     }),
   );
   @override
   SlackMessageDto $make(CopyWithData data) => SlackMessageDto(
+    channelId: data.get(#channelId, or: $value.channelId),
     text: data.get(#text, or: $value.text),
-    user: data.get(#user, or: $value.user),
+    userId: data.get(#userId, or: $value.userId),
     ts: data.get(#ts, or: $value.ts),
-    channel: data.get(#channel, or: $value.channel),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
+    channelLabel: data.get(#channelLabel, or: $value.channelLabel),
+    workspaceId: data.get(#workspaceId, or: $value.workspaceId),
+    threadTs: data.get(#threadTs, or: $value.threadTs),
+    permalink: data.get(#permalink, or: $value.permalink),
+    userDisplayName: data.get(#userDisplayName, or: $value.userDisplayName),
+    userUsername: data.get(#userUsername, or: $value.userUsername),
+    userAvatarUrl: data.get(#userAvatarUrl, or: $value.userAvatarUrl),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
   );
 
   @override

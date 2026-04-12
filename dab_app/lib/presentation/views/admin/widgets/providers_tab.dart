@@ -52,9 +52,14 @@ class ProvidersTab extends StatelessWidget {
           itemCount: sorted.length,
           padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
           itemBuilder: (context, index) {
+            final config = sorted[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.l),
-              child: ProviderCard(config: sorted[index], bloc: bloc),
+              child: ProviderCard(
+                key: ValueKey(config.id),
+                config: config,
+                bloc: bloc,
+              ),
             );
           },
         );

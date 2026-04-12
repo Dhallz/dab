@@ -1,6 +1,7 @@
 import 'package:dab_api/src/infrastructure/database/tables/activities_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_github_commit_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_slack_message_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/provider_configs_table.dart';
@@ -19,6 +20,7 @@ part 'app_database.g.dart';
     ActivitiesTable,
     ActivityPhorgeTable,
     ActivityGithubCommitTable,
+    ActivitySlackMessageTable,
     SessionsTable,
     GroupsTable,
     GroupMembersTable,
@@ -30,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -133,7 +135,10 @@ WHERE users.phorge_phid IS NOT NULL
 ''');
       }
       if (from < 10) {
-        await m.addColumn(userIdentitiesTable, userIdentitiesTable.externalUsername);
+        await m.addColumn(
+          userIdentitiesTable,
+          userIdentitiesTable.externalUsername,
+        );
         await m.database.customStatement(r'''
 UPDATE user_identities ui
 SET external_username = users.phorge_username,
@@ -145,6 +150,9 @@ WHERE ui.user_id = users.id
   AND users.phorge_username <> ''
   AND (ui.external_username IS NULL OR ui.external_username = '');
 ''');
+      }
+      if (from < 11) {
+        await m.createTable(activitySlackMessageTable);
       }
     },
     beforeOpen: (details) async {
@@ -173,7 +181,9 @@ WHERE ui.user_id = users.id
               name: 'Jira',
               baseUrl: 'https://atlassian.net',
               isActive: const Value(1),
-              iconUrl: const Value('https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png'),
+              iconUrl: const Value(
+                'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png',
+              ),
               settings: const Value('{}'),
             ),
             ProviderConfigsTableCompanion.insert(
@@ -181,7 +191,9 @@ WHERE ui.user_id = users.id
               name: 'Microsoft Teams',
               baseUrl: 'https://teams.microsoft.com',
               isActive: const Value(1),
-              iconUrl: const Value('https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico'),
+              iconUrl: const Value(
+                'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico',
+              ),
               settings: const Value('{}'),
             ),
             ProviderConfigsTableCompanion.insert(
@@ -189,7 +201,9 @@ WHERE ui.user_id = users.id
               name: 'Slack',
               baseUrl: 'https://slack.com',
               isActive: const Value(1),
-              iconUrl: const Value('https://a.slack-edge.com/80588/img/favicon-32.png'),
+              iconUrl: const Value(
+                'https://a.slack-edge.com/80588/img/favicon-32.png',
+              ),
               settings: const Value('{}'),
             ),
             ProviderConfigsTableCompanion.insert(
@@ -205,7 +219,9 @@ WHERE ui.user_id = users.id
               name: 'GitHub',
               baseUrl: 'https://github.com',
               isActive: const Value(1),
-              iconUrl: const Value('https://github.githubassets.com/favicons/favicon.svg'),
+              iconUrl: const Value(
+                'https://github.githubassets.com/favicons/favicon.svg',
+              ),
               settings: const Value('{}'),
             ),
             ProviderConfigsTableCompanion.insert(

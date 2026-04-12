@@ -55,7 +55,8 @@ class ExplorerViewMobile extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final item = state.items[index];
                         final isStack =
-                            item is TaskActivityItem && !item.isExpanded;
+                            (item is TaskActivityItem && !item.isExpanded) ||
+                            (item is SlackConversationItem && !item.isExpanded);
                         return Padding(
                           padding: EdgeInsets.only(bottom: isStack ? 24 : 12),
                           child: switch (item) {
@@ -69,6 +70,13 @@ class ExplorerViewMobile extends StatelessWidget {
                               resolvedAuthorName:
                                   userNameById[item.latestActivity.userId],
                             ),
+                            SlackConversationItem(:final activities) =>
+                              ActivityCard(
+                                activity: item.latestActivity,
+                                activities: activities,
+                                resolvedAuthorName:
+                                    userNameById[item.latestActivity.userId],
+                              ),
                           },
                         );
                       },

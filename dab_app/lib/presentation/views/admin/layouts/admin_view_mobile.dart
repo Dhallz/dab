@@ -2,25 +2,23 @@ import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/widgets/island_bar.dart';
-import 'package:dab_app/presentation/views/admin/widgets/admin_island_bar_content.dart';
 import 'package:dab_app/presentation/features/app/app_cubit.dart';
 import 'package:dab_app/presentation/features/auth/auth_cubit.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
-import 'package:dab_app/presentation/views/admin/layouts/admin_sidebar.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
+import 'package:dab_app/presentation/views/admin/widgets/admin_island_bar_content.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_section_body.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_section_header.dart';
+import 'package:dab_app/presentation/views/admin/widgets/admin_section_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 String _identityListSignature(List<UserIdentity> list) =>
     list.map((e) => e.id).join('|');
 
-/// [ARCH: PRESENTATION_LAYOUT]
-/// ROLE: Desktop layout for the Admin Console.
-class AdminViewDesktop extends StatelessWidget {
-  const AdminViewDesktop({super.key});
+class AdminViewMobile extends StatelessWidget {
+  const AdminViewMobile({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,43 +59,40 @@ class AdminViewDesktop extends StatelessWidget {
       },
       builder: (context, state, bloc) {
         final section = state.selectedSection;
-
         return Scaffold(
           backgroundColor: Colors.transparent,
-          body: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AdminSidebar(selectedSection: section),
-              Expanded(
-                child: Column(
-                  children: [
-                    const IslandBar(content: AdminIslandBarContent()),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AdminSectionHeader(
-                              title: section.title,
-                              subtitle: section.subtitle,
-                            ),
-                            const SizedBox(height: 32),
-                            Expanded(
-                              child: AdminSectionBody(
-                                state: state,
-                                bloc: bloc,
-                                section: section,
-                              ),
-                            ),
-                          ],
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const IslandBar(content: AdminIslandBarContent()),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        AdminSectionSelector(selectedSection: section),
+                        const SizedBox(height: 16),
+                        AdminSectionHeader(
+                          title: section.title,
+                          subtitle: section.subtitle,
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: AdminSectionBody(
+                            state: state,
+                            bloc: bloc,
+                            section: section,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -33,3 +33,23 @@ class TaskActivityItem extends ExplorerItem with TaskActivityItemMappable {
 
   Activity get latestActivity => activities.first;
 }
+
+@MappableClass()
+class SlackConversationItem extends ExplorerItem
+    with SlackConversationItemMappable {
+  final List<Activity> activities;
+  final bool isExpanded;
+  final String conversationKey;
+  final String channelId;
+  final String threadTs;
+
+  const SlackConversationItem({
+    required this.activities,
+    required this.conversationKey,
+    required this.channelId,
+    required this.threadTs,
+    this.isExpanded = false,
+  });
+
+  Activity get latestActivity => activities.first;
+}

@@ -47,6 +47,8 @@ class ActivityProviderIcon extends StatelessWidget {
         return Icons.code_rounded;
       case ActivityCategory.task:
         return Icons.task_alt_rounded;
+      case ActivityCategory.message:
+        return Icons.chat_bubble_outline_rounded;
       case ActivityCategory.generic:
         return null; // Will fallback to the default provider icon
     }

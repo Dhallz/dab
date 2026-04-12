@@ -32,6 +32,8 @@ class ActivityCategoryMapper extends EnumMapper<ActivityCategory> {
         return ActivityCategory.revision;
       case r'task':
         return ActivityCategory.task;
+      case r'message':
+        return ActivityCategory.message;
       case r'generic':
         return ActivityCategory.generic;
       default:
@@ -48,6 +50,8 @@ class ActivityCategoryMapper extends EnumMapper<ActivityCategory> {
         return r'revision';
       case ActivityCategory.task:
         return r'task';
+      case ActivityCategory.message:
+        return r'message';
       case ActivityCategory.generic:
         return r'generic';
     }

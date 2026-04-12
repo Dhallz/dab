@@ -572,7 +572,10 @@ paths:
   /admin/configs/test:
     post:
       summary: Test provider connectivity.
-      description: Verifies connection to a provider without saving the config. Requires admin privileges.
+      description: |
+        Verifies connection to a provider without saving the config. Requires admin privileges.
+        Slack configs are validated with `auth.test` and support `settings.botToken`
+        (plus optional `settings.apiBaseUrl`).
       security:
         - bearerAuth: []
       requestBody:
@@ -584,6 +587,20 @@ paths:
       responses:
         '200':
           description: Connectivity test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: connected
+                      message:
+                        type: string
+                        example: Successfully connected as account-name
   /admin/identities/summary:
     get:
       summary: Unresolved identity count for admin UI badge.

@@ -4,16 +4,30 @@ import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_event.dart';
 import 'package:flutter/material.dart';
 
+enum IdentityCreateFocusField { externalId, externalUsername }
+
 class IdentityCreateDialog extends StatefulWidget {
   final AdminBloc bloc;
   final List<User> users;
   final List<String> providerIds;
+  final String? initialUserId;
+  final String? initialProviderId;
+  final String? initialExternalId;
+  final String? initialExternalUsername;
+  final IdentityCreateFocusField? initialFocusField;
+  final bool isUpdateMode;
 
   const IdentityCreateDialog({
     super.key,
     required this.bloc,
     required this.users,
     required this.providerIds,
+    this.initialUserId,
+    this.initialProviderId,
+    this.initialExternalId,
+    this.initialExternalUsername,
+    this.initialFocusField,
+    this.isUpdateMode = false,
   });
 
   @override
@@ -23,24 +37,54 @@ class IdentityCreateDialog extends StatefulWidget {
 class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
   final _externalIdController = TextEditingController();
   final _externalUsernameController = TextEditingController();
+  final _externalIdFocusNode = FocusNode();
+  final _externalUsernameFocusNode = FocusNode();
   String? _selectedUserId;
   String? _selectedProviderId;
 
   @override
   void initState() {
     super.initState();
+    _selectedUserId = widget.initialUserId;
+    _selectedProviderId = widget.initialProviderId;
+    _externalIdController.text = widget.initialExternalId ?? '';
+    _externalUsernameController.text = widget.initialExternalUsername ?? '';
     if (widget.users.isNotEmpty) {
-      _selectedUserId = widget.users.first.id;
+      _selectedUserId ??= widget.users.first.id;
     }
     if (widget.providerIds.isNotEmpty) {
-      _selectedProviderId = widget.providerIds.first;
+      _selectedProviderId ??= widget.providerIds.first;
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (widget.initialFocusField) {
+        case IdentityCreateFocusField.externalId:
+          _externalIdFocusNode.requestFocus();
+          _externalIdController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: _externalIdController.text.length,
+          );
+          break;
+        case IdentityCreateFocusField.externalUsername:
+          _externalUsernameFocusNode.requestFocus();
+          _externalUsernameController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: _externalUsernameController.text.length,
+          );
+          break;
+        case null:
+          break;
+      }
+    });
   }
 
   @override
   void dispose() {
     _externalIdController.dispose();
     _externalUsernameController.dispose();
+    _externalIdFocusNode.dispose();
+    _externalUsernameFocusNode.dispose();
     super.dispose();
   }
 
@@ -53,13 +97,15 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
 
     return Theme(
       data: Theme.of(context).copyWith(
-        dialogBackgroundColor: const Color(0xFF0F172A),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Color(0xFF0F172A),
+        ),
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          'Create Identity Link',
+        title: Text(
+          widget.isUpdateMode ? 'Update Identity Link' : 'Create Identity Link',
           style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.white),
         ),
         content: Column(
@@ -75,7 +121,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedUserId,
+              initialValue: _selectedUserId,
               items: widget.users
                   .map(
                     (u) => DropdownMenuItem(
@@ -90,7 +136,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _selectedProviderId,
+              initialValue: _selectedProviderId,
               items: widget.providerIds
                   .map(
                     (id) => DropdownMenuItem(
@@ -106,6 +152,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _externalIdController,
+              focusNode: _externalIdFocusNode,
               onChanged: (_) => setState(() {}),
               style: const TextStyle(color: AppColors.white),
               decoration: _fieldDecoration(
@@ -115,6 +162,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _externalUsernameController,
+              focusNode: _externalUsernameFocusNode,
               style: const TextStyle(color: AppColors.white),
               decoration: _fieldDecoration(
                 'Provider Username (optional, e.g. dlimier)',
@@ -152,8 +200,8 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
                     );
                     Navigator.pop(context);
                   },
-            child: const Text(
-              'Create Link',
+            child: Text(
+              widget.isUpdateMode ? 'Update Link' : 'Create Link',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

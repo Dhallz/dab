@@ -11,6 +11,14 @@ import 'models/provider_connection_status.dart';
 
 part 'admin_state.mapper.dart';
 
+enum IdentitySortField {
+  fullName,
+  provider,
+  externalId,
+  providerUsername,
+  status,
+}
+
 /// [ARCH: PRESENTATION_STATE]
 /// ROLE: Snapshot of the Admin Console screen state.
 /// CONTRACT: Immutable Plain Old Data (POD) object.
@@ -21,6 +29,9 @@ class AdminState with AdminStateMappable {
   final List<ProviderConfig> configs;
   final List<UserIdentity> identities;
   final List<User> users;
+  final String identitySearchQuery;
+  final IdentitySortField identitySortField;
+  final bool identitySortAscending;
   final Map<String, ProviderConnectionStatus> connectionStatuses;
   final String? errorMessage;
 
@@ -30,6 +41,9 @@ class AdminState with AdminStateMappable {
     this.configs = const [],
     this.identities = const [],
     this.users = const [],
+    this.identitySearchQuery = '',
+    this.identitySortField = IdentitySortField.fullName,
+    this.identitySortAscending = true,
     this.connectionStatuses = const {},
     this.errorMessage,
   });
@@ -55,6 +69,49 @@ extension OnAdminState on AdminState {
       connectionFailed: health.failed,
       connectionUnknown: health.unknown,
     );
+  }
+
+  List<UserIdentity> get filteredSortedIdentities {
+    final lowerQuery = identitySearchQuery.trim().toLowerCase();
+    final fullNameByUserId = {for (final user in users) user.id: user.name.trim()};
+
+    final filtered = identities.where((identity) {
+      if (lowerQuery.isEmpty) {
+        return true;
+      }
+      final fullName = (fullNameByUserId[identity.userId] ?? identity.userId)
+          .toLowerCase();
+      final provider = identity.providerId.toLowerCase();
+      final externalId = identity.externalId.toLowerCase();
+      final userId = identity.userId.toLowerCase();
+      final username = (identity.externalUsername ?? '').toLowerCase();
+      return fullName.contains(lowerQuery) ||
+          provider.contains(lowerQuery) ||
+          externalId.contains(lowerQuery) ||
+          userId.contains(lowerQuery) ||
+          username.contains(lowerQuery);
+    }).toList();
+
+    filtered.sort((a, b) {
+      final comparison = switch (identitySortField) {
+        IdentitySortField.fullName => (fullNameByUserId[a.userId] ?? a.userId)
+            .toLowerCase()
+            .compareTo((fullNameByUserId[b.userId] ?? b.userId).toLowerCase()),
+        IdentitySortField.provider => a.providerId.toLowerCase().compareTo(
+          b.providerId.toLowerCase(),
+        ),
+        IdentitySortField.externalId => a.externalId.toLowerCase().compareTo(
+          b.externalId.toLowerCase(),
+        ),
+        IdentitySortField.providerUsername => (a.externalUsername ?? '')
+            .toLowerCase()
+            .compareTo((b.externalUsername ?? '').toLowerCase()),
+        IdentitySortField.status => a.status.name.compareTo(b.status.name),
+      };
+      return identitySortAscending ? comparison : -comparison;
+    });
+
+    return filtered;
   }
 }
 

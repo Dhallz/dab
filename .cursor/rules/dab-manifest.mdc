@@ -31,6 +31,7 @@ Keep supporting artifacts in sync with code changes.
 - **Documentation**: `dab-doc-maintenance.mdc` — updating `doc/*.md`.
 - **Bruno**: `dab-bruno-maintenance.mdc` — updating the `bruno/` API collection.
 - **Commits**: `dab-commit.mdc` (source: `.agents/rules/commit.md`) — one commit per completed task, issue-key subject lines, no AI/tool attribution in messages.
+- **Project management**: `dab-project-manager.mdc` (source: `.agents/rules/project-manager.md`) — PO/PM boundaries, Linear ticket hygiene, and delivery gatekeeping.
 
 ### 4. Package-specific rules
 

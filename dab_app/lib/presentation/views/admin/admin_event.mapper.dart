@@ -21,7 +21,10 @@ class AdminEventMapper extends ClassMapperBase<AdminEvent> {
       AdminUserRoleUpdatedMapper.ensureInitialized();
       AdminIdentityLinkedMapper.ensureInitialized();
       AdminIdentityResolvedMapper.ensureInitialized();
+      AdminIdentitySortChangedMapper.ensureInitialized();
+      AdminIdentitySearchChangedMapper.ensureInitialized();
       AdminTestConnectionMapper.ensureInitialized();
+      AdminRefreshProviderStatusesMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -1039,6 +1042,292 @@ class _AdminIdentityResolvedCopyWithImpl<$R, $Out>
       _AdminIdentityResolvedCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
+class AdminIdentitySortChangedMapper
+    extends ClassMapperBase<AdminIdentitySortChanged> {
+  AdminIdentitySortChangedMapper._();
+
+  static AdminIdentitySortChangedMapper? _instance;
+  static AdminIdentitySortChangedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = AdminIdentitySortChangedMapper._(),
+      );
+      AdminEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'AdminIdentitySortChanged';
+
+  static IdentitySortField _$sortField(AdminIdentitySortChanged v) =>
+      v.sortField;
+  static const Field<AdminIdentitySortChanged, IdentitySortField> _f$sortField =
+      Field('sortField', _$sortField);
+  static bool _$ascending(AdminIdentitySortChanged v) => v.ascending;
+  static const Field<AdminIdentitySortChanged, bool> _f$ascending = Field(
+    'ascending',
+    _$ascending,
+  );
+
+  @override
+  final MappableFields<AdminIdentitySortChanged> fields = const {
+    #sortField: _f$sortField,
+    #ascending: _f$ascending,
+  };
+
+  static AdminIdentitySortChanged _instantiate(DecodingData data) {
+    return AdminIdentitySortChanged(
+      sortField: data.dec(_f$sortField),
+      ascending: data.dec(_f$ascending),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static AdminIdentitySortChanged fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<AdminIdentitySortChanged>(map);
+  }
+
+  static AdminIdentitySortChanged fromJson(String json) {
+    return ensureInitialized().decodeJson<AdminIdentitySortChanged>(json);
+  }
+}
+
+mixin AdminIdentitySortChangedMappable {
+  String toJson() {
+    return AdminIdentitySortChangedMapper.ensureInitialized()
+        .encodeJson<AdminIdentitySortChanged>(this as AdminIdentitySortChanged);
+  }
+
+  Map<String, dynamic> toMap() {
+    return AdminIdentitySortChangedMapper.ensureInitialized()
+        .encodeMap<AdminIdentitySortChanged>(this as AdminIdentitySortChanged);
+  }
+
+  AdminIdentitySortChangedCopyWith<
+    AdminIdentitySortChanged,
+    AdminIdentitySortChanged,
+    AdminIdentitySortChanged
+  >
+  get copyWith =>
+      _AdminIdentitySortChangedCopyWithImpl<
+        AdminIdentitySortChanged,
+        AdminIdentitySortChanged
+      >(this as AdminIdentitySortChanged, $identity, $identity);
+  @override
+  String toString() {
+    return AdminIdentitySortChangedMapper.ensureInitialized().stringifyValue(
+      this as AdminIdentitySortChanged,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return AdminIdentitySortChangedMapper.ensureInitialized().equalsValue(
+      this as AdminIdentitySortChanged,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return AdminIdentitySortChangedMapper.ensureInitialized().hashValue(
+      this as AdminIdentitySortChanged,
+    );
+  }
+}
+
+extension AdminIdentitySortChangedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, AdminIdentitySortChanged, $Out> {
+  AdminIdentitySortChangedCopyWith<$R, AdminIdentitySortChanged, $Out>
+  get $asAdminIdentitySortChanged => $base.as(
+    (v, t, t2) => _AdminIdentitySortChangedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class AdminIdentitySortChangedCopyWith<
+  $R,
+  $In extends AdminIdentitySortChanged,
+  $Out
+>
+    implements AdminEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({IdentitySortField? sortField, bool? ascending});
+  AdminIdentitySortChangedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _AdminIdentitySortChangedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, AdminIdentitySortChanged, $Out>
+    implements
+        AdminIdentitySortChangedCopyWith<$R, AdminIdentitySortChanged, $Out> {
+  _AdminIdentitySortChangedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<AdminIdentitySortChanged> $mapper =
+      AdminIdentitySortChangedMapper.ensureInitialized();
+  @override
+  $R call({IdentitySortField? sortField, bool? ascending}) => $apply(
+    FieldCopyWithData({
+      if (sortField != null) #sortField: sortField,
+      if (ascending != null) #ascending: ascending,
+    }),
+  );
+  @override
+  AdminIdentitySortChanged $make(CopyWithData data) => AdminIdentitySortChanged(
+    sortField: data.get(#sortField, or: $value.sortField),
+    ascending: data.get(#ascending, or: $value.ascending),
+  );
+
+  @override
+  AdminIdentitySortChangedCopyWith<$R2, AdminIdentitySortChanged, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _AdminIdentitySortChangedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class AdminIdentitySearchChangedMapper
+    extends ClassMapperBase<AdminIdentitySearchChanged> {
+  AdminIdentitySearchChangedMapper._();
+
+  static AdminIdentitySearchChangedMapper? _instance;
+  static AdminIdentitySearchChangedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = AdminIdentitySearchChangedMapper._(),
+      );
+      AdminEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'AdminIdentitySearchChanged';
+
+  static String _$query(AdminIdentitySearchChanged v) => v.query;
+  static const Field<AdminIdentitySearchChanged, String> _f$query = Field(
+    'query',
+    _$query,
+  );
+
+  @override
+  final MappableFields<AdminIdentitySearchChanged> fields = const {
+    #query: _f$query,
+  };
+
+  static AdminIdentitySearchChanged _instantiate(DecodingData data) {
+    return AdminIdentitySearchChanged(data.dec(_f$query));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static AdminIdentitySearchChanged fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<AdminIdentitySearchChanged>(map);
+  }
+
+  static AdminIdentitySearchChanged fromJson(String json) {
+    return ensureInitialized().decodeJson<AdminIdentitySearchChanged>(json);
+  }
+}
+
+mixin AdminIdentitySearchChangedMappable {
+  String toJson() {
+    return AdminIdentitySearchChangedMapper.ensureInitialized()
+        .encodeJson<AdminIdentitySearchChanged>(
+          this as AdminIdentitySearchChanged,
+        );
+  }
+
+  Map<String, dynamic> toMap() {
+    return AdminIdentitySearchChangedMapper.ensureInitialized()
+        .encodeMap<AdminIdentitySearchChanged>(
+          this as AdminIdentitySearchChanged,
+        );
+  }
+
+  AdminIdentitySearchChangedCopyWith<
+    AdminIdentitySearchChanged,
+    AdminIdentitySearchChanged,
+    AdminIdentitySearchChanged
+  >
+  get copyWith =>
+      _AdminIdentitySearchChangedCopyWithImpl<
+        AdminIdentitySearchChanged,
+        AdminIdentitySearchChanged
+      >(this as AdminIdentitySearchChanged, $identity, $identity);
+  @override
+  String toString() {
+    return AdminIdentitySearchChangedMapper.ensureInitialized().stringifyValue(
+      this as AdminIdentitySearchChanged,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return AdminIdentitySearchChangedMapper.ensureInitialized().equalsValue(
+      this as AdminIdentitySearchChanged,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return AdminIdentitySearchChangedMapper.ensureInitialized().hashValue(
+      this as AdminIdentitySearchChanged,
+    );
+  }
+}
+
+extension AdminIdentitySearchChangedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, AdminIdentitySearchChanged, $Out> {
+  AdminIdentitySearchChangedCopyWith<$R, AdminIdentitySearchChanged, $Out>
+  get $asAdminIdentitySearchChanged => $base.as(
+    (v, t, t2) => _AdminIdentitySearchChangedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class AdminIdentitySearchChangedCopyWith<
+  $R,
+  $In extends AdminIdentitySearchChanged,
+  $Out
+>
+    implements AdminEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? query});
+  AdminIdentitySearchChangedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _AdminIdentitySearchChangedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, AdminIdentitySearchChanged, $Out>
+    implements
+        AdminIdentitySearchChangedCopyWith<
+          $R,
+          AdminIdentitySearchChanged,
+          $Out
+        > {
+  _AdminIdentitySearchChangedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<AdminIdentitySearchChanged> $mapper =
+      AdminIdentitySearchChangedMapper.ensureInitialized();
+  @override
+  $R call({String? query}) =>
+      $apply(FieldCopyWithData({if (query != null) #query: query}));
+  @override
+  AdminIdentitySearchChanged $make(CopyWithData data) =>
+      AdminIdentitySearchChanged(data.get(#query, or: $value.query));
+
+  @override
+  AdminIdentitySearchChangedCopyWith<$R2, AdminIdentitySearchChanged, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _AdminIdentitySearchChangedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
 class AdminTestConnectionMapper extends ClassMapperBase<AdminTestConnection> {
   AdminTestConnectionMapper._();
 
@@ -1168,5 +1457,139 @@ class _AdminTestConnectionCopyWithImpl<$R, $Out>
   AdminTestConnectionCopyWith<$R2, AdminTestConnection, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _AdminTestConnectionCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class AdminRefreshProviderStatusesMapper
+    extends ClassMapperBase<AdminRefreshProviderStatuses> {
+  AdminRefreshProviderStatusesMapper._();
+
+  static AdminRefreshProviderStatusesMapper? _instance;
+  static AdminRefreshProviderStatusesMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = AdminRefreshProviderStatusesMapper._(),
+      );
+      AdminEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'AdminRefreshProviderStatuses';
+
+  @override
+  final MappableFields<AdminRefreshProviderStatuses> fields = const {};
+
+  static AdminRefreshProviderStatuses _instantiate(DecodingData data) {
+    return AdminRefreshProviderStatuses();
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static AdminRefreshProviderStatuses fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<AdminRefreshProviderStatuses>(map);
+  }
+
+  static AdminRefreshProviderStatuses fromJson(String json) {
+    return ensureInitialized().decodeJson<AdminRefreshProviderStatuses>(json);
+  }
+}
+
+mixin AdminRefreshProviderStatusesMappable {
+  String toJson() {
+    return AdminRefreshProviderStatusesMapper.ensureInitialized()
+        .encodeJson<AdminRefreshProviderStatuses>(
+          this as AdminRefreshProviderStatuses,
+        );
+  }
+
+  Map<String, dynamic> toMap() {
+    return AdminRefreshProviderStatusesMapper.ensureInitialized()
+        .encodeMap<AdminRefreshProviderStatuses>(
+          this as AdminRefreshProviderStatuses,
+        );
+  }
+
+  AdminRefreshProviderStatusesCopyWith<
+    AdminRefreshProviderStatuses,
+    AdminRefreshProviderStatuses,
+    AdminRefreshProviderStatuses
+  >
+  get copyWith =>
+      _AdminRefreshProviderStatusesCopyWithImpl<
+        AdminRefreshProviderStatuses,
+        AdminRefreshProviderStatuses
+      >(this as AdminRefreshProviderStatuses, $identity, $identity);
+  @override
+  String toString() {
+    return AdminRefreshProviderStatusesMapper.ensureInitialized()
+        .stringifyValue(this as AdminRefreshProviderStatuses);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return AdminRefreshProviderStatusesMapper.ensureInitialized().equalsValue(
+      this as AdminRefreshProviderStatuses,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return AdminRefreshProviderStatusesMapper.ensureInitialized().hashValue(
+      this as AdminRefreshProviderStatuses,
+    );
+  }
+}
+
+extension AdminRefreshProviderStatusesValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, AdminRefreshProviderStatuses, $Out> {
+  AdminRefreshProviderStatusesCopyWith<$R, AdminRefreshProviderStatuses, $Out>
+  get $asAdminRefreshProviderStatuses => $base.as(
+    (v, t, t2) => _AdminRefreshProviderStatusesCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class AdminRefreshProviderStatusesCopyWith<
+  $R,
+  $In extends AdminRefreshProviderStatuses,
+  $Out
+>
+    implements AdminEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call();
+  AdminRefreshProviderStatusesCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _AdminRefreshProviderStatusesCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, AdminRefreshProviderStatuses, $Out>
+    implements
+        AdminRefreshProviderStatusesCopyWith<
+          $R,
+          AdminRefreshProviderStatuses,
+          $Out
+        > {
+  _AdminRefreshProviderStatusesCopyWithImpl(
+    super.value,
+    super.then,
+    super.then2,
+  );
+
+  @override
+  late final ClassMapperBase<AdminRefreshProviderStatuses> $mapper =
+      AdminRefreshProviderStatusesMapper.ensureInitialized();
+  @override
+  $R call() => $apply(FieldCopyWithData({}));
+  @override
+  AdminRefreshProviderStatuses $make(CopyWithData data) =>
+      AdminRefreshProviderStatuses();
+
+  @override
+  AdminRefreshProviderStatusesCopyWith<$R2, AdminRefreshProviderStatuses, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _AdminRefreshProviderStatusesCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

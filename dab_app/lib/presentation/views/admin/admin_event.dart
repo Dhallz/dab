@@ -3,6 +3,7 @@ import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
 import '../../../domain/entities/provider/provider_config.dart';
+import 'admin_state.dart';
 import 'models/admin_section.dart';
 
 part 'admin_event.mapper.dart';
@@ -74,7 +75,33 @@ class AdminIdentityResolved extends AdminEvent
 }
 
 @MappableClass()
+class AdminIdentitySortChanged extends AdminEvent
+    with AdminIdentitySortChangedMappable {
+  final IdentitySortField sortField;
+  final bool ascending;
+
+  const AdminIdentitySortChanged({
+    required this.sortField,
+    required this.ascending,
+  });
+}
+
+@MappableClass()
+class AdminIdentitySearchChanged extends AdminEvent
+    with AdminIdentitySearchChangedMappable {
+  final String query;
+
+  const AdminIdentitySearchChanged(this.query);
+}
+
+@MappableClass()
 class AdminTestConnection extends AdminEvent with AdminTestConnectionMappable {
   final ProviderConfig config;
   const AdminTestConnection(this.config);
+}
+
+@MappableClass()
+class AdminRefreshProviderStatuses extends AdminEvent
+    with AdminRefreshProviderStatusesMappable {
+  const AdminRefreshProviderStatuses();
 }

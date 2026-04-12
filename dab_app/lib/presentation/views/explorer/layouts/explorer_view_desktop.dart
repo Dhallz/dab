@@ -66,7 +66,10 @@ class ExplorerViewDesktop extends StatelessWidget {
                             itemBuilder: (context, index) {
                               final item = state.items[index];
                               final isStack =
-                                  item is TaskActivityItem && !item.isExpanded;
+                                  (item is TaskActivityItem &&
+                                      !item.isExpanded) ||
+                                  (item is SlackConversationItem &&
+                                      !item.isExpanded);
                               return Padding(
                                 padding: EdgeInsets.only(
                                   bottom: isStack ? 32 : 16,
@@ -82,8 +85,15 @@ class ExplorerViewDesktop extends StatelessWidget {
                                     ActivityCard(
                                       activity: activities.first,
                                       activities: activities,
-                                      resolvedAuthorName: userNameById[
-                                          activities.first.userId],
+                                      resolvedAuthorName:
+                                          userNameById[activities.first.userId],
+                                    ),
+                                  SlackConversationItem(:final activities) =>
+                                    ActivityCard(
+                                      activity: activities.first,
+                                      activities: activities,
+                                      resolvedAuthorName:
+                                          userNameById[activities.first.userId],
                                     ),
                                 },
                               );

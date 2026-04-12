@@ -26,21 +26,27 @@ class ProviderCard extends StatefulWidget {
 class _ProviderCardState extends State<ProviderCard> {
   final Map<String, TextEditingController> _controllers = {};
   late List<AdminConfigField> _fields;
+  bool _showDetails = false;
 
   @override
   void initState() {
     super.initState();
     _syncControllersFromConfig(widget.config, replaceExisting: true);
+    _showDetails = false;
   }
 
   @override
   void didUpdateWidget(ProviderCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final configChanged = oldWidget.config.id != widget.config.id ||
+    final configChanged =
+        oldWidget.config.id != widget.config.id ||
         oldWidget.config.settings != widget.config.settings ||
         oldWidget.config.baseUrl != widget.config.baseUrl;
     if (configChanged) {
       _syncControllersFromConfig(widget.config, replaceExisting: true);
+      if (oldWidget.config.id != widget.config.id) {
+        _showDetails = false;
+      }
     }
   }
 
@@ -68,11 +74,26 @@ class _ProviderCardState extends State<ProviderCard> {
     _fields = _getFieldsForProvider(config.id);
     for (final field in _fields) {
       final rawValue = config.settings[field.key];
-      final initialValue = field.key == 'repos' && rawValue is List
-          ? rawValue.map((e) => e.toString()).join('\n')
-          : rawValue?.toString() ?? '';
+      final initialValue = _initialValueForField(config, field, rawValue);
       _controllers[field.key] = TextEditingController(text: initialValue);
     }
+  }
+
+  String _initialValueForField(
+    ProviderConfig config,
+    AdminConfigField field,
+    dynamic rawValue,
+  ) {
+    if ((field.key == 'repos' || field.key == 'channels') && rawValue is List) {
+      return rawValue.map((e) => e.toString()).join('\n');
+    }
+
+    if (field.key == 'botToken') {
+      final fallback = config.settings['api.token'] ?? config.settings['token'];
+      return (rawValue ?? fallback)?.toString() ?? '';
+    }
+
+    return rawValue?.toString() ?? '';
   }
 
   @override
@@ -107,7 +128,7 @@ class _ProviderCardState extends State<ProviderCard> {
         } catch (_) {
           config = widget.config;
         }
-        final isExpanded = config.isActive;
+        final isExpanded = _showDetails;
 
         return Container(
           decoration: BoxDecoration(
@@ -173,19 +194,15 @@ class _ProviderCardState extends State<ProviderCard> {
                         ],
                       ),
                     ),
+                    LivePulsingIcon(status: status),
                     if (isExpanded) ...[
-                      LivePulsingIcon(status: status),
                       SizedBox(width: AppSpacing.xs),
                       TextButton.icon(
                         onPressed: status?.status.isLoading == true
                             ? null
                             : () {
-                                      final currentSettings = _buildSettings(
-                                        config,
-                                      );
-                                      final newBaseUrl = _resolveBaseUrl(
-                                        config,
-                                      );
+                                final currentSettings = _buildSettings(config);
+                                final newBaseUrl = _resolveBaseUrl(config);
 
                                 final configToTest = config.copyWith(
                                   settings: currentSettings,
@@ -222,15 +239,33 @@ class _ProviderCardState extends State<ProviderCard> {
                         ),
                       ),
                     ],
+                    TextButton.icon(
+                      onPressed: () =>
+                          setState(() => _showDetails = !_showDetails),
+                      icon: Icon(
+                        _showDetails
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: AppLayout.iconSmall,
+                      ),
+                      label: Text(
+                        _showDetails ? 'Hide fields' : 'Show fields',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.onSurfaceVariantLow,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s,
+                        ),
+                      ),
+                    ),
                     Transform.scale(
                       scale: 0.85,
                       child: Switch(
                         value: config.isActive,
                         onChanged: (val) => widget.bloc.add(
-                          AdminProviderToggled(
-                            id: config.id,
-                            isActive: val,
-                          ),
+                          AdminProviderToggled(id: config.id, isActive: val),
                         ),
                         activeThumbColor: AppColors.primary,
                         activeTrackColor: AppColors.primary.withValues(
@@ -295,8 +330,8 @@ class _ProviderCardState extends State<ProviderCard> {
                                         fillColor: AppColors.surfaceContainer
                                             .withValues(alpha: 0.65),
                                         hintText: 'Enter ${field.label}...',
-                                        hintStyle:
-                                            AppTextStyles.bodyMedium.copyWith(
+                                        hintStyle: AppTextStyles.bodyMedium
+                                            .copyWith(
                                               color: AppColors
                                                   .onSurfaceVariantLow
                                                   .withValues(alpha: 0.35),
@@ -307,13 +342,11 @@ class _ProviderCardState extends State<ProviderCard> {
                                               vertical: AppSpacing.m,
                                             ),
                                         border: OutlineInputBorder(
-                                          borderRadius:
-                                              AppLayout.borderMedium,
+                                          borderRadius: AppLayout.borderMedium,
                                           borderSide: BorderSide.none,
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              AppLayout.borderMedium,
+                                          borderRadius: AppLayout.borderMedium,
                                           borderSide: const BorderSide(
                                             color: AppColors.primary,
                                             width: 1.5,
@@ -422,6 +455,18 @@ class _ProviderCardState extends State<ProviderCard> {
     if (lowerId.contains('slack')) {
       return [
         AdminConfigField(key: 'botToken', label: 'Bot Token', isSecret: true),
+        AdminConfigField(
+          key: 'workspaceId',
+          label: 'Workspace/Team ID (e.g. T0123456789)',
+        ),
+        AdminConfigField(
+          key: 'channels',
+          label: 'Channel IDs (one per line)',
+        ),
+        AdminConfigField(
+          key: 'apiBaseUrl',
+          label: 'API Base URL (optional, defaults to https://slack.com/api)',
+        ),
       ];
     }
     if (lowerId.contains('discord')) {
@@ -475,11 +520,11 @@ class _ProviderCardState extends State<ProviderCard> {
     final Map<String, dynamic> settings = Map.from(config.settings);
     _controllers.forEach((key, controller) {
       final value = controller.text.trim();
-      if (key == 'repos') {
+      if (key == 'repos' || key == 'channels') {
         if (value.isEmpty) {
-          settings.remove('repos');
+          settings.remove(key);
         } else {
-          settings['repos'] = value
+          settings[key] = value
               .split(RegExp(r'[\n,]+'))
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty)

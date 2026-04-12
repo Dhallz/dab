@@ -48,6 +48,11 @@ class ActivityCategoryStyles extends ThemeExtension<ActivityCategoryStyles> {
           icon: AppIcons.task,
           label: 'TASK',
         ),
+        ActivityCategory.message: const ActivityStyle(
+          color: AppColors.genericActivity,
+          icon: AppIcons.slack,
+          label: 'MESSAGE',
+        ),
         ActivityCategory.generic: const ActivityStyle(
           color: AppColors.genericActivity,
           icon: AppIcons.genericActivity,

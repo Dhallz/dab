@@ -30,7 +30,9 @@ body:json {
     "baseUrl": "{{targetProviderUrl}}",
     "isActive": true,
     "settings": {
-      "apiToken": "{{targetProviderToken}}"
+      "apiToken": "{{targetProviderToken}}",
+      "api.token": "{{targetProviderToken}}",
+      "botToken": "{{targetProviderToken}}"
     }
   }
 }
@@ -42,7 +44,7 @@ tests {
 
   test("Connectivity report is returned", function() {
     expect(res.body.data).to.be.an("object");
-    expect(res.body.data).to.have.property("success");
+    expect(res.body.data).to.have.property("status");
     expect(res.body.data).to.have.property("message");
   });
 }

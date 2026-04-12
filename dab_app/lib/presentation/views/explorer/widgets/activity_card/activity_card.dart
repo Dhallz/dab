@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -41,8 +42,11 @@ class _ActivityCardState extends State<ActivityCard> {
     if (originalUrl == null || originalUrl.trim().isEmpty) return;
 
     String finalUrl = originalUrl;
+    final hasAbsoluteScheme = RegExp(
+      r'^[a-zA-Z][a-zA-Z0-9+.-]*://',
+    ).hasMatch(originalUrl);
 
-    if (!originalUrl.startsWith('http')) {
+    if (!hasAbsoluteScheme) {
       final String providerName = widget.activity.provider.name.toLowerCase();
       final config =
           configs
@@ -59,13 +63,32 @@ class _ActivityCardState extends State<ActivityCard> {
     }
 
     final Uri url = Uri.parse(finalUrl);
-    if (!await launchUrl(url)) {
+    final didLaunch = url.scheme == 'slack'
+        ? await _launchSlackUrl(url)
+        : await launchUrl(url, mode: LaunchMode.platformDefault);
+    if (!didLaunch) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Could not launch URL')));
       }
     }
+  }
+
+  Future<bool> _launchSlackUrl(Uri url) async {
+    final teamId = url.queryParameters['team']?.trim();
+    if (teamId != null && teamId.isNotEmpty) {
+      final openWorkspaceUri = Uri(
+        scheme: 'slack',
+        host: 'open',
+        queryParameters: {'team': teamId.toUpperCase()},
+      );
+      await launchUrl(openWorkspaceUri, mode: LaunchMode.externalApplication);
+      // Give Slack a short moment to switch workspace before opening channel.
+      await Future.delayed(const Duration(milliseconds: 250));
+    }
+
+    return launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override

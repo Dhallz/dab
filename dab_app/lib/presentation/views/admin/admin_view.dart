@@ -4,6 +4,8 @@ import 'package:dab_app/services/service_locator.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_event.dart';
 import 'package:dab_app/presentation/views/admin/layouts/admin_view_desktop.dart';
+import 'package:dab_app/presentation/views/admin/layouts/admin_view_mobile.dart';
+import 'package:dab_app/presentation/views/admin/layouts/admin_view_tablet.dart';
 
 /// [ARCH: PRESENTATION_VIEW]
 /// ROLE: Entry point for the Admin Console.
@@ -20,9 +22,13 @@ class AdminView extends StatelessWidget {
       )..add(const AdminStarted()),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // For now, we only have desktop layout for Admin.
-          // In a real app we would have mobile-specific logic here.
-          return const AdminViewDesktop();
+          if (constraints.maxWidth >= 1024) {
+            return const AdminViewDesktop();
+          }
+          if (constraints.maxWidth >= 600) {
+            return const AdminViewTablet();
+          }
+          return const AdminViewMobile();
         },
       ),
     );

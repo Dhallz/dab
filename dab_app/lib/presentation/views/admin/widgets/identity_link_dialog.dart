@@ -40,13 +40,15 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dialogBackgroundColor: const Color(0xFF0F172A),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Color(0xFF0F172A),
+        ),
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text(
-          'Link Identity',
+          'Update Identity Link',
           style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.white),
         ),
         content: Column(
@@ -138,7 +140,7 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
               Navigator.pop(context);
             },
             child: const Text(
-              'Confirm Link',
+              'Update Link',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

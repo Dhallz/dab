@@ -126,10 +126,7 @@ Future<void> serviceLocator() async {
   final phorgeRevisionMapper = PhorgeRevisionMapper();
 
   // Infrastructure Sources (Raw I/O)
-  final phorgeTaskSource = PhorgeTaskSource(
-    phorgeClient,
-    phorgeSprintService,
-  );
+  final phorgeTaskSource = PhorgeTaskSource(phorgeClient, phorgeSprintService);
   final phorgeRevisionSource = PhorgeRevisionSource(phorgeClient);
   final phorgeUserSource = PhorgeUserSource(phorgeClient);
   final phorgeProjectSource = PhorgeProjectSource(
@@ -139,7 +136,10 @@ Future<void> serviceLocator() async {
 
   // New Scaffolds (Slack, Teams, Jira, Linear, Discord)
   final slackMapper = SlackMessageMapper();
-  final slackSource = SlackMessageSource();
+  final slackSource = SlackMessageSource(
+    providerConfigRepository,
+    userRepository,
+  );
   final teamsMapper = TeamsMessageMapper();
   final teamsSource = TeamsMessageSource();
   final jiraMapper = JiraIssueMapper();
@@ -187,9 +187,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<AbsIProviderMetadataRepository>(
     ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
   );
-  sl.registerSingleton<AbsIProviderConfigRepository>(
-    providerConfigRepository,
-  );
+  sl.registerSingleton<AbsIProviderConfigRepository>(providerConfigRepository);
 
   // -----------------------------------------------------
   // 3. System Services

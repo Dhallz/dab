@@ -90,7 +90,7 @@ dab_app/lib/
 | Entity | Description |
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. |
-| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (e.g., Phorge tasks, revisions) |
+| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub commits, Slack messages) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
 | `Group` | Team / organizational group |
@@ -107,7 +107,7 @@ Mirrors the API entities but uses ObjectBox annotations where local persistence 
 ## 4. Cross-Package Data Flow
 
 ```
-External Provider (Phorge, GitHub, …)
+External Provider (Phorge, GitHub, Slack, …)
         │
         ▼
  IActivitySource (Infrastructure)
@@ -177,6 +177,7 @@ Client request  ──►  Vegas Middleware
 activities               ← shared fields (id, userId, title, content, createdAt)
 activity_phorge          ← Phorge-specific metadata (phid, tags, revisionId)
 activity_github_commit   ← GitHub commit metadata (repo, branch)
+activity_slack_message   ← Slack message metadata (workspace/channel/thread/message ids)
 ```
 
 - Child tables reference `activities.id` with `CASCADE DELETE`.

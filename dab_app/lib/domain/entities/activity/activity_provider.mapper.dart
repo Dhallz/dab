@@ -17,6 +17,7 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
       PhorgeTaskProviderMapper.ensureInitialized();
       PhorgeRevisionProviderMapper.ensureInitialized();
       GitHubCommitProviderMapper.ensureInitialized();
+      SlackMessageProviderMapper.ensureInitialized();
       GenericProviderMapper.ensureInitialized();
     }
     return _instance!;
@@ -550,6 +551,192 @@ class _GitHubCommitProviderCopyWithImpl<$R, $Out>
   GitHubCommitProviderCopyWith<$R2, GitHubCommitProvider, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _GitHubCommitProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class SlackMessageProviderMapper extends ClassMapperBase<SlackMessageProvider> {
+  SlackMessageProviderMapper._();
+
+  static SlackMessageProviderMapper? _instance;
+  static SlackMessageProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = SlackMessageProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'SlackMessageProvider';
+
+  static String? _$workspaceId(SlackMessageProvider v) => v.workspaceId;
+  static const Field<SlackMessageProvider, String> _f$workspaceId = Field(
+    'workspaceId',
+    _$workspaceId,
+    opt: true,
+  );
+  static String? _$channelId(SlackMessageProvider v) => v.channelId;
+  static const Field<SlackMessageProvider, String> _f$channelId = Field(
+    'channelId',
+    _$channelId,
+    opt: true,
+  );
+  static String? _$threadTs(SlackMessageProvider v) => v.threadTs;
+  static const Field<SlackMessageProvider, String> _f$threadTs = Field(
+    'threadTs',
+    _$threadTs,
+    opt: true,
+  );
+  static String? _$messageTs(SlackMessageProvider v) => v.messageTs;
+  static const Field<SlackMessageProvider, String> _f$messageTs = Field(
+    'messageTs',
+    _$messageTs,
+    opt: true,
+  );
+  static String _$name(SlackMessageProvider v) => v.name;
+  static const Field<SlackMessageProvider, String> _f$name = Field(
+    'name',
+    _$name,
+    mode: FieldMode.member,
+  );
+  static ActivityCategory _$category(SlackMessageProvider v) => v.category;
+  static const Field<SlackMessageProvider, ActivityCategory> _f$category =
+      Field('category', _$category, mode: FieldMode.member);
+
+  @override
+  final MappableFields<SlackMessageProvider> fields = const {
+    #workspaceId: _f$workspaceId,
+    #channelId: _f$channelId,
+    #threadTs: _f$threadTs,
+    #messageTs: _f$messageTs,
+    #name: _f$name,
+    #category: _f$category,
+  };
+
+  static SlackMessageProvider _instantiate(DecodingData data) {
+    return SlackMessageProvider(
+      workspaceId: data.dec(_f$workspaceId),
+      channelId: data.dec(_f$channelId),
+      threadTs: data.dec(_f$threadTs),
+      messageTs: data.dec(_f$messageTs),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static SlackMessageProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<SlackMessageProvider>(map);
+  }
+
+  static SlackMessageProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<SlackMessageProvider>(json);
+  }
+}
+
+mixin SlackMessageProviderMappable {
+  String toJson() {
+    return SlackMessageProviderMapper.ensureInitialized()
+        .encodeJson<SlackMessageProvider>(this as SlackMessageProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return SlackMessageProviderMapper.ensureInitialized()
+        .encodeMap<SlackMessageProvider>(this as SlackMessageProvider);
+  }
+
+  SlackMessageProviderCopyWith<
+    SlackMessageProvider,
+    SlackMessageProvider,
+    SlackMessageProvider
+  >
+  get copyWith =>
+      _SlackMessageProviderCopyWithImpl<
+        SlackMessageProvider,
+        SlackMessageProvider
+      >(this as SlackMessageProvider, $identity, $identity);
+  @override
+  String toString() {
+    return SlackMessageProviderMapper.ensureInitialized().stringifyValue(
+      this as SlackMessageProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return SlackMessageProviderMapper.ensureInitialized().equalsValue(
+      this as SlackMessageProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return SlackMessageProviderMapper.ensureInitialized().hashValue(
+      this as SlackMessageProvider,
+    );
+  }
+}
+
+extension SlackMessageProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, SlackMessageProvider, $Out> {
+  SlackMessageProviderCopyWith<$R, SlackMessageProvider, $Out>
+  get $asSlackMessageProvider => $base.as(
+    (v, t, t2) => _SlackMessageProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class SlackMessageProviderCopyWith<
+  $R,
+  $In extends SlackMessageProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({
+    String? workspaceId,
+    String? channelId,
+    String? threadTs,
+    String? messageTs,
+  });
+  SlackMessageProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _SlackMessageProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, SlackMessageProvider, $Out>
+    implements SlackMessageProviderCopyWith<$R, SlackMessageProvider, $Out> {
+  _SlackMessageProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<SlackMessageProvider> $mapper =
+      SlackMessageProviderMapper.ensureInitialized();
+  @override
+  $R call({
+    Object? workspaceId = $none,
+    Object? channelId = $none,
+    Object? threadTs = $none,
+    Object? messageTs = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (workspaceId != $none) #workspaceId: workspaceId,
+      if (channelId != $none) #channelId: channelId,
+      if (threadTs != $none) #threadTs: threadTs,
+      if (messageTs != $none) #messageTs: messageTs,
+    }),
+  );
+  @override
+  SlackMessageProvider $make(CopyWithData data) => SlackMessageProvider(
+    workspaceId: data.get(#workspaceId, or: $value.workspaceId),
+    channelId: data.get(#channelId, or: $value.channelId),
+    threadTs: data.get(#threadTs, or: $value.threadTs),
+    messageTs: data.get(#messageTs, or: $value.messageTs),
+  );
+
+  @override
+  SlackMessageProviderCopyWith<$R2, SlackMessageProvider, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _SlackMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class GenericProviderMapper extends ClassMapperBase<GenericProvider> {

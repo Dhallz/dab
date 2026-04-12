@@ -16,6 +16,7 @@ class ExplorerItemMapper extends ClassMapperBase<ExplorerItem> {
       MapperContainer.globals.use(_instance = ExplorerItemMapper._());
       SingleActivityItemMapper.ensureInitialized();
       TaskActivityItemMapper.ensureInitialized();
+      SlackConversationItemMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -368,5 +369,205 @@ class _TaskActivityItemCopyWithImpl<$R, $Out>
   TaskActivityItemCopyWith<$R2, TaskActivityItem, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _TaskActivityItemCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class SlackConversationItemMapper
+    extends ClassMapperBase<SlackConversationItem> {
+  SlackConversationItemMapper._();
+
+  static SlackConversationItemMapper? _instance;
+  static SlackConversationItemMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = SlackConversationItemMapper._());
+      ExplorerItemMapper.ensureInitialized();
+      ActivityMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'SlackConversationItem';
+
+  static List<Activity> _$activities(SlackConversationItem v) => v.activities;
+  static const Field<SlackConversationItem, List<Activity>> _f$activities =
+      Field('activities', _$activities);
+  static String _$conversationKey(SlackConversationItem v) => v.conversationKey;
+  static const Field<SlackConversationItem, String> _f$conversationKey = Field(
+    'conversationKey',
+    _$conversationKey,
+  );
+  static String _$channelId(SlackConversationItem v) => v.channelId;
+  static const Field<SlackConversationItem, String> _f$channelId = Field(
+    'channelId',
+    _$channelId,
+  );
+  static String _$threadTs(SlackConversationItem v) => v.threadTs;
+  static const Field<SlackConversationItem, String> _f$threadTs = Field(
+    'threadTs',
+    _$threadTs,
+  );
+  static bool _$isExpanded(SlackConversationItem v) => v.isExpanded;
+  static const Field<SlackConversationItem, bool> _f$isExpanded = Field(
+    'isExpanded',
+    _$isExpanded,
+    opt: true,
+    def: false,
+  );
+  static Activity _$latestActivity(SlackConversationItem v) => v.latestActivity;
+  static const Field<SlackConversationItem, Activity> _f$latestActivity = Field(
+    'latestActivity',
+    _$latestActivity,
+    mode: FieldMode.member,
+  );
+
+  @override
+  final MappableFields<SlackConversationItem> fields = const {
+    #activities: _f$activities,
+    #conversationKey: _f$conversationKey,
+    #channelId: _f$channelId,
+    #threadTs: _f$threadTs,
+    #isExpanded: _f$isExpanded,
+    #latestActivity: _f$latestActivity,
+  };
+
+  static SlackConversationItem _instantiate(DecodingData data) {
+    return SlackConversationItem(
+      activities: data.dec(_f$activities),
+      conversationKey: data.dec(_f$conversationKey),
+      channelId: data.dec(_f$channelId),
+      threadTs: data.dec(_f$threadTs),
+      isExpanded: data.dec(_f$isExpanded),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static SlackConversationItem fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<SlackConversationItem>(map);
+  }
+
+  static SlackConversationItem fromJson(String json) {
+    return ensureInitialized().decodeJson<SlackConversationItem>(json);
+  }
+}
+
+mixin SlackConversationItemMappable {
+  String toJson() {
+    return SlackConversationItemMapper.ensureInitialized()
+        .encodeJson<SlackConversationItem>(this as SlackConversationItem);
+  }
+
+  Map<String, dynamic> toMap() {
+    return SlackConversationItemMapper.ensureInitialized()
+        .encodeMap<SlackConversationItem>(this as SlackConversationItem);
+  }
+
+  SlackConversationItemCopyWith<
+    SlackConversationItem,
+    SlackConversationItem,
+    SlackConversationItem
+  >
+  get copyWith =>
+      _SlackConversationItemCopyWithImpl<
+        SlackConversationItem,
+        SlackConversationItem
+      >(this as SlackConversationItem, $identity, $identity);
+  @override
+  String toString() {
+    return SlackConversationItemMapper.ensureInitialized().stringifyValue(
+      this as SlackConversationItem,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return SlackConversationItemMapper.ensureInitialized().equalsValue(
+      this as SlackConversationItem,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return SlackConversationItemMapper.ensureInitialized().hashValue(
+      this as SlackConversationItem,
+    );
+  }
+}
+
+extension SlackConversationItemValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, SlackConversationItem, $Out> {
+  SlackConversationItemCopyWith<$R, SlackConversationItem, $Out>
+  get $asSlackConversationItem => $base.as(
+    (v, t, t2) => _SlackConversationItemCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class SlackConversationItemCopyWith<
+  $R,
+  $In extends SlackConversationItem,
+  $Out
+>
+    implements ExplorerItemCopyWith<$R, $In, $Out> {
+  ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
+  get activities;
+  @override
+  $R call({
+    List<Activity>? activities,
+    String? conversationKey,
+    String? channelId,
+    String? threadTs,
+    bool? isExpanded,
+  });
+  SlackConversationItemCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _SlackConversationItemCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, SlackConversationItem, $Out>
+    implements SlackConversationItemCopyWith<$R, SlackConversationItem, $Out> {
+  _SlackConversationItemCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<SlackConversationItem> $mapper =
+      SlackConversationItemMapper.ensureInitialized();
+  @override
+  ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
+  get activities => ListCopyWith(
+    $value.activities,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(activities: v),
+  );
+  @override
+  $R call({
+    List<Activity>? activities,
+    String? conversationKey,
+    String? channelId,
+    String? threadTs,
+    bool? isExpanded,
+  }) => $apply(
+    FieldCopyWithData({
+      if (activities != null) #activities: activities,
+      if (conversationKey != null) #conversationKey: conversationKey,
+      if (channelId != null) #channelId: channelId,
+      if (threadTs != null) #threadTs: threadTs,
+      if (isExpanded != null) #isExpanded: isExpanded,
+    }),
+  );
+  @override
+  SlackConversationItem $make(CopyWithData data) => SlackConversationItem(
+    activities: data.get(#activities, or: $value.activities),
+    conversationKey: data.get(#conversationKey, or: $value.conversationKey),
+    channelId: data.get(#channelId, or: $value.channelId),
+    threadTs: data.get(#threadTs, or: $value.threadTs),
+    isExpanded: data.get(#isExpanded, or: $value.isExpanded),
+  );
+
+  @override
+  SlackConversationItemCopyWith<$R2, SlackConversationItem, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _SlackConversationItemCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

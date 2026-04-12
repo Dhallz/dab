@@ -12,8 +12,8 @@ import '../database/drift_row_mappers.dart';
 /// ROLE: Persistence implementation for the Unified Activity Feed.
 /// CONTRACT: Implements [AbsIActivityRepository] using [AppDatabase] (Drift/Postgres).
 /// CONSTRAINTS: Employs the **Table-Per-Type (TBT)** pattern to store polymorphic metadata.
-/// 
-/// This repository manages the atomic storage of base activity data and its 
+///
+/// This repository manages the atomic storage of base activity data and its
 /// specialized provider-specific metadata across relational tables.
 class ActivityRepository implements AbsIActivityRepository {
   final AppDatabase _db;
@@ -77,6 +77,18 @@ class ActivityRepository implements AbsIActivityRepository {
                   branch: Value(provider.branch),
                 ),
               );
+        } else if (provider is SlackMessageProvider) {
+          await _db
+              .into(_db.activitySlackMessageTable)
+              .insert(
+                ActivitySlackMessageTableCompanion.insert(
+                  activityId: activity.id,
+                  workspaceId: Value(provider.workspaceId),
+                  channelId: Value(provider.channelId),
+                  threadTs: Value(provider.threadTs),
+                  messageTs: Value(provider.messageTs),
+                ),
+              );
         }
         // Add more providers here (GitHub, Slack, etc.)
 
@@ -100,13 +112,23 @@ class ActivityRepository implements AbsIActivityRepository {
         ),
         leftOuterJoin(
           _db.activityGithubCommitTable,
-          _db.activityGithubCommitTable.activityId.equalsExp(_db.activitiesTable.id),
+          _db.activityGithubCommitTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activitySlackMessageTable,
+          _db.activitySlackMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
         ),
         // INNER JOIN with provider_configs to enforce "Deep Deactivation"
         // We filter out any activity whose provider is currently disabled.
         innerJoin(
           _db.providerConfigsTable,
-          _db.providerConfigsTable.id.equalsExp(_db.activitiesTable.providerName.lower()),
+          _db.providerConfigsTable.id.equalsExp(
+            _db.activitiesTable.providerName.lower(),
+          ),
         ),
       ]);
 
@@ -140,20 +162,30 @@ class ActivityRepository implements AbsIActivityRepository {
         ),
         leftOuterJoin(
           _db.activityGithubCommitTable,
-          _db.activityGithubCommitTable.activityId.equalsExp(_db.activitiesTable.id),
+          _db.activityGithubCommitTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activitySlackMessageTable,
+          _db.activitySlackMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
         ),
         // ENFORCE Deep Deactivation filtering for user-specific feeds too
         innerJoin(
           _db.providerConfigsTable,
-          _db.providerConfigsTable.id.equalsExp(_db.activitiesTable.providerName.lower()),
+          _db.providerConfigsTable.id.equalsExp(
+            _db.activitiesTable.providerName.lower(),
+          ),
         ),
       ]);
 
       query.where(
         _db.activitiesTable.userId.equals(userId) &
-        _db.providerConfigsTable.isActive.equals(1),
+            _db.providerConfigsTable.isActive.equals(1),
       );
-      
+
       query.orderBy([
         OrderingTerm(
           expression: _db.activitiesTable.createdAt,
@@ -175,6 +207,7 @@ class ActivityRepository implements AbsIActivityRepository {
     final activityData = row.readTable(_db.activitiesTable);
     final phorgeData = row.readTableOrNull(_db.activityPhorgeTable);
     final githubData = row.readTableOrNull(_db.activityGithubCommitTable);
+    final slackData = row.readTableOrNull(_db.activitySlackMessageTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -197,6 +230,15 @@ class ActivityRepository implements AbsIActivityRepository {
       );
     } else if (pName == 'github') {
       provider = const GitHubCommitProvider();
+    } else if (pName == 'slack' && slackData != null) {
+      provider = SlackMessageProvider(
+        workspaceId: slackData.workspaceId,
+        channelId: slackData.channelId,
+        threadTs: slackData.threadTs,
+        messageTs: slackData.messageTs,
+      );
+    } else if (pName == 'slack') {
+      provider = const SlackMessageProvider();
     } else {
       provider = GenericProvider(name: activityData.providerName);
     }

@@ -59,6 +59,28 @@ class GitHubCommitProvider extends ActivityProvider
 }
 
 @MappableClass()
+class SlackMessageProvider extends ActivityProvider
+    with SlackMessageProviderMappable {
+  final String? workspaceId;
+  final String? channelId;
+  final String? threadTs;
+  final String? messageTs;
+
+  const SlackMessageProvider({
+    this.workspaceId,
+    this.channelId,
+    this.threadTs,
+    this.messageTs,
+  });
+
+  @override
+  String get name => 'Slack';
+
+  @override
+  ActivityCategory get category => ActivityCategory.message;
+}
+
+@MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override
   final String name;
