@@ -24,7 +24,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
     return guardedCall(() async {
       final response = await _remoteDataSource.getRecentActivities();
       final List<dynamic> jsonList = _getEnvelopeData(response);
-      return jsonList.map((json) => ActivityMapper.fromMap(json)).toList();
+      return _mapAndNormalizeActivities(jsonList);
     });
   }
 
@@ -35,11 +35,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
     List<String>? users,
     bool authoredOnly = true,
   }) {
-    print('DEBUG: ActivityRepository.searchActivities entry');
     return guardedCall(() async {
-      print(
-        'DEBUG: ActivityRepository.searchActivities calling remoteDataSource',
-      );
       final response = await _remoteDataSource.searchActivities(
         startDate: startDate,
         endDate: endDate,
@@ -47,14 +43,8 @@ class ActivityRepository extends Repository implements IActivityRepository {
         authoredOnly: authoredOnly,
       );
 
-      print(
-        'DEBUG: ActivityRepository.searchActivities response: ${response.statusCode}',
-      );
       final List<dynamic> jsonList = _getEnvelopeData(response);
-      print(
-        'DEBUG: ActivityRepository.searchActivities jsonList length: ${jsonList.length}',
-      );
-      return jsonList.map((json) => ActivityMapper.fromMap(json)).toList();
+      return _mapAndNormalizeActivities(jsonList);
     });
   }
 
@@ -87,5 +77,38 @@ class ActivityRepository extends Repository implements IActivityRepository {
         .handleError((e) {
           // Log or handle error appropriately
         });
+  }
+
+  List<Activity> _mapAndNormalizeActivities(List<dynamic> jsonList) {
+    final activities = jsonList
+        .map((json) => ActivityMapper.fromMap(json))
+        .map(_normalizeActivityProvider)
+        .toList();
+
+    activities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return activities;
+  }
+
+  Activity _normalizeActivityProvider(Activity activity) {
+    final provider = activity.provider;
+
+    if (provider is! SlackMessageProvider) {
+      return activity;
+    }
+
+    final normalizedProvider = provider.copyWith(
+      workspaceId: _normalizeSlackValue(provider.workspaceId),
+      channelId: _normalizeSlackValue(provider.channelId),
+      threadTs: _normalizeSlackValue(provider.threadTs),
+      messageTs: _normalizeSlackValue(provider.messageTs),
+    );
+
+    return activity.copyWith(provider: normalizedProvider);
+  }
+
+  String? _normalizeSlackValue(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

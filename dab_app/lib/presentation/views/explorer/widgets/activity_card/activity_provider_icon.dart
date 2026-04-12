@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../domain/entities/provider/provider_config.dart';
+import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/core/styles/provider_icon_resolver.dart';
 
 class ActivityProviderIcon extends StatelessWidget {
@@ -19,7 +20,10 @@ class ActivityProviderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final providerId = activity.provider.name;
     final iconData = ProviderIconResolver.resolveFallbackIcon(context, providerId);
-    final iconColor = ProviderIconResolver.resolveBrandColor(context, providerId);
+    final brandColor = ProviderIconResolver.resolveBrandColor(context, providerId);
+    final iconColor = brandColor.computeLuminance() < 0.2
+        ? AppColors.onSurface
+        : brandColor;
     final customIconUrl = ProviderIconResolver.resolveIconUrl(providerId, configs);
 
     Widget fallbackIcon = Icon(
@@ -40,6 +44,21 @@ class ActivityProviderIcon extends StatelessWidget {
       );
     }
 
-    return Tooltip(message: 'Source: ${activity.provider.name}', child: icon);
+    return Tooltip(
+      message: 'Source: ${activity.provider.name}',
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHigh.withValues(alpha: 0.45),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.35),
+          ),
+        ),
+        alignment: Alignment.center,
+        child: icon,
+      ),
+    );
   }
 }
