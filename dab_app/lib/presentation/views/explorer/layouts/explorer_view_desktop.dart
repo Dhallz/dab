@@ -59,7 +59,7 @@ class ExplorerViewDesktop extends StatelessWidget {
                             ],
                           )
                         : ListView.builder(
-                            clipBehavior: Clip.none,
+                            clipBehavior: Clip.hardEdge,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 32,
                               vertical: 16,

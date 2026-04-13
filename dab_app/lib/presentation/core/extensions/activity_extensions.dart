@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
+import '../localization/l10n_extension.dart';
 import '../styles/activity_category_styles.dart';
 import '../styles/provider_styles.dart';
 
@@ -27,55 +28,17 @@ extension OnActivity on Activity {
 
   Color brandColor(BuildContext context) => providerStyle(context).brandColor;
 
-  IconData granularIcon(BuildContext context) {
-    final contentLower = content.toLowerCase();
-    final titleLower = title.toLowerCase();
-
-    // Comment detection
-    if (contentLower.contains('comment') ||
-        titleLower.contains('comment') ||
-        commentCount > 0) {
-      return Icons.chat_bubble_outline_rounded;
+  String granularKey() {
+    // GitHub integration is commit-only in DAB.
+    if (provider is GitHubCommitProvider) {
+      return 'commit';
     }
 
-    // Tag / Label detection
-    if (contentLower.contains('tag') ||
-        titleLower.contains('tag') ||
-        contentLower.contains('label') ||
-        titleLower.contains('label')) {
-      return Icons.local_offer_outlined;
+    // Slack integration is message-oriented in DAB.
+    if (provider is SlackMessageProvider) {
+      return 'message';
     }
 
-    // Status / State detection
-    if (contentLower.contains('status') ||
-        titleLower.contains('status') ||
-        contentLower.contains('state') ||
-        titleLower.contains('state') ||
-        contentLower.contains('moved to') ||
-        contentLower.contains('changed to') ||
-        contentLower.contains('to done') ||
-        contentLower.contains('to in progress')) {
-      return Icons.swap_horiz_rounded;
-    }
-
-    // Code Review detection
-    if (contentLower.contains('review') ||
-        titleLower.contains('review') ||
-        contentLower.contains('approved') ||
-        contentLower.contains('requested changes')) {
-      return Icons.fact_check_outlined;
-    }
-
-    // Assignment detection
-    if (contentLower.contains('assigned') || titleLower.contains('assigned')) {
-      return Icons.person_add_alt_1_outlined;
-    }
-
-    // Default fallback to category-level icon
-    return icon(context);
-  }
-
-  String granularLabel(BuildContext context) {
     final contentLower = content.toLowerCase();
     final titleLower = title.toLowerCase();
 
@@ -95,7 +58,9 @@ extension OnActivity on Activity {
         contentLower.contains('state') ||
         titleLower.contains('state') ||
         contentLower.contains('moved to') ||
-        contentLower.contains('changed to')) {
+        contentLower.contains('changed to') ||
+        contentLower.contains('to done') ||
+        contentLower.contains('to in progress')) {
       return 'status';
     }
     if (contentLower.contains('review') ||
@@ -108,6 +73,30 @@ extension OnActivity on Activity {
       return 'assignment';
     }
 
-    return style(context).label.toLowerCase();
+    return 'activity';
+  }
+
+  IconData granularIcon(BuildContext context) {
+    return switch (granularKey()) {
+      'comment' => Icons.chat_bubble_outline_rounded,
+      'tag' => Icons.local_offer_outlined,
+      'status' => Icons.swap_horiz_rounded,
+      'review' => Icons.fact_check_outlined,
+      'assignment' => Icons.person_add_alt_1_outlined,
+      _ => icon(context),
+    };
+  }
+
+  String granularLabel(BuildContext context) {
+    return switch (granularKey()) {
+      'comment' => context.l10n.activityKindComment,
+      'tag' => context.l10n.activityKindTag,
+      'status' => context.l10n.activityKindStatus,
+      'review' => context.l10n.activityKindReview,
+      'assignment' => context.l10n.activityKindAssignment,
+      'commit' => context.l10n.activityKindCommit,
+      'message' => context.l10n.activityKindMessage,
+      _ => context.l10n.activityKindActivity,
+    };
   }
 }

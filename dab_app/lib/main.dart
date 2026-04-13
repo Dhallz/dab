@@ -6,6 +6,7 @@ import 'domain/repositories/abs_i_auth_repository.dart';
 import 'domain/repositories/abs_i_monitoring_repository.dart';
 import 'presentation/core/abs_bloc.dart';
 import 'presentation/core/abs_cubit.dart';
+import 'presentation/core/localization/app_localizations.dart';
 import 'presentation/core/navigation/app_router.dart';
 import 'presentation/features/app/app_cubit.dart';
 import 'presentation/features/app/app_state.dart';
@@ -65,6 +66,8 @@ class DabApp extends StatelessWidget {
           title: 'DAB App',
           routerConfig: appRouter.router,
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.dark, // We can define a light theme later
           darkTheme: AppTheme.dark,
           themeMode: state.settings.themeMode,

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class ActivityIntensityBar extends StatefulWidget {
   final int activityCount;
   final Color accentColor;
+  final Axis direction;
 
   const ActivityIntensityBar({
     super.key,
     required this.activityCount,
     required this.accentColor,
+    this.direction = Axis.horizontal,
   });
 
   @override
@@ -59,7 +61,7 @@ class _ActivityIntensityBarState extends State<ActivityIntensityBar>
   @override
   Widget build(BuildContext context) {
     final count = widget.activityCount;
-    
+
     // Step configuration
     final steps = [
       _StepConfig(threshold: 2, color: const Color(0xFF00E5FF)), // Cyan
@@ -71,41 +73,59 @@ class _ActivityIntensityBarState extends State<ActivityIntensityBar>
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, child) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: steps.asMap().entries.map((entry) {
-            final index = entry.key;
-            final config = entry.value;
-            final isFilled = count >= config.threshold;
-            final isLastStep = index == steps.length - 1;
-            final isExtreme = isLastStep && count >= config.threshold;
+        final children = steps.asMap().entries.map((entry) {
+          final index = entry.key;
+          final config = entry.value;
+          final isFilled = count >= config.threshold;
+          final isLastStep = index == steps.length - 1;
+          final isExtreme = isLastStep && count >= config.threshold;
 
+          final segment = Container(
+            width: widget.direction == Axis.horizontal ? 12 : 4,
+            height: widget.direction == Axis.horizontal ? 4 : 12,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              color: isFilled
+                  ? config.color
+                  : config.color.withValues(alpha: 0.1),
+              boxShadow: isFilled
+                  ? [
+                      BoxShadow(
+                        color: config.color.withValues(
+                          alpha: isExtreme ? (0.6 * _glowAnimation.value) : 0.3,
+                        ),
+                        blurRadius: isExtreme
+                            ? (6 + (4 * _glowAnimation.value))
+                            : 4,
+                        spreadRadius: isExtreme
+                            ? (1 * _glowAnimation.value)
+                            : 0,
+                      ),
+                    ]
+                  : [],
+            ),
+          );
+
+          if (widget.direction == Axis.vertical) {
             return Padding(
-              padding: EdgeInsets.only(left: index == 0 ? 0 : 4),
-              child: Container(
-                width: 12,
-                height: 4,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2),
-                  color: isFilled 
-                      ? config.color 
-                      : config.color.withValues(alpha: 0.1),
-                  boxShadow: isFilled 
-                      ? [
-                          BoxShadow(
-                            color: config.color.withValues(
-                              alpha: isExtreme ? (0.6 * _glowAnimation.value) : 0.3,
-                            ),
-                            blurRadius: isExtreme ? (6 + (4 * _glowAnimation.value)) : 4,
-                            spreadRadius: isExtreme ? (1 * _glowAnimation.value) : 0,
-                          ),
-                        ]
-                      : [],
-                ),
-              ),
+              padding: EdgeInsets.only(top: index == 0 ? 0 : 4),
+              child: segment,
             );
-          }).toList(),
-        );
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(left: index == 0 ? 0 : 4),
+            child: segment,
+          );
+        }).toList();
+
+        if (widget.direction == Axis.vertical) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: children.reversed.toList(),
+          );
+        }
+        return Row(mainAxisSize: MainAxisSize.min, children: children);
       },
     );
   }

@@ -13,6 +13,8 @@ import '../../core/abs_bloc.dart';
 import 'explorer_event.dart';
 import 'explorer_item.dart';
 import 'explorer_state.dart';
+import 'models/directory_type.dart';
+import 'models/explorer_date_mode.dart';
 
 class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
   final ActivityUseCases _activityUseCases;
@@ -29,6 +31,8 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       transformer: (events, mapper) =>
           events.debounce(const Duration(milliseconds: 300)).switchMap(mapper),
     );
+    on<ExplorerDateModeChanged>(_onDateModeChanged);
+    on<ExplorerDateRangeChanged>(_onDateRangeChanged);
     on<ExplorerDirectoryTypeChanged>(_onDirectoryTypeChanged);
     on<ExplorerUserToggled>(_onUserToggled);
     on<ExplorerGroupToggled>(_onGroupToggled);
@@ -73,43 +77,82 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       );
     });
 
+    final connectedUserId = event.connectedUserId;
+    if (connectedUserId != null &&
+        newState.users.any((user) => user.id == connectedUserId)) {
+      newState = newState.copyWith(selectedUserIds: {connectedUserId});
+    }
+
     emit(newState);
-    await _fetchActivities(emit, newState.selectedDate);
+    await _fetchActivities(emit);
   }
 
   Future<void> _onDateChanged(
     ExplorerDateChanged event,
     Emitter<ExplorerState> emit,
   ) async {
-    emit(state.copyWith(selectedDate: event.date, status: ViewStatus.loading));
-    await _fetchActivities(emit, event.date);
+    emit(
+      state.copyWith(
+        selectedDate: event.date,
+        rangeStartDate: event.date,
+        rangeEndDate: event.date,
+        status: ViewStatus.loading,
+      ),
+    );
+    await _fetchActivities(emit);
   }
 
-  Future<void> _fetchActivities(
+  Future<void> _onDateModeChanged(
+    ExplorerDateModeChanged event,
     Emitter<ExplorerState> emit,
-    DateTime date,
   ) async {
+    if (event.mode == state.dateMode) return;
+
+    final nextState = state.copyWith(
+      dateMode: event.mode,
+      rangeStartDate: state.rangeStartDate ?? state.selectedDate,
+      rangeEndDate: state.rangeEndDate ?? state.selectedDate,
+    );
+    emit(nextState.copyWith(status: ViewStatus.loading));
+    await _fetchActivities(emit);
+  }
+
+  Future<void> _onDateRangeChanged(
+    ExplorerDateRangeChanged event,
+    Emitter<ExplorerState> emit,
+  ) async {
+    final start = event.startDate.isBefore(event.endDate)
+        ? event.startDate
+        : event.endDate;
+    final end = event.startDate.isBefore(event.endDate)
+        ? event.endDate
+        : event.startDate;
+    emit(
+      state.copyWith(
+        rangeStartDate: start,
+        rangeEndDate: end,
+        selectedDate: start,
+        status: ViewStatus.loading,
+      ),
+    );
+    await _fetchActivities(emit);
+  }
+
+  Future<void> _fetchActivities(Emitter<ExplorerState> emit) async {
     emit(state.copyWith(status: ViewStatus.loading));
 
-    final Set<String> targetIds = {...state.selectedUserIds};
-
-    if (state.selectedGroupIds.isNotEmpty) {
-      for (final groupId in state.selectedGroupIds) {
-        final group = state.groups.cast<Group?>().firstWhere(
-          (g) => g?.id == groupId,
-          orElse: () => null,
-        );
-        if (group != null) {
-          targetIds.addAll(group.members.map((m) => m.id));
-        }
-      }
+    final targetIds = _resolveTargetUserIds();
+    if (targetIds.isEmpty) {
+      emit(state.copyWith(status: ViewStatus.success, items: const []));
+      return;
     }
 
-    final usersToSearch = targetIds.isEmpty ? null : targetIds.toList();
+    final usersToSearch = targetIds.toList();
+    final (startDate, endDate) = _resolveDateWindow();
 
     final result = await _activityUseCases.searchActivities.execute(
-      startDate: date,
-      endDate: date,
+      startDate: startDate,
+      endDate: endDate,
       users: usersToSearch,
       authoredOnly: true,
     );
@@ -271,8 +314,9 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
   void _onDirectoryTypeChanged(
     ExplorerDirectoryTypeChanged event,
     Emitter<ExplorerState> emit,
-  ) {
-    emit(state.copyWith(directoryType: event.type));
+  ) async {
+    emit(state.copyWith(directoryType: event.type, status: ViewStatus.loading));
+    await _fetchActivities(emit);
   }
 
   Future<void> _onUserToggled(
@@ -286,7 +330,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       updated.add(event.userId);
     }
     emit(state.copyWith(selectedUserIds: updated));
-    await _fetchActivities(emit, state.selectedDate);
+    await _fetchActivities(emit);
   }
 
   Future<void> _onGroupToggled(
@@ -300,7 +344,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       updated.add(event.groupId);
     }
     emit(state.copyWith(selectedGroupIds: updated));
-    await _fetchActivities(emit, state.selectedDate);
+    await _fetchActivities(emit);
   }
 
   FutureOr<void> _onProviderToggled(
@@ -315,14 +359,14 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     }
 
     emit(state.copyWith(selectedProviders: selected));
-    await _fetchActivities(emit, state.selectedDate);
+    await _fetchActivities(emit);
   }
 
   Future<void> _onRefreshRequested(
     ExplorerRefreshRequested event,
     Emitter<ExplorerState> emit,
   ) async {
-    await _fetchActivities(emit, state.selectedDate);
+    await _fetchActivities(emit);
   }
 
   void _onStackToggled(
@@ -359,5 +403,32 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
       },
     );
+  }
+
+  (DateTime, DateTime) _resolveDateWindow() {
+    if (state.dateMode == ExplorerDateMode.range) {
+      final startDate = state.rangeStartDate ?? state.selectedDate;
+      final endDate = state.rangeEndDate ?? state.selectedDate;
+      return (startDate, endDate);
+    }
+    return (state.selectedDate, state.selectedDate);
+  }
+
+  Set<String> _resolveTargetUserIds() {
+    if (state.directoryType == DirectoryType.users) {
+      return Set<String>.from(state.selectedUserIds);
+    }
+
+    final ids = <String>{};
+    for (final groupId in state.selectedGroupIds) {
+      final group = state.groups.cast<Group?>().firstWhere(
+        (g) => g?.id == groupId,
+        orElse: () => null,
+      );
+      if (group != null) {
+        ids.addAll(group.members.map((m) => m.id));
+      }
+    }
+    return ids;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
+import 'models/explorer_date_mode.dart';
 import 'models/directory_type.dart';
 
 part 'explorer_event.mapper.dart';
@@ -11,7 +12,8 @@ sealed class ExplorerEvent with ExplorerEventMappable {
 
 @MappableClass()
 class ExplorerStarted extends ExplorerEvent with ExplorerStartedMappable {
-  const ExplorerStarted();
+  final String? connectedUserId;
+  const ExplorerStarted({this.connectedUserId});
 }
 
 @MappableClass()
@@ -19,6 +21,24 @@ class ExplorerDateChanged extends ExplorerEvent
     with ExplorerDateChangedMappable {
   final DateTime date;
   const ExplorerDateChanged(this.date);
+}
+
+@MappableClass()
+class ExplorerDateModeChanged extends ExplorerEvent
+    with ExplorerDateModeChangedMappable {
+  final ExplorerDateMode mode;
+  const ExplorerDateModeChanged(this.mode);
+}
+
+@MappableClass()
+class ExplorerDateRangeChanged extends ExplorerEvent
+    with ExplorerDateRangeChangedMappable {
+  final DateTime startDate;
+  final DateTime endDate;
+  const ExplorerDateRangeChanged({
+    required this.startDate,
+    required this.endDate,
+  });
 }
 
 @MappableClass()

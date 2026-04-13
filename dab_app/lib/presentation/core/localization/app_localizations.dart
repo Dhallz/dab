@@ -111,6 +111,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coming soon: Live activity feed.'**
   String get dashboardSubtitle;
+
+  /// No description provided for @explorerModeSingleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get explorerModeSingleDay;
+
+  /// No description provided for @explorerModeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get explorerModeRange;
+
+  /// No description provided for @explorerQuickToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get explorerQuickToday;
+
+  /// No description provided for @explorerQuickWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get explorerQuickWeek;
+
+  /// No description provided for @explorerPickRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick range'**
+  String get explorerPickRange;
+
+  /// No description provided for @activityKindComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get activityKindComment;
+
+  /// No description provided for @activityKindTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get activityKindTag;
+
+  /// No description provided for @activityKindStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get activityKindStatus;
+
+  /// No description provided for @activityKindReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get activityKindReview;
+
+  /// No description provided for @activityKindAssignment.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignment'**
+  String get activityKindAssignment;
+
+  /// No description provided for @activityKindCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'Commit'**
+  String get activityKindCommit;
+
+  /// No description provided for @activityKindMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get activityKindMessage;
+
+  /// No description provided for @activityKindActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityKindActivity;
 }
 
 class _AppLocalizationsDelegate

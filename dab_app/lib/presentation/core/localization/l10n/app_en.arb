@@ -2,5 +2,18 @@
   "@@locale": "en",
   "helloWorld": "Hello World!",
   "dashboardTitle": "Dashboard",
-  "dashboardSubtitle": "Coming soon: Live activity feed."
+  "dashboardSubtitle": "Coming soon: Live activity feed.",
+  "explorerModeSingleDay": "Day",
+  "explorerModeRange": "Range",
+  "explorerQuickToday": "Today",
+  "explorerQuickWeek": "Week",
+  "explorerPickRange": "Pick range",
+  "activityKindComment": "Comment",
+  "activityKindTag": "Tag",
+  "activityKindStatus": "Status",
+  "activityKindReview": "Review",
+  "activityKindAssignment": "Assignment",
+  "activityKindCommit": "Commit",
+  "activityKindMessage": "Message",
+  "activityKindActivity": "Activity"
 }

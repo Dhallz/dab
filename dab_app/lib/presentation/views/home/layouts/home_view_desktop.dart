@@ -1,9 +1,9 @@
 import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
+import 'package:dab_app/presentation/core/navigation/app_route.dart';
 import 'package:dab_app/presentation/features/app/app_cubit.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/features/auth/auth_cubit.dart';
 import 'package:dab_app/presentation/features/auth/auth_state.dart';
-import 'package:dab_app/presentation/core/navigation/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +18,9 @@ class HomeViewDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.select<AuthCubit, AuthState>((cubit) => cubit.state);
+    final authState = context.select<AuthCubit, AuthState>(
+      (cubit) => cubit.state,
+    );
     final userName = _displayName(authState);
     final userInitials = _displayInitials(userName);
 
@@ -55,7 +57,8 @@ class HomeViewDesktop extends StatelessWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
-    if (previousIndex != index && navigationShell.currentIndex == previousIndex) {
+    if (previousIndex != index &&
+        navigationShell.currentIndex == previousIndex) {
       final targetPath = switch (index) {
         0 => AppRoute.homeDashboard.path,
         1 => AppRoute.homeExplorer.path,

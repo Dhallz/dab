@@ -44,7 +44,7 @@ class _ExplorerCalendarDateButtonState
           padding: EdgeInsets.symmetric(
             vertical: widget.compact
                 ? (widget.isSelected ? 6 : 4)
-                : (widget.isSelected ? 12 : 8),
+                : (widget.isSelected ? 8 : 6),
           ),
           decoration: BoxDecoration(
             color: _isHovered && !widget.isSelected

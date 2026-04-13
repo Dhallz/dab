@@ -53,7 +53,7 @@ class ExplorerViewMobile extends StatelessWidget {
                       ],
                     )
                   : ListView.builder(
-                      clipBehavior: Clip.none,
+                      clipBehavior: Clip.hardEdge,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: state.items.length,
                       itemBuilder: (context, index) {

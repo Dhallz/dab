@@ -4,6 +4,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/user/user.dart';
 import 'explorer_item.dart';
+import 'models/explorer_date_mode.dart';
 import 'models/directory_type.dart';
 
 part 'explorer_state.mapper.dart';
@@ -16,6 +17,9 @@ class ExplorerState with ExplorerStateMappable {
   final List<ExplorerItem> items;
   final String? errorMessage;
   final DateTime selectedDate;
+  final ExplorerDateMode dateMode;
+  final DateTime? rangeStartDate;
+  final DateTime? rangeEndDate;
 
   // Directory
   final DirectoryType directoryType;
@@ -33,6 +37,9 @@ class ExplorerState with ExplorerStateMappable {
     this.items = const [],
     this.errorMessage,
     required this.selectedDate,
+    this.dateMode = ExplorerDateMode.singleDay,
+    this.rangeStartDate,
+    this.rangeEndDate,
     this.directoryType = DirectoryType.users,
     this.users = const [],
     this.groups = const [],

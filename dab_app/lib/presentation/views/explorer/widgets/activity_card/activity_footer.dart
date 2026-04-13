@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/core/styles/app_icons.dart';
 import 'activity_avatar.dart';
@@ -85,7 +86,7 @@ class ActivityFooter extends StatelessWidget {
         // Primary Activity Chip
         ActivityStatusSummaryChip(
           count: 1,
-          label: style.label.toLowerCase(),
+          label: activity.granularLabel(context),
           icon: activity.granularIcon(context),
           color: style.color,
         ),
@@ -117,7 +118,7 @@ class ActivityFooter extends StatelessWidget {
           padding: const EdgeInsets.only(right: 8),
           child: ActivityStatusSummaryChip(
             count: totalCount,
-            label: totalCount == 1 ? 'activity' : 'activities',
+            label: context.l10n.activityKindActivity,
             icon: AppIcons.genericActivity,
             color: heatColor,
           ),
@@ -134,7 +135,7 @@ class ActivityFooter extends StatelessWidget {
             padding: const EdgeInsets.only(right: 8),
             child: ActivityStatusSummaryChip(
               count: count,
-              label: count == 1 ? label : '${label}s',
+              label: label,
               icon: icon,
               color: color,
             ),
@@ -152,4 +153,3 @@ class ActivityFooter extends StatelessWidget {
     return AppColors.primary; // Fallback
   }
 }
-

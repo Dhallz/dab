@@ -104,7 +104,9 @@ class _ActivityCardState extends State<ActivityCard> {
           widget.activity,
           isGitHubCommit: isGitHubCommit,
         );
-        final commitSha = isGitHubCommit ? _extractSha(widget.activity.title) : null;
+        final commitSha = isGitHubCommit
+            ? _extractSha(widget.activity.title)
+            : null;
         final displayAuthorName =
             widget.resolvedAuthorName?.trim().isNotEmpty == true
             ? widget.resolvedAuthorName!.trim()
@@ -118,188 +120,19 @@ class _ActivityCardState extends State<ActivityCard> {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             child: Stack(
+              fit: StackFit.passthrough,
               children: [
-                Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow.withValues(alpha: _isHovering ? 0.6 : 0.4),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _isHovering
-                            ? style.color.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.1),
-                      ),
-                      boxShadow: _isHovering
-                          ? [
-                              BoxShadow(
-                                color: style.color.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                spreadRadius: -5,
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Category Icon (Functional Accent)
-                                  Tooltip(
-                                    message: 'Category: ${style.label}',
-                                    child: Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: style.color.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: style.color.withValues(alpha: 0.2),
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        style.icon,
-                                        color: style.color,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            style.label.toUpperCase(),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: style.color,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          width: 4,
-                                          height: 4,
-                                          decoration: const BoxDecoration(
-                                            color: AppColors
-                                                .surfaceContainerHighest,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _formatDate(
-                                            widget.activity.createdAt,
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            color:
-                                                AppColors.onSurfaceVariantLow,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      displayTitle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.onSurface,
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                    if (commitSha != null) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        commitSha,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.onSurfaceVariantLow,
-                                          fontFamily: 'Roboto Mono',
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              // Top Right Icons
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  ActivityProviderIcon(
-                                    activity: widget.activity,
-                                    configs: state.configs,
-                                  ),
-                                  if (widget.activity.url != null &&
-                                      widget.activity.url!
-                                          .trim()
-                                          .isNotEmpty) ...[
-                                    const SizedBox(height: 12),
-                                    ActivityLinkButton(
-                                      accentColor: style.color,
-                                      onTap: () => _launchUrl(state.configs),
-                                      isVisible: _isHovering,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              // Content Section
-                              ActivityContent(
-                                activity: widget.activity,
-                                activities: widget.activities,
-                                isExpanded: _isHovering,
-                                accentColor: style.color,
-                              ),
-                              const SizedBox(height: 16),
-                              // Footer Section
-                              ActivityFooter(
-                                activity: widget.activity,
-                                activities: widget.activities,
-                                displayAuthorName: displayAuthorName,
-                                providerAuthorName: widget.activity.authorName,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 Positioned(
                   left: 0,
-                  top: 32,
-                  bottom: 32,
-                  width: 3,
+                  top: 0,
+                  bottom: 0,
+                  width: 24,
                   child: Container(
                     decoration: BoxDecoration(
                       color: brandColor.withValues(alpha: 0.8),
                       borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(4),
-                        bottomRight: Radius.circular(4),
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -310,6 +143,199 @@ class _ActivityCardState extends State<ActivityCard> {
                       ],
                     ),
                   ),
+                ),
+                Row(
+                  children: [
+                    SizedBox(width: 4),
+                    Expanded(
+                      child: Container(
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow.withValues(
+                            alpha: _isHovering ? 0.6 : 0.4,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _isHovering
+                                ? style.color.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.1),
+                          ),
+                          boxShadow: _isHovering
+                              ? [
+                                  BoxShadow(
+                                    color: style.color.withValues(alpha: 0.1),
+                                    blurRadius: 20,
+                                    spreadRadius: -5,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Category Icon (Functional Accent)
+                                      Tooltip(
+                                        message: 'Category: ${style.label}',
+                                        child: Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: style.color.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: style.color.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            style.icon,
+                                            color: style.color,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    style.label.toUpperCase(),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: style.color,
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  width: 4,
+                                                  height: 4,
+                                                  decoration: const BoxDecoration(
+                                                    color: AppColors
+                                                        .surfaceContainerHighest,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  _formatDate(
+                                                    widget.activity.createdAt,
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: AppColors
+                                                        .onSurfaceVariantLow,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              displayTitle,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.onSurface,
+                                                letterSpacing: -0.2,
+                                              ),
+                                            ),
+                                            if (commitSha != null) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                commitSha,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors
+                                                      .onSurfaceVariantLow,
+                                                  fontFamily: 'Roboto Mono',
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      // Top Right Icons
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          ActivityProviderIcon(
+                                            activity: widget.activity,
+                                            configs: state.configs,
+                                          ),
+                                          if (widget.activity.url != null &&
+                                              widget.activity.url!
+                                                  .trim()
+                                                  .isNotEmpty) ...[
+                                            const SizedBox(height: 12),
+                                            ActivityLinkButton(
+                                              accentColor: style.color,
+                                              onTap: () =>
+                                                  _launchUrl(state.configs),
+                                              isVisible: _isHovering,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Content Section
+                                  ActivityContent(
+                                    activity: widget.activity,
+                                    activities: widget.activities,
+                                    isExpanded: _isHovering,
+                                    accentColor: style.color,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Footer Section
+                                  ActivityFooter(
+                                    activity: widget.activity,
+                                    activities: widget.activities,
+                                    displayAuthorName: displayAuthorName,
+                                    providerAuthorName:
+                                        widget.activity.authorName,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

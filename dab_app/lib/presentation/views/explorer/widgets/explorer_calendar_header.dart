@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/extensions/date_extensions.dart';
 import '../explorer_item.dart';
 import '../explorer_state.dart';
+import '../models/explorer_date_mode.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Header display for the active date in the explorer, including activity counts.
@@ -20,10 +21,14 @@ class ExplorerCalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRangeMode = state.dateMode == ExplorerDateMode.range;
     final dayStr = DateFormat('EEEE, MMMM').format(displayDate);
-    final dateStr = '$dayStr ${displayDate.withOrdinalSuffix}';
-    final shortDate =
-        '${DateFormat('EEE, MMM').format(displayDate)} ${displayDate.withOrdinalSuffix}';
+    final dateStr = isRangeMode
+        ? _rangeLabel()
+        : '$dayStr ${displayDate.withOrdinalSuffix}';
+    final shortDate = isRangeMode
+        ? _rangeLabel(short: true)
+        : '${DateFormat('EEE, MMM').format(displayDate)} ${displayDate.withOrdinalSuffix}';
 
     if (compact) {
       return Padding(
@@ -56,24 +61,6 @@ class ExplorerCalendarHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                border: Border.all(color: const Color(0xFF334155)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'ARCHIVED',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF94A3B8),
-                  letterSpacing: 0.4,
-                ),
               ),
             ),
           ],
@@ -113,24 +100,6 @@ class ExplorerCalendarHeader extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              border: Border.all(color: const Color(0xFF334155)),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Text(
-              'ARCHIVED FEED',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF94A3B8),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -142,7 +111,21 @@ class ExplorerCalendarHeader extends StatelessWidget {
       (sum, item) => sum + _countActivities(item),
     );
 
+    if (state.dateMode == ExplorerDateMode.range) {
+      return 'Viewing $activityCount archived activities from this range.';
+    }
     return 'Viewing $activityCount archived activities from this date.';
+  }
+
+  String _rangeLabel({bool short = false}) {
+    final startDate = state.rangeStartDate ?? displayDate;
+    final endDate = state.rangeEndDate ?? displayDate;
+    if (short) {
+      final shortFormat = DateFormat('MMM d');
+      return '${shortFormat.format(startDate)} - ${shortFormat.format(endDate)}';
+    }
+    final fullFormat = DateFormat('EEEE, MMMM d');
+    return '${fullFormat.format(startDate)} - ${fullFormat.format(endDate)}';
   }
 
   int _countActivities(ExplorerItem item) => switch (item) {

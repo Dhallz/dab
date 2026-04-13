@@ -18,19 +18,14 @@ class ActivityStatusSummaryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final normalizedLabel = label.trim();
-    final tooltipLabel = count == 1 ? normalizedLabel : '${normalizedLabel}s';
     return Tooltip(
-      message: '$count $tooltipLabel',
+      message: '$label: $count',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: color.withValues(alpha: 0.2),
-            width: 0.5,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

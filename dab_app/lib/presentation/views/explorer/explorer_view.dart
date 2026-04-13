@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/auth/auth_cubit.dart';
 import '../../../../services/service_locator.dart';
 import 'explorer_bloc.dart';
 import 'explorer_event.dart';
@@ -12,12 +13,13 @@ class ExplorerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final connectedUserId = context.read<AuthCubit>().state.user?.id;
     return BlocProvider(
       create: (context) => ExplorerBloc(
         sl.activityUseCases,
         sl.userUseCases,
         sl.metadataUseCases,
-      )..add(const ExplorerStarted()),
+      )..add(ExplorerStarted(connectedUserId: connectedUserId)),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 900) {

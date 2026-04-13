@@ -16,6 +16,8 @@ class ExplorerEventMapper extends ClassMapperBase<ExplorerEvent> {
       MapperContainer.globals.use(_instance = ExplorerEventMapper._());
       ExplorerStartedMapper.ensureInitialized();
       ExplorerDateChangedMapper.ensureInitialized();
+      ExplorerDateModeChangedMapper.ensureInitialized();
+      ExplorerDateRangeChangedMapper.ensureInitialized();
       ExplorerActivityReceivedMapper.ensureInitialized();
       ExplorerDirectoryTypeChangedMapper.ensureInitialized();
       ExplorerUserToggledMapper.ensureInitialized();
@@ -78,11 +80,20 @@ class ExplorerStartedMapper extends ClassMapperBase<ExplorerStarted> {
   @override
   final String id = 'ExplorerStarted';
 
+  static String? _$connectedUserId(ExplorerStarted v) => v.connectedUserId;
+  static const Field<ExplorerStarted, String> _f$connectedUserId = Field(
+    'connectedUserId',
+    _$connectedUserId,
+    opt: true,
+  );
+
   @override
-  final MappableFields<ExplorerStarted> fields = const {};
+  final MappableFields<ExplorerStarted> fields = const {
+    #connectedUserId: _f$connectedUserId,
+  };
 
   static ExplorerStarted _instantiate(DecodingData data) {
-    return ExplorerStarted();
+    return ExplorerStarted(connectedUserId: data.dec(_f$connectedUserId));
   }
 
   @override
@@ -148,7 +159,7 @@ extension ExplorerStartedValueCopy<$R, $Out>
 abstract class ExplorerStartedCopyWith<$R, $In extends ExplorerStarted, $Out>
     implements ExplorerEventCopyWith<$R, $In, $Out> {
   @override
-  $R call();
+  $R call({String? connectedUserId});
   ExplorerStartedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -163,9 +174,15 @@ class _ExplorerStartedCopyWithImpl<$R, $Out>
   late final ClassMapperBase<ExplorerStarted> $mapper =
       ExplorerStartedMapper.ensureInitialized();
   @override
-  $R call() => $apply(FieldCopyWithData({}));
+  $R call({Object? connectedUserId = $none}) => $apply(
+    FieldCopyWithData({
+      if (connectedUserId != $none) #connectedUserId: connectedUserId,
+    }),
+  );
   @override
-  ExplorerStarted $make(CopyWithData data) => ExplorerStarted();
+  ExplorerStarted $make(CopyWithData data) => ExplorerStarted(
+    connectedUserId: data.get(#connectedUserId, or: $value.connectedUserId),
+  );
 
   @override
   ExplorerStartedCopyWith<$R2, ExplorerStarted, $Out2> $chain<$R2, $Out2>(
@@ -297,6 +314,284 @@ class _ExplorerDateChangedCopyWithImpl<$R, $Out>
   ExplorerDateChangedCopyWith<$R2, ExplorerDateChanged, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _ExplorerDateChangedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerDateModeChangedMapper
+    extends ClassMapperBase<ExplorerDateModeChanged> {
+  ExplorerDateModeChangedMapper._();
+
+  static ExplorerDateModeChangedMapper? _instance;
+  static ExplorerDateModeChangedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = ExplorerDateModeChangedMapper._(),
+      );
+      ExplorerEventMapper.ensureInitialized();
+      ExplorerDateModeMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerDateModeChanged';
+
+  static ExplorerDateMode _$mode(ExplorerDateModeChanged v) => v.mode;
+  static const Field<ExplorerDateModeChanged, ExplorerDateMode> _f$mode = Field(
+    'mode',
+    _$mode,
+  );
+
+  @override
+  final MappableFields<ExplorerDateModeChanged> fields = const {#mode: _f$mode};
+
+  static ExplorerDateModeChanged _instantiate(DecodingData data) {
+    return ExplorerDateModeChanged(data.dec(_f$mode));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerDateModeChanged fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerDateModeChanged>(map);
+  }
+
+  static ExplorerDateModeChanged fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerDateModeChanged>(json);
+  }
+}
+
+mixin ExplorerDateModeChangedMappable {
+  String toJson() {
+    return ExplorerDateModeChangedMapper.ensureInitialized()
+        .encodeJson<ExplorerDateModeChanged>(this as ExplorerDateModeChanged);
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerDateModeChangedMapper.ensureInitialized()
+        .encodeMap<ExplorerDateModeChanged>(this as ExplorerDateModeChanged);
+  }
+
+  ExplorerDateModeChangedCopyWith<
+    ExplorerDateModeChanged,
+    ExplorerDateModeChanged,
+    ExplorerDateModeChanged
+  >
+  get copyWith =>
+      _ExplorerDateModeChangedCopyWithImpl<
+        ExplorerDateModeChanged,
+        ExplorerDateModeChanged
+      >(this as ExplorerDateModeChanged, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerDateModeChangedMapper.ensureInitialized().stringifyValue(
+      this as ExplorerDateModeChanged,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerDateModeChangedMapper.ensureInitialized().equalsValue(
+      this as ExplorerDateModeChanged,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerDateModeChangedMapper.ensureInitialized().hashValue(
+      this as ExplorerDateModeChanged,
+    );
+  }
+}
+
+extension ExplorerDateModeChangedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerDateModeChanged, $Out> {
+  ExplorerDateModeChangedCopyWith<$R, ExplorerDateModeChanged, $Out>
+  get $asExplorerDateModeChanged => $base.as(
+    (v, t, t2) => _ExplorerDateModeChangedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerDateModeChangedCopyWith<
+  $R,
+  $In extends ExplorerDateModeChanged,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({ExplorerDateMode? mode});
+  ExplorerDateModeChangedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerDateModeChangedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerDateModeChanged, $Out>
+    implements
+        ExplorerDateModeChangedCopyWith<$R, ExplorerDateModeChanged, $Out> {
+  _ExplorerDateModeChangedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ExplorerDateModeChanged> $mapper =
+      ExplorerDateModeChangedMapper.ensureInitialized();
+  @override
+  $R call({ExplorerDateMode? mode}) =>
+      $apply(FieldCopyWithData({if (mode != null) #mode: mode}));
+  @override
+  ExplorerDateModeChanged $make(CopyWithData data) =>
+      ExplorerDateModeChanged(data.get(#mode, or: $value.mode));
+
+  @override
+  ExplorerDateModeChangedCopyWith<$R2, ExplorerDateModeChanged, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerDateModeChangedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerDateRangeChangedMapper
+    extends ClassMapperBase<ExplorerDateRangeChanged> {
+  ExplorerDateRangeChangedMapper._();
+
+  static ExplorerDateRangeChangedMapper? _instance;
+  static ExplorerDateRangeChangedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = ExplorerDateRangeChangedMapper._(),
+      );
+      ExplorerEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerDateRangeChanged';
+
+  static DateTime _$startDate(ExplorerDateRangeChanged v) => v.startDate;
+  static const Field<ExplorerDateRangeChanged, DateTime> _f$startDate = Field(
+    'startDate',
+    _$startDate,
+  );
+  static DateTime _$endDate(ExplorerDateRangeChanged v) => v.endDate;
+  static const Field<ExplorerDateRangeChanged, DateTime> _f$endDate = Field(
+    'endDate',
+    _$endDate,
+  );
+
+  @override
+  final MappableFields<ExplorerDateRangeChanged> fields = const {
+    #startDate: _f$startDate,
+    #endDate: _f$endDate,
+  };
+
+  static ExplorerDateRangeChanged _instantiate(DecodingData data) {
+    return ExplorerDateRangeChanged(
+      startDate: data.dec(_f$startDate),
+      endDate: data.dec(_f$endDate),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerDateRangeChanged fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerDateRangeChanged>(map);
+  }
+
+  static ExplorerDateRangeChanged fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerDateRangeChanged>(json);
+  }
+}
+
+mixin ExplorerDateRangeChangedMappable {
+  String toJson() {
+    return ExplorerDateRangeChangedMapper.ensureInitialized()
+        .encodeJson<ExplorerDateRangeChanged>(this as ExplorerDateRangeChanged);
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerDateRangeChangedMapper.ensureInitialized()
+        .encodeMap<ExplorerDateRangeChanged>(this as ExplorerDateRangeChanged);
+  }
+
+  ExplorerDateRangeChangedCopyWith<
+    ExplorerDateRangeChanged,
+    ExplorerDateRangeChanged,
+    ExplorerDateRangeChanged
+  >
+  get copyWith =>
+      _ExplorerDateRangeChangedCopyWithImpl<
+        ExplorerDateRangeChanged,
+        ExplorerDateRangeChanged
+      >(this as ExplorerDateRangeChanged, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerDateRangeChangedMapper.ensureInitialized().stringifyValue(
+      this as ExplorerDateRangeChanged,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerDateRangeChangedMapper.ensureInitialized().equalsValue(
+      this as ExplorerDateRangeChanged,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerDateRangeChangedMapper.ensureInitialized().hashValue(
+      this as ExplorerDateRangeChanged,
+    );
+  }
+}
+
+extension ExplorerDateRangeChangedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerDateRangeChanged, $Out> {
+  ExplorerDateRangeChangedCopyWith<$R, ExplorerDateRangeChanged, $Out>
+  get $asExplorerDateRangeChanged => $base.as(
+    (v, t, t2) => _ExplorerDateRangeChangedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerDateRangeChangedCopyWith<
+  $R,
+  $In extends ExplorerDateRangeChanged,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({DateTime? startDate, DateTime? endDate});
+  ExplorerDateRangeChangedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerDateRangeChangedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerDateRangeChanged, $Out>
+    implements
+        ExplorerDateRangeChangedCopyWith<$R, ExplorerDateRangeChanged, $Out> {
+  _ExplorerDateRangeChangedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ExplorerDateRangeChanged> $mapper =
+      ExplorerDateRangeChangedMapper.ensureInitialized();
+  @override
+  $R call({DateTime? startDate, DateTime? endDate}) => $apply(
+    FieldCopyWithData({
+      if (startDate != null) #startDate: startDate,
+      if (endDate != null) #endDate: endDate,
+    }),
+  );
+  @override
+  ExplorerDateRangeChanged $make(CopyWithData data) => ExplorerDateRangeChanged(
+    startDate: data.get(#startDate, or: $value.startDate),
+    endDate: data.get(#endDate, or: $value.endDate),
+  );
+
+  @override
+  ExplorerDateRangeChangedCopyWith<$R2, ExplorerDateRangeChanged, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerDateRangeChangedCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class ExplorerActivityReceivedMapper

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../explorer_bloc.dart';
+import '../explorer_event.dart';
 import '../explorer_state.dart';
 import 'explorer_calendar_date_button.dart';
 
@@ -81,6 +82,12 @@ class ExplorerDateSelector extends StatelessWidget {
                           date: date,
                           isSelected: isSelected,
                           onTap: () {
+                            if (!DateUtils.isSameDay(
+                              date,
+                              state.selectedDate,
+                            )) {
+                              bloc.add(ExplorerDateChanged(date));
+                            }
                             pageController.animateToPage(
                               index,
                               duration: const Duration(milliseconds: 500),

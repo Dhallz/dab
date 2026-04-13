@@ -16,6 +16,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       MapperContainer.globals.use(_instance = ExplorerStateMapper._());
       ViewStatusMapper.ensureInitialized();
       ExplorerItemMapper.ensureInitialized();
+      ExplorerDateModeMapper.ensureInitialized();
       DirectoryTypeMapper.ensureInitialized();
       UserMapper.ensureInitialized();
       GroupMapper.ensureInitialized();
@@ -50,6 +51,25 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
   static const Field<ExplorerState, DateTime> _f$selectedDate = Field(
     'selectedDate',
     _$selectedDate,
+  );
+  static ExplorerDateMode _$dateMode(ExplorerState v) => v.dateMode;
+  static const Field<ExplorerState, ExplorerDateMode> _f$dateMode = Field(
+    'dateMode',
+    _$dateMode,
+    opt: true,
+    def: ExplorerDateMode.singleDay,
+  );
+  static DateTime? _$rangeStartDate(ExplorerState v) => v.rangeStartDate;
+  static const Field<ExplorerState, DateTime> _f$rangeStartDate = Field(
+    'rangeStartDate',
+    _$rangeStartDate,
+    opt: true,
+  );
+  static DateTime? _$rangeEndDate(ExplorerState v) => v.rangeEndDate;
+  static const Field<ExplorerState, DateTime> _f$rangeEndDate = Field(
+    'rangeEndDate',
+    _$rangeEndDate,
+    opt: true,
   );
   static DirectoryType _$directoryType(ExplorerState v) => v.directoryType;
   static const Field<ExplorerState, DirectoryType> _f$directoryType = Field(
@@ -109,6 +129,9 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     #items: _f$items,
     #errorMessage: _f$errorMessage,
     #selectedDate: _f$selectedDate,
+    #dateMode: _f$dateMode,
+    #rangeStartDate: _f$rangeStartDate,
+    #rangeEndDate: _f$rangeEndDate,
     #directoryType: _f$directoryType,
     #users: _f$users,
     #groups: _f$groups,
@@ -124,6 +147,9 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       items: data.dec(_f$items),
       errorMessage: data.dec(_f$errorMessage),
       selectedDate: data.dec(_f$selectedDate),
+      dateMode: data.dec(_f$dateMode),
+      rangeStartDate: data.dec(_f$rangeStartDate),
+      rangeEndDate: data.dec(_f$rangeEndDate),
       directoryType: data.dec(_f$directoryType),
       users: data.dec(_f$users),
       groups: data.dec(_f$groups),
@@ -207,6 +233,9 @@ abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
     List<ExplorerItem>? items,
     String? errorMessage,
     DateTime? selectedDate,
+    ExplorerDateMode? dateMode,
+    DateTime? rangeStartDate,
+    DateTime? rangeEndDate,
     DirectoryType? directoryType,
     List<User>? users,
     List<Group>? groups,
@@ -260,6 +289,9 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     List<ExplorerItem>? items,
     Object? errorMessage = $none,
     DateTime? selectedDate,
+    ExplorerDateMode? dateMode,
+    Object? rangeStartDate = $none,
+    Object? rangeEndDate = $none,
     DirectoryType? directoryType,
     List<User>? users,
     List<Group>? groups,
@@ -273,6 +305,9 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
       if (items != null) #items: items,
       if (errorMessage != $none) #errorMessage: errorMessage,
       if (selectedDate != null) #selectedDate: selectedDate,
+      if (dateMode != null) #dateMode: dateMode,
+      if (rangeStartDate != $none) #rangeStartDate: rangeStartDate,
+      if (rangeEndDate != $none) #rangeEndDate: rangeEndDate,
       if (directoryType != null) #directoryType: directoryType,
       if (users != null) #users: users,
       if (groups != null) #groups: groups,
@@ -288,6 +323,9 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     items: data.get(#items, or: $value.items),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
     selectedDate: data.get(#selectedDate, or: $value.selectedDate),
+    dateMode: data.get(#dateMode, or: $value.dateMode),
+    rangeStartDate: data.get(#rangeStartDate, or: $value.rangeStartDate),
+    rangeEndDate: data.get(#rangeEndDate, or: $value.rangeEndDate),
     directoryType: data.get(#directoryType, or: $value.directoryType),
     users: data.get(#users, or: $value.users),
     groups: data.get(#groups, or: $value.groups),
