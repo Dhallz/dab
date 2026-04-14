@@ -142,6 +142,120 @@ abstract class AppLocalizations {
   /// **'Pick range'**
   String get explorerPickRange;
 
+  /// No description provided for @explorerSectionDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory'**
+  String get explorerSectionDirectory;
+
+  /// No description provided for @explorerSectionActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities'**
+  String get explorerSectionActivities;
+
+  /// No description provided for @explorerSectionProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get explorerSectionProviders;
+
+  /// No description provided for @explorerDirectoryUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get explorerDirectoryUsers;
+
+  /// No description provided for @explorerDirectoryGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get explorerDirectoryGroups;
+
+  /// No description provided for @explorerCreateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get explorerCreateGroup;
+
+  /// No description provided for @explorerGroupActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Group actions'**
+  String get explorerGroupActions;
+
+  /// No description provided for @explorerEditGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit group members'**
+  String get explorerEditGroupMembers;
+
+  /// No description provided for @explorerSelectGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Select members'**
+  String get explorerSelectGroupMembers;
+
+  /// No description provided for @explorerRenameGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename group'**
+  String get explorerRenameGroup;
+
+  /// No description provided for @explorerDeleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get explorerDeleteGroup;
+
+  /// No description provided for @explorerGroupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get explorerGroupNamePlaceholder;
+
+  /// No description provided for @explorerCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get explorerCancel;
+
+  /// No description provided for @explorerSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get explorerSave;
+
+  /// No description provided for @explorerActivityFilterCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'Commits'**
+  String get explorerActivityFilterCommit;
+
+  /// No description provided for @explorerActivityFilterRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Revisions'**
+  String get explorerActivityFilterRevision;
+
+  /// No description provided for @explorerActivityFilterTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get explorerActivityFilterTask;
+
+  /// No description provided for @explorerActivityFilterMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get explorerActivityFilterMessage;
+
+  /// No description provided for @explorerActivityFilterGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Generic'**
+  String get explorerActivityFilterGeneric;
+
   /// No description provided for @activityKindComment.
   ///
   /// In en, this message translates to:

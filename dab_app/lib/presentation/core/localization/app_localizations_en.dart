@@ -33,6 +33,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get explorerPickRange => 'Pick range';
 
   @override
+  String get explorerSectionDirectory => 'Directory';
+
+  @override
+  String get explorerSectionActivities => 'Activities';
+
+  @override
+  String get explorerSectionProviders => 'Providers';
+
+  @override
+  String get explorerDirectoryUsers => 'Users';
+
+  @override
+  String get explorerDirectoryGroups => 'Groups';
+
+  @override
+  String get explorerCreateGroup => 'Create group';
+
+  @override
+  String get explorerGroupActions => 'Group actions';
+
+  @override
+  String get explorerEditGroupMembers => 'Edit group members';
+
+  @override
+  String get explorerSelectGroupMembers => 'Select members';
+
+  @override
+  String get explorerRenameGroup => 'Rename group';
+
+  @override
+  String get explorerDeleteGroup => 'Delete group';
+
+  @override
+  String get explorerGroupNamePlaceholder => 'Group name';
+
+  @override
+  String get explorerCancel => 'Cancel';
+
+  @override
+  String get explorerSave => 'Save';
+
+  @override
+  String get explorerActivityFilterCommit => 'Commits';
+
+  @override
+  String get explorerActivityFilterRevision => 'Revisions';
+
+  @override
+  String get explorerActivityFilterTask => 'Tasks';
+
+  @override
+  String get explorerActivityFilterMessage => 'Messages';
+
+  @override
+  String get explorerActivityFilterGeneric => 'Generic';
+
+  @override
   String get activityKindComment => 'Comment';
 
   @override

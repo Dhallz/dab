@@ -9,6 +9,7 @@ class SelectionTile extends StatelessWidget {
   final VoidCallback onTap;
   final String? avatarUrl;
   final IconData? iconData;
+  final Widget? trailing;
 
   const SelectionTile({
     super.key,
@@ -17,6 +18,7 @@ class SelectionTile extends StatelessWidget {
     required this.onTap,
     this.avatarUrl,
     this.iconData,
+    this.trailing,
   });
 
   @override
@@ -87,12 +89,10 @@ class SelectionTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (isSelected)
-              Icon(
-                AppIcons.selected,
-                size: 16,
-                color: AppColors.accentIndigo,
-              ),
+            if (trailing != null)
+              trailing!
+            else if (isSelected)
+              Icon(AppIcons.selected, size: 16, color: AppColors.accentIndigo),
           ],
         ),
       ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_icons.dart';
+import '../../../../core/styles/app_spacing.dart';
+import '../../../../core/localization/l10n_extension.dart';
 import '../../explorer_bloc.dart';
 import '../../explorer_event.dart';
 import '../../models/directory_type.dart';
@@ -15,39 +16,24 @@ class DirectoryToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        const Text(
-          'DIRECTORY',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: AppColors.outlineVariant,
-            letterSpacing: 1.2,
+        DirectoryTile(
+          label: context.l10n.explorerDirectoryUsers,
+          icon: AppIcons.user,
+          isSelected: directoryType == DirectoryType.users,
+          onTap: () => context.read<ExplorerBloc>().add(
+            const ExplorerDirectoryTypeChanged(DirectoryType.users),
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            DirectoryTile(
-              label: 'Users',
-              icon: AppIcons.user,
-              isSelected: directoryType == DirectoryType.users,
-              onTap: () => context.read<ExplorerBloc>().add(
-                const ExplorerDirectoryTypeChanged(DirectoryType.users),
-              ),
-            ),
-            const SizedBox(width: 12),
-            DirectoryTile(
-              label: 'Groups',
-              icon: AppIcons.users,
-              isSelected: directoryType == DirectoryType.groups,
-              onTap: () => context.read<ExplorerBloc>().add(
-                const ExplorerDirectoryTypeChanged(DirectoryType.groups),
-              ),
-            ),
-          ],
+        const SizedBox(width: AppSpacing.s),
+        DirectoryTile(
+          label: context.l10n.explorerDirectoryGroups,
+          icon: AppIcons.users,
+          isSelected: directoryType == DirectoryType.groups,
+          onTap: () => context.read<ExplorerBloc>().add(
+            const ExplorerDirectoryTypeChanged(DirectoryType.groups),
+          ),
         ),
       ],
     );

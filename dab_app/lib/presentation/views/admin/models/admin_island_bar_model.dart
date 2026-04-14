@@ -28,7 +28,9 @@ class AdminIslandBarModel with AdminIslandBarModelMappable {
   /// Layout: use [Expanded] tiles when width is at least this (matches explorer breakpoint).
   static const double expandBreakpointWidth = 900;
 
-  static const double scrollTileWidth = 118;
+  /// Matches Explorer island button width.
+  static const double scrollTileWidth = 70;
 
-  static const double refreshTileWidth = 100;
+  /// Matches Explorer island button width.
+  static const double refreshTileWidth = 70;
 }

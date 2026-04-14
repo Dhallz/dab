@@ -2,7 +2,6 @@ import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
-import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
 import 'package:dab_app/presentation/views/admin/admin_event.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
@@ -81,7 +80,6 @@ class AdminIslandBarContent extends StatelessWidget {
               : () => bloc.add(const AdminStarted()),
         );
 
-        final gap = SizedBox(width: AppSpacing.s);
         const divider = AdminIslandSectionDivider();
 
         return LayoutBuilder(
@@ -91,28 +89,59 @@ class AdminIslandBarContent extends StatelessWidget {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: providersTile),
-                  gap,
-                  Expanded(child: unresolvedTile),
-                  gap,
-                  Expanded(child: usersTile),
-                  gap,
-                  divider,
-                  gap,
-                  Expanded(child: okTile),
-                  gap,
-                  Expanded(child: failedTile),
-                  gap,
-                  Expanded(child: pendingTile),
-                  gap,
-                  SizedBox(
-                    width: AdminIslandBarModel.refreshTileWidth,
-                    child: refreshTile,
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: providersTile,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: unresolvedTile,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: usersTile,
+                    ),
+                  ),
+                  const _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: divider,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: okTile,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: failedTile,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.scrollTileWidth,
+                      child: pendingTile,
+                    ),
+                  ),
+                  _DesktopIslandSlot(
+                    child: SizedBox(
+                      width: AdminIslandBarModel.refreshTileWidth,
+                      child: refreshTile,
+                    ),
                   ),
                 ],
               );
             }
 
+            const gap = SizedBox(width: 10);
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
@@ -164,5 +193,16 @@ class AdminIslandBarContent extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _DesktopIslandSlot extends StatelessWidget {
+  final Widget child;
+
+  const _DesktopIslandSlot({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(child: Center(child: child));
   }
 }

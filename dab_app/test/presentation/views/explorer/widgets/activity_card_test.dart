@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dab_app/domain/entities/activity/activity.dart';
+import 'package:dab_app/presentation/core/localization/app_localizations.dart';
 import 'package:dab_app/presentation/features/app/app_cubit.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/explorer/widgets/activity_card/activity_card.dart';
@@ -32,12 +33,14 @@ void main() {
     authorName: 'Test Author',
     authorAvatarUrl: null,
     commentCount: 0,
-    provider: const GitHubCommitProvider(repo: 'dab', branch: 'main'),
+    provider: const GenericProvider(name: 'Test'),
     url: 'https://github.com',
   );
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: BlocProvider<AppCubit>.value(
           value: mockAppCubit,

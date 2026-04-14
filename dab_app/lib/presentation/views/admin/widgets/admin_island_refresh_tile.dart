@@ -1,7 +1,6 @@
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
-import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -35,33 +34,34 @@ class AdminIslandRefreshTile extends StatelessWidget {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
+              // Match Explorer calendar button compact padding.
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (loading)
                     const SizedBox(
-                      width: 28,
-                      height: 28,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
+                        strokeWidth: 2,
                         color: AppColors.primary,
                       ),
                     )
                   else
                     Icon(
                       AppIcons.refresh,
-                      size: AppLayout.iconLarge,
+                      size: 13,
                       color: AppColors.onSurfaceVariant,
                     ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     'REFRESH',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
-                      fontSize: 10,
+                      fontSize: 8,
                     ),
                   ),
                 ],

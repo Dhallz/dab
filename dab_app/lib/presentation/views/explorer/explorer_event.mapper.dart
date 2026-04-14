@@ -23,6 +23,9 @@ class ExplorerEventMapper extends ClassMapperBase<ExplorerEvent> {
       ExplorerUserToggledMapper.ensureInitialized();
       ExplorerGroupToggledMapper.ensureInitialized();
       ExplorerProviderToggledMapper.ensureInitialized();
+      ExplorerGroupRenamedMapper.ensureInitialized();
+      ExplorerGroupDeletedMapper.ensureInitialized();
+      ExplorerActivityCategoryToggledMapper.ensureInitialized();
       ExplorerRefreshRequestedMapper.ensureInitialized();
       ExplorerGroupSavedMapper.ensureInitialized();
       ExplorerStackToggledMapper.ensureInitialized();
@@ -1252,6 +1255,433 @@ class _ExplorerProviderToggledCopyWithImpl<$R, $Out>
   ExplorerProviderToggledCopyWith<$R2, ExplorerProviderToggled, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _ExplorerProviderToggledCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerGroupRenamedMapper extends ClassMapperBase<ExplorerGroupRenamed> {
+  ExplorerGroupRenamedMapper._();
+
+  static ExplorerGroupRenamedMapper? _instance;
+  static ExplorerGroupRenamedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExplorerGroupRenamedMapper._());
+      ExplorerEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerGroupRenamed';
+
+  static String _$groupId(ExplorerGroupRenamed v) => v.groupId;
+  static const Field<ExplorerGroupRenamed, String> _f$groupId = Field(
+    'groupId',
+    _$groupId,
+  );
+  static String _$name(ExplorerGroupRenamed v) => v.name;
+  static const Field<ExplorerGroupRenamed, String> _f$name = Field(
+    'name',
+    _$name,
+  );
+
+  @override
+  final MappableFields<ExplorerGroupRenamed> fields = const {
+    #groupId: _f$groupId,
+    #name: _f$name,
+  };
+
+  static ExplorerGroupRenamed _instantiate(DecodingData data) {
+    return ExplorerGroupRenamed(
+      groupId: data.dec(_f$groupId),
+      name: data.dec(_f$name),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerGroupRenamed fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerGroupRenamed>(map);
+  }
+
+  static ExplorerGroupRenamed fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerGroupRenamed>(json);
+  }
+}
+
+mixin ExplorerGroupRenamedMappable {
+  String toJson() {
+    return ExplorerGroupRenamedMapper.ensureInitialized()
+        .encodeJson<ExplorerGroupRenamed>(this as ExplorerGroupRenamed);
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerGroupRenamedMapper.ensureInitialized()
+        .encodeMap<ExplorerGroupRenamed>(this as ExplorerGroupRenamed);
+  }
+
+  ExplorerGroupRenamedCopyWith<
+    ExplorerGroupRenamed,
+    ExplorerGroupRenamed,
+    ExplorerGroupRenamed
+  >
+  get copyWith =>
+      _ExplorerGroupRenamedCopyWithImpl<
+        ExplorerGroupRenamed,
+        ExplorerGroupRenamed
+      >(this as ExplorerGroupRenamed, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerGroupRenamedMapper.ensureInitialized().stringifyValue(
+      this as ExplorerGroupRenamed,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerGroupRenamedMapper.ensureInitialized().equalsValue(
+      this as ExplorerGroupRenamed,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerGroupRenamedMapper.ensureInitialized().hashValue(
+      this as ExplorerGroupRenamed,
+    );
+  }
+}
+
+extension ExplorerGroupRenamedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerGroupRenamed, $Out> {
+  ExplorerGroupRenamedCopyWith<$R, ExplorerGroupRenamed, $Out>
+  get $asExplorerGroupRenamed => $base.as(
+    (v, t, t2) => _ExplorerGroupRenamedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerGroupRenamedCopyWith<
+  $R,
+  $In extends ExplorerGroupRenamed,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? groupId, String? name});
+  ExplorerGroupRenamedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerGroupRenamedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerGroupRenamed, $Out>
+    implements ExplorerGroupRenamedCopyWith<$R, ExplorerGroupRenamed, $Out> {
+  _ExplorerGroupRenamedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ExplorerGroupRenamed> $mapper =
+      ExplorerGroupRenamedMapper.ensureInitialized();
+  @override
+  $R call({String? groupId, String? name}) => $apply(
+    FieldCopyWithData({
+      if (groupId != null) #groupId: groupId,
+      if (name != null) #name: name,
+    }),
+  );
+  @override
+  ExplorerGroupRenamed $make(CopyWithData data) => ExplorerGroupRenamed(
+    groupId: data.get(#groupId, or: $value.groupId),
+    name: data.get(#name, or: $value.name),
+  );
+
+  @override
+  ExplorerGroupRenamedCopyWith<$R2, ExplorerGroupRenamed, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerGroupRenamedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerGroupDeletedMapper extends ClassMapperBase<ExplorerGroupDeleted> {
+  ExplorerGroupDeletedMapper._();
+
+  static ExplorerGroupDeletedMapper? _instance;
+  static ExplorerGroupDeletedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExplorerGroupDeletedMapper._());
+      ExplorerEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerGroupDeleted';
+
+  static String _$groupId(ExplorerGroupDeleted v) => v.groupId;
+  static const Field<ExplorerGroupDeleted, String> _f$groupId = Field(
+    'groupId',
+    _$groupId,
+  );
+
+  @override
+  final MappableFields<ExplorerGroupDeleted> fields = const {
+    #groupId: _f$groupId,
+  };
+
+  static ExplorerGroupDeleted _instantiate(DecodingData data) {
+    return ExplorerGroupDeleted(data.dec(_f$groupId));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerGroupDeleted fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerGroupDeleted>(map);
+  }
+
+  static ExplorerGroupDeleted fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerGroupDeleted>(json);
+  }
+}
+
+mixin ExplorerGroupDeletedMappable {
+  String toJson() {
+    return ExplorerGroupDeletedMapper.ensureInitialized()
+        .encodeJson<ExplorerGroupDeleted>(this as ExplorerGroupDeleted);
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerGroupDeletedMapper.ensureInitialized()
+        .encodeMap<ExplorerGroupDeleted>(this as ExplorerGroupDeleted);
+  }
+
+  ExplorerGroupDeletedCopyWith<
+    ExplorerGroupDeleted,
+    ExplorerGroupDeleted,
+    ExplorerGroupDeleted
+  >
+  get copyWith =>
+      _ExplorerGroupDeletedCopyWithImpl<
+        ExplorerGroupDeleted,
+        ExplorerGroupDeleted
+      >(this as ExplorerGroupDeleted, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerGroupDeletedMapper.ensureInitialized().stringifyValue(
+      this as ExplorerGroupDeleted,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerGroupDeletedMapper.ensureInitialized().equalsValue(
+      this as ExplorerGroupDeleted,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerGroupDeletedMapper.ensureInitialized().hashValue(
+      this as ExplorerGroupDeleted,
+    );
+  }
+}
+
+extension ExplorerGroupDeletedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerGroupDeleted, $Out> {
+  ExplorerGroupDeletedCopyWith<$R, ExplorerGroupDeleted, $Out>
+  get $asExplorerGroupDeleted => $base.as(
+    (v, t, t2) => _ExplorerGroupDeletedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerGroupDeletedCopyWith<
+  $R,
+  $In extends ExplorerGroupDeleted,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? groupId});
+  ExplorerGroupDeletedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerGroupDeletedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerGroupDeleted, $Out>
+    implements ExplorerGroupDeletedCopyWith<$R, ExplorerGroupDeleted, $Out> {
+  _ExplorerGroupDeletedCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ExplorerGroupDeleted> $mapper =
+      ExplorerGroupDeletedMapper.ensureInitialized();
+  @override
+  $R call({String? groupId}) =>
+      $apply(FieldCopyWithData({if (groupId != null) #groupId: groupId}));
+  @override
+  ExplorerGroupDeleted $make(CopyWithData data) =>
+      ExplorerGroupDeleted(data.get(#groupId, or: $value.groupId));
+
+  @override
+  ExplorerGroupDeletedCopyWith<$R2, ExplorerGroupDeleted, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerGroupDeletedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class ExplorerActivityCategoryToggledMapper
+    extends ClassMapperBase<ExplorerActivityCategoryToggled> {
+  ExplorerActivityCategoryToggledMapper._();
+
+  static ExplorerActivityCategoryToggledMapper? _instance;
+  static ExplorerActivityCategoryToggledMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = ExplorerActivityCategoryToggledMapper._(),
+      );
+      ExplorerEventMapper.ensureInitialized();
+      ActivityCategoryMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExplorerActivityCategoryToggled';
+
+  static ActivityCategory _$category(ExplorerActivityCategoryToggled v) =>
+      v.category;
+  static const Field<ExplorerActivityCategoryToggled, ActivityCategory>
+  _f$category = Field('category', _$category);
+
+  @override
+  final MappableFields<ExplorerActivityCategoryToggled> fields = const {
+    #category: _f$category,
+  };
+
+  static ExplorerActivityCategoryToggled _instantiate(DecodingData data) {
+    return ExplorerActivityCategoryToggled(data.dec(_f$category));
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExplorerActivityCategoryToggled fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExplorerActivityCategoryToggled>(map);
+  }
+
+  static ExplorerActivityCategoryToggled fromJson(String json) {
+    return ensureInitialized().decodeJson<ExplorerActivityCategoryToggled>(
+      json,
+    );
+  }
+}
+
+mixin ExplorerActivityCategoryToggledMappable {
+  String toJson() {
+    return ExplorerActivityCategoryToggledMapper.ensureInitialized()
+        .encodeJson<ExplorerActivityCategoryToggled>(
+          this as ExplorerActivityCategoryToggled,
+        );
+  }
+
+  Map<String, dynamic> toMap() {
+    return ExplorerActivityCategoryToggledMapper.ensureInitialized()
+        .encodeMap<ExplorerActivityCategoryToggled>(
+          this as ExplorerActivityCategoryToggled,
+        );
+  }
+
+  ExplorerActivityCategoryToggledCopyWith<
+    ExplorerActivityCategoryToggled,
+    ExplorerActivityCategoryToggled,
+    ExplorerActivityCategoryToggled
+  >
+  get copyWith =>
+      _ExplorerActivityCategoryToggledCopyWithImpl<
+        ExplorerActivityCategoryToggled,
+        ExplorerActivityCategoryToggled
+      >(this as ExplorerActivityCategoryToggled, $identity, $identity);
+  @override
+  String toString() {
+    return ExplorerActivityCategoryToggledMapper.ensureInitialized()
+        .stringifyValue(this as ExplorerActivityCategoryToggled);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ExplorerActivityCategoryToggledMapper.ensureInitialized()
+        .equalsValue(this as ExplorerActivityCategoryToggled, other);
+  }
+
+  @override
+  int get hashCode {
+    return ExplorerActivityCategoryToggledMapper.ensureInitialized().hashValue(
+      this as ExplorerActivityCategoryToggled,
+    );
+  }
+}
+
+extension ExplorerActivityCategoryToggledValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ExplorerActivityCategoryToggled, $Out> {
+  ExplorerActivityCategoryToggledCopyWith<
+    $R,
+    ExplorerActivityCategoryToggled,
+    $Out
+  >
+  get $asExplorerActivityCategoryToggled => $base.as(
+    (v, t, t2) =>
+        _ExplorerActivityCategoryToggledCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class ExplorerActivityCategoryToggledCopyWith<
+  $R,
+  $In extends ExplorerActivityCategoryToggled,
+  $Out
+>
+    implements ExplorerEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call({ActivityCategory? category});
+  ExplorerActivityCategoryToggledCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ExplorerActivityCategoryToggledCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ExplorerActivityCategoryToggled, $Out>
+    implements
+        ExplorerActivityCategoryToggledCopyWith<
+          $R,
+          ExplorerActivityCategoryToggled,
+          $Out
+        > {
+  _ExplorerActivityCategoryToggledCopyWithImpl(
+    super.value,
+    super.then,
+    super.then2,
+  );
+
+  @override
+  late final ClassMapperBase<ExplorerActivityCategoryToggled> $mapper =
+      ExplorerActivityCategoryToggledMapper.ensureInitialized();
+  @override
+  $R call({ActivityCategory? category}) =>
+      $apply(FieldCopyWithData({if (category != null) #category: category}));
+  @override
+  ExplorerActivityCategoryToggled $make(CopyWithData data) =>
+      ExplorerActivityCategoryToggled(data.get(#category, or: $value.category));
+
+  @override
+  ExplorerActivityCategoryToggledCopyWith<
+    $R2,
+    ExplorerActivityCategoryToggled,
+    $Out2
+  >
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _ExplorerActivityCategoryToggledCopyWithImpl<$R2, $Out2>(
+        $value,
+        $cast,
+        t,
+      );
 }
 
 class ExplorerRefreshRequestedMapper

@@ -20,6 +20,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       DirectoryTypeMapper.ensureInitialized();
       UserMapper.ensureInitialized();
       GroupMapper.ensureInitialized();
+      ActivityCategoryMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -106,6 +107,36 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     opt: true,
     def: const {},
   );
+  static Set<ActivityCategory> _$availableActivityCategories(ExplorerState v) =>
+      v.availableActivityCategories;
+  static const Field<ExplorerState, Set<ActivityCategory>>
+  _f$availableActivityCategories = Field(
+    'availableActivityCategories',
+    _$availableActivityCategories,
+    opt: true,
+    def: const {
+      ActivityCategory.commit,
+      ActivityCategory.revision,
+      ActivityCategory.task,
+      ActivityCategory.message,
+      ActivityCategory.generic,
+    },
+  );
+  static Set<ActivityCategory> _$selectedActivityCategories(ExplorerState v) =>
+      v.selectedActivityCategories;
+  static const Field<ExplorerState, Set<ActivityCategory>>
+  _f$selectedActivityCategories = Field(
+    'selectedActivityCategories',
+    _$selectedActivityCategories,
+    opt: true,
+    def: const {
+      ActivityCategory.commit,
+      ActivityCategory.revision,
+      ActivityCategory.task,
+      ActivityCategory.message,
+      ActivityCategory.generic,
+    },
+  );
   static List<String> _$availableProviders(ExplorerState v) =>
       v.availableProviders;
   static const Field<ExplorerState, List<String>> _f$availableProviders = Field(
@@ -137,6 +168,8 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     #groups: _f$groups,
     #selectedUserIds: _f$selectedUserIds,
     #selectedGroupIds: _f$selectedGroupIds,
+    #availableActivityCategories: _f$availableActivityCategories,
+    #selectedActivityCategories: _f$selectedActivityCategories,
     #availableProviders: _f$availableProviders,
     #selectedProviders: _f$selectedProviders,
   };
@@ -155,6 +188,8 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       groups: data.dec(_f$groups),
       selectedUserIds: data.dec(_f$selectedUserIds),
       selectedGroupIds: data.dec(_f$selectedGroupIds),
+      availableActivityCategories: data.dec(_f$availableActivityCategories),
+      selectedActivityCategories: data.dec(_f$selectedActivityCategories),
       availableProviders: data.dec(_f$availableProviders),
       selectedProviders: data.dec(_f$selectedProviders),
     );
@@ -241,6 +276,8 @@ abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
     List<Group>? groups,
     Set<String>? selectedUserIds,
     Set<String>? selectedGroupIds,
+    Set<ActivityCategory>? availableActivityCategories,
+    Set<ActivityCategory>? selectedActivityCategories,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
   });
@@ -297,6 +334,8 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     List<Group>? groups,
     Set<String>? selectedUserIds,
     Set<String>? selectedGroupIds,
+    Set<ActivityCategory>? availableActivityCategories,
+    Set<ActivityCategory>? selectedActivityCategories,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
   }) => $apply(
@@ -313,6 +352,10 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
       if (groups != null) #groups: groups,
       if (selectedUserIds != null) #selectedUserIds: selectedUserIds,
       if (selectedGroupIds != null) #selectedGroupIds: selectedGroupIds,
+      if (availableActivityCategories != null)
+        #availableActivityCategories: availableActivityCategories,
+      if (selectedActivityCategories != null)
+        #selectedActivityCategories: selectedActivityCategories,
       if (availableProviders != null) #availableProviders: availableProviders,
       if (selectedProviders != null) #selectedProviders: selectedProviders,
     }),
@@ -331,6 +374,14 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     groups: data.get(#groups, or: $value.groups),
     selectedUserIds: data.get(#selectedUserIds, or: $value.selectedUserIds),
     selectedGroupIds: data.get(#selectedGroupIds, or: $value.selectedGroupIds),
+    availableActivityCategories: data.get(
+      #availableActivityCategories,
+      or: $value.availableActivityCategories,
+    ),
+    selectedActivityCategories: data.get(
+      #selectedActivityCategories,
+      or: $value.selectedActivityCategories,
+    ),
     availableProviders: data.get(
       #availableProviders,
       or: $value.availableProviders,

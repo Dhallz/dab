@@ -1,5 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
+import '../../../../domain/entities/activity/activity_category.dart';
 import 'models/explorer_date_mode.dart';
 import 'models/directory_type.dart';
 
@@ -74,6 +75,28 @@ class ExplorerProviderToggled extends ExplorerEvent
     with ExplorerProviderToggledMappable {
   final String provider;
   const ExplorerProviderToggled(this.provider);
+}
+
+@MappableClass()
+class ExplorerGroupRenamed extends ExplorerEvent
+    with ExplorerGroupRenamedMappable {
+  final String groupId;
+  final String name;
+  const ExplorerGroupRenamed({required this.groupId, required this.name});
+}
+
+@MappableClass()
+class ExplorerGroupDeleted extends ExplorerEvent
+    with ExplorerGroupDeletedMappable {
+  final String groupId;
+  const ExplorerGroupDeleted(this.groupId);
+}
+
+@MappableClass()
+class ExplorerActivityCategoryToggled extends ExplorerEvent
+    with ExplorerActivityCategoryToggledMappable {
+  final ActivityCategory category;
+  const ExplorerActivityCategoryToggled(this.category);
 }
 
 @MappableClass()

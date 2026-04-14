@@ -7,7 +7,9 @@ import '../../../../domain/containers/activity_usecases.dart';
 import '../../../../domain/containers/metadata_usecases.dart';
 import '../../../../domain/containers/user_usecases.dart';
 import '../../../../domain/entities/activity/activity.dart';
+import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../../domain/entities/group/group.dart';
+import '../../../../domain/entities/provider/provider_config.dart';
 import '../../core/models/view_status.dart';
 import '../../core/abs_bloc.dart';
 import 'explorer_event.dart';
@@ -36,6 +38,9 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     on<ExplorerDirectoryTypeChanged>(_onDirectoryTypeChanged);
     on<ExplorerUserToggled>(_onUserToggled);
     on<ExplorerGroupToggled>(_onGroupToggled);
+    on<ExplorerGroupRenamed>(_onGroupRenamed);
+    on<ExplorerGroupDeleted>(_onGroupDeleted);
+    on<ExplorerActivityCategoryToggled>(_onActivityCategoryToggled);
     on<ExplorerProviderToggled>(_onProviderToggled);
     on<ExplorerRefreshRequested>(_onRefreshRequested);
     on<ExplorerGroupSaved>(_onGroupSaved);
@@ -67,13 +72,21 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       (groups) => newState = newState.copyWith(groups: groups),
     );
     providerResult.fold((failure) => null, (configs) {
-      final providerIds = configs
-          .map((c) => c.id as String)
-          .toList()
-          .cast<String>();
+      final activeConfigs = (configs as List)
+          .whereType<ProviderConfig>()
+          .where((c) => c.isActive)
+          .toList();
+      final providerIds = activeConfigs.map((c) => c.id).toList();
+      final availableCategories = activeConfigs
+          .expand((config) => _categoriesForProvider(config.id))
+          .toSet();
       newState = newState.copyWith(
         availableProviders: providerIds,
         selectedProviders: Set<String>.from(providerIds),
+        availableActivityCategories: availableCategories,
+        selectedActivityCategories: Set<ActivityCategory>.from(
+          availableCategories,
+        ),
       );
     });
 
@@ -168,9 +181,11 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         final lowerSelected = state.selectedProviders
             .map((e) => e.toLowerCase())
             .toSet();
+        final selectedCategories = state.selectedActivityCategories;
 
         final filteredActivities = activities.where((a) {
-          return lowerSelected.contains(a.provider.name.toLowerCase());
+          return lowerSelected.contains(a.provider.name.toLowerCase()) &&
+              selectedCategories.contains(a.provider.category);
         }).toList();
 
         final items = groupActivities(filteredActivities);
@@ -311,6 +326,20 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     return parts.isNotEmpty ? parts.last : key;
   }
 
+  Set<ActivityCategory> _categoriesForProvider(String providerId) {
+    final normalized = providerId.toLowerCase();
+    switch (normalized) {
+      case 'github':
+        return {ActivityCategory.commit};
+      case 'slack':
+        return {ActivityCategory.message};
+      case 'phorge':
+        return {ActivityCategory.task, ActivityCategory.revision};
+      default:
+        return {ActivityCategory.generic};
+    }
+  }
+
   void _onDirectoryTypeChanged(
     ExplorerDirectoryTypeChanged event,
     Emitter<ExplorerState> emit,
@@ -344,6 +373,82 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       updated.add(event.groupId);
     }
     emit(state.copyWith(selectedGroupIds: updated));
+    await _fetchActivities(emit);
+  }
+
+  Future<void> _onGroupRenamed(
+    ExplorerGroupRenamed event,
+    Emitter<ExplorerState> emit,
+  ) async {
+    final group = state.groups.cast<Group?>().firstWhere(
+      (g) => g?.id == event.groupId,
+      orElse: () => null,
+    );
+    if (group == null) return;
+
+    final result = await _userUseCases.saveGroup.execute(
+      group.copyWith(name: event.name),
+    );
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (savedGroup) {
+        final updatedGroups = state.groups
+            .map((g) => g.id == savedGroup.id ? savedGroup : g)
+            .toList();
+        emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
+      },
+    );
+  }
+
+  Future<void> _onGroupDeleted(
+    ExplorerGroupDeleted event,
+    Emitter<ExplorerState> emit,
+  ) async {
+    final result = await _userUseCases.deleteGroup.execute(event.groupId);
+    await result.fold(
+      (failure) async => emit(
+        state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (_) async {
+        final updatedGroups = state.groups
+            .where((g) => g.id != event.groupId)
+            .toList();
+        final updatedSelectedGroups = Set<String>.from(state.selectedGroupIds)
+          ..remove(event.groupId);
+        emit(
+          state.copyWith(
+            groups: updatedGroups,
+            selectedGroupIds: updatedSelectedGroups,
+            status: ViewStatus.success,
+          ),
+        );
+        await _fetchActivities(emit);
+      },
+    );
+  }
+
+  Future<void> _onActivityCategoryToggled(
+    ExplorerActivityCategoryToggled event,
+    Emitter<ExplorerState> emit,
+  ) async {
+    final selected = Set<ActivityCategory>.from(
+      state.selectedActivityCategories,
+    );
+    if (selected.contains(event.category)) {
+      selected.remove(event.category);
+    } else {
+      selected.add(event.category);
+    }
+
+    emit(state.copyWith(selectedActivityCategories: selected));
     await _fetchActivities(emit);
   }
 
@@ -399,7 +504,16 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         ),
       ),
       (savedGroup) async {
-        final updatedGroups = [...state.groups, savedGroup];
+        final hasExisting = state.groups.any(
+          (group) => group.id == savedGroup.id,
+        );
+        final updatedGroups = hasExisting
+            ? state.groups
+                  .map(
+                    (group) => group.id == savedGroup.id ? savedGroup : group,
+                  )
+                  .toList()
+            : [...state.groups, savedGroup];
         emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
       },
     );

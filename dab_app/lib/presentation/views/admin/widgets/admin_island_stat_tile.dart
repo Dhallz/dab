@@ -1,6 +1,5 @@
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
-import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -33,49 +32,38 @@ class AdminIslandStatTile extends StatelessWidget {
           border: Border.all(color: AppColors.outline.withValues(alpha: 0.45)),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.m,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          // Explorer calendar buttons use compact vertical-only padding.
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: AppLayout.iconLarge,
+                size: 13,
                 color: iconColor ?? AppColors.onSurfaceVariant,
               ),
-              const SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title.toUpperCase(),
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: AppTextStyles.titleSmall.copyWith(
-                        color: AppColors.onSurface,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title.toUpperCase(),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  fontSize: 8,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
