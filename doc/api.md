@@ -16,7 +16,7 @@ graph TD
     subgraph "Application Layer"
         A_Sync[UnifiedActivityFetcher]
         A_Reg[ConnectorRegistry]
-        A_Serv[ActivityService]
+        A_Serv[LogActivity + Fetch/Search UseCases]
     end
     subgraph "Domain Layer"
         D_Map[IActivityMapper]
@@ -68,9 +68,9 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`connectors/`):** Specialized clients for each provider. Handle raw I/O, auth, rate-limiting, protocol specifics (e.g., Conduit API for Phorge). Each source returns provider-specific DTOs — never domain entities.
+- **`IActivitySource` implementations (`sources/`):** Specialized provider fetchers returning provider-specific DTOs — never domain entities.
 
-- **`sources/`:** Lower-level data fetchers used by sources.
+- **`connectors/`:** Provider HTTP clients / protocol adapters (for example, Phorge Conduit client + endpoint wrappers).
 
 - **`repositories/`:** Concrete SQL implementations using Drift + PostgreSQL. Implement Table-Per-Type polymorphism via `leftOuterJoin`.
 
@@ -78,9 +78,9 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 - **`dtos/`:** Provider-specific Data Transfer Objects. Never leak outside Infrastructure.
 
-- **`security/`:** JWT signing/verification (via `dart_jsonwebtoken`), bcrypt password hashing. All secrets come from `AppConfig`.
+- **`security/`:** JWT signing/verification (via `dart_jsonwebtoken`), bcrypt password hashing. All secrets come from `Config`.
 
-- **`config/`:** `AppConfig` — loads env vars at startup. Single source for all configuration.
+- **`config/`:** `Config` — loads env vars at startup. Single source for all configuration.
 
 - **Relative URL Strategy:** Providers generate relative paths (e.g., `/T123`). The DAB app resolves full URLs using `baseUrl` from `ProviderConfig`.
 
@@ -94,9 +94,9 @@ Orchestrates use cases and coordinates Domain + Infrastructure without coupling 
 
 - **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. Aggregates results into a unified stream.
 
-- **`ActivityService`:** Coordinates persistence, cache invalidation, WebSocket fan-out, and Vegas token increment after each ingestion cycle.
-
-- **`AuthService`:** Handles auth workflows (login, token validation, refresh, logout).
+- **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `PresenceService`.
+- **Activity query use cases:** `GetRecentActivities`, `SearchActivities`, and `FetchRemoteActivities`.
+- **Auth workflows:** Implemented through `AuthUseCases` (`RegisterUser`, `AuthenticateUser`, `RefreshUserToken`, etc.).
 
 ---
 
@@ -109,18 +109,18 @@ Thin entry points only. No business logic.
 | Controller | Path | Key Responsibilities |
 |---|---|---|
 | `ActivityController` | `GET /activities` | Paginated activity feed, user filtering |
-| `AdminController` | `/admin/*` | Bootstrap lock, user management, provider config CRUD, identity list (`GET /identities`), **unresolved count (`GET /identities/summary`)**, link/resolve |
-| `AuthController` | `/auth/*` | Login, logout, refresh token |
+| `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
+| `AuthController` | `/auth/*` | Register, login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
-| `MetadataController` | `/metadata/*` | Provider configs list, connector metadata |
+| `MetadataController` | `/metadata/*`, `/admin/configs*` | Public bootstrap status/configs, provider metadata list, admin provider config save/test |
 | `UserController` | `/users/*` | User profile, identity linking |
 
 #### Middleware
 
 - **Vegas Middleware:** Compares client `X-Sync-Token` against Redis version. Returns `304 Not Modified` on fresh token.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
-- **Domain Lockdown:** Rejects registrations outside `DAB_ALLOWED_DOMAIN`.
+- **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
 
@@ -143,9 +143,9 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 
 | Category | Key Registrations |
 |---|---|
-| Application | `ConnectorRegistry`, `UnifiedActivityFetcher` |
-| Services | `ActivityService`, `AuthService`, `PresenceService`, `LoggingService` |
-| Repositories | `SqlActivityRepository`, `SqlAuthRepository` |
+| Application | `ConnectorRegistry`, `UnifiedActivityFetcher`, activity/auth use-case containers |
+| Services | `PresenceService`, `LoggingService`, `IdentityDiscoveryService` |
+| Repositories | `ActivityRepository`, `AuthRepository`, `UserRepository`, `ProviderConfigRepository` |
 
 **Rule:** `singleton` for stateful services, `factory` for stateless use cases.
 
@@ -158,6 +158,10 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Phorge | ✅ Active | Conduit REST API |
 | GitHub | ✅ Active (Commits v1) | REST |
 | Slack | ✅ Active (Messages v1) | Slack Web API |
+| Jira | 🧪 Scaffolded | REST |
+| Linear | 🧪 Scaffolded | REST |
+| Teams | 🧪 Scaffolded | REST |
+| Discord | 🧪 Scaffolded | REST |
 | GitLab | 🔜 Planned | REST |
 | Bitbucket | 🔜 Planned | REST |
 
@@ -180,7 +184,7 @@ and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
 |---|---|
 | Analyze | `dart analyze` |
 | Run tests | `dart test` |
-| Start server | `dart run bin/server.dart` |
-| Start via Docker | `docker-compose up -d` |
+| Start server | `dart run bin/dab_api.dart` |
+| Start via Docker | `cd dab_api && docker-compose up -d` |
 | Regenerate code | `dart run build_runner build --delete-conflicting-outputs` |
 | Health check | `curl http://localhost:8080/health` |

@@ -1,7 +1,7 @@
 # DAB Infrastructure — Technical Blueprint
 
 > **Linear source:** [Dab Infrastructure](https://linear.app/dev-activity-board/document/dab-infrastructure-339365576c10) · Last synced: 2026-04-08  
-> **Stack:** Dart + Relic · PostgreSQL + Drift · Redis · WebSocket · Docker Compose
+> **Stack:** Dart + Relic · PostgreSQL + Drift · Redis (Vegas) · WebSocket · Docker Compose
 
 ---
 
@@ -51,8 +51,8 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 ### Schema Overview
 
 ```
-activities                  ← Base table: id, userId, title, content, provider, createdAt, updatedAt
-  └── activity_phorge       ← Phorge metadata: phid, tags, revisionId, transactionType
+activities                  ← Base table: id, userId, providerName, title, content, author, createdAt
+  └── activity_phorge       ← Phorge metadata: taskPhid, revisionId, tags
   └── activity_github_commit← GitHub commit metadata: repo, branch
   └── activity_slack_message← Slack metadata: workspaceId, channelId, threadTs, messageTs
 ```
@@ -96,7 +96,7 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 | Step | Mechanism |
 |---|---|
 | **Global clock** | `INCR dab:version` — atomic increment on every write |
-| **Sync tokens** | Every API response embeds the current `syncToken` in `meta` |
+| **Sync tokens** | Vegas-enabled data responses embed the current `syncToken` in `meta` |
 | **Client request** | Client sends `X-Sync-Token` header with its last known token |
 | **Vegas Middleware** | Compares token; returns `304 Not Modified` if client is current |
 
@@ -105,16 +105,18 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 | Redis Key | Type | Use Case |
 |---|---|---|
 | `activities:global` | LIST | Rolling dashboard feed (last 500 items) |
-| `activities:user:{id}` | LIST | Personal activity feed |
-| `activities:date:{iso}` | ZSET | Temporal sharding for date-range queries |
-| `insights:stats:{iso}` | HASH | Real-time counts per provider category |
-| `insights:rankings:{iso}:total` | ZSET | Global team leaderboard by contribution |
+| `activities:user:{id}` | LIST | Personal activity feed (last 100 items) |
+| `activities:date:{yyyy-mm-dd}` | ZSET | Temporal sharding for date-range queries |
+| `insights:stats:{yyyy-mm-dd}` | HASH | Real-time counts per provider category |
+| `insights:rankings:{yyyy-mm-dd}:{category}` | ZSET | Category leaderboard by contribution |
+| `insights:rankings:{yyyy-mm-dd}:total` | ZSET | Global team leaderboard by contribution |
+| `dab:stream:events` | STREAM | Raw provider event ingestion stream |
 
 ---
 
 ## WebSocket Real-Time Layer
 
-- **Endpoint:** `ws://host:8081/ws`
+- **Endpoint:** `ws://host:8080/ws` (same API service port by default)
 - **Protocol:** Clients upgrade HTTP → WebSocket on connect.
 - **Payloads:** `ACTIVITY_RECEIVED` events pushed on every new ingestion.
 - **Graceful Degradation:** If WebSocket is unavailable, clients fall back to polling with Vegas sync tokens.
@@ -125,19 +127,19 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 
 ```bash
 # Start all services (API + PostgreSQL + Redis)
-docker-compose up -d
+cd dab_api && docker-compose up -d
 
 # Production deployment
-docker-compose -f docker-compose.prod.yml up -d
+cd dab_api && docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Service Map
 
 | Service | Port | Role |
 |---|---|---|
-| `dab_api` | `8080` | REST API |
-| `dab_api` | `8081` | WebSocket |
-| `postgres` | `5432` | Primary database |
+| `api` (`relic`) | `8080` | REST API + WebSocket (`/ws`) |
+| `swagger` | `8081` | Swagger UI (serves `doc/openapi.yaml`) |
+| `db` (`postgres`) | `5433` (host) / `5432` (container) | Primary database |
 | `redis` | `6379` | Cache + versional clock |
 
 ---
@@ -154,20 +156,20 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Required Environment Variables (`.env`)
 
 ```
-DAB_DB_HOST=
-DAB_DB_PORT=5432
-DAB_DB_NAME=dab
-DAB_DB_USER=
-DAB_DB_PASSWORD=
-DAB_REDIS_URL=
-DAB_JWT_SECRET=
-DAB_JWT_EXPIRY=
+DB_HOST=
+DB_PORT=5432
+DB_NAME=
+DB_USER=
+DB_PASS=
+REDIS_HOST=
+REDIS_PORT=6379
+JWT_SECRET=
+JWT_EXPIRY_MINUTES=60
 DAB_ALLOWED_DOMAIN=
-DAB_API_PORT=8080
-DAB_WS_PORT=8081
+PORT=8080
+DAB_INITIAL_ADMIN_EMAIL=
 ```
-
-> See `.env.example` for the full reference.
+Production compose currently configures DB + API; if Redis is not in compose, provide an external Redis and set `REDIS_HOST` / `REDIS_PORT`.
 
 ---
 
@@ -175,9 +177,9 @@ DAB_WS_PORT=8081
 
 | Check | Endpoint | Expected Response |
 |---|---|---|
-| API Pulse | `GET /health` | `{"status": "ok", "version": "1.0.0"}` |
-| DB Health | `GET /health/db` | `{"connected": true, "latency_ms": <10}` |
-| WSS Stream | `ws://host:8081/ws` | Successful upgrade + `ACTIVITY_RECEIVED` payloads |
+| API Pulse | `GET /health` | `{"status":"healthy","timestamp":"..."}` |
+| DB Health | `GET /health/db` | `{"status":"healthy|degraded","database":"connected|disconnected","timestamp":"..."}` |
+| WS Stream | `ws://host:8080/ws` | Successful upgrade + `ACTIVITY_RECEIVED` payloads |
 
 ---
 

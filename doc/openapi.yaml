@@ -63,8 +63,8 @@ paths:
                 password:
                   type: string
       responses:
-        '201':
-          description: Created
+        '200':
+          description: Created session (access + refresh token payload)
   /auth/refresh:
     post:
       summary: rotate the user's authentication tokens.
@@ -113,13 +113,26 @@ paths:
                   type: string
       responses:
         '200':
-          description: OK with JWT token
+          description: OK with session payload
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  userId:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  role:
                     type: string
   /activities:
     get:
@@ -190,7 +203,7 @@ paths:
         | `id` | `activities` | `id` | Primary Key |
         | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
         | `title` | `activities` | `title` | Search keyword matches here |
-        | `date` | `activities` | `date` | Actual activity occurrence date |
+        | `createdAt` | `activities` | `created_at` | Activity occurrence timestamp |
       security:
         - bearerAuth: []
       parameters:
@@ -262,15 +275,14 @@ paths:
           description: API is healthy
   /health/db:
     get:
-      summary: Infrastructure (DB + Redis) health check.
+      summary: Infrastructure (DB) health check.
       description: |
-        Verifies connectivity to the PostgreSQL database and Redis cache.
+        Verifies connectivity to the PostgreSQL database.
         
         ### Database Mapping
         | Target | Action | Role |
         | :--- | :--- | :--- |
-        | PostgreSQL | Ping | Connectivity Test |
-        | Redis | Ping | Connectivity Test |
+        | PostgreSQL | Ping (`SELECT 1`) | Connectivity Test |
       responses:
         '200':
           description: Databases connected
@@ -328,8 +340,6 @@ paths:
     get:
       summary: Get public provider configurations.
       description: Returns base URLs and icon URLs for active providers, used for deep-linking in the UI.
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: Successful data envelope containing ProviderConfig
@@ -356,6 +366,34 @@ paths:
                       dataType:
                         type: string
                         enum: ['list:provider_config']
+                      isSystemConfigured:
+                        type: boolean
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/status:
+    get:
+      summary: Get bootstrap/system readiness state.
+      description: Returns whether the platform is configured (admin + active provider config).
+      responses:
+        '200':
+          description: Successful system status envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      isSystemConfigured:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['system_status']
                       timestamp:
                         type: string
                         format: date-time
@@ -658,6 +696,7 @@ paths:
         | `userId` | `user_identities` | `user_id` | Link target |
         | `providerId` | `user_identities` | `provider_id` | Source system |
         | `externalId` | `user_identities` | `external_id` | Remote ID |
+        | `externalUsername` | `user_identities` | `external_username` | Optional display linkage |
       security:
         - bearerAuth: []
       requestBody:
@@ -667,9 +706,43 @@ paths:
             schema:
               type: object
               required: [userId, providerId, externalId]
+              properties:
+                userId:
+                  type: string
+                providerId:
+                  type: string
+                externalId:
+                  type: string
+                externalUsername:
+                  type: string
+                  nullable: true
       responses:
         '200':
           description: Identity linked
+  /admin/identities/resolve:
+    post:
+      summary: Resolve identity status.
+      description: Administrative endpoint to update identity resolution status (`pending`, `linked`, `failed`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, providerId, status]
+              properties:
+                userId:
+                  type: string
+                providerId:
+                  type: string
+                status:
+                  type: string
+                  enum: [pending, linked, failed]
+      responses:
+        '200':
+          description: Identity resolved
   /groups:
     get:
       summary: List all activity groups.
@@ -697,13 +770,13 @@ paths:
         
         **Request Body**:
         - `name`: Human-readable name (e.g., 'Daily Sync', 'Production Alerts').
-        - `memberIds`: List of user UUIDs belonging to this group.
+        - `members`: List of user objects belonging to this group.
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
         | :--- | :--- | :--- | :--- |
         | `name` | `groups` | `name` | Group record |
-        | `memberIds` | `group_members` | `user_id` | Linked via join table |
+        | `members` | `group_members` | `user_id` | Linked via join table |
       security:
         - bearerAuth: []
       requestBody:
@@ -714,12 +787,16 @@ paths:
               type: object
               required: [name]
               properties:
+                id:
+                  type: string
                 name:
                   type: string
-                memberIds:
+                type:
+                  type: string
+                members:
                   type: array
                   items:
-                    type: string
+                    $ref: '#/components/schemas/User'
       responses:
         '200':
           description: Group saved

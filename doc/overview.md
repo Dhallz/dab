@@ -28,12 +28,12 @@ DAB is a centralized engine that aggregates every signal a developer needs into 
 
 DAB is **not a SaaS** — it is private-first infrastructure that you own and audit.
 
-- **Deployment:** Fully self-hosted via a single `docker-compose up -d` command. No hidden cloud dependencies.
-- **Data Security:** All sensitive provider tokens and secrets are AES-256 encrypted at rest. Data never leaves your network.
+- **Deployment:** Fully self-hosted via Docker Compose (`cd dab_api && docker-compose up -d`). No hidden cloud dependencies.
+- **Data Security:** Provider credentials and operational data stay inside your infrastructure. TLS/encryption-at-rest policies are deployment-controlled.
 - **Hybrid Ingestion Logic:**
   - **Push (Webhooks):** Real-time triggers for modern stacks (GitHub, Slack).
   - **Pull (Adaptive Polling):** Configurable polling for legacy or firewalled tools (Phorge, on-prem Bitbucket).
-- **The Live Bus:** The API and clients stay synced via a WebSocket (WSS) layer for sub-second event propagation.
+- **The Live Bus:** The API and clients stay synced via a WebSocket layer (dev: `ws://`, production typically `wss://`) for sub-second event propagation.
 
 ---
 
@@ -76,7 +76,7 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | App State | flutter_bloc (BLoC / Cubit) |
 | App Navigation | go_router |
 | App Local Storage | ObjectBox |
-| App Networking | Dio |
+| App Networking | Dio + WebSocket (`web_socket_channel`) |
 | Serialization | dart_mappable (both packages) |
 | Error Handling | fpdart `Either<Failure, T>` |
 | Deployment | Docker Compose |
@@ -88,10 +88,11 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | Provider | Status | Notes |
 |---|---|---|
 | Phorge | ✅ Active | Maniphest Tasks + Differential Revisions |
-| GitHub | 🔜 Planned | Issues, PRs, Commits |
+| GitHub | ✅ Active (Commits v1) | Issues/PR timeline still planned |
 | GitLab | 🔜 Planned | Via generic `IActivitySource` |
 | Bitbucket | 🔜 Planned | Via generic `IActivitySource` |
-| Linear | 🔜 Planned | Issues + Project events |
-| Slack | 🔜 Planned | Webhooks + Huddle transcription |
-| Jira | 🔜 Planned | Ticket updates |
-| Microsoft Teams | 🔜 Planned | Meetings + transcription |
+| Slack | ✅ Active (Messages v1) | Identity-scoped Slack message ingestion |
+| Jira | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
+| Linear | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
+| Microsoft Teams | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
+| Discord | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |

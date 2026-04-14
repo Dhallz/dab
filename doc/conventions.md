@@ -66,11 +66,13 @@
 | Concern | Package |
 |---|---|
 | HTTP framework | `relic` |
-| Database ORM | `drift` + `drift_postgres` |
+| Database ORM | `drift` + `drift_postgres` (+ `postgres` driver) |
 | DI | `get_it` — resolved via `sl<T>()` |
 | JWT | `dart_jsonwebtoken` |
 | Password hashing | `bcrypt` |
 | Cache | `redis` |
+| Config loading | `dotenv` |
+| External HTTP | `http` |
 
 ### App (`dab_app/`)
 
@@ -78,10 +80,12 @@
 |---|---|
 | State management | `flutter_bloc` |
 | Navigation | `go_router` |
-| Networking | `dio` + `cached_network_image` |
+| Networking | `dio` + `web_socket_channel` + `cached_network_image` |
 | Local persistence | `objectbox` + `objectbox_flutter_libs` |
 | Secure token storage | `flutter_secure_storage` |
 | Formatting | `timeago` + `intl` |
+| Charts / visual analytics | `fl_chart` |
+| Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
 | Testing | `mocktail` + `bloc_test` |
 
 ---
@@ -127,7 +131,7 @@
   ├── layouts/              ← device-specific layouts (mobile, desktop)
   │   ├── [name]_view_mobile.dart
   │   └── [name]_view_desktop.dart
-  ├── [name]_cubit.dart     ← extends AbsCubit or AbsBloc
+  ├── [name]_cubit.dart     ← OR: [name]_bloc.dart + [name]_event.dart
   ├── [name]_state.dart     ← uses ViewStatus, always isolated file
   ├── models/               ← feature-local enums and data classes
   └── widgets/              ← extracted UI components, strictly one per file
@@ -157,7 +161,7 @@
 ### Localization
 
 - `.arb` files in `lib/presentation/core/localization/l10n/`.
-- Naming: `app_en.arb`, `app_fr.arb`, etc.
+- Current baseline locale file: `app_en.arb` (additional locales are additive as introduced).
 - Auto-generated via `flutter gen-l10n` (configured in `l10n.yaml`).
 - **Standard Pattern:** Use the `L10n` extension in `lib/presentation/core/localization/l10n_extension.dart` to access keys via `context.l10n.keyName`.
 
@@ -176,7 +180,7 @@
 ```dart
 // Pattern: parse → call one use case → map result
 router.get('/activities', (request) async {
-  final result = await sl<ActivityService>().fetchActivities(...);
+  final result = await sl<ActivityUseCases>().getRecentActivities.execute();
   return result.fold(
     (failure) => Response.internalServerError(...),
     (data) => Response.ok(jsonEncode({ 'data': data, 'meta': {...} })),
@@ -191,7 +195,7 @@ router.get('/activities', (request) async {
 
 - Column naming: `snake_case`.
 - Table naming: plural `snake_case` (e.g., `provider_configs`, `user_identities`).
-- Every table must have `created_at` and `updated_at` using Drift's `dateTime()`.
+- Table timestamps follow each table contract; `created_at` is standard on activity rows, and additional timestamp columns are added only when needed by behavior.
 - Drift migrations are required for any schema change — never alter the DB manually.
 
 ---
@@ -201,6 +205,7 @@ router.get('/activities', (request) async {
 | Rule | Detail |
 |---|---|
 | Test file mirrors source | `lib/src/application/usecases/auth/login.dart` → `test/application/usecases/auth/login_test.dart` |
+| App mirror example | `lib/presentation/features/auth/auth_cubit.dart` → `test/presentation/features/auth/auth_cubit_test.dart` |
 | Fixtures | Use `TestData` (Object Mother) factory — never inline entity construction |
 | Mocking | `mocktail` at interface / repository boundaries only |
 | Cubit testing | `bloc_test`'s `blocTest<MyCubit, MyState>(...)` — never call `emit()` manually |

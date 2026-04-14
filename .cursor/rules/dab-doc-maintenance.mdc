@@ -1,11 +1,6 @@
 ---
-description: Keep doc/ in sync with codebase changes
-globs:
-  - "**/*.dart"
-  - "**/pubspec.yaml"
-  - "**/*.g.dart"
-  - doc/openapi.yaml
-alwaysApply: false
+description: 
+alwaysApply: true
 ---
 
 # Doc Maintenance Rule

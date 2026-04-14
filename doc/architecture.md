@@ -27,7 +27,7 @@ Violating these import rules is an architectural failure — refactor the abstra
 ```
 dab/
 ├── dab_api/    ← Dart server. Ingestion, storage, REST + WebSocket API
-└── dab_app/    ← Flutter client. Real-time dashboard, activity explorer, settings
+└── dab_app/    ← Flutter client. Auth + shell navigation, dashboard, explorer, insights, admin, settings
 ```
 
 ### API Package Layer Map
@@ -41,17 +41,17 @@ dab_api/lib/src/
 │   └── services/        ← Domain-level service contracts
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
-│   ├── services/        ← ActivityService, AuthService, PresenceService, ConnectorRegistry, IdentityDiscoveryService
+│   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, PresenceService, IdentityDiscoveryService
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
-│   ├── connectors/      ← IActivitySource implementations (one per provider)
-│   ├── sources/         ← Raw data fetchers
+│   ├── connectors/      ← Provider HTTP clients / DTO adapters (e.g., Phorge connector)
+│   ├── sources/         ← IActivitySource implementations and raw fetchers
 │   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
 │   ├── database/        ← Drift schema, DAOs, migrations
 │   ├── dtos/            ← Provider-specific Data Transfer Objects
 │   ├── http/            ← HTTP client helpers
 │   ├── security/        ← JWT, bcrypt
-│   ├── config/          ← AppConfig, env loading
+│   ├── config/          ← Config, env loading
 │   ├── logging/         ← Structured logging
 │   └── notifications/   ← WebSocket push logic
 └── presentation/
@@ -76,7 +76,7 @@ dab_app/lib/
 ├── presentation/
 │   ├── features/        ← Cross-cutting state (auth/, app/)
 │   ├── views/           ← Screen modules — see View Hierarchy below
-│   └── core/            ← AppRouter (go_router), shared widgets, theming
+│   └── core/            ← navigation/ (AppRoute + AppRouter), shared widgets, theming
 └── services/
     └── service_locator.dart  ← All DI registrations
 ```
@@ -100,7 +100,7 @@ dab_app/lib/
 
 ### App Entities (`dab_app/lib/domain/entities/`)
 
-Mirrors the API entities but uses ObjectBox annotations where local persistence is needed.
+Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`). ObjectBox records for cache/storage remain in the Infrastructure layer.
 
 ---
 
@@ -128,6 +128,8 @@ External Provider (Phorge, GitHub, Slack, …)
         ├─► Redis (Vegas version clock + materialized feeds)
         │
         └─► WebSocket push ──► DAB App
+        │
+        └─► (on user sync) IdentityDiscoveryService reconciliation
                                    │
                                    ▼
                           VegasInterceptor (Dio)
@@ -159,7 +161,7 @@ IActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  IActivi
 ### Vegas Sync Pattern
 
 Every data mutation increments an atomic Redis counter (`INCR dab:version`).  
-Clients embed the last seen `syncToken` in the `X-Sync-Token` request header.  
+Clients embed the last seen `syncToken` in the `X-Sync-Token` request header on Vegas-enabled routes.  
 The **Vegas Middleware** returns `304 Not Modified` when the token is current, bypassing the DB entirely.
 
 ```
@@ -175,7 +177,7 @@ Client request  ──►  Vegas Middleware
 
 ```
 activities               ← shared fields (id, userId, title, content, createdAt)
-activity_phorge          ← Phorge-specific metadata (phid, tags, revisionId)
+activity_phorge          ← Phorge-specific metadata (taskPhid, revisionId, tags)
 activity_github_commit   ← GitHub commit metadata (repo, branch)
 activity_slack_message   ← Slack message metadata (workspace/channel/thread/message ids)
 ```
@@ -191,7 +193,7 @@ tenants).
 
 ### Envelope Response Pattern
 
-All API responses are wrapped:
+Envelope responses are used on the data endpoints that expose structured `data/meta` payloads:
 
 ```json
 {
@@ -203,7 +205,7 @@ All API responses are wrapped:
 }
 ```
 
-The client `VegasInterceptor` reads `meta.syncToken` on every response and persists it locally.
+When `meta.syncToken` is present, the client `VegasInterceptor` persists it locally.
 
 ---
 
@@ -212,11 +214,11 @@ The client `VegasInterceptor` reads `meta.syncToken` on every response and persi
 | Controller | Base Path | Responsibility |
 |---|---|---|
 | `ActivityController` | `/activities` | Fetch, search, paginate activities |
-| `AdminController` | `/admin` | User management, provider config, bootstrap lock |
-| `AuthController` | `/auth` | Login, logout, refresh token |
+| `AdminController` | `/admin` | User management + identity review/link/resolve |
+| `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
-| `MetadataController` | `/metadata` | Provider configs, registry metadata |
+| `MetadataController` | `/metadata` | Provider configs, status, registry metadata, admin config test/save |
 | `UserController` | `/users` | User profile, identity linking |
 
 ---

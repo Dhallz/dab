@@ -49,8 +49,10 @@ graph TD
 
 Pure Dart. Zero Flutter or third-party framework imports.
 
-- **Entities:** Business objects — no "Entity" suffix. Current entities:
+- **Entities:** Business objects — no "Entity" suffix. Current entities include:
   - `Activity` — normalized activity event
+  - `ActivityCategory` — canonical activity classification enum
+  - `ActivitySearchQuery` — shared activity filter contract across local/remote search
   - `ActivityProvider` — sealed hierarchy for provider-specific payloads
   - `User` — DAB user with role, group, and provider identity links
   - `UserIdentity` — maps DAB user to external provider account
@@ -58,6 +60,8 @@ Pure Dart. Zero Flutter or third-party framework imports.
   - `ProviderConfig` — external tool settings (`baseUrl`, `iconUrl`, `configJson`)
   - `Presence` — real-time online/offline status
   - `AuthResponse` — JWT + refresh token pair
+  - `AppSettings` — persisted client settings (`themeMode`, `syncToken`)
+  - `SprintContext` — optional sprint metadata attached to provider payloads
 
 - **Entities use `dart_mappable`** for serialization, equality, and `copyWith`.
 
@@ -85,7 +89,7 @@ Implements Domain contracts. Handles protocols, APIs, and databases.
 
 - **Models:** DB/API-specific DTOs. **Every model must** have an `extension On[Model] on [Model]` with a `toDomain` getter, co-located in the same file.
 
-- **Error Mapping:** Converts `DioException` → `AppFailure`. Located in `core/extensions/dio_extensions.dart`.
+- **Error Mapping:** Converts `DioException` → `AppFailure`. Located in `lib/infrastructure/core/extensions/dio_extensions.dart`.
 
 ---
 
@@ -103,7 +107,7 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 ├── layouts/                   ← device-specific layouts (mobile, desktop)
 │   ├── [name]_view_mobile.dart
 │   └── [name]_view_desktop.dart
-├── [name]_cubit.dart          ← extends AbsCubit (or AbsBloc)
+├── [name]_cubit.dart          ← OR: [name]_bloc.dart + [name]_event.dart
 ├── [name]_state.dart          ← immutable, isolated state file using ViewStatus
 ├── models/                    ← feature-local enums and data classes
 └── widgets/                   ← private local widgets (strictly one per file)
@@ -116,8 +120,9 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 
 | View | Role | State Pattern |
 |---|---|---|
-| **Login** | Auth gate | Form bound to `AuthCubit` |
-| **Dashboard** | Real-time activity feed | Streamed list via WebSocket + `AppBlocBuilder` |
+| **Splash** | App bootstrap + redirect | Router-driven auth gate handoff |
+| **Login** | Auth gate | Form events handled by `AuthBloc`; session persisted in `AuthCubit` |
+| **Dashboard** | Real-time activity feed | Streamed list via activity watch stream + `AppBlocConsumer` |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
@@ -152,7 +157,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 
 ## Navigation (go_router)
 
-All routes are declared in `AppRoute` and wired in `AppRouter`.
+All routes are declared in `presentation/core/navigation/app_route.dart` and wired in `presentation/core/navigation/app_router.dart`.
 
 - Use named routes — never push raw path strings.
 - Auth guards (`redirect` logic) live in the router configuration, not in widgets.
@@ -198,7 +203,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 |---|---|---|
 | **Colors** | [app_colors.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_colors.dart) | M3 roles + Electric Indigo (`#6366F1`) & Glass Tokens |
 | **Spacing** | [app_spacing.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_spacing.dart) | Base 4px grid (tiny=4, small=8, medium=16, large=24) |
-| **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **Roboto Mono** for Monospace |
+| **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **JetBrains Mono** for monospaced text |
 | **Layout** | [app_layout.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_layout.dart) | Viewport constraints, standard border radii (12-24px) |
 | **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application (`flutty_heroicons` for non-provider UI, `simple_icons` for provider brands) |
 
