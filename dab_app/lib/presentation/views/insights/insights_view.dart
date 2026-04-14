@@ -1,38 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../services/service_locator.dart';
+import '../../features/auth/auth_cubit.dart';
+import 'insights_bloc.dart';
+import 'insights_event.dart';
+import 'layouts/insights_view_desktop.dart';
+import 'layouts/insights_view_mobile.dart';
 
 class InsightsView extends StatelessWidget {
   const InsightsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.insights_rounded,
-            size: 64,
-            color: const Color(0xFF94A3B8).withOpacity(0.3),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Statistics & Insights',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFFF8FAFC),
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Coming soon: Detailed activity analytics and charts.',
-            style: TextStyle(
-              fontSize: 14,
-              color: const Color(0xFF94A3B8).withOpacity(0.8),
-            ),
-          ),
-        ],
+    final connectedUserId = context.read<AuthCubit>().state.user?.id;
+    return BlocProvider(
+      create: (context) => InsightsBloc(
+        sl.activityUseCases,
+        sl.userUseCases,
+        sl.metadataUseCases,
+      )..add(InsightsStarted(connectedUserId: connectedUserId)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth > 900) {
+            return const InsightsViewDesktop();
+          }
+          return const InsightsViewMobile();
+        },
       ),
     );
   }

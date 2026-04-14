@@ -303,6 +303,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Activity'**
   String get activityKindActivity;
+
+  /// No description provided for @insightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insightsTitle;
+
+  /// No description provided for @insightsFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get insightsFiltersTitle;
+
+  /// No description provided for @insightsUsersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get insightsUsersSectionTitle;
+
+  /// No description provided for @insightsProvidersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get insightsProvidersSectionTitle;
+
+  /// No description provided for @insightsActivityTypesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity types'**
+  String get insightsActivityTypesSectionTitle;
+
+  /// No description provided for @insightsPresetToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get insightsPresetToday;
+
+  /// No description provided for @insightsPresetLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7d'**
+  String get insightsPresetLast7Days;
+
+  /// No description provided for @insightsPresetLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30d'**
+  String get insightsPresetLast30Days;
+
+  /// No description provided for @insightsPresetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get insightsPresetCustom;
+
+  /// No description provided for @insightsKpiTotalActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Total activities'**
+  String get insightsKpiTotalActivities;
+
+  /// No description provided for @insightsKpiActiveUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Active users'**
+  String get insightsKpiActiveUsers;
+
+  /// No description provided for @insightsKpiActiveProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Active providers'**
+  String get insightsKpiActiveProviders;
+
+  /// No description provided for @insightsKpiTopActivityType.
+  ///
+  /// In en, this message translates to:
+  /// **'Top activity type'**
+  String get insightsKpiTopActivityType;
+
+  /// No description provided for @insightsTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity trend'**
+  String get insightsTrendTitle;
+
+  /// No description provided for @insightsBreakdownProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'By provider'**
+  String get insightsBreakdownProviders;
+
+  /// No description provided for @insightsBreakdownActivityTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'By activity type'**
+  String get insightsBreakdownActivityTypes;
+
+  /// No description provided for @insightsBreakdownTopUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Top users'**
+  String get insightsBreakdownTopUsers;
+
+  /// No description provided for @insightsDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get insightsDetailsTitle;
+
+  /// No description provided for @insightsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get insightsNoData;
+
+  /// No description provided for @insightsNoDataForFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No data for selected filters.'**
+  String get insightsNoDataForFilters;
+
+  /// No description provided for @insightsErrorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load insights.'**
+  String get insightsErrorLoading;
 }
 
 class _AppLocalizationsDelegate

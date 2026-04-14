@@ -111,7 +111,7 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 
 #### Application Views
 
-Home branches (**Dashboard**, **Explorer**, **Admin**) use the shared **Island Bar** shell (`IslandBar` in `lib/presentation/core/widgets/island_bar.dart`) with identical padding and height where applicable. **Dashboard** and **Admin** pass branch **content** widgets (`DashboardIslandBarContent`, `AdminIslandBarContent`). **Explorer** uses `ExplorerIslandBarContent`, which wraps `IslandBar` around the date strip only and keeps the calendar title row (`ExplorerCalendarHeader`) below the bar, matching the legacy layout. On desktop, Explorer now pairs the feed with a foldable left sidebar split into **Directory**, **Activities**, and **Providers** checklist sections. **Admin** metrics are projected from `AdminState` via `OnAdminState.islandBarModel` (co-located in `admin_state.dart`) into `AdminIslandBarModel` (`views/admin/models/`), with one widget per file under `views/admin/widgets/` for each island tile type.
+Home branches (**Dashboard**, **Explorer**, **Insights**, **Admin**) use the shared **Island Bar** shell (`IslandBar` in `lib/presentation/core/widgets/island_bar.dart`) with identical padding and height where applicable. **Dashboard** and **Admin** pass branch **content** widgets (`DashboardIslandBarContent`, `AdminIslandBarContent`). **Explorer** uses `ExplorerIslandBarContent`, which wraps `IslandBar` around the date strip only and keeps the calendar title row (`ExplorerCalendarHeader`) below the bar, matching the legacy layout. On desktop, Explorer now pairs the feed with a foldable left sidebar split into **Directory**, **Activities**, and **Providers** checklist sections. **Insights** mirrors this shell pattern and adds filterable analytics cards/charts (date/date-range, users, providers, activity types) rendered with DAB glassmorphism tokens. **Admin** metrics are projected from `AdminState` via `OnAdminState.islandBarModel` (co-located in `admin_state.dart`) into `AdminIslandBarModel` (`views/admin/models/`), with one widget per file under `views/admin/widgets/` for each island tile type.
 The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity Board` readable as secondary text on supported widths.
 
 | View | Role | State Pattern |
@@ -119,7 +119,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 | **Login** | Auth gate | Form bound to `AuthCubit` |
 | **Dashboard** | Real-time activity feed | Streamed list via WebSocket + `AppBlocBuilder` |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
-| **Statistics** | Behavior analytics | Area/Donut charts built from ObjectBox data |
+| **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
 | **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
