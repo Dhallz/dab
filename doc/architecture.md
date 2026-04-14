@@ -213,12 +213,12 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities` | Fetch, search, paginate activities |
+| `ActivityController` | `/activities`, `/ws` | Fetch historical feed, fetch Redis live feed, search activities, and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
-| `MetadataController` | `/metadata` | Provider configs, status, registry metadata, admin config test/save |
+| `MetadataController` | `/metadata` | Provider configs, status, provider capability metadata, admin config test/save |
 | `UserController` | `/users` | User profile, identity linking |
 
 ---

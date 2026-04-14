@@ -47,5 +47,18 @@ void main() {
       verify(() => mockSocket.trySendText(any())).called(1);
       verify(() => mockSocket2.trySendText(any())).called(1);
     });
+
+    test('broadcastToUser should target only matching sessions', () {
+      final mockSocket2 = MockRelicWebSocket();
+      when(() => mockSocket2.trySendText(any())).thenReturn(true);
+
+      presenceService.addSession(mockSocket, 'user1');
+      presenceService.addSession(mockSocket2, 'user2');
+
+      presenceService.broadcastToUser('user2', 'alert', {'msg': 'hello'});
+
+      verifyNever(() => mockSocket.trySendText(any()));
+      verify(() => mockSocket2.trySendText(any())).called(1);
+    });
   });
 }

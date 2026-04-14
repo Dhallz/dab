@@ -112,11 +112,15 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 | `insights:rankings:{yyyy-mm-dd}:total` | ZSET | Global team leaderboard by contribution |
 | `dab:stream:events` | STREAM | Raw provider event ingestion stream |
 
+The dedicated Dashboard live endpoint reads only from the Redis live keys
+(`activities:global` and `activities:user:{id}`) and does not query Postgres.
+
 ---
 
 ## WebSocket Real-Time Layer
 
 - **Endpoint:** `ws://host:8080/ws` (same API service port by default)
+- **Auth:** JWT-authenticated upgrade; request identity is used for scoped delivery
 - **Protocol:** Clients upgrade HTTP → WebSocket on connect.
 - **Payloads:** `ACTIVITY_RECEIVED` events pushed on every new ingestion.
 - **Graceful Degradation:** If WebSocket is unavailable, clients fall back to polling with Vegas sync tokens.

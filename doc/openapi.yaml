@@ -253,10 +253,80 @@ paths:
                         type: string
         '400':
           description: Bad request (missing or invalid date parameter)
+  /activities/live:
+    get:
+      summary: Get live dashboard activities from Redis.
+      description: |
+        Retrieves Redis-backed live activities for Dashboard realtime hydration.
+        This endpoint is dedicated to live data and does not query Postgres directly.
+
+        **Query Parameters**:
+        - `limit` (optional, 1..100): Max number of events to read. Default: 50.
+        - `scope` (optional): `user` (default) or `global`.
+
+        ### Live Data Mapping
+        | API Field | Redis Key | Role |
+        | :--- | :--- | :--- |
+        | `data[]` | `activities:user:{id}` | User-scoped rolling feed |
+        | `data[]` | `activities:global` | Global rolling feed |
+        | `meta.syncToken` | `dab:version` | Vegas version clock |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [user, global]
+            default: user
+      responses:
+        '200':
+          description: Successful Redis live-data envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:activity_live']
+                      source:
+                        type: string
+                        enum: ['redis']
+                      scope:
+                        type: string
+                        enum: [user, global]
+                      limit:
+                        type: integer
+                      syncToken:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid query parameter
   /ws:
     get:
       summary: WebSocket Connection for real-time broadcasts
       description: This endpoint upgrades the connection to WebSocket.
+      security:
+        - bearerAuth: []
       responses:
         '101':
           description: Switching Protocols
@@ -333,6 +403,50 @@ paths:
                       dataType:
                         type: string
                         enum: ['list:provider_metadata']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/capabilities:
+    get:
+      summary: Get provider live ingestion capabilities.
+      description: |
+        Returns provider live-ingestion capabilities used by Dashboard strategy.
+        This allows clients to prefer webhook/websocket when available and use
+        API polling fallback otherwise.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing provider capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        providerId:
+                          type: string
+                        ingestionMode:
+                          type: string
+                          enum: [webhook, polling, hybrid]
+                        supportsWebhook:
+                          type: boolean
+                        supportsWebSocket:
+                          type: boolean
+                        supportsPolling:
+                          type: boolean
+                        isActive:
+                          type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_capability']
                       timestamp:
                         type: string
                         format: date-time

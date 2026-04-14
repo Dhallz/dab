@@ -7,9 +7,11 @@ import 'package:dab_api/src/application/containers/metadata_usecases.dart';
 import 'package:dab_api/src/application/containers/user_usecases.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
+import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
@@ -30,6 +32,7 @@ import 'package:dab_api/src/application/usecases/group/get_groups.dart';
 import 'package:dab_api/src/application/usecases/group/save_group.dart';
 import 'package:dab_api/src/application/usecases/health/check_database_health.dart';
 import 'package:dab_api/src/application/usecases/metadata/get_provider_configs.dart';
+import 'package:dab_api/src/application/usecases/metadata/get_provider_capabilities.dart';
 import 'package:dab_api/src/application/usecases/metadata/get_provider_metadata.dart';
 import 'package:dab_api/src/application/usecases/metadata/get_system_status.dart';
 import 'package:dab_api/src/application/usecases/metadata/save_provider_config.dart';
@@ -197,6 +200,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PresenceService>(PresenceService());
   sl.registerSingleton<LoggingService>(LoggingService());
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
+  sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
 
   final fetcher = UnifiedActivityFetcher(
     registry,
@@ -277,6 +281,9 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GetRecentActivities>(
     GetRecentActivities(sl<AbsIActivityRepository>()),
   );
+  sl.registerSingleton<GetLiveActivities>(
+    GetLiveActivities(sl<RedisService>()),
+  );
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
   );
@@ -315,6 +322,12 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<GetProviderConfigs>(
     GetProviderConfigs(sl<AbsIProviderConfigRepository>()),
+  );
+  sl.registerSingleton<GetProviderCapabilities>(
+    GetProviderCapabilities(
+      sl<AbsIProviderConfigRepository>(),
+      sl<ProviderCapabilityCatalog>(),
+    ),
   );
   sl.registerSingleton<SaveProviderConfig>(
     SaveProviderConfig(sl<AbsIProviderConfigRepository>()),
@@ -357,6 +370,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<ActivityUseCases>(
     ActivityUseCases(
       fetchRemoteActivities: sl<FetchRemoteActivities>(),
+      getLiveActivities: sl<GetLiveActivities>(),
       getRecentActivities: sl<GetRecentActivities>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),
@@ -383,6 +397,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<MetadataUseCases>(
     MetadataUseCases(
       getProviderConfigs: sl<GetProviderConfigs>(),
+      getProviderCapabilities: sl<GetProviderCapabilities>(),
       getProviderMetadata: sl<GetProviderMetadata>(),
       getSystemStatus: sl<GetSystemStatus>(),
       saveProviderConfig: sl<SaveProviderConfig>(),

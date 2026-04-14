@@ -1,0 +1,28 @@
+meta {
+  name: Get Provider Capabilities
+  type: http
+  seq: 4
+}
+
+docs {
+  Returns provider live-ingestion capabilities used by Dashboard strategy.
+  This enables realtime-first decisions:
+  - webhook/websocket when provider supports it
+  - API polling fallback when live ingestion is unavailable
+}
+
+get {
+  url: {{baseUrl}}/metadata/capabilities
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns capabilities array", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

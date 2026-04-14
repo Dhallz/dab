@@ -42,13 +42,17 @@ Future<void> main() async {
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
     ..get('/activities/search', ActivityController().searchActivities)
+    ..get('/activities/live', ActivityController().getLiveActivities)
     ..get('/activities', ActivityController().getActivities)
+    ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
     // Auth only on /metadata/providers — Relic's use(prefix) wraps ALL deeper
     // routes under that prefix, so use('/metadata', …) also wrapped /configs and /status.
     ..use('/metadata/providers', AuthMiddleware().call)
+    ..use('/metadata/capabilities', AuthMiddleware().call)
     ..get('/metadata/providers', MetadataController().getProviders)
+    ..get('/metadata/capabilities', MetadataController().getCapabilities)
     ..use('/users', AuthMiddleware().call)
     ..get('/users', UserController().getUsers)
     ..get('/users/:id', UserController().getUser)
@@ -57,7 +61,6 @@ Future<void> main() async {
     ..get('/groups', GroupController().getGroups)
     ..post('/groups', GroupController().saveGroup)
     ..delete('/groups/:id', GroupController().deleteGroup)
-    
     // --- Admin Console (DAB-40) ---
     // All routes under /admin require both authentication and admin role.
     ..use('/admin', AuthMiddleware().call)
@@ -75,7 +78,6 @@ Future<void> main() async {
     ..get('/admin/users', AdminController().getUsers)
     ..post('/admin/users/role', AdminController().postUpdateUserRole)
     // ------------------------------
-
     ..get('/hello/:name/age/:age', helloHandler)
     ..fallback = respondWith(
       (_) => Response.notFound(

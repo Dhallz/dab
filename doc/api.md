@@ -108,18 +108,19 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `GET /activities` | Paginated activity feed, user filtering |
+| `ActivityController` | `/activities*`, `/ws` | Historical feed (`/activities`), Redis live feed (`/activities/live`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`) |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
 | `AuthController` | `/auth/*` | Register, login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
-| `MetadataController` | `/metadata/*`, `/admin/configs*` | Public bootstrap status/configs, provider metadata list, admin provider config save/test |
+| `MetadataController` | `/metadata/*`, `/admin/configs*` | Public bootstrap status/configs, provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test |
 | `UserController` | `/users/*` | User profile, identity linking |
 
 #### Middleware
 
 - **Vegas Middleware:** Compares client `X-Sync-Token` against Redis version. Returns `304 Not Modified` on fresh token.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
+- **WebSocket auth guard:** `/ws` is protected by JWT middleware and uses request-context identity for scoped delivery.
 - **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
@@ -175,6 +176,10 @@ slack`). Connector execution and attribution require linked Slack user IDs in
 `user_identities.external_id`; there is no email fallback during mapping. The
 admin test-connection endpoint validates Slack credentials using `auth.test`,
 and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
+
+Provider live-ingestion capabilities are exposed via `GET /metadata/capabilities`
+to support dashboard strategy selection (webhook/websocket first, polling
+fallback).
 
 ---
 

@@ -81,6 +81,31 @@ class RedisService {
     ]);
   }
 
+  /// Returns live activities from Redis materialized feeds.
+  ///
+  /// This method serves the dedicated live endpoint and intentionally reads only
+  /// from Redis live keys. It does not query Postgres.
+  Future<List<Activity>> getLiveActivities({
+    required String userId,
+    int limit = 50,
+    bool global = false,
+  }) async {
+    final normalizedLimit = limit.clamp(1, 100);
+    final key = global ? 'activities:global' : 'activities:user:$userId';
+    final raw = await _cmd.send_object(['LRANGE', key, 0, normalizedLimit - 1]);
+
+    if (raw is! List) return const [];
+
+    final decoded = <Activity>[];
+    for (final entry in raw) {
+      final activity = _decodeActivity(entry);
+      if (activity != null) {
+        decoded.add(activity);
+      }
+    }
+    return decoded;
+  }
+
   /// --- REDIS STREAMS ---
 
   /// Adds a raw event to the ingestion stream.
@@ -107,6 +132,27 @@ class RedisService {
         'timestamp': DateTime.now().toIso8601String(),
       },
     });
+  }
+
+  Activity? _decodeActivity(Object? rawEntry) {
+    try {
+      final decoded = jsonDecode(rawEntry.toString());
+      if (decoded is! Map<String, dynamic>) return null;
+
+      // Current fan-out payload stores an envelope with data[0] = Activity map.
+      final envelopeData = decoded['data'];
+      if (envelopeData is List && envelopeData.isNotEmpty) {
+        final first = envelopeData.first;
+        if (first is Map<String, dynamic>) {
+          return ActivityMapper.fromMap(first);
+        }
+      }
+
+      // Defensive fallback: accept direct activity payload if present.
+      return ActivityMapper.fromMap(decoded);
+    } catch (_) {
+      return null;
+    }
   }
 
   String _getDateKey(DateTime dt) =>

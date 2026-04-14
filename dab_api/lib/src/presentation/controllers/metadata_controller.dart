@@ -47,6 +47,34 @@ class MetadataController {
     }
   }
 
+  Future<Response> getCapabilities(Request request) async {
+    try {
+      final capabilities = await _metadata.getProviderCapabilities.execute();
+      return Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': capabilities,
+            'meta': {
+              'dataType': 'list:provider_capability',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Failed to fetch provider capabilities',
+            'details': e.toString(),
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
   Future<Response> getConfigs(Request request) async {
     try {
       final configs = await _metadata.getProviderConfigs.execute();

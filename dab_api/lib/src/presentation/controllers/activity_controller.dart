@@ -11,8 +11,8 @@ import '../middlewares/auth_middleware.dart';
 /// ROLE: Entry point for the Activity Feed API.
 /// CONTRACT: Standard Relic Controller mapping HTTP/WebSocket requests to Application UseCases.
 /// CONSTRAINTS: Must not contain business logic. Delegates to [ActivityUseCases].
-/// 
-/// This controller handles historical activity retrieval, complex multi-source 
+///
+/// This controller handles historical activity retrieval, complex multi-source
 /// searches, and real-time WebSocket session management.
 class ActivityController {
   final ActivityUseCases _activity = sl<ActivityUseCases>();
@@ -39,6 +39,61 @@ class ActivityController {
           },
         }),
         mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  Future<Response> getLiveActivities(Request request) async {
+    final userId = userIdProperty.get(request);
+    final redis = sl<RedisService>();
+
+    final limitParam = request.url.queryParameters['limit'];
+    final scopeParam = request.url.queryParameters['scope']?.toLowerCase();
+    final global = scopeParam == 'global';
+
+    final parsedLimit = int.tryParse(limitParam ?? '');
+    if (limitParam != null && parsedLimit == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid limit. Must be an integer.'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final limit = (parsedLimit ?? 50).clamp(1, 100);
+    final result = await _activity.getLiveActivities.execute(
+      userId: userId,
+      limit: limit,
+      global: global,
+    );
+    final syncToken = await redis.getCurrentVersion();
+
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Failed to fetch live activities',
+            'details': failure.message,
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (activities) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': activities.map((activity) => activity.toMap()).toList(),
+            'meta': {
+              'dataType': 'list:activity_live',
+              'source': 'redis',
+              'scope': global ? 'global' : 'user',
+              'limit': limit,
+              'syncToken': syncToken.toString(),
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
       ),
     );
   }

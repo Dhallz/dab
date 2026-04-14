@@ -20,7 +20,7 @@ class LogActivity {
   LogActivity(this._repo, this._authRepo, this._presence, this._redis);
 
   /// Executes the activity logging process.
-  /// 
+  ///
   /// 1. Data Hydration: Resolves author name from [AbsIAuthRepository].
   /// 2. Entity Creation: Constructs a unified [Activity] object.
   /// 3. Persistence: Saves the activity to the primary database.
@@ -67,7 +67,7 @@ class LogActivity {
 
   /// Internal helper to push activity updates to the Presence WebSocket layer.
   void _broadcastActivity(Activity activity) {
-    _presence.broadcast('ACTIVITY_RECEIVED', {
+    _presence.broadcastToUser(activity.userId, 'ACTIVITY_RECEIVED', {
       'id': activity.id,
       'userId': activity.userId,
       'type': activity.type,
