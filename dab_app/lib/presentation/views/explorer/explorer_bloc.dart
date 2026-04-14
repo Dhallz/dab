@@ -8,6 +8,7 @@ import '../../../../domain/containers/metadata_usecases.dart';
 import '../../../../domain/containers/user_usecases.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
+import '../../../../domain/entities/activity/activity_search_query.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../core/models/view_status.dart';
@@ -164,10 +165,15 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     final (startDate, endDate) = _resolveDateWindow();
 
     final result = await _activityUseCases.searchActivities.execute(
-      startDate: startDate,
-      endDate: endDate,
-      users: usersToSearch,
-      authoredOnly: true,
+      ActivitySearchQuery(
+        startDate: startDate,
+        endDate: endDate,
+        users: usersToSearch,
+        providers: state.selectedProviders,
+        coverageProviders: Set<String>.from(state.availableProviders),
+        categories: state.selectedActivityCategories,
+        authoredOnly: true,
+      ),
     );
 
     result.fold(
@@ -178,17 +184,7 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
         ),
       ),
       (activities) {
-        final lowerSelected = state.selectedProviders
-            .map((e) => e.toLowerCase())
-            .toSet();
-        final selectedCategories = state.selectedActivityCategories;
-
-        final filteredActivities = activities.where((a) {
-          return lowerSelected.contains(a.provider.name.toLowerCase()) &&
-              selectedCategories.contains(a.provider.category);
-        }).toList();
-
-        final items = groupActivities(filteredActivities);
+        final items = groupActivities(activities);
 
         emit(state.copyWith(status: ViewStatus.success, items: items));
       },

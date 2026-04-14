@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures.dart';
 import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/entities/activity/activity_search_query.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 
 class SearchActivities {
@@ -9,17 +10,9 @@ class SearchActivities {
 
   SearchActivities(this.repository);
 
-  Future<Either<AppFailure, List<Activity>>> execute({
-    DateTime? startDate,
-    DateTime? endDate,
-    List<String>? users,
-    bool authoredOnly = true,
-  }) {
-    return repository.searchActivities(
-      startDate: startDate,
-      endDate: endDate,
-      users: users,
-      authoredOnly: authoredOnly,
-    );
+  Future<Either<AppFailure, List<Activity>>> execute(
+    ActivitySearchQuery query,
+  ) {
+    return repository.searchActivities(query);
   }
 }

@@ -16,6 +16,9 @@ import 'package:objectbox_flutter_libs/objectbox_flutter_libs.dart';
 
 import 'infrastructure/core/local/records/app_settings_record.dart';
 import 'infrastructure/core/local/records/auth_credential_record.dart';
+import 'infrastructure/core/local/records/explorer_activity_record.dart';
+import 'infrastructure/core/local/records/explorer_cache_meta_record.dart';
+import 'infrastructure/core/local/records/explorer_coverage_record.dart';
 import 'infrastructure/core/local/records/user_record.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
@@ -118,6 +121,175 @@ final _entities = <obx_int.ModelEntity>[
     relations: <obx_int.ModelRelation>[],
     backlinks: <obx_int.ModelBacklink>[],
   ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(4, 2114438073850940408),
+    name: 'ExplorerActivityRecord',
+    lastPropertyId: const obx_int.IdUid(11, 8582881736033917369),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 889290399146030220),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 1389225622195937843),
+        name: 'activityRemoteId',
+        type: 9,
+        flags: 34848,
+        indexId: const obx_int.IdUid(2, 4253150040991624744),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 6545617921150313747),
+        name: 'dayKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(3, 7152636154332435698),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 3513061140187161184),
+        name: 'createdAtEpochMs',
+        type: 6,
+        flags: 8,
+        indexId: const obx_int.IdUid(4, 3735156122044755209),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 2191233798302343189),
+        name: 'userId',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(5, 3904247878649000190),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 2051884171915924359),
+        name: 'providerKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(6, 1758829703636283519),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 4847315401470611901),
+        name: 'categoryKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(7, 4332867278008176871),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(8, 1443115378943154930),
+        name: 'searchText',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(9, 4434428181328378938),
+        name: 'payloadJson',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(10, 3782013091048683405),
+        name: 'providerDisplayNameLower',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(13, 3769193168313235368),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(11, 8582881736033917369),
+        name: 'activityKindKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(14, 7756117237748901060),
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(5, 8030822507214583482),
+    name: 'ExplorerCoverageRecord',
+    lastPropertyId: const obx_int.IdUid(7, 72224913254877193),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 6202451819738535208),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 1580124125297852834),
+        name: 'coverageKey',
+        type: 9,
+        flags: 34848,
+        indexId: const obx_int.IdUid(8, 4275661977240097798),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 4121434524686579043),
+        name: 'dayKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(9, 5767892458705886714),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 2574896938146037739),
+        name: 'userId',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(10, 5589067974296492969),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 7256136590027625698),
+        name: 'providerKey',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(11, 5607866096785985598),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 3218094029066440736),
+        name: 'lastFetchedAtEpochMs',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 72224913254877193),
+        name: 'dayEpochMs',
+        type: 6,
+        flags: 8,
+        indexId: const obx_int.IdUid(12, 5904639541964778527),
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(6, 2001301504864418651),
+    name: 'ExplorerCacheMetaRecord',
+    lastPropertyId: const obx_int.IdUid(3, 8184979429939381123),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 861876112826827882),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 217035540434772102),
+        name: 'cacheSchemaVersion',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 8184979429939381123),
+        name: 'lastMigrationAtEpochMs',
+        type: 6,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
 ];
 
 /// Shortcut for [obx.Store.new] that passes [getObjectBoxModel] and for Flutter
@@ -158,8 +330,8 @@ Future<obx.Store> openStore({
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
     entities: _entities,
-    lastEntityId: const obx_int.IdUid(3, 2073501343485982893),
-    lastIndexId: const obx_int.IdUid(1, 6218771340300999518),
+    lastEntityId: const obx_int.IdUid(6, 2001301504864418651),
+    lastIndexId: const obx_int.IdUid(14, 7756117237748901060),
     lastRelationId: const obx_int.IdUid(0, 0),
     lastSequenceId: const obx_int.IdUid(0, 0),
     retiredEntityUids: const [],
@@ -307,6 +479,198 @@ obx_int.ModelDefinition getObjectBoxModel() {
         return object;
       },
     ),
+    ExplorerActivityRecord: obx_int.EntityDefinition<ExplorerActivityRecord>(
+      model: _entities[3],
+      toOneRelations: (ExplorerActivityRecord object) => [],
+      toManyRelations: (ExplorerActivityRecord object) => {},
+      getId: (ExplorerActivityRecord object) => object.id,
+      setId: (ExplorerActivityRecord object, int id) {
+        object.id = id;
+      },
+      objectToFB: (ExplorerActivityRecord object, fb.Builder fbb) {
+        final activityRemoteIdOffset = fbb.writeString(object.activityRemoteId);
+        final dayKeyOffset = fbb.writeString(object.dayKey);
+        final userIdOffset = fbb.writeString(object.userId);
+        final providerKeyOffset = fbb.writeString(object.providerKey);
+        final categoryKeyOffset = fbb.writeString(object.categoryKey);
+        final searchTextOffset = fbb.writeString(object.searchText);
+        final payloadJsonOffset = fbb.writeString(object.payloadJson);
+        final providerDisplayNameLowerOffset = fbb.writeString(
+          object.providerDisplayNameLower,
+        );
+        final activityKindKeyOffset = fbb.writeString(object.activityKindKey);
+        fbb.startTable(12);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, activityRemoteIdOffset);
+        fbb.addOffset(2, dayKeyOffset);
+        fbb.addInt64(3, object.createdAtEpochMs);
+        fbb.addOffset(4, userIdOffset);
+        fbb.addOffset(5, providerKeyOffset);
+        fbb.addOffset(6, categoryKeyOffset);
+        fbb.addOffset(7, searchTextOffset);
+        fbb.addOffset(8, payloadJsonOffset);
+        fbb.addOffset(9, providerDisplayNameLowerOffset);
+        fbb.addOffset(10, activityKindKeyOffset);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final activityRemoteIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final dayKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 8, '');
+        final createdAtEpochMsParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          10,
+          0,
+        );
+        final userIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
+        final providerKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 14, '');
+        final providerDisplayNameLowerParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 22, '');
+        final categoryKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 16, '');
+        final activityKindKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 24, '');
+        final searchTextParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 18, '');
+        final payloadJsonParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 20, '');
+        final object = ExplorerActivityRecord(
+          activityRemoteId: activityRemoteIdParam,
+          dayKey: dayKeyParam,
+          createdAtEpochMs: createdAtEpochMsParam,
+          userId: userIdParam,
+          providerKey: providerKeyParam,
+          providerDisplayNameLower: providerDisplayNameLowerParam,
+          categoryKey: categoryKeyParam,
+          activityKindKey: activityKindKeyParam,
+          searchText: searchTextParam,
+          payloadJson: payloadJsonParam,
+        )..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+        return object;
+      },
+    ),
+    ExplorerCoverageRecord: obx_int.EntityDefinition<ExplorerCoverageRecord>(
+      model: _entities[4],
+      toOneRelations: (ExplorerCoverageRecord object) => [],
+      toManyRelations: (ExplorerCoverageRecord object) => {},
+      getId: (ExplorerCoverageRecord object) => object.id,
+      setId: (ExplorerCoverageRecord object, int id) {
+        object.id = id;
+      },
+      objectToFB: (ExplorerCoverageRecord object, fb.Builder fbb) {
+        final coverageKeyOffset = fbb.writeString(object.coverageKey);
+        final dayKeyOffset = fbb.writeString(object.dayKey);
+        final userIdOffset = fbb.writeString(object.userId);
+        final providerKeyOffset = fbb.writeString(object.providerKey);
+        fbb.startTable(8);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, coverageKeyOffset);
+        fbb.addOffset(2, dayKeyOffset);
+        fbb.addOffset(3, userIdOffset);
+        fbb.addOffset(4, providerKeyOffset);
+        fbb.addInt64(5, object.lastFetchedAtEpochMs);
+        fbb.addInt64(6, object.dayEpochMs);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final coverageKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final dayKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 8, '');
+        final dayEpochMsParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          16,
+          0,
+        );
+        final userIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 10, '');
+        final providerKeyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
+        final lastFetchedAtEpochMsParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          14,
+          0,
+        );
+        final object = ExplorerCoverageRecord(
+          coverageKey: coverageKeyParam,
+          dayKey: dayKeyParam,
+          dayEpochMs: dayEpochMsParam,
+          userId: userIdParam,
+          providerKey: providerKeyParam,
+          lastFetchedAtEpochMs: lastFetchedAtEpochMsParam,
+        )..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+        return object;
+      },
+    ),
+    ExplorerCacheMetaRecord: obx_int.EntityDefinition<ExplorerCacheMetaRecord>(
+      model: _entities[5],
+      toOneRelations: (ExplorerCacheMetaRecord object) => [],
+      toManyRelations: (ExplorerCacheMetaRecord object) => {},
+      getId: (ExplorerCacheMetaRecord object) => object.id,
+      setId: (ExplorerCacheMetaRecord object, int id) {
+        object.id = id;
+      },
+      objectToFB: (ExplorerCacheMetaRecord object, fb.Builder fbb) {
+        fbb.startTable(4);
+        fbb.addInt64(0, object.id);
+        fbb.addInt64(1, object.cacheSchemaVersion);
+        fbb.addInt64(2, object.lastMigrationAtEpochMs);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final cacheSchemaVersionParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          6,
+          0,
+        );
+        final lastMigrationAtEpochMsParam = const fb.Int64Reader()
+            .vTableGetNullable(buffer, rootOffset, 8);
+        final object = ExplorerCacheMetaRecord(
+          id: idParam,
+          cacheSchemaVersion: cacheSchemaVersionParam,
+          lastMigrationAtEpochMs: lastMigrationAtEpochMsParam,
+        );
+
+        return object;
+      },
+    ),
   };
 
   return obx_int.ModelDefinition(model, bindings);
@@ -374,4 +738,125 @@ class AuthCredentialRecord_ {
   static final password = obx.QueryStringProperty<AuthCredentialRecord>(
     _entities[2].properties[2],
   );
+}
+
+/// [ExplorerActivityRecord] entity fields to define ObjectBox queries.
+class ExplorerActivityRecord_ {
+  /// See [ExplorerActivityRecord.id].
+  static final id = obx.QueryIntegerProperty<ExplorerActivityRecord>(
+    _entities[3].properties[0],
+  );
+
+  /// See [ExplorerActivityRecord.activityRemoteId].
+  static final activityRemoteId =
+      obx.QueryStringProperty<ExplorerActivityRecord>(
+        _entities[3].properties[1],
+      );
+
+  /// See [ExplorerActivityRecord.dayKey].
+  static final dayKey = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[2],
+  );
+
+  /// See [ExplorerActivityRecord.createdAtEpochMs].
+  static final createdAtEpochMs =
+      obx.QueryIntegerProperty<ExplorerActivityRecord>(
+        _entities[3].properties[3],
+      );
+
+  /// See [ExplorerActivityRecord.userId].
+  static final userId = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[4],
+  );
+
+  /// See [ExplorerActivityRecord.providerKey].
+  static final providerKey = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[5],
+  );
+
+  /// See [ExplorerActivityRecord.categoryKey].
+  static final categoryKey = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[6],
+  );
+
+  /// See [ExplorerActivityRecord.searchText].
+  static final searchText = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[7],
+  );
+
+  /// See [ExplorerActivityRecord.payloadJson].
+  static final payloadJson = obx.QueryStringProperty<ExplorerActivityRecord>(
+    _entities[3].properties[8],
+  );
+
+  /// See [ExplorerActivityRecord.providerDisplayNameLower].
+  static final providerDisplayNameLower =
+      obx.QueryStringProperty<ExplorerActivityRecord>(
+        _entities[3].properties[9],
+      );
+
+  /// See [ExplorerActivityRecord.activityKindKey].
+  static final activityKindKey =
+      obx.QueryStringProperty<ExplorerActivityRecord>(
+        _entities[3].properties[10],
+      );
+}
+
+/// [ExplorerCoverageRecord] entity fields to define ObjectBox queries.
+class ExplorerCoverageRecord_ {
+  /// See [ExplorerCoverageRecord.id].
+  static final id = obx.QueryIntegerProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[0],
+  );
+
+  /// See [ExplorerCoverageRecord.coverageKey].
+  static final coverageKey = obx.QueryStringProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[1],
+  );
+
+  /// See [ExplorerCoverageRecord.dayKey].
+  static final dayKey = obx.QueryStringProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[2],
+  );
+
+  /// See [ExplorerCoverageRecord.userId].
+  static final userId = obx.QueryStringProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[3],
+  );
+
+  /// See [ExplorerCoverageRecord.providerKey].
+  static final providerKey = obx.QueryStringProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[4],
+  );
+
+  /// See [ExplorerCoverageRecord.lastFetchedAtEpochMs].
+  static final lastFetchedAtEpochMs =
+      obx.QueryIntegerProperty<ExplorerCoverageRecord>(
+        _entities[4].properties[5],
+      );
+
+  /// See [ExplorerCoverageRecord.dayEpochMs].
+  static final dayEpochMs = obx.QueryIntegerProperty<ExplorerCoverageRecord>(
+    _entities[4].properties[6],
+  );
+}
+
+/// [ExplorerCacheMetaRecord] entity fields to define ObjectBox queries.
+class ExplorerCacheMetaRecord_ {
+  /// See [ExplorerCacheMetaRecord.id].
+  static final id = obx.QueryIntegerProperty<ExplorerCacheMetaRecord>(
+    _entities[5].properties[0],
+  );
+
+  /// See [ExplorerCacheMetaRecord.cacheSchemaVersion].
+  static final cacheSchemaVersion =
+      obx.QueryIntegerProperty<ExplorerCacheMetaRecord>(
+        _entities[5].properties[1],
+      );
+
+  /// See [ExplorerCacheMetaRecord.lastMigrationAtEpochMs].
+  static final lastMigrationAtEpochMs =
+      obx.QueryIntegerProperty<ExplorerCacheMetaRecord>(
+        _entities[5].properties[2],
+      );
 }

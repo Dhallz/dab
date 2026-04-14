@@ -4,6 +4,7 @@ import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_category.dart';
+import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/entities/group/group.dart';
 import 'package:dab_app/domain/entities/group/group_type.dart';
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
@@ -81,6 +82,7 @@ void main() {
         members: [],
       ),
     );
+    registerFallbackValue(const ActivitySearchQuery());
   });
 
   setUp(() {
@@ -107,14 +109,7 @@ void main() {
     when(
       () => mockProviderConfigRepository.getProviderConfigs(),
     ).thenAnswer((_) async => Right([providerConfig, githubProviderConfig]));
-    when(
-      () => mockActivityRepository.searchActivities(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        users: any(named: 'users'),
-        authoredOnly: any(named: 'authoredOnly'),
-      ),
-    ).thenAnswer(
+    when(() => mockActivityRepository.searchActivities(any())).thenAnswer(
       (_) async => Right([activityFor('u1', DateTime.utc(2026, 1, 1, 10))]),
     );
     when(() => mockUserRepository.saveGroup(any())).thenAnswer(
@@ -161,10 +156,23 @@ void main() {
       expect(bloc.state.selectedUserIds, {'u1'});
       verify(
         () => mockActivityRepository.searchActivities(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          users: ['u1'],
-          authoredOnly: true,
+          any(
+            that: isA<ActivitySearchQuery>()
+                .having((query) => query.users, 'users', ['u1'])
+                .having((query) => query.providers, 'providers', {
+                  'slack',
+                  'github',
+                })
+                .having(
+                  (query) => query.coverageProviders,
+                  'coverageProviders',
+                  {'slack', 'github'},
+                )
+                .having((query) => query.categories, 'categories', {
+                  ActivityCategory.message,
+                  ActivityCategory.commit,
+                }),
+          ),
         ),
       ).called(1);
     },
@@ -187,10 +195,20 @@ void main() {
     verify: (_) {
       verify(
         () => mockActivityRepository.searchActivities(
-          startDate: DateTime.utc(2026, 1, 1),
-          endDate: DateTime.utc(2026, 1, 7),
-          users: ['u1'],
-          authoredOnly: true,
+          any(
+            that: isA<ActivitySearchQuery>()
+                .having(
+                  (query) => query.startDate,
+                  'startDate',
+                  DateTime.utc(2026, 1, 1),
+                )
+                .having(
+                  (query) => query.endDate,
+                  'endDate',
+                  DateTime.utc(2026, 1, 7),
+                )
+                .having((query) => query.users, 'users', ['u1']),
+          ),
         ),
       ).called(1);
     },
@@ -207,10 +225,13 @@ void main() {
     verify: (_) {
       verify(
         () => mockActivityRepository.searchActivities(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          users: ['u1'],
-          authoredOnly: true,
+          any(
+            that: isA<ActivitySearchQuery>().having(
+              (query) => query.users,
+              'users',
+              ['u1'],
+            ),
+          ),
         ),
       ).called(2);
     },
@@ -228,10 +249,13 @@ void main() {
     verify: (_) {
       verify(
         () => mockActivityRepository.searchActivities(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          users: ['u1', 'u2'],
-          authoredOnly: true,
+          any(
+            that: isA<ActivitySearchQuery>().having(
+              (query) => query.users,
+              'users',
+              ['u1', 'u2'],
+            ),
+          ),
         ),
       ).called(1);
     },
@@ -245,51 +269,48 @@ void main() {
     },
     wait: const Duration(milliseconds: 50),
     verify: (_) {
-      verifyNever(
-        () => mockActivityRepository.searchActivities(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          users: any(named: 'users'),
-          authoredOnly: any(named: 'authoredOnly'),
-        ),
-      );
+      verifyNever(() => mockActivityRepository.searchActivities(any()));
     },
   );
 
   blocTest<ExplorerBloc, ExplorerState>(
     'filters activities by selected activity categories',
     build: () {
-      when(
-        () => mockActivityRepository.searchActivities(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          users: any(named: 'users'),
-          authoredOnly: any(named: 'authoredOnly'),
+      final allActivities = [
+        Activity(
+          id: 'commit-1',
+          userId: 'u1',
+          provider: const GitHubCommitProvider(),
+          title: 'Commit',
+          content: 'Code updated',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 11),
         ),
-      ).thenAnswer(
-        (_) async => Right([
-          Activity(
-            id: 'commit-1',
-            userId: 'u1',
-            provider: const GitHubCommitProvider(),
-            title: 'Commit',
-            content: 'Code updated',
-            authorName: 'Alice',
-            commentCount: 0,
-            createdAt: DateTime.utc(2026, 1, 1, 11),
-          ),
-          Activity(
-            id: 'message-1',
-            userId: 'u1',
-            provider: const SlackMessageProvider(channelId: 'C123'),
-            title: 'Message',
-            content: 'Slack update',
-            authorName: 'Alice',
-            commentCount: 0,
-            createdAt: DateTime.utc(2026, 1, 1, 10),
-          ),
-        ]),
-      );
+        Activity(
+          id: 'message-1',
+          userId: 'u1',
+          provider: const SlackMessageProvider(channelId: 'C123'),
+          title: 'Message',
+          content: 'Slack update',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
+        ),
+      ];
+      when(() => mockActivityRepository.searchActivities(any())).thenAnswer((
+        invocation,
+      ) async {
+        final query =
+            invocation.positionalArguments.first as ActivitySearchQuery;
+        final filtered = allActivities
+            .where(
+              (activity) =>
+                  query.categories.contains(activity.provider.category),
+            )
+            .toList();
+        return Right(filtered);
+      });
       return explorerBloc;
     },
     act: (bloc) {

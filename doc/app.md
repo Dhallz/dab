@@ -123,6 +123,13 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
 | **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
+#### Explorer Historical Cache Strategy
+
+- Explorer searches now use a shared `ActivitySearchQuery` contract across remote and local sources.
+- For date windows fully in the past, the repository reads ObjectBox first (`ExplorerActivityRecord`) and only falls back to API when provider coverage is incomplete.
+- Coverage is tracked per `(day, user, provider)` via `ExplorerCoverageRecord` so newly activated providers trigger targeted backfill for already-cached days.
+- For windows including today, Explorer remains remote-first to keep mutable day data fresh.
+
 ---
 
 ### 4. Services Layer (`lib/services/`)

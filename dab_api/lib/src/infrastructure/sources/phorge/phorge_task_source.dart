@@ -59,14 +59,19 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
       return [];
     }
 
-    // 1. PERFORMANCE: Single Transaction Sweep for Authored Activities
-    final txResult = await _client.call('transaction.search', {
-      'objectType': 'TASK',
-      'constraints': {'authorPHIDs': userPhids},
-      'limit': 150,
-    });
+    final txData = await _fetchPagedTransactions(
+      constraints: {'authorPHIDs': userPhids},
+      start: start,
+      stopWhenBeforeStart: true,
+      pageLimit: 150,
+    );
 
-    return _processTransactionsIntoBundles(txResult, start, end, sprintTag);
+    return _processTransactionsIntoBundles(
+      {'data': txData},
+      start,
+      end,
+      sprintTag,
+    );
   }
 
   /// [ARCH: INFRASTRUCTURE_INTERNAL]
@@ -87,7 +92,9 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
 
     // 2. Fetch all tasks in this sprint
     final tasksResult = await _client.call('maniphest.search', {
-      'constraints': {'projects': [sprintPhid]},
+      'constraints': {
+        'projects': [sprintPhid],
+      },
       'limit': 100,
     });
     final taskData = tasksResult['data'] as List<dynamic>?;
@@ -95,13 +102,81 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     final taskPhids = taskData.map((t) => t['phid'].toString()).toList();
 
     // 3. Fetch all transactions for these tasks
-    final txResult = await _client.call('transaction.search', {
-      'objectType': 'TASK',
-      'constraints': {'objectPHIDs': taskPhids},
-      'limit': 200,
-    });
+    final txData = await _fetchPagedTransactions(
+      constraints: {'objectPHIDs': taskPhids},
+      start: start,
+      stopWhenBeforeStart: true,
+      pageLimit: 200,
+    );
 
-    return _processTransactionsIntoBundles(txResult, start, end, sprintTag);
+    return _processTransactionsIntoBundles(
+      {'data': txData},
+      start,
+      end,
+      sprintTag,
+    );
+  }
+
+  Future<List<dynamic>> _fetchPagedTransactions({
+    required Map<String, dynamic> constraints,
+    required DateTime start,
+    required bool stopWhenBeforeStart,
+    required int pageLimit,
+  }) async {
+    final allRows = <dynamic>[];
+    String? afterCursor;
+
+    for (var page = 0; page < 50; page++) {
+      final params = <String, dynamic>{
+        'objectType': 'TASK',
+        'constraints': constraints,
+        'limit': pageLimit,
+      };
+      if (afterCursor != null && afterCursor.isNotEmpty) {
+        params['after'] = afterCursor;
+      }
+
+      final txResult = await _client.call('transaction.search', params);
+      final pageRows = txResult['data'] as List<dynamic>? ?? const [];
+      if (pageRows.isEmpty) break;
+
+      allRows.addAll(pageRows);
+
+      if (stopWhenBeforeStart) {
+        final oldestInPage = _oldestDateCreated(pageRows);
+        if (oldestInPage != null && oldestInPage.isBefore(start)) {
+          break;
+        }
+      }
+
+      final cursorMap = txResult['cursor'] as Map<String, dynamic>?;
+      final nextAfter = cursorMap?['after']?.toString();
+      if (nextAfter == null || nextAfter.isEmpty || nextAfter == afterCursor) {
+        break;
+      }
+      afterCursor = nextAfter;
+    }
+
+    return allRows;
+  }
+
+  DateTime? _oldestDateCreated(List<dynamic> rows) {
+    DateTime? oldest;
+    for (final row in rows) {
+      final map = row as Map<String, dynamic>;
+      final date = _extractDateCreated(map);
+      if (date == null) continue;
+      if (oldest == null || date.isBefore(oldest)) {
+        oldest = date;
+      }
+    }
+    return oldest;
+  }
+
+  DateTime? _extractDateCreated(Map<String, dynamic> json) {
+    final value = int.tryParse(json['dateCreated']?.toString() ?? '');
+    if (value == null || value <= 0) return null;
+    return DateTime.fromMillisecondsSinceEpoch(value * 1000, isUtc: true);
   }
 
   /// [ARCH: INFRASTRUCTURE_INTERNAL]
@@ -119,12 +194,16 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     final allTransactions = rawTxData
         .map((e) => _mapToTransactionData(e as Map<String, dynamic>))
         .where(
-          (tx) => !tx.dateCreated.isBefore(start) && !tx.dateCreated.isAfter(end),
+          (tx) =>
+              !tx.dateCreated.isBefore(start) && !tx.dateCreated.isAfter(end),
         )
         .toList();
 
     if (allTransactions.isEmpty) return [];
-    final taskPhids = allTransactions.map((tx) => tx.objectPHID).toSet().toList();
+    final taskPhids = allTransactions
+        .map((tx) => tx.objectPHID)
+        .toSet()
+        .toList();
     final taskResult = await _client.call('maniphest.search', {
       'constraints': {'phids': taskPhids},
       'attachments': {'projects': true},
@@ -144,7 +223,9 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
       bundlesMap.putIfAbsent(tx.objectPHID, () => []).add(tx);
     }
 
-    return bundlesMap.entries.where((e) => tasksMap.containsKey(e.key)).map((entry) {
+    return bundlesMap.entries.where((e) => tasksMap.containsKey(e.key)).map((
+      entry,
+    ) {
       return PhorgeTaskBundle(
         task: tasksMap[entry.key]!,
         transactions: entry.value,
@@ -156,8 +237,10 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   PhorgeTaskData _mapToTaskData(Map<String, dynamic> json) {
     final fields = json['fields'] as Map<String, dynamic>? ?? {};
     final attachments = json['attachments'] as Map<String, dynamic>? ?? {};
-    final projectsAttachment = attachments['projects'] as Map<String, dynamic>? ?? {};
-    final projectDict = projectsAttachment['projectPHIDs'] as List<dynamic>? ?? [];
+    final projectsAttachment =
+        attachments['projects'] as Map<String, dynamic>? ?? {};
+    final projectDict =
+        projectsAttachment['projectPHIDs'] as List<dynamic>? ?? [];
 
     return PhorgeTaskData(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
@@ -169,7 +252,8 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
       dateModified: fields['dateModified'] != null
           ? DateTime.fromMillisecondsSinceEpoch(
               (int.tryParse(fields['dateModified'].toString()) ?? 0) * 1000,
-              isUtc: true)
+              isUtc: true,
+            )
           : null,
     );
   }

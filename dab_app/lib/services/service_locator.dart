@@ -15,6 +15,7 @@ import '../infrastructure/core/remote/auth_interceptor.dart';
 import '../infrastructure/core/remote/rest_api_client.dart';
 import '../infrastructure/core/remote/web_socket_client.dart';
 import '../infrastructure/datasources/activity_remote_data_source.dart';
+import '../infrastructure/datasources/activity_local_data_source.dart';
 import '../infrastructure/datasources/auth_local_data_source.dart';
 import '../infrastructure/datasources/auth_remote_data_source.dart';
 import '../infrastructure/datasources/monitoring_remote_data_source.dart';
@@ -94,16 +95,13 @@ class ServiceLocator {
 
     authInterceptor.onRefreshToken = () async {
       final result = await authRepository.refreshToken();
-      result.fold(
-        (failure) {
-          if (failure is AuthFailure &&
-              failure.message == 'No refresh token available') {
-            return;
-          }
-          throw Exception(failure.message);
-        },
-        (_) {},
-      );
+      result.fold((failure) {
+        if (failure is AuthFailure &&
+            failure.message == 'No refresh token available') {
+          return;
+        }
+        throw Exception(failure.message);
+      }, (_) {});
     };
 
     // 4. System Context
@@ -117,7 +115,11 @@ class ServiceLocator {
       restApiClient,
       wsClient,
     );
-    activityRepository = ActivityRepository(activityRemoteDataSource);
+    final activityLocalDataSource = ActivityLocalDataSource(objectBoxStore);
+    activityRepository = ActivityRepository(
+      activityRemoteDataSource,
+      activityLocalDataSource,
+    );
     activityUseCases = ActivityUseCases(activityRepository);
 
     // 6. Presence Context
