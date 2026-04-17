@@ -122,7 +122,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 |---|---|---|
 | **Splash** | App bootstrap + redirect | Router-driven auth gate handoff |
 | **Login** | Auth gate | Form events handled by `AuthBloc`; session persisted in `AuthCubit` |
-| **Dashboard** | Real-time activity feed | Streamed list via activity watch stream + `AppBlocConsumer` |
+| **Dashboard** | Real-time activity feed | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |

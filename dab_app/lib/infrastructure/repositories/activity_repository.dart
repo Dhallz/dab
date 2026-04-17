@@ -34,6 +34,24 @@ class ActivityRepository extends Repository implements IActivityRepository {
   }
 
   @override
+  Future<Either<AppFailure, List<Activity>>> getLiveActivities({
+    int limit = 50,
+    bool global = false,
+  }) {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.getLiveActivities(
+        limit: limit,
+        global: global,
+      );
+      if (response.statusCode == 304) {
+        return const <Activity>[];
+      }
+      final List<dynamic> jsonList = _getEnvelopeData(response);
+      return _mapAndNormalizeActivities(jsonList);
+    });
+  }
+
+  @override
   Future<Either<AppFailure, List<Activity>>> searchActivities(
     ActivitySearchQuery query,
   ) {
@@ -80,16 +98,44 @@ class ActivityRepository extends Repository implements IActivityRepository {
   Stream<Activity> watchActivities() {
     return _remoteDataSource
         .watchActivities()
-        .map((event) {
-          final Map<String, dynamic> json = jsonDecode(event);
-          if (json['type'] == 'ACTIVITY_RECEIVED') {
-            return ActivityMapper.fromMap(json['data']);
-          }
-          throw Exception('Unknown event type');
-        })
-        .handleError((e) {
-          // Log or handle error appropriately
-        });
+        .map(_decodeActivityEvent)
+        .where((activity) => activity != null)
+        .cast<Activity>();
+  }
+
+  Activity? _decodeActivityEvent(dynamic event) {
+    try {
+      final dynamic decoded = event is String ? jsonDecode(event) : event;
+      if (decoded is! Map<String, dynamic>) {
+        print(
+          '[LIVE_CLIENT] ws_decode_skip reason=non_map runtime=${decoded.runtimeType}',
+        );
+        return null;
+      }
+      if (decoded['type'] != 'ACTIVITY_RECEIVED') {
+        print(
+          '[LIVE_CLIENT] ws_decode_skip reason=event_type type=${decoded['type']}',
+        );
+        return null;
+      }
+      final payload = decoded['data'];
+      if (payload is! Map<String, dynamic>) {
+        print(
+          '[LIVE_CLIENT] ws_decode_skip reason=payload_non_map runtime=${payload.runtimeType}',
+        );
+        return null;
+      }
+      final activity = _normalizeActivityProvider(
+        ActivityMapper.fromMap(payload),
+      );
+      print(
+        '[LIVE_CLIENT] ws_activity_received activity_id=${activity.id} user_id=${activity.userId} provider=${activity.provider.name}',
+      );
+      return activity;
+    } catch (error) {
+      print('[LIVE_CLIENT] ws_decode_error error=$error raw=$event');
+      return null;
+    }
   }
 
   List<Activity> _mapAndNormalizeActivities(List<dynamic> jsonList) {

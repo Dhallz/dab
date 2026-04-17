@@ -28,10 +28,18 @@ class PresenceService {
   /// Broadcasts a message to all sessions of a single user.
   void broadcastToUser(String userId, String type, Map<String, dynamic> data) {
     final payload = jsonEncode({'type': type, 'data': data});
+    var delivered = 0;
     for (final entry in _sessions.entries) {
       if (entry.value == userId) {
         entry.key.trySendText(payload);
+        delivered++;
       }
+    }
+    if (type == 'ACTIVITY_RECEIVED') {
+      final activityId = data['id']?.toString() ?? 'unknown';
+      print(
+        '[SLACK_PIPELINE] ws_emit type=$type activity_id=$activityId user_id=$userId delivered_sessions=$delivered',
+      );
     }
   }
 }

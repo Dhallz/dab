@@ -2,10 +2,9 @@ import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/styles/app_colors.dart';
-import '../../../core/styles/app_icons.dart';
 import '../../../core/widgets/island_bar.dart';
 import '../widgets/dashboard_island_bar_content.dart';
+import '../widgets/dashboard_live_feed.dart';
 import '../dashboard_bloc.dart';
 import '../dashboard_state.dart';
 
@@ -28,37 +27,12 @@ class DashboardViewDesktop extends StatelessWidget {
                   children: [
                     const IslandBar(content: DashboardIslandBarContent()),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            AppIcons.emptyState,
-                            size: 64,
-                            color: AppColors.onSurfaceVariantLow.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Dashboard',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFF8FAFC),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Coming soon: Live activity feed.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: const Color(
-                                0xFF94A3B8,
-                              ).withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
+                      child: DashboardLiveFeed(
+                        state: state,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 20,
+                        ),
                       ),
                     ),
                   ],

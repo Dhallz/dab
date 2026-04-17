@@ -108,7 +108,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws` | Historical feed (`/activities`), Redis live feed (`/activities/live`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`) |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), Redis live feed (`/activities/live`), Slack Events webhook ingestion (`/integrations/slack/events`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`) |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
 | `AuthController` | `/auth/*` | Register, login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
@@ -180,6 +180,19 @@ and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
 Provider live-ingestion capabilities are exposed via `GET /metadata/capabilities`
 to support dashboard strategy selection (webhook/websocket first, polling
 fallback).
+
+Slack true-live ingestion is handled via `POST /integrations/slack/events`
+(Events API webhook). The endpoint validates Slack signatures, acknowledges
+quickly, and processes event callbacks asynchronously into DB + Redis live keys
+and scoped WebSocket delivery. Message routing is mention-targeted: activities
+are created per recipient when a message includes direct user mentions (`<@U...>`),
+broadcast mentions (`@all`, `<!channel>`, `<!here>`, `<!everyone>`), or Slack
+user-group mention tokens (`<!subteam^...>`). Messages without target mentions
+are ignored for live-feed ingestion.
+
+For local webhook testing, generate signature headers from the exact raw request
+body using:
+`./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
 
 ---
 

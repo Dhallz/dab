@@ -11,7 +11,7 @@ import 'dashboard_state.dart';
 
 class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
   final ActivityUseCases _activityUseCases;
-  StreamSubscription? _activitySubscription;
+  StreamSubscription<Activity>? _activitySubscription;
 
   DashboardBloc(this._activityUseCases) : super(const DashboardState()) {
     on<DashboardStarted>(_onStarted);
@@ -22,34 +22,16 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     DashboardStarted event,
     Emitter<DashboardState> emit,
   ) async {
-    emit(state.copyWith(status: ViewStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading, errorMessage: null));
 
-    final result = await _activityUseCases.getRecentActivities.execute();
+    await _refreshLiveActivities(emit: emit, isInitialLoad: true);
 
-    result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: ViewStatus.failure,
-          errorMessage: failure.message,
-        ),
-      ),
-      (activities) {
-        emit(
-          state.copyWith(
-            status: ViewStatus.success,
-            activities: activities,
-          ),
-        );
-
-        // Start watching for live updates
-        _activitySubscription?.cancel();
-        _activitySubscription = _activityUseCases.watchActivities
-            .execute()
-            .listen((activity) {
-              add(DashboardActivityReceived(activity));
-            });
-      },
-    );
+    _activitySubscription?.cancel();
+    _activitySubscription = _activityUseCases.watchActivities.execute().listen((
+      activity,
+    ) {
+      add(DashboardActivityReceived(activity));
+    });
   }
 
   void _onActivityReceived(
@@ -57,10 +39,57 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     Emitter<DashboardState> emit,
   ) {
     final activity = event.activity as Activity;
+    print(
+      '[LIVE_CLIENT] dashboard_event activity_id=${activity.id} user_id=${activity.userId}',
+    );
+    if (state.activities.any((item) => item.id == activity.id)) {
+      print('[LIVE_CLIENT] dashboard_dedup activity_id=${activity.id}');
+      return;
+    }
     final updatedList = [activity, ...state.activities];
     if (updatedList.length > 100) updatedList.removeLast();
 
+    print(
+      '[LIVE_CLIENT] dashboard_state_updated total=${updatedList.length} newest=${activity.id}',
+    );
     emit(state.copyWith(activities: updatedList));
+  }
+
+  Future<void> _refreshLiveActivities({
+    required Emitter<DashboardState> emit,
+    required bool isInitialLoad,
+  }) async {
+    final result = await _activityUseCases.getLiveActivities.execute(limit: 50);
+    result.fold(
+      (failure) {
+        if (isInitialLoad) {
+          emit(
+            state.copyWith(
+              status: ViewStatus.failure,
+              errorMessage: failure.message,
+            ),
+          );
+        }
+      },
+      (activities) {
+        if (emit.isDone) {
+          return;
+        }
+        if (activities.isEmpty &&
+            !isInitialLoad &&
+            state.activities.isNotEmpty) {
+          return;
+        }
+
+        emit(
+          state.copyWith(
+            status: ViewStatus.success,
+            errorMessage: null,
+            activities: activities,
+          ),
+        );
+      },
+    );
   }
 
   @override

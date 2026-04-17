@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../services/service_locator.dart';
 import 'dashboard_bloc.dart';
+import 'dashboard_event.dart';
 import 'layouts/dashboard_view_desktop.dart';
 import 'layouts/dashboard_view_mobile.dart';
 
@@ -15,7 +16,8 @@ class DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => DashboardBloc(sl.activityUseCases),
+      create: (context) =>
+          DashboardBloc(sl.activityUseCases)..add(const DashboardStarted()),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 900) {

@@ -1,0 +1,85 @@
+meta {
+  name: Slack Events Webhook
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/integrations/slack/events
+  body: json
+  auth: none
+}
+
+headers {
+  X-Slack-Signature: {{slackSignature}}
+  X-Slack-Request-Timestamp: {{slackTimestamp}}
+}
+
+body:json {
+  {
+    "type": "event_callback",
+    "event_id": "Ev1234567890",
+    "team_id": "T12345678",
+    "event": {
+      "type": "message",
+      "user": "U12345678",
+      "channel": "C12345678",
+      "text": "Hello from Slack event callback",
+      "ts": "1712950000.100000"
+    }
+  }
+}
+
+vars:pre-request {
+  slackSignature: 
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const signingSecret =
+    bru.getEnvVar("slackSigningSecret") ||
+    bru.getEnvVar("SLACK_SIGNING_SECRET") ||
+    bru.getVar("slackSigningSecret") ||
+    bru.getVar("SLACK_SIGNING_SECRET");
+  
+  if (!signingSecret) {
+    throw new Error(
+      "Missing Slack signing secret. Set slackSigningSecret or SLACK_SIGNING_SECRET in environment vars.",
+    );
+  }
+  
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const rawBody = req.getBody({ raw: true });
+  const baseString = `v0:${timestamp}:${rawBody}`;
+  const digest = CryptoJS.HmacSHA256(baseString, signingSecret).toString(
+    CryptoJS.enc.Hex,
+  );
+  const signature = `v0=${digest}`;
+  
+  req.setHeader("X-Slack-Request-Timestamp", timestamp);
+  req.setHeader("X-Slack-Signature", signature);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("slackTimestamp", timestamp);
+  bru.setVar("slackSignature", signature);
+}
+
+tests {
+  test("Status is acknowledged", function() {
+    expect(res.status).to.be.oneOf([200, 401]);
+  });
+}
+
+docs {
+  Receives Slack Events API callbacks for true push-live ingestion.
+  
+  Required headers:
+  - `X-Slack-Signature`: HMAC SHA256 signature (`v0=...`)
+  - `X-Slack-Request-Timestamp`: Unix epoch seconds
+  
+  For URL verification, send payload type `url_verification` and expect challenge echo.
+  
+  Environment variable required:
+  - `slackSigningSecret` (or `SLACK_SIGNING_SECRET`)
+}

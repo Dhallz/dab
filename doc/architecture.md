@@ -213,7 +213,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws` | Fetch historical feed, fetch Redis live feed, search activities, and serve authenticated realtime stream |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events` | Fetch historical feed, fetch Redis live feed, receive Slack push events, search activities, and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |

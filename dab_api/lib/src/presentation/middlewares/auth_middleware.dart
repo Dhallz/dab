@@ -45,10 +45,7 @@ class AuthMiddleware extends MiddlewareObject {
         return await next(request);
       }
 
-      final authHeaders = request.headers['Authorization'];
-      final authHeader = authHeaders?.isNotEmpty == true
-          ? authHeaders!.first
-          : null;
+      final authHeader = _readAuthorizationHeader(request);
 
       if (authHeader == null || !authHeader.startsWith('Bearer ')) {
         return Response.unauthorized(
@@ -70,5 +67,25 @@ class AuthMiddleware extends MiddlewareObject {
 
       return await next(request);
     };
+  }
+
+  String? _readAuthorizationHeader(Request request) {
+    final direct = request.headers['Authorization'];
+    if (direct != null && direct.isNotEmpty) {
+      return direct.first;
+    }
+
+    final lower = request.headers['authorization'];
+    if (lower != null && lower.isNotEmpty) {
+      return lower.first;
+    }
+
+    for (final entry in request.headers.entries) {
+      if (entry.key.toLowerCase() == 'authorization' &&
+          entry.value.isNotEmpty) {
+        return entry.value.first;
+      }
+    }
+    return null;
   }
 }

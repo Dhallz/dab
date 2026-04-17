@@ -33,11 +33,15 @@ class RedisService {
     final timestamp = activity.createdAt.millisecondsSinceEpoch;
 
     // 1. Global Feed (Rolling last 500)
-    await _cmd.send_object(['LPUSH', 'activities:global', activityJson]);
+    final globalLen = await _cmd.send_object([
+      'LPUSH',
+      'activities:global',
+      activityJson,
+    ]);
     await _cmd.send_object(['LTRIM', 'activities:global', 0, 499]);
 
     // 2. Per-User Feed
-    await _cmd.send_object([
+    final userLen = await _cmd.send_object([
       'LPUSH',
       'activities:user:${activity.userId}',
       activityJson,
@@ -79,6 +83,10 @@ class RedisService {
       1,
       activity.userId,
     ]);
+
+    print(
+      '[SLACK_PIPELINE] redis_fanout activity_id=${activity.id} user_id=${activity.userId} global_len=$globalLen user_len=$userLen',
+    );
   }
 
   /// Returns live activities from Redis materialized feeds.
@@ -119,6 +127,26 @@ class RedisService {
       'payload',
       jsonEncode(data),
     ]);
+  }
+
+  /// Attempts to reserve a Slack event id for one-time processing.
+  ///
+  /// Returns true if the event id was not seen recently and is now reserved.
+  /// Returns false when the id already exists (retry/duplicate delivery).
+  Future<bool> reserveSlackEventId(
+    String eventId, {
+    Duration ttl = const Duration(hours: 24),
+  }) async {
+    final key = 'slack:event:$eventId';
+    final result = await _cmd.send_object([
+      'SET',
+      key,
+      '1',
+      'NX',
+      'EX',
+      ttl.inSeconds,
+    ]);
+    return result != null;
   }
 
   /// --- HELPERS ---

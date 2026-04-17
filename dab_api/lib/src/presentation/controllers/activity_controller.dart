@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:relic/relic.dart';
 import '../../application/containers/activity_usecases.dart';
+import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity/activity_provider.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
+import '../../infrastructure/security/slack_request_verifier.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
@@ -94,6 +97,91 @@ class ActivityController {
           }),
           mimeType: MimeType.json,
         ),
+      ),
+    );
+  }
+
+  Future<Response> receiveSlackEvents(Request request) async {
+    final body = await request.readAsString();
+    final signature = request.headers['X-Slack-Signature']?.first ?? '';
+    final timestamp = request.headers['X-Slack-Request-Timestamp']?.first ?? '';
+    final signingSecret = await _resolveSlackSigningSecret();
+
+    if (signingSecret.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Slack signing secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<SlackRequestVerifier>();
+    final valid = verifier.isValid(
+      body: body,
+      signatureHeader: signature,
+      timestampHeader: timestamp,
+      signingSecret: signingSecret,
+    );
+    if (!valid) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Slack signature'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final payload = jsonDecode(body);
+    if (payload is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Slack event payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    if (payload['type']?.toString() == 'url_verification') {
+      print(
+        '[SLACK_PIPELINE] webhook_received type=url_verification challenge=${payload['challenge']}',
+      );
+      return Response.ok(
+        body: Body.fromString(
+          jsonEncode({'challenge': payload['challenge']}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final eventId = payload['event_id']?.toString() ?? 'unknown';
+    final eventType = payload['event'] is Map<String, dynamic>
+        ? (payload['event']['type']?.toString() ?? 'unknown')
+        : 'unknown';
+    print(
+      '[SLACK_PIPELINE] webhook_received type=event_callback event_id=$eventId event_type=$eventType',
+    );
+
+    // Slack requires an acknowledgement within ~3 seconds. We respond now and
+    // process the event asynchronously through the ingestion use case.
+    unawaited(
+      _activity.ingestSlackEvent.execute(payload).then((result) {
+        result.fold((failure) {
+          print('Slack live ingestion failed: ${failure.message}');
+        }, (_) {});
+      }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'slack_event_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
       ),
     );
   }
@@ -226,5 +314,20 @@ class ActivityController {
         mimeType: MimeType.json,
       ),
     );
+  }
+
+  Future<String> _resolveSlackSigningSecret() async {
+    final repo = sl<AbsIProviderConfigRepository>();
+    final result = await repo.getConfigs();
+    final slackConfig = result
+        .getOrElse((_) => const [])
+        .where(
+          (config) => config.id.toLowerCase() == 'slack' && config.isActive,
+        )
+        .firstOrNull;
+    if (slackConfig == null) {
+      return '';
+    }
+    return (slackConfig.settings['signingSecret'] ?? '').toString().trim();
   }
 }

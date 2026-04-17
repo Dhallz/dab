@@ -110,7 +110,13 @@ class ServiceLocator {
     systemUseCases = SystemUseCases(systemRepository);
 
     // 5. Activity Context
-    final wsClient = WebSocketClient('ws://localhost:8080/ws');
+    final wsClient = WebSocketClient(
+      'ws://localhost:8080/ws',
+      tokenProvider: () async {
+        final tokens = await tokenStorage.readTokens();
+        return tokens?['accessToken'];
+      },
+    );
     final activityRemoteDataSource = ActivityRemoteDataSource(
       restApiClient,
       wsClient,

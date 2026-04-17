@@ -67,19 +67,8 @@ class LogActivity {
 
   /// Internal helper to push activity updates to the Presence WebSocket layer.
   void _broadcastActivity(Activity activity) {
-    _presence.broadcastToUser(activity.userId, 'ACTIVITY_RECEIVED', {
-      'id': activity.id,
-      'userId': activity.userId,
-      'type': activity.type,
-      'category': activity.provider.category,
-      'provider': activity.provider.toMap(),
-      'title': activity.title,
-      'content': activity.content,
-      'url': activity.url,
-      'authorName': activity.authorName,
-      'authorAvatarUrl': activity.authorAvatarUrl,
-      'commentCount': activity.commentCount,
-      'createdAt': activity.createdAt.toIso8601String(),
-    });
+    final payload = activity.toMap();
+
+    _presence.broadcastToUser(activity.userId, 'ACTIVITY_RECEIVED', payload);
   }
 }

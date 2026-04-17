@@ -18,6 +18,16 @@ class ActivityRemoteDataSource {
     return await _restClient.get('/activities');
   }
 
+  Future<Response> getLiveActivities({
+    int limit = 50,
+    bool global = false,
+  }) async {
+    return await _restClient.get(
+      '/activities/live',
+      queryParameters: {'limit': limit, if (global) 'scope': 'global'},
+    );
+  }
+
   Future<Response> searchActivities(ActivitySearchQuery query) async {
     final queryParameters = ActivitySearchQueryMapper.toRemoteQueryParameters(
       query,
@@ -30,6 +40,7 @@ class ActivityRemoteDataSource {
   }
 
   Stream<dynamic> watchActivities() {
+    _wsClient.connect();
     return _wsClient.stream;
   }
 }

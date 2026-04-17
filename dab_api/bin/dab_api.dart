@@ -44,6 +44,10 @@ Future<void> main() async {
     ..get('/activities/search', ActivityController().searchActivities)
     ..get('/activities/live', ActivityController().getLiveActivities)
     ..get('/activities', ActivityController().getActivities)
+    ..post(
+      '/integrations/slack/events',
+      ActivityController().receiveSlackEvents,
+    )
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)

@@ -13,6 +13,7 @@ import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_slack_event.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
@@ -74,6 +75,7 @@ import 'package:dab_api/src/infrastructure/repositories/provider_config_reposito
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/security/jwt_provider.dart';
+import 'package:dab_api/src/infrastructure/security/slack_request_verifier.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
@@ -111,6 +113,7 @@ Future<void> serviceLocator() async {
   final phorgeClient = PhorgeClient();
   sl.registerSingleton<PhorgeClient>(phorgeClient);
   sl.registerSingleton<JwtProvider>(JwtProvider());
+  sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
 
   // -----------------------------------------------------
   // 2. Activity Architecture (Domain & Infrastructure)
@@ -287,6 +290,15 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
   );
+  sl.registerSingleton<IngestSlackEvent>(
+    IngestSlackEvent(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
   sl.registerSingleton<LogActivity>(
     LogActivity(
       sl<AbsIActivityRepository>(),
@@ -372,6 +384,7 @@ Future<void> serviceLocator() async {
       fetchRemoteActivities: sl<FetchRemoteActivities>(),
       getLiveActivities: sl<GetLiveActivities>(),
       getRecentActivities: sl<GetRecentActivities>(),
+      ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),
     ),

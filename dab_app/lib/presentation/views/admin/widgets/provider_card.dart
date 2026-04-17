@@ -92,6 +92,12 @@ class _ProviderCardState extends State<ProviderCard> {
       final fallback = config.settings['api.token'] ?? config.settings['token'];
       return (rawValue ?? fallback)?.toString() ?? '';
     }
+    if (field.key == 'signingSecret') {
+      final fallback =
+          config.settings['signing_secret'] ??
+          config.settings['slackSigningSecret'];
+      return (rawValue ?? fallback)?.toString() ?? '';
+    }
 
     return rawValue?.toString() ?? '';
   }
@@ -303,6 +309,9 @@ class _ProviderCardState extends State<ProviderCard> {
                             ),
                             SizedBox(height: AppSpacing.l),
                             ..._fields.map((field) {
+                              final isMultiValueField =
+                                  field.key == 'repos' ||
+                                  field.key == 'channels';
                               return Padding(
                                 padding: const EdgeInsets.only(
                                   bottom: AppSpacing.m,
@@ -322,6 +331,11 @@ class _ProviderCardState extends State<ProviderCard> {
                                     TextField(
                                       controller: _controllers[field.key],
                                       obscureText: field.isSecret,
+                                      keyboardType: isMultiValueField
+                                          ? TextInputType.multiline
+                                          : TextInputType.text,
+                                      minLines: isMultiValueField ? 3 : 1,
+                                      maxLines: isMultiValueField ? 6 : 1,
                                       style: AppTextStyles.bodyMedium.copyWith(
                                         color: AppColors.onSurfaceHighlight,
                                       ),
@@ -330,6 +344,9 @@ class _ProviderCardState extends State<ProviderCard> {
                                         fillColor: AppColors.surfaceContainer
                                             .withValues(alpha: 0.65),
                                         hintText: 'Enter ${field.label}...',
+                                        helperText: isMultiValueField
+                                            ? 'Use one value per line (comma-separated also works).'
+                                            : null,
                                         hintStyle: AppTextStyles.bodyMedium
                                             .copyWith(
                                               color: AppColors
@@ -456,13 +473,15 @@ class _ProviderCardState extends State<ProviderCard> {
       return [
         AdminConfigField(key: 'botToken', label: 'Bot Token', isSecret: true),
         AdminConfigField(
+          key: 'signingSecret',
+          label: 'Signing Secret',
+          isSecret: true,
+        ),
+        AdminConfigField(
           key: 'workspaceId',
           label: 'Workspace/Team ID (e.g. T0123456789)',
         ),
-        AdminConfigField(
-          key: 'channels',
-          label: 'Channel IDs (one per line)',
-        ),
+        AdminConfigField(key: 'channels', label: 'Channel IDs (one per line)'),
         AdminConfigField(
           key: 'apiBaseUrl',
           label: 'API Base URL (optional, defaults to https://slack.com/api)',
