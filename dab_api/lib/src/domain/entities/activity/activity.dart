@@ -43,6 +43,13 @@ class Activity with ActivityMappable {
   /// The timestamp of the activity as recorded by the external platform.
   final DateTime createdAt;
 
+  /// Triage flag: whether the user archived this activity from the live feed.
+  /// This field is only meaningful for activities currently in the Redis live
+  /// feed; it is always `false` when the entity comes from the persistent
+  /// database because archive/unarchive is a live-feed-only operation that is
+  /// wiped by the daily midnight purge.
+  final bool archived;
+
   Activity({
     required this.id,
     required this.userId,
@@ -54,6 +61,7 @@ class Activity with ActivityMappable {
     this.authorAvatarUrl,
     this.commentCount = 0,
     required this.createdAt,
+    this.archived = false,
   });
 }
 

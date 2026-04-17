@@ -5,17 +5,20 @@ import 'package:dab_api/src/application/containers/group_usecases.dart';
 import 'package:dab_api/src/application/containers/health_usecases.dart';
 import 'package:dab_api/src/application/containers/metadata_usecases.dart';
 import 'package:dab_api/src/application/containers/user_usecases.dart';
+import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
 import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
+import 'package:dab_api/src/application/usecases/activity/archive_live_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_slack_event.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/unarchive_live_activity.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
 import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
 import 'package:dab_api/src/application/usecases/auth/count_unresolved_identities.dart';
@@ -307,6 +310,15 @@ Future<void> serviceLocator() async {
       sl<RedisService>(),
     ),
   );
+  sl.registerSingleton<ArchiveLiveActivity>(
+    ArchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
+  );
+  sl.registerSingleton<UnarchiveLiveActivity>(
+    UnarchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
+  );
+  sl.registerSingleton<ActivityPurgeScheduler>(
+    ActivityPurgeScheduler(sl<RedisService>()),
+  );
 
   // User
   sl.registerLazySingleton<SyncPhorgeUsers>(
@@ -381,12 +393,14 @@ Future<void> serviceLocator() async {
 
   sl.registerSingleton<ActivityUseCases>(
     ActivityUseCases(
+      archiveLiveActivity: sl<ArchiveLiveActivity>(),
       fetchRemoteActivities: sl<FetchRemoteActivities>(),
       getLiveActivities: sl<GetLiveActivities>(),
       getRecentActivities: sl<GetRecentActivities>(),
       ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),
+      unarchiveLiveActivity: sl<UnarchiveLiveActivity>(),
     ),
   );
 

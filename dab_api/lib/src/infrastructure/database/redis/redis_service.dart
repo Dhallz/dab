@@ -93,25 +93,131 @@ class RedisService {
   ///
   /// This method serves the dedicated live endpoint and intentionally reads only
   /// from Redis live keys. It does not query Postgres.
+  ///
+  /// When [includeArchived] is false (default), entries whose `archived` flag
+  /// is true are filtered out before the limit is applied. The [limit] is the
+  /// upper bound on the **returned** list, so we over-read internally to avoid
+  /// starving the result when many entries are archived.
   Future<List<Activity>> getLiveActivities({
     required String userId,
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   }) async {
     final normalizedLimit = limit.clamp(1, 100);
     final key = global ? 'activities:global' : 'activities:user:$userId';
-    final raw = await _cmd.send_object(['LRANGE', key, 0, normalizedLimit - 1]);
+    // Over-read so filtering by `archived` can still fill up to the limit.
+    final fetchSize = includeArchived ? normalizedLimit : 100;
+    final raw = await _cmd.send_object(['LRANGE', key, 0, fetchSize - 1]);
 
     if (raw is! List) return const [];
 
     final decoded = <Activity>[];
     for (final entry in raw) {
       final activity = _decodeActivity(entry);
-      if (activity != null) {
-        decoded.add(activity);
-      }
+      if (activity == null) continue;
+      if (!includeArchived && activity.archived) continue;
+      decoded.add(activity);
+      if (decoded.length >= normalizedLimit) break;
     }
     return decoded;
+  }
+
+  /// Rewrites a user's live-feed entry with an updated [archived] flag.
+  ///
+  /// Uses `LRANGE` + `LSET` so we keep the original position (and therefore
+  /// the timestamp ordering) in place. Returns the updated [Activity] on
+  /// success, or `null` if the id could not be found in the caller's live
+  /// feed (e.g. already purged or never fanned out to this user).
+  Future<Activity?> setActivityArchiveFlag({
+    required String userId,
+    required String activityId,
+    required bool archived,
+  }) async {
+    final key = 'activities:user:$userId';
+    final raw = await _cmd.send_object(['LRANGE', key, 0, -1]);
+    if (raw is! List) return null;
+
+    for (var index = 0; index < raw.length; index++) {
+      final entry = raw[index];
+      final activity = _decodeActivity(entry);
+      if (activity == null || activity.id != activityId) continue;
+
+      final updated = activity.copyWith(archived: archived);
+      await _cmd.send_object([
+        'LSET',
+        key,
+        index,
+        _encodeActivity(updated),
+      ]);
+      print(
+        '[TRIAGE_PIPELINE] redis_flag activity_id=$activityId user_id=$userId archived=$archived position=$index',
+      );
+      return updated;
+    }
+
+    return null;
+  }
+
+  /// Removes every archived entry from every per-user live-feed key.
+  ///
+  /// Intended for the daily midnight reset. Rebuilds each list by decoding all
+  /// entries, dropping those with `archived == true`, and rewriting the key in
+  /// a single `DEL` + `RPUSH` cycle so the remaining entries preserve their
+  /// original ordering.
+  ///
+  /// Returns a map of `userFeedKey -> removedCount` for observability.
+  Future<Map<String, int>> purgeArchivedActivities() async {
+    final removed = <String, int>{};
+    final scan = await _cmd.send_object([
+      'SCAN',
+      '0',
+      'MATCH',
+      'activities:user:*',
+      'COUNT',
+      '500',
+    ]);
+    if (scan is! List || scan.length < 2) return removed;
+
+    final keys = scan[1];
+    if (keys is! List) return removed;
+
+    for (final key in keys) {
+      final keyStr = key.toString();
+      final raw = await _cmd.send_object(['LRANGE', keyStr, 0, -1]);
+      if (raw is! List) continue;
+
+      final kept = <String>[];
+      var dropped = 0;
+      for (final entry in raw) {
+        final activity = _decodeActivity(entry);
+        if (activity == null) {
+          // Preserve undecodable entries as-is so we don't eat them by mistake.
+          kept.add(entry.toString());
+          continue;
+        }
+        if (activity.archived) {
+          dropped++;
+          continue;
+        }
+        kept.add(entry.toString());
+      }
+
+      if (dropped == 0) continue;
+
+      await _cmd.send_object(['DEL', keyStr]);
+      if (kept.isNotEmpty) {
+        await _cmd.send_object(['RPUSH', keyStr, ...kept]);
+      }
+      removed[keyStr] = dropped;
+    }
+
+    if (removed.isNotEmpty) {
+      print(
+        '[TRIAGE_PIPELINE] purge_complete keys=${removed.length} total_removed=${removed.values.fold(0, (a, b) => a + b)}',
+      );
+    }
+    return removed;
   }
 
   /// --- REDIS STREAMS ---

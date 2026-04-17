@@ -17,12 +17,14 @@ class GetLiveActivities {
     required String userId,
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   }) async {
     try {
       final activities = await _redisService.getLiveActivities(
         userId: userId,
         limit: limit,
         global: global,
+        includeArchived: includeArchived,
       );
       return Right(activities);
     } catch (error) {

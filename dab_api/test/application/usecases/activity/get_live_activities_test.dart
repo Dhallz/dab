@@ -23,6 +23,7 @@ void main() {
         userId: 'u-1',
         limit: 25,
         global: false,
+        includeArchived: false,
       ),
     ).thenAnswer((_) async => [activity]);
 
@@ -32,12 +33,39 @@ void main() {
     expect(result.getOrElse((_) => []), hasLength(1));
   });
 
+  test('forwards includeArchived flag to RedisService', () async {
+    when(
+      () => redisService.getLiveActivities(
+        userId: 'u-2',
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer((_) async => const []);
+
+    final result = await useCase.execute(
+      userId: 'u-2',
+      includeArchived: true,
+    );
+
+    expect(result.isRight(), isTrue);
+    verify(
+      () => redisService.getLiveActivities(
+        userId: 'u-2',
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).called(1);
+  });
+
   test('maps Redis exception into DatabaseFailure', () async {
     when(
       () => redisService.getLiveActivities(
         userId: 'u-1',
         limit: 10,
         global: true,
+        includeArchived: false,
       ),
     ).thenThrow(Exception('redis unavailable'));
 

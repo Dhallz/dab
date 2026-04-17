@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:fpdart/fpdart.dart';
 import 'package:relic/relic.dart';
 import '../../application/containers/activity_usecases.dart';
+import '../../domain/core/failure.dart';
+import '../../domain/entities/activity/activity.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity/activity_provider.dart';
@@ -52,7 +55,13 @@ class ActivityController {
 
     final limitParam = request.url.queryParameters['limit'];
     final scopeParam = request.url.queryParameters['scope']?.toLowerCase();
+    final includeArchivedParam = request
+        .url
+        .queryParameters['includeArchived']
+        ?.toLowerCase();
     final global = scopeParam == 'global';
+    final includeArchived = includeArchivedParam == 'true' ||
+        includeArchivedParam == '1';
 
     final parsedLimit = int.tryParse(limitParam ?? '');
     if (limitParam != null && parsedLimit == null) {
@@ -69,6 +78,7 @@ class ActivityController {
       userId: userId,
       limit: limit,
       global: global,
+      includeArchived: includeArchived,
     );
     final syncToken = await redis.getCurrentVersion();
 
@@ -91,7 +101,87 @@ class ActivityController {
               'source': 'redis',
               'scope': global ? 'global' : 'user',
               'limit': limit,
+              'includeArchived': includeArchived,
               'syncToken': syncToken.toString(),
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /activities/live/:id/archive — flips the caller's live-feed entry
+  /// for [id] to `archived=true`. Returns 404 when the entry is not present in
+  /// the caller's Redis live feed (already purged or never fanned out).
+  Future<Response> archiveLiveActivity(Request request) async {
+    final userId = userIdProperty.get(request);
+    final activityId = request.pathParameters.raw[#id]?.toString();
+    if (activityId == null || activityId.isEmpty) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Missing activity id'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final result = await _activity.archiveLiveActivity.execute(
+      userId: userId,
+      activityId: activityId,
+    );
+    return _respondWithTriageResult(result);
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /activities/live/:id/unarchive — flips the caller's live-feed entry
+  /// for [id] back to `archived=false`.
+  Future<Response> unarchiveLiveActivity(Request request) async {
+    final userId = userIdProperty.get(request);
+    final activityId = request.pathParameters.raw[#id]?.toString();
+    if (activityId == null || activityId.isEmpty) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Missing activity id'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final result = await _activity.unarchiveLiveActivity.execute(
+      userId: userId,
+      activityId: activityId,
+    );
+    return _respondWithTriageResult(result);
+  }
+
+  Response _respondWithTriageResult(Either<Failure, Activity> result) {
+    return result.fold(
+      (failure) {
+        final message = failure.message;
+        if (failure is NotFoundFailure) {
+          return Response.notFound(
+            body: Body.fromString(
+              jsonEncode({'error': message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (activity) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': activity.toMap(),
+            'meta': {
+              'dataType': 'object:activity',
               'timestamp': DateTime.now().toIso8601String(),
             },
           }),

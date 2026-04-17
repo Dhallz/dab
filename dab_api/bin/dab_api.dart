@@ -11,6 +11,7 @@ import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
 import 'package:dab_api/src/presentation/controllers/user_controller.dart';
 import 'package:dab_api/src/presentation/middlewares/admin_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
+import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
 import 'package:dab_api/src/service_locator.dart';
@@ -28,6 +29,9 @@ Future<void> main() async {
   // sl<ActivityService>().startPolling();
   print('Phorge polling started.');
 
+  // 3. Start the daily midnight purge of archived live-feed entries.
+  sl<ActivityPurgeScheduler>().start();
+
   final app = RelicApp()
     ..use('/', GlobalErrorHandler().call)
     ..use('/', RequestLogger().call)
@@ -42,6 +46,14 @@ Future<void> main() async {
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)
     ..get('/activities/search', ActivityController().searchActivities)
+    ..post(
+      '/activities/live/:id/archive',
+      ActivityController().archiveLiveActivity,
+    )
+    ..post(
+      '/activities/live/:id/unarchive',
+      ActivityController().unarchiveLiveActivity,
+    )
     ..get('/activities/live', ActivityController().getLiveActivities)
     ..get('/activities', ActivityController().getActivities)
     ..post(

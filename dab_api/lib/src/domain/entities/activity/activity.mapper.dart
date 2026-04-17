@@ -60,6 +60,13 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     'createdAt',
     _$createdAt,
   );
+  static bool _$archived(Activity v) => v.archived;
+  static const Field<Activity, bool> _f$archived = Field(
+    'archived',
+    _$archived,
+    opt: true,
+    def: false,
+  );
 
   @override
   final MappableFields<Activity> fields = const {
@@ -73,6 +80,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     #authorAvatarUrl: _f$authorAvatarUrl,
     #commentCount: _f$commentCount,
     #createdAt: _f$createdAt,
+    #archived: _f$archived,
   };
 
   static Activity _instantiate(DecodingData data) {
@@ -87,6 +95,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
       authorAvatarUrl: data.dec(_f$authorAvatarUrl),
       commentCount: data.dec(_f$commentCount),
       createdAt: data.dec(_f$createdAt),
+      archived: data.dec(_f$archived),
     );
   }
 
@@ -158,6 +167,7 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
     String? authorAvatarUrl,
     int? commentCount,
     DateTime? createdAt,
+    bool? archived,
   });
   ActivityCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -182,6 +192,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     Object? authorAvatarUrl = $none,
     int? commentCount,
     DateTime? createdAt,
+    bool? archived,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -194,6 +205,7 @@ class _ActivityCopyWithImpl<$R, $Out>
       if (authorAvatarUrl != $none) #authorAvatarUrl: authorAvatarUrl,
       if (commentCount != null) #commentCount: commentCount,
       if (createdAt != null) #createdAt: createdAt,
+      if (archived != null) #archived: archived,
     }),
   );
   @override
@@ -208,6 +220,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     authorAvatarUrl: data.get(#authorAvatarUrl, or: $value.authorAvatarUrl),
     commentCount: data.get(#commentCount, or: $value.commentCount),
     createdAt: data.get(#createdAt, or: $value.createdAt),
+    archived: data.get(#archived, or: $value.archived),
   );
 
   @override
