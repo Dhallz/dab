@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failures.dart';
 import '../../domain/entities/activity/activity.dart';
+import '../../domain/entities/activity/activity_live_event.dart';
 import '../../domain/entities/activity/activity_search_query.dart';
 
 abstract class IActivityRepository {
@@ -9,9 +10,20 @@ abstract class IActivityRepository {
   Future<Either<AppFailure, List<Activity>>> getLiveActivities({
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   });
   Future<Either<AppFailure, List<Activity>>> searchActivities(
     ActivitySearchQuery query,
   );
-  Stream<Activity> watchActivities();
+
+  /// Archives a live-feed activity for the authenticated user.
+  /// Returns [AppFailure] (typically ServerFailure with 404) when the entry
+  /// is no longer present in the user's Redis live feed.
+  Future<Either<AppFailure, Activity>> archiveLiveActivity(String id);
+
+  /// Restores an archived live-feed activity to visible state.
+  Future<Either<AppFailure, Activity>> unarchiveLiveActivity(String id);
+
+  /// Streams live feed events — new activities + archive/unarchive mutations.
+  Stream<ActivityLiveEvent> watchActivities();
 }

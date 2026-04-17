@@ -12,7 +12,12 @@ class GetLiveActivities {
   Future<Either<AppFailure, List<Activity>>> execute({
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   }) {
-    return repository.getLiveActivities(limit: limit, global: global);
+    return repository.getLiveActivities(
+      limit: limit,
+      global: global,
+      includeArchived: includeArchived,
+    );
   }
 }

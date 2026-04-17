@@ -89,7 +89,7 @@ dab_app/lib/
 
 | Entity | Description |
 |---|---|
-| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. |
+| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
 | `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub commits, Slack messages) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
@@ -100,7 +100,17 @@ dab_app/lib/
 
 ### App Entities (`dab_app/lib/domain/entities/`)
 
-Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`). ObjectBox records for cache/storage remain in the Infrastructure layer.
+Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`).
+
+The Dashboard additionally introduces:
+
+| Entity | Description |
+|---|---|
+| `ActivityLiveEvent` | Sealed discriminated union over the WS live stream — `ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`. |
+| `UpcomingEvent` | Time-anchored item surfaced by the Dashboard "Upcoming Soon" section. Carries `id`, `title`, `startsAt`, optional `url`, `source`, and `priority` (`UpcomingEventPriority`). |
+| `UpcomingEventPriority` | Ordered enum (`low`, `normal`, `high`, `critical`) with a `weight` getter for deterministic banner selection. |
+
+ObjectBox records for cache/storage remain in the Infrastructure layer.
 
 ---
 

@@ -1,4 +1,4 @@
-import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 
 class WatchActivities {
@@ -6,5 +6,5 @@ class WatchActivities {
 
   WatchActivities(this.repository);
 
-  Stream<Activity> execute() => repository.watchActivities();
+  Stream<ActivityLiveEvent> execute() => repository.watchActivities();
 }

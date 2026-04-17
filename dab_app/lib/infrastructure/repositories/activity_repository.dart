@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_category.dart';
+import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../domain/entities/activity/activity_search_query.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../datasources/activity_local_data_source.dart';
@@ -37,11 +38,13 @@ class ActivityRepository extends Repository implements IActivityRepository {
   Future<Either<AppFailure, List<Activity>>> getLiveActivities({
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   }) {
     return guardedCall(() async {
       final response = await _remoteDataSource.getLiveActivities(
         limit: limit,
         global: global,
+        includeArchived: includeArchived,
       );
       if (response.statusCode == 304) {
         return const <Activity>[];
@@ -49,6 +52,34 @@ class ActivityRepository extends Repository implements IActivityRepository {
       final List<dynamic> jsonList = _getEnvelopeData(response);
       return _mapAndNormalizeActivities(jsonList);
     });
+  }
+
+  @override
+  Future<Either<AppFailure, Activity>> archiveLiveActivity(String id) {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.archiveLiveActivity(id);
+      return _decodeTriageEnvelope(response);
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, Activity>> unarchiveLiveActivity(String id) {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.unarchiveLiveActivity(id);
+      return _decodeTriageEnvelope(response);
+    });
+  }
+
+  Activity _decodeTriageEnvelope(Response response) {
+    final data = response.data;
+    final Map<String, dynamic> envelope = data is Map<String, dynamic>
+        ? data
+        : jsonDecode(data.toString());
+    final payload = envelope['data'];
+    if (payload is! Map<String, dynamic>) {
+      throw StateError('Triage response missing activity payload');
+    }
+    return _normalizeActivityProvider(ActivityMapper.fromMap(payload));
   }
 
   @override
@@ -95,15 +126,15 @@ class ActivityRepository extends Repository implements IActivityRepository {
   }
 
   @override
-  Stream<Activity> watchActivities() {
+  Stream<ActivityLiveEvent> watchActivities() {
     return _remoteDataSource
         .watchActivities()
-        .map(_decodeActivityEvent)
-        .where((activity) => activity != null)
-        .cast<Activity>();
+        .map(_decodeLiveEvent)
+        .where((event) => event != null)
+        .cast<ActivityLiveEvent>();
   }
 
-  Activity? _decodeActivityEvent(dynamic event) {
+  ActivityLiveEvent? _decodeLiveEvent(dynamic event) {
     try {
       final dynamic decoded = event is String ? jsonDecode(event) : event;
       if (decoded is! Map<String, dynamic>) {
@@ -112,26 +143,38 @@ class ActivityRepository extends Repository implements IActivityRepository {
         );
         return null;
       }
-      if (decoded['type'] != 'ACTIVITY_RECEIVED') {
-        print(
-          '[LIVE_CLIENT] ws_decode_skip reason=event_type type=${decoded['type']}',
-        );
-        return null;
-      }
+      final type = decoded['type']?.toString();
       final payload = decoded['data'];
-      if (payload is! Map<String, dynamic>) {
-        print(
-          '[LIVE_CLIENT] ws_decode_skip reason=payload_non_map runtime=${payload.runtimeType}',
-        );
-        return null;
+
+      switch (type) {
+        case 'ACTIVITY_RECEIVED':
+          if (payload is! Map<String, dynamic>) {
+            print(
+              '[LIVE_CLIENT] ws_decode_skip reason=payload_non_map runtime=${payload.runtimeType}',
+            );
+            return null;
+          }
+          final activity = _normalizeActivityProvider(
+            ActivityMapper.fromMap(payload),
+          );
+          print(
+            '[LIVE_CLIENT] ws_activity_received activity_id=${activity.id} user_id=${activity.userId} provider=${activity.provider.name}',
+          );
+          return ActivityReceivedEvent(activity);
+        case 'ACTIVITY_ARCHIVED':
+        case 'ACTIVITY_UNARCHIVED':
+          if (payload is! Map<String, dynamic>) return null;
+          final id = payload['id']?.toString();
+          final userId = payload['userId']?.toString() ?? '';
+          if (id == null) return null;
+          print('[LIVE_CLIENT] ws_triage type=$type activity_id=$id');
+          return type == 'ACTIVITY_ARCHIVED'
+              ? ActivityArchivedEvent(activityId: id, userId: userId)
+              : ActivityUnarchivedEvent(activityId: id, userId: userId);
+        default:
+          print('[LIVE_CLIENT] ws_decode_skip reason=event_type type=$type');
+          return null;
       }
-      final activity = _normalizeActivityProvider(
-        ActivityMapper.fromMap(payload),
-      );
-      print(
-        '[LIVE_CLIENT] ws_activity_received activity_id=${activity.id} user_id=${activity.userId} provider=${activity.provider.name}',
-      );
-      return activity;
     } catch (error) {
       print('[LIVE_CLIENT] ws_decode_error error=$error raw=$event');
       return null;

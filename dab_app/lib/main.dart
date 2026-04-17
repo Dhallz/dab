@@ -45,7 +45,12 @@ void main() async {
           BlocProvider(
             create: (context) => AuthCubit(sl.authUseCases)..checkAuth(),
           ),
-          BlocProvider(create: (context) => DashboardBloc(sl.activityUseCases)),
+          BlocProvider(
+            create: (context) => DashboardBloc(
+              sl.activityUseCases,
+              sl.upcomingEventUseCases,
+            ),
+          ),
         ],
         child: DabApp(appRouter: sl.appRouter),
       ),

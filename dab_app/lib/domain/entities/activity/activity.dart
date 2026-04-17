@@ -18,6 +18,11 @@ class Activity with ActivityMappable {
   final String? url;
   final DateTime createdAt;
 
+  /// Triage flag: whether the entry was archived by the user from the
+  /// dashboard live feed. Archived entries are hidden by default and wiped
+  /// at midnight. Only meaningful for live-feed activities.
+  final bool archived;
+
   Activity({
     required this.id,
     required this.userId,
@@ -29,6 +34,7 @@ class Activity with ActivityMappable {
     required this.commentCount,
     this.url,
     required this.createdAt,
+    this.archived = false,
   });
 }
 

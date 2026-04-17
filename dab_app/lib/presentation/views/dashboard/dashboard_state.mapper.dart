@@ -16,6 +16,8 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       MapperContainer.globals.use(_instance = DashboardStateMapper._());
       ViewStatusMapper.ensureInitialized();
       ActivityMapper.ensureInitialized();
+      UpcomingEventMapper.ensureInitialized();
+      DashboardBannerMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -37,24 +39,71 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     opt: true,
     def: const [],
   );
+  static List<UpcomingEvent> _$upcomingEvents(DashboardState v) =>
+      v.upcomingEvents;
+  static const Field<DashboardState, List<UpcomingEvent>> _f$upcomingEvents =
+      Field('upcomingEvents', _$upcomingEvents, opt: true, def: const []);
+  static DashboardBanner? _$activeBanner(DashboardState v) => v.activeBanner;
+  static const Field<DashboardState, DashboardBanner> _f$activeBanner = Field(
+    'activeBanner',
+    _$activeBanner,
+    opt: true,
+  );
+  static List<String> _$lastNotifiedEventIds(DashboardState v) =>
+      v.lastNotifiedEventIds;
+  static const Field<DashboardState, List<String>> _f$lastNotifiedEventIds =
+      Field(
+        'lastNotifiedEventIds',
+        _$lastNotifiedEventIds,
+        opt: true,
+        def: const [],
+      );
+  static bool _$showArchivedActivities(DashboardState v) =>
+      v.showArchivedActivities;
+  static const Field<DashboardState, bool> _f$showArchivedActivities = Field(
+    'showArchivedActivities',
+    _$showArchivedActivities,
+    opt: true,
+    def: false,
+  );
   static String? _$errorMessage(DashboardState v) => v.errorMessage;
   static const Field<DashboardState, String> _f$errorMessage = Field(
     'errorMessage',
     _$errorMessage,
     opt: true,
   );
+  static List<Activity> _$visibleActivities(DashboardState v) =>
+      v.visibleActivities;
+  static const Field<DashboardState, List<Activity>> _f$visibleActivities =
+      Field('visibleActivities', _$visibleActivities, mode: FieldMode.member);
+  static int _$archivedCount(DashboardState v) => v.archivedCount;
+  static const Field<DashboardState, int> _f$archivedCount = Field(
+    'archivedCount',
+    _$archivedCount,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<DashboardState> fields = const {
     #status: _f$status,
     #activities: _f$activities,
+    #upcomingEvents: _f$upcomingEvents,
+    #activeBanner: _f$activeBanner,
+    #lastNotifiedEventIds: _f$lastNotifiedEventIds,
+    #showArchivedActivities: _f$showArchivedActivities,
     #errorMessage: _f$errorMessage,
+    #visibleActivities: _f$visibleActivities,
+    #archivedCount: _f$archivedCount,
   };
 
   static DashboardState _instantiate(DecodingData data) {
     return DashboardState(
       status: data.dec(_f$status),
       activities: data.dec(_f$activities),
+      upcomingEvents: data.dec(_f$upcomingEvents),
+      activeBanner: data.dec(_f$activeBanner),
+      lastNotifiedEventIds: data.dec(_f$lastNotifiedEventIds),
+      showArchivedActivities: data.dec(_f$showArchivedActivities),
       errorMessage: data.dec(_f$errorMessage),
     );
   }
@@ -123,9 +172,23 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
   get activities;
+  ListCopyWith<
+    $R,
+    UpcomingEvent,
+    UpcomingEventCopyWith<$R, UpcomingEvent, UpcomingEvent>
+  >
+  get upcomingEvents;
+  DashboardBannerCopyWith<$R, DashboardBanner, DashboardBanner>?
+  get activeBanner;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get lastNotifiedEventIds;
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
+    List<UpcomingEvent>? upcomingEvents,
+    DashboardBanner? activeBanner,
+    List<String>? lastNotifiedEventIds,
+    bool? showArchivedActivities,
     String? errorMessage,
   });
   DashboardStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
@@ -149,14 +212,46 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     (v) => call(activities: v),
   );
   @override
+  ListCopyWith<
+    $R,
+    UpcomingEvent,
+    UpcomingEventCopyWith<$R, UpcomingEvent, UpcomingEvent>
+  >
+  get upcomingEvents => ListCopyWith(
+    $value.upcomingEvents,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(upcomingEvents: v),
+  );
+  @override
+  DashboardBannerCopyWith<$R, DashboardBanner, DashboardBanner>?
+  get activeBanner =>
+      $value.activeBanner?.copyWith.$chain((v) => call(activeBanner: v));
+  @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get lastNotifiedEventIds => ListCopyWith(
+    $value.lastNotifiedEventIds,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(lastNotifiedEventIds: v),
+  );
+  @override
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
+    List<UpcomingEvent>? upcomingEvents,
+    Object? activeBanner = $none,
+    List<String>? lastNotifiedEventIds,
+    bool? showArchivedActivities,
     Object? errorMessage = $none,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
       if (activities != null) #activities: activities,
+      if (upcomingEvents != null) #upcomingEvents: upcomingEvents,
+      if (activeBanner != $none) #activeBanner: activeBanner,
+      if (lastNotifiedEventIds != null)
+        #lastNotifiedEventIds: lastNotifiedEventIds,
+      if (showArchivedActivities != null)
+        #showArchivedActivities: showArchivedActivities,
       if (errorMessage != $none) #errorMessage: errorMessage,
     }),
   );
@@ -164,6 +259,16 @@ class _DashboardStateCopyWithImpl<$R, $Out>
   DashboardState $make(CopyWithData data) => DashboardState(
     status: data.get(#status, or: $value.status),
     activities: data.get(#activities, or: $value.activities),
+    upcomingEvents: data.get(#upcomingEvents, or: $value.upcomingEvents),
+    activeBanner: data.get(#activeBanner, or: $value.activeBanner),
+    lastNotifiedEventIds: data.get(
+      #lastNotifiedEventIds,
+      or: $value.lastNotifiedEventIds,
+    ),
+    showArchivedActivities: data.get(
+      #showArchivedActivities,
+      or: $value.showArchivedActivities,
+    ),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
   );
 

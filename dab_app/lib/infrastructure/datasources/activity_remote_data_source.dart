@@ -21,11 +21,24 @@ class ActivityRemoteDataSource {
   Future<Response> getLiveActivities({
     int limit = 50,
     bool global = false,
+    bool includeArchived = false,
   }) async {
     return await _restClient.get(
       '/activities/live',
-      queryParameters: {'limit': limit, if (global) 'scope': 'global'},
+      queryParameters: {
+        'limit': limit,
+        if (global) 'scope': 'global',
+        if (includeArchived) 'includeArchived': 'true',
+      },
     );
+  }
+
+  Future<Response> archiveLiveActivity(String id) async {
+    return await _restClient.post('/activities/live/$id/archive');
+  }
+
+  Future<Response> unarchiveLiveActivity(String id) async {
+    return await _restClient.post('/activities/live/$id/unarchive');
   }
 
   Future<Response> searchActivities(ActivitySearchQuery query) async {

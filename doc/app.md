@@ -122,11 +122,21 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 |---|---|---|
 | **Splash** | App bootstrap + redirect | Router-driven auth gate handoff |
 | **Login** | Auth gate | Form events handled by `AuthBloc`; session persisted in `AuthCubit` |
-| **Dashboard** | Real-time activity feed | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream |
+| **Dashboard** | Info capture + upcoming alerts | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream. Renders an **Upcoming Soon** section, a periodic in-app **banner** evaluated from `UpcomingEvent`s, and a **Live Now** feed with per-item Archive/Unarchive triage and a Show/Hide archived toggle. |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
 | **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
+
+#### Dashboard (Live Feed + Triage + Upcoming)
+
+- **Live Now** renders `visibleActivities` from `DashboardState` — the subset of the in-memory live feed filtered by the `showArchivedActivities` toggle.
+- Each `DabActivityCard` exposes an Archive action (or Unarchive for already-archived entries) routed through `DashboardBloc` with **optimistic UI** and rollback on failure.
+- Remote `ACTIVITY_ARCHIVED` / `ACTIVITY_UNARCHIVED` events on the WS stream are surfaced as `ActivityLiveEvent` subtypes (`ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`) and merged into the same list by flipping the entry's `archived` flag in place.
+- `DashboardArchiveToggle` surfaces the archived count and switches `showArchivedActivities`.
+- **Upcoming Soon** consumes `UpcomingEvent` items from `UpcomingEventUseCases` (currently backed by `PlaceholderUpcomingEventsRepository` until a calendar provider is wired in).
+- A periodic `DashboardBannerTick` (default every 30s) feeds `BannerEvaluator` which chooses at most one active `DashboardBanner` based on priority, time thresholds, and a per-event dedupe key retained in `DashboardState.lastNotifiedEventIds`.
+- The active banner is dismissable and re-shows only when a different `dedupeKey` becomes eligible.
 
 #### Explorer Historical Cache Strategy
 

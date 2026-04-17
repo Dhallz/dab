@@ -17,7 +17,8 @@ class DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          DashboardBloc(sl.activityUseCases)..add(const DashboardStarted()),
+          DashboardBloc(sl.activityUseCases, sl.upcomingEventUseCases)
+            ..add(const DashboardStarted()),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 900) {

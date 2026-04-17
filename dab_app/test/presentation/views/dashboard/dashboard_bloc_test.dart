@@ -1,8 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dab_app/domain/containers/activity_usecases.dart';
+import 'package:dab_app/domain/containers/upcoming_event_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_upcoming_events_repository.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_bloc.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_event.dart';
@@ -13,8 +15,12 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockActivityRepository extends Mock implements IActivityRepository {}
 
+class _MockUpcomingRepository extends Mock
+    implements IUpcomingEventsRepository {}
+
 void main() {
   late _MockActivityRepository repository;
+  late _MockUpcomingRepository upcomingRepository;
   late DashboardBloc bloc;
 
   setUpAll(() {
@@ -23,11 +29,19 @@ void main() {
 
   setUp(() {
     repository = _MockActivityRepository();
+    upcomingRepository = _MockUpcomingRepository();
     final useCases = ActivityUseCases(repository);
-    bloc = DashboardBloc(useCases);
+    final upcomingUseCases = UpcomingEventUseCases(upcomingRepository);
+    bloc = DashboardBloc(useCases, upcomingUseCases);
     when(
       () => repository.watchActivities(),
     ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => upcomingRepository.getUpcomingEvents(
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+      ),
+    ).thenAnswer((_) async => const Right([]));
   });
 
   tearDown(() async {
@@ -38,7 +52,11 @@ void main() {
     'loads live activities on start',
     build: () {
       when(
-        () => repository.getLiveActivities(limit: 50, global: false),
+        () => repository.getLiveActivities(
+          limit: 50,
+          global: false,
+          includeArchived: false,
+        ),
       ).thenAnswer(
         (_) async => Right([
           Activity(

@@ -58,6 +58,13 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     'createdAt',
     _$createdAt,
   );
+  static bool _$archived(Activity v) => v.archived;
+  static const Field<Activity, bool> _f$archived = Field(
+    'archived',
+    _$archived,
+    opt: true,
+    def: false,
+  );
 
   @override
   final MappableFields<Activity> fields = const {
@@ -71,6 +78,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     #commentCount: _f$commentCount,
     #url: _f$url,
     #createdAt: _f$createdAt,
+    #archived: _f$archived,
   };
 
   static Activity _instantiate(DecodingData data) {
@@ -85,6 +93,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
       commentCount: data.dec(_f$commentCount),
       url: data.dec(_f$url),
       createdAt: data.dec(_f$createdAt),
+      archived: data.dec(_f$archived),
     );
   }
 
@@ -156,6 +165,7 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
     int? commentCount,
     String? url,
     DateTime? createdAt,
+    bool? archived,
   });
   ActivityCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -180,6 +190,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     int? commentCount,
     Object? url = $none,
     DateTime? createdAt,
+    bool? archived,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -192,6 +203,7 @@ class _ActivityCopyWithImpl<$R, $Out>
       if (commentCount != null) #commentCount: commentCount,
       if (url != $none) #url: url,
       if (createdAt != null) #createdAt: createdAt,
+      if (archived != null) #archived: archived,
     }),
   );
   @override
@@ -206,6 +218,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     commentCount: data.get(#commentCount, or: $value.commentCount),
     url: data.get(#url, or: $value.url),
     createdAt: data.get(#createdAt, or: $value.createdAt),
+    archived: data.get(#archived, or: $value.archived),
   );
 
   @override
