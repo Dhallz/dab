@@ -55,7 +55,7 @@ void main() {
         () => repository.getLiveActivities(
           limit: 50,
           global: false,
-          includeArchived: false,
+          includeArchived: true,
         ),
       ).thenAnswer(
         (_) async => Right([
@@ -85,5 +85,80 @@ void main() {
           .having((s) => s.status, 'status', ViewStatus.success)
           .having((s) => s.activities.length, 'activities length', 1),
     ],
+  );
+
+  // Regression: on app restart we must hydrate archived entries so the user's
+  // triage state survives. They stay hidden by default (visibleActivities
+  // filters them), and toggling 'Show archived' must reveal them *without*
+  // issuing a second API call.
+  blocTest<DashboardBloc, DashboardState>(
+    'hydrates archived entries on start and reveals them via visibility toggle',
+    build: () {
+      when(
+        () => repository.getLiveActivities(
+          limit: 50,
+          global: false,
+          includeArchived: true,
+        ),
+      ).thenAnswer(
+        (_) async => Right([
+          Activity(
+            id: 'a-1',
+            userId: 'u-1',
+            provider: const SlackMessageProvider(channelId: 'C1'),
+            title: 'Visible message',
+            content: 'still on the feed',
+            authorName: 'Alice',
+            commentCount: 0,
+            createdAt: DateTime.utc(2026, 1, 1, 10),
+          ),
+          Activity(
+            id: 'a-2',
+            userId: 'u-1',
+            provider: const SlackMessageProvider(channelId: 'C1'),
+            title: 'Archived earlier',
+            content: 'user archived before restart',
+            authorName: 'Alice',
+            commentCount: 0,
+            createdAt: DateTime.utc(2026, 1, 1, 9),
+            archived: true,
+          ),
+        ]),
+      );
+      return bloc;
+    },
+    act: (bloc) async {
+      bloc.add(const DashboardStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      bloc.add(const DashboardArchivedVisibilityToggled());
+    },
+    wait: const Duration(milliseconds: 100),
+    verify: (bloc) {
+      expect(bloc.state.activities.length, 2);
+      expect(
+        bloc.state.activities.where((a) => a.archived).length,
+        1,
+        reason: 'archived flag must survive hydration',
+      );
+      expect(
+        bloc.state.showArchivedActivities,
+        true,
+        reason: 'toggle must flip to show archived',
+      );
+      expect(
+        bloc.state.visibleActivities.length,
+        2,
+        reason: 'archived entry must become visible after toggle',
+      );
+
+      // Exactly one hydration call; toggling must not trigger a refetch.
+      verify(
+        () => repository.getLiveActivities(
+          limit: 50,
+          global: false,
+          includeArchived: true,
+        ),
+      ).called(1);
+    },
   );
 }

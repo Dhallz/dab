@@ -57,9 +57,14 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
   ) async {
     emit(state.copyWith(status: ViewStatus.loading, errorMessage: null));
 
+    // Always request archived entries on hydration so the client has a
+    // complete picture of the Redis live feed. The archive visibility toggle
+    // is applied purely client-side via `DashboardState.visibleActivities`,
+    // which means a user's archive state survives an app restart even when
+    // the feed opens with archived items hidden by default.
     final liveResult = await _activityUseCases.getLiveActivities.execute(
       limit: 50,
-      includeArchived: state.showArchivedActivities,
+      includeArchived: true,
     );
     final upcomingResult = await _upcomingEventUseCases.getUpcomingEvents
         .execute();
