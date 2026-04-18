@@ -70,7 +70,7 @@ class ServiceLocator {
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
     // 1. Core Infrastructure
-    restApiClient = RestApiClient(baseUrl: 'http://localhost:8080');
+    restApiClient = RestApiClient(baseUrl: 'http://localhost:9080');
     tokenStorage = TokenStorage();
     final authInterceptor = AuthInterceptor(tokenStorage);
     restApiClient.addInterceptor(authInterceptor);
@@ -114,7 +114,7 @@ class ServiceLocator {
 
     // 5. Activity Context
     final wsClient = WebSocketClient(
-      'ws://localhost:8080/ws',
+      'ws://localhost:9080/ws',
       tokenProvider: () async {
         final tokens = await tokenStorage.readTokens();
         return tokens?['accessToken'];

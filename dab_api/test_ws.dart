@@ -1,9 +1,9 @@
 import 'dart:io';
 
 void main() async {
-  print('Attempting to connect to ws://localhost:8080/ws...');
+  print('Attempting to connect to ws://localhost:9080/ws...');
   try {
-    final socket = await WebSocket.connect('ws://localhost:8080/ws');
+    final socket = await WebSocket.connect('ws://localhost:9080/ws');
     print('Connected successfully!');
 
     socket.listen((data) {

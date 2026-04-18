@@ -29,8 +29,8 @@ services:
     # leave the process without a valid getcwd() unless this is explicit.
     working_dir: /app
     ports:
-      - "${API_PUBLIC_PORT:-8080}:${PORT:-8080}"
-      - "${DART_VM_PUBLIC_PORT:-8181}:8181"
+      - "${API_PUBLIC_PORT:-9080}:${PORT:-8080}"
+      - "${DART_VM_PUBLIC_PORT:-9181}:8181"
     command: sh -c "dart pub get && dart run --enable-vm-service=8181/0.0.0.0 bin/dab_api.dart"
     environment:
       - DB_HOST=db
@@ -51,7 +51,7 @@ services:
     image: swaggerapi/swagger-ui
     container_name: swagger
     ports:
-      - "${SWAGGER_PUBLIC_PORT:-8081}:8080"
+      - "${SWAGGER_PUBLIC_PORT:-9081}:8080"
     volumes:
       - ../doc/openapi.yaml:/usr/share/nginx/html/openapi.yaml
     environment:

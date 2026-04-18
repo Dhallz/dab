@@ -4,7 +4,7 @@ info:
   description: High-performance aggregator of developer activities, featuring real-time caching and the Vegas Sync Pattern.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:9080
     description: Local development server
 
 components:

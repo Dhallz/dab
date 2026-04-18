@@ -2,7 +2,7 @@
 # local.bru is gitignored to prevent accidental credential leaks.
 
 vars {
-  baseUrl: http://localhost:8080
+  baseUrl: http://localhost:9080
   accessToken: 
   refreshToken: 
   adminEmail: your@email.com

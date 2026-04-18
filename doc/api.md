@@ -205,4 +205,4 @@ body using:
 | Start server | `dart run bin/dab_api.dart` |
 | Start via Docker | `cd dab_api && docker-compose up -d` |
 | Regenerate code | `dart run build_runner build --delete-conflicting-outputs` |
-| Health check | `curl http://localhost:8080/health` |
+| Health check | `curl http://localhost:9080/health` |

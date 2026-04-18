@@ -121,7 +121,7 @@ Slack live events reach these keys through a signed Events API webhook endpoint
 
 ## WebSocket Real-Time Layer
 
-- **Endpoint:** `ws://host:8080/ws` (same API service port by default)
+- **Endpoint:** `ws://host:9080/ws` (same API service port by default)
 - **Auth:** JWT-authenticated upgrade; request identity is used for scoped delivery
 - **Protocol:** Clients upgrade HTTP → WebSocket on connect.
 - **Payloads:** `ACTIVITY_RECEIVED` events pushed on every new ingestion.
@@ -141,12 +141,18 @@ cd dab_api && docker-compose -f docker-compose.prod.yml up -d
 
 ### Service Map
 
-| Service | Port | Role |
-|---|---|---|
-| `api` (`relic`) | `8080` | REST API + WebSocket (`/ws`) |
-| `swagger` | `8081` | Swagger UI (serves `doc/openapi.yaml`) |
-| `db` (`postgres`) | `5433` (host) / `5432` (container) | Primary database |
-| `redis` | `6379` | Cache + versional clock |
+| Service | Host Port (default) | Container Port | Env Override | Role |
+|---|---|---|---|---|
+| `api` (`relic`) | `9080` | `8080` | `API_PUBLIC_PORT` / `PORT` | REST API + WebSocket (`/ws`) |
+| `api` (Dart VM) | `9181` | `8181` | `DART_VM_PUBLIC_PORT` | Dart VM service / observatory |
+| `swagger` | `9081` | `8080` | `SWAGGER_PUBLIC_PORT` | Swagger UI (serves `doc/openapi.yaml`) |
+| `db` (`postgres`) | `5433` | `5432` | `DB_PUBLIC_PORT` | Primary database |
+| `redis` | `6379` | `6379` | `REDIS_PUBLIC_PORT` | Cache + versional clock |
+
+> Host-side defaults for the API, Swagger, and Dart VM service moved from the
+> `808x` range to `90xx/91xx` so DAB can coexist with other local APIs that
+> already bind `8080`. Only the host mapping changed; inside the container the
+> API still listens on `8080`. Override any of them via `dab_api/.env`.
 
 ---
 
@@ -185,7 +191,7 @@ Production compose currently configures DB + API; if Redis is not in compose, pr
 |---|---|---|
 | API Pulse | `GET /health` | `{"status":"healthy","timestamp":"..."}` |
 | DB Health | `GET /health/db` | `{"status":"healthy|degraded","database":"connected|disconnected","timestamp":"..."}` |
-| WS Stream | `ws://host:8080/ws` | Successful upgrade + `ACTIVITY_RECEIVED` payloads |
+| WS Stream | `ws://host:9080/ws` | Successful upgrade + `ACTIVITY_RECEIVED` payloads |
 
 ---
 

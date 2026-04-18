@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 void main() async {
-  final baseUrl = 'http://localhost:8080';
+  final baseUrl = 'http://localhost:9080';
   final email = 'tester_${DateTime.now().millisecondsSinceEpoch}@necs.com';
   final password = 'password123';
 

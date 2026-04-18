@@ -67,8 +67,12 @@ cd dab_api
 docker-compose up -d  # Postgres, Redis, API, and Swagger go live
 ```
 🌐 **Services:** 
-- **Core API**: [http://localhost:8080](http://localhost:8080)
-- **Swagger Docs**: [http://localhost:8081](http://localhost:8081)
+- **Core API**: [http://localhost:9080](http://localhost:9080)
+- **Swagger Docs**: [http://localhost:9081](http://localhost:9081)
+
+> Default host ports moved off the 808x range to avoid collisions with other local
+> APIs. All are env-overridable via `API_PUBLIC_PORT`, `SWAGGER_PUBLIC_PORT`, and
+> `DART_VM_PUBLIC_PORT` in `dab_api/.env`.
 
 ### 2️⃣ Launch the Dashboard
 ```bash
