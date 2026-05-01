@@ -291,7 +291,7 @@ void main() {
             ).captured.single
             as Activity;
     expect(capturedActivity.userId, user.id);
-    expect(capturedActivity.authorName, 'bob.slack');
+    expect(capturedActivity.authorName, 'Bob');
   });
 
   test('broadcast mention fans out to all linked users', () async {
