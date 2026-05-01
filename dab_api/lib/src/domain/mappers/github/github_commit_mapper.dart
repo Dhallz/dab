@@ -27,20 +27,53 @@ class GitHubCommitMapper implements IActivityMapper<GitHubCommitDto> {
       return const [];
     }
 
-    final shortSha = data.sha.length > 7 ? data.sha.substring(0, 7) : data.sha;
+    final subjectAndBody = _splitCommitSubjectAndBody(data.message);
+    final subject = subjectAndBody.$1;
+    final body = subjectAndBody.$2;
+
+    final branchTag = data.branch?.trim();
+    final title =
+        branchTag != null && branchTag.isNotEmpty
+            ? '[$branchTag] $subject'
+            : subject;
+
+    final githubLogin = data.authorLogin?.trim();
+    final authorLine =
+        githubLogin != null && githubLogin.isNotEmpty
+            ? '${user.name} (@$githubLogin)'
+            : user.name;
+
     return [
       Activity(
         id: _uuid.v5(Namespace.url.value, 'github-${data.repo}-${data.sha}'),
         userId: user.id,
         provider: GitHubCommitProvider(repo: data.repo, branch: data.branch),
-        title: '[${data.repo}] $shortSha',
-        content: data.message,
+        title: title,
+        content: body,
         url: data.url,
-        authorName: data.authorName ?? user.name,
+        authorName: authorLine,
         authorAvatarUrl: data.authorAvatarUrl ?? user.avatarUrl,
         commentCount: 0,
         createdAt: data.committedAt,
       ),
     ];
+  }
+
+  /// First line vs remainder (after first `\n`). Normalizes CRLF.
+  (String subject, String body) _splitCommitSubjectAndBody(String message) {
+    final normalized = message.replaceAll('\r\n', '\n').trim();
+    if (normalized.isEmpty) {
+      return ('(empty commit message)', '');
+    }
+    final i = normalized.indexOf('\n');
+    if (i < 0) {
+      return (normalized, '');
+    }
+    final sub = normalized.substring(0, i).trim();
+    final rest = normalized.substring(i + 1).trim();
+    return (
+      sub.isEmpty ? '(empty commit message)' : sub,
+      rest,
+    );
   }
 }

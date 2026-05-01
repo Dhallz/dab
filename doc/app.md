@@ -135,6 +135,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 - Main feed is sectioned: **Upcoming Soon** -> **Awaiting Your Reply** -> **Live Now**.
 - **Live Now** renders the remainder of `visibleActivities` from `DashboardState` after urgency-oriented section routing, while still honoring the `showArchivedActivities` toggle.
 - Each `DabActivityCard` exposes an Archive action (or Unarchive for already-archived entries) routed through `DashboardBloc` with **optimistic UI** and rollback on failure.
+- **Live feed card copy:** Slack uses channel label + truncated summary as the headline, **From** `{sender}`, then full message below. GitHub commits use **`[branch] {commit subject}`** as the headline (`subject` is the first line of the commit message), **From** **`{linked DAB user name} (@{GitHub login})`**, then the remaining commit description on following lines when present.
 - Remote `ACTIVITY_ARCHIVED` / `ACTIVITY_UNARCHIVED` events on the WS stream are surfaced as `ActivityLiveEvent` subtypes (`ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`) and merged into the same list by flipping the entry's `archived` flag in place.
 - `DashboardArchiveToggle` surfaces the archived count and switches `showArchivedActivities`.
 - **Upcoming Soon** consumes `UpcomingEvent` items from `UpcomingEventUseCases` (currently backed by `PlaceholderUpcomingEventsRepository` until a calendar provider is wired in).

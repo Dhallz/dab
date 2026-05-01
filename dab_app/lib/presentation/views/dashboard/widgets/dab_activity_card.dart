@@ -40,9 +40,11 @@ class _DabActivityCardState extends State<DabActivityCard> {
     final style = widget.activity.style(context);
     final theme = Theme.of(context);
     final showsTriage = widget.onArchive != null || widget.onUnarchive != null;
+    final trimmedContent = widget.activity.content.trim();
     final showSenderLine =
-        widget.activity.provider is SlackMessageProvider &&
-        widget.activity.authorName.trim().isNotEmpty;
+        widget.activity.authorName.trim().isNotEmpty &&
+        (widget.activity.provider is SlackMessageProvider ||
+            widget.activity.provider is GitHubCommitProvider);
 
     return Semantics(
       label: widget.activity.archived
@@ -146,15 +148,17 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                   ],
                                 ),
                               ],
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.activity.content,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.onSurfaceVariant,
+                              if (trimmedContent.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.activity.content,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              ],
                             ],
                           ),
                         ),

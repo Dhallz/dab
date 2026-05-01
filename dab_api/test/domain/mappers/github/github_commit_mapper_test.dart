@@ -29,10 +29,10 @@ void main() {
         repo: 'acme/repo',
         branch: 'main',
         sha: 'abc1234',
-        message: 'feat: add flow',
+        message: 'feat: add flow\n\nBody paragraph.',
         url: 'https://github.com/acme/repo/commit/abc1234',
         committedAt: DateTime.utc(2026, 1, 1),
-        authorName: 'Alice',
+        authorLogin: 'alicegh',
         userId: 'u-1',
       ),
       [user],
@@ -43,6 +43,27 @@ void main() {
     expect(activity.userId, 'u-1');
     expect(activity.provider.name, 'GitHub');
     expect(activity.provider.category, 'commit');
-    expect(activity.title, '[acme/repo] abc1234');
+    expect(activity.title, '[main] feat: add flow');
+    expect(activity.content, 'Body paragraph.');
+    expect(activity.authorName, 'Alice (@alicegh)');
+  });
+
+  test('uses subject only title when branch is absent', () {
+    final user = TestData.user(id: 'u-1', name: 'Bob');
+    final activities = mapper.mapToActivities(
+      GitHubCommitDto(
+        repo: 'acme/repo',
+        sha: 'deadbeef',
+        message: 'fix: typo',
+        url: 'https://github.com/acme/repo/commit/deadbeef',
+        committedAt: DateTime.utc(2026, 1, 2),
+        authorLogin: 'bob',
+        userId: 'u-1',
+      ),
+      [user],
+    );
+    expect(activities.single.title, 'fix: typo');
+    expect(activities.single.content, '');
+    expect(activities.single.authorName, 'Bob (@bob)');
   });
 }
