@@ -15,6 +15,7 @@ import 'package:dab_api/src/application/usecases/activity/archive_live_activity.
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_github_webhook.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_slack_event.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
@@ -78,6 +79,7 @@ import 'package:dab_api/src/infrastructure/repositories/provider_config_reposito
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/security/jwt_provider.dart';
+import 'package:dab_api/src/infrastructure/security/github_webhook_verifier.dart';
 import 'package:dab_api/src/infrastructure/security/slack_request_verifier.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
@@ -117,6 +119,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PhorgeClient>(phorgeClient);
   sl.registerSingleton<JwtProvider>(JwtProvider());
   sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
+  sl.registerSingleton<GitHubWebhookVerifier>(GitHubWebhookVerifier());
 
   // -----------------------------------------------------
   // 2. Activity Architecture (Domain & Infrastructure)
@@ -157,7 +160,7 @@ Future<void> serviceLocator() async {
   final linearSource = LinearIssueSource();
   final discordMapper = DiscordMessageMapper();
   final discordSource = DiscordMessageSource();
-  final githubMapper = GitHubCommitMapper();
+  final githubCommitMapper = GitHubCommitMapper();
   final githubSource = GitHubCommitSource(
     providerConfigRepository,
     userRepository,
@@ -182,9 +185,10 @@ Future<void> serviceLocator() async {
   registry.register(jiraSource, jiraMapper);
   registry.register(linearSource, linearMapper);
   registry.register(discordSource, discordMapper);
-  registry.register(githubSource, githubMapper);
+  registry.register(githubSource, githubCommitMapper);
 
   sl.registerSingleton<ConnectorRegistry>(registry);
+  sl.registerSingleton<GitHubCommitMapper>(githubCommitMapper);
 
   // Repositories
   sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
@@ -293,6 +297,16 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
   );
+  sl.registerSingleton<IngestGitHubWebhook>(
+    IngestGitHubWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+      sl<GitHubCommitMapper>(),
+    ),
+  );
   sl.registerSingleton<IngestSlackEvent>(
     IngestSlackEvent(
       sl<IUserRepository>(),
@@ -397,6 +411,7 @@ Future<void> serviceLocator() async {
       fetchRemoteActivities: sl<FetchRemoteActivities>(),
       getLiveActivities: sl<GetLiveActivities>(),
       getRecentActivities: sl<GetRecentActivities>(),
+      ingestGitHubWebhook: sl<IngestGitHubWebhook>(),
       ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),

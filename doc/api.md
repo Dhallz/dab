@@ -157,7 +157,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Provider | Status | Protocol |
 |---|---|---|
 | Phorge | ✅ Active | Conduit REST API |
-| GitHub | ✅ Active (Commits v1) | REST |
+| GitHub | ✅ Active (Commits v1) | REST (+ push webhook) |
 | Slack | ✅ Active (Messages v1) | Slack Web API |
 | Jira | 🧪 Scaffolded | REST |
 | Linear | 🧪 Scaffolded | REST |
@@ -167,8 +167,13 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Bitbucket | 🔜 Planned | REST |
 
 GitHub v1 ingestion is commits-only and uses provider-linked identities from
-`user_identities` (`provider_id: github`) to scope authored fetches. Bootstrap
-remains local-first for the first admin; teams can onboard with any provider
+`user_identities` (`provider_id: github`) to scope attribution. Saved provider
+settings may include **`webhookSecret`** (matching the secret configured on the
+repository webhook in GitHub) for **`POST /integrations/github/webhook`**. The
+configured repo allow-list (`owner`/`repo`, `repos` list — same shaping as polling)
+gates which repositories may deliver push events into DAB; the unified fetcher continues to backfill commits via polling when configured.
+
+Bootstrap remains local-first for the first admin; teams can onboard with any provider
 afterward (no Phorge prerequisite).
 
 Slack v1 ingestion is message-only and strictly identity-based (`provider_id:
@@ -193,6 +198,16 @@ are ignored for live-feed ingestion.
 For local webhook testing, generate signature headers from the exact raw request
 body using:
 `./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
+
+GitHub true-live commit ingestion uses **`POST /integrations/github/webhook`**. The
+endpoint verifies **`X-Hub-Signature-256`** (HMAC SHA-256 of the raw body with
+`webhookSecret`), **`X-GitHub-Delivery`** (duplicate deliveries are skipped via Redis),
+and **`X-GitHub-Event`**. **`push`** events whose `repository.full_name` is in the
+configured allow-list fork into one activity per commit whose webhook author
+login matches a **linked** `user_identities` row (`provider_id: github`), then the
+pipeline matches Slack: Postgres + Redis **`fanOutActivity`** +
+**`PresenceService`** (`ACTIVITY_RECEIVED`). **`ping`** is acknowledged without
+persisting commits. Other event types return success but perform no ingestion.
 
 ---
 

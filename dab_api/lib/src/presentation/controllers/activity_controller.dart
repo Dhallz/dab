@@ -9,6 +9,7 @@ import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity/activity_provider.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
+import '../../infrastructure/security/github_webhook_verifier.dart';
 import '../../infrastructure/security/slack_request_verifier.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
@@ -276,6 +277,81 @@ class ActivityController {
     );
   }
 
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/github/webhook — verifies `X-Hub-Signature-256` and ingests push events.
+  Future<Response> receiveGitHubWebhook(Request request) async {
+    final body = await request.readAsString();
+    final signature = request.headers['X-Hub-Signature-256']?.first ?? '';
+    final delivery = request.headers['X-GitHub-Delivery']?.first ?? '';
+    final eventType = request.headers['X-GitHub-Event']?.first ?? '';
+
+    final webhookSecret = await _resolveGitHubWebhookSecret();
+    if (webhookSecret.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'GitHub webhook secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<GitHubWebhookVerifier>();
+    final valid = verifier.isValidSha256Signature(
+      body: body,
+      signature256Header: signature,
+      webhookSecret: webhookSecret,
+    );
+    if (!valid) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid GitHub webhook signature'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(body);
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid GitHub webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print(
+      '[GITHUB_WEBHOOK] webhook_received event=${eventType.trim()} delivery=${delivery.trim()}',
+    );
+
+    unawaited(
+      _activity.ingestGitHubWebhook
+          .execute(
+            payload: decoded,
+            deliveryId: delivery,
+            event: eventType,
+          )
+          .then((result) {
+            result.fold((failure) {
+              print('GitHub live ingestion failed: ${failure.message}');
+            }, (_) {});
+          }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'github_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
   Future<Response> searchActivities(Request request) async {
     final callerId = userIdProperty.get(request);
 
@@ -419,5 +495,23 @@ class ActivityController {
       return '';
     }
     return (slackConfig.settings['signingSecret'] ?? '').toString().trim();
+  }
+
+  Future<String> _resolveGitHubWebhookSecret() async {
+    final repo = sl<AbsIProviderConfigRepository>();
+    final result = await repo.getConfigs();
+    final githubConfig = result
+        .getOrElse((_) => const [])
+        .where(
+          (config) => config.id.toLowerCase() == 'github' && config.isActive,
+        )
+        .firstOrNull;
+    if (githubConfig == null) {
+      return '';
+    }
+    final settings = githubConfig.settings;
+    return (settings['webhookSecret'] ?? settings['webhook_secret'] ?? '')
+        .toString()
+        .trim();
   }
 }

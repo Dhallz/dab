@@ -1,0 +1,92 @@
+meta {
+  name: GitHub Webhook Push
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/integrations/github/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Hub-Signature-256: {{githubSignature256}}
+  X-GitHub-Delivery: {{githubDelivery}}
+  X-GitHub-Event: {{githubEvent}}
+}
+
+body:json {
+  {
+    "ref": "refs/heads/main",
+    "repository": {
+      "full_name": "acme/app"
+    },
+    "commits": [
+      {
+        "id": "abcdef1234567890abcdef1234567890abcd",
+        "distinct": true,
+        "message": "Example webhook commit",
+        "timestamp": "2026-03-01T15:30:00Z",
+        "url": "https://github.com/acme/app/commit/abcdef1234567890abcdef1234567890abcd",
+        "author": {
+          "name": "Dev User",
+          "username": "devuser",
+          "email": "dev@example.com"
+        }
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  githubEvent: push
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const webhookSecret =
+    bru.getEnvVar("githubWebhookSecret") ||
+    bru.getEnvVar("GITHUB_WEBHOOK_SECRET") ||
+    bru.getVar("githubWebhookSecret") ||
+    bru.getVar("GITHUB_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing GitHub webhook secret. Set githubWebhookSecret or GITHUB_WEBHOOK_SECRET.",
+    );
+  }
+  
+  const rawBody = req.getBody({ raw: true });
+  const digest = CryptoJS.HmacSHA256(rawBody, webhookSecret).toString(
+    CryptoJS.enc.Hex,
+  );
+  const signature = `sha256=${digest}`;
+  const delivery = `del-${Date.now()}`;
+  
+  req.setHeader("X-Hub-Signature-256", signature);
+  req.setHeader("X-GitHub-Delivery", delivery);
+  req.setHeader("X-GitHub-Event", bru.getVar("githubEvent"));
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("githubSignature256", signature);
+  bru.setVar("githubDelivery", delivery);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates GitHub `push` delivery to `POST /integrations/github/webhook`.
+  
+  Set `webhookSecret` on the GitHub provider config (`webhookSecret`) to match
+  the secret used below. The webhook body must align with repos configured under
+  the active `github` provider (`owner`/`repo`, `repos` list).
+  
+  Environment variables:
+  - `githubWebhookSecret` (or `GITHUB_WEBHOOK_SECRET`)
+}

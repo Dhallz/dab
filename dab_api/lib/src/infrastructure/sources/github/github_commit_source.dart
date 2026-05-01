@@ -5,6 +5,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/dtos/github/github_commit_dto.dart';
+import 'package:dab_api/src/infrastructure/sources/github/github_repo_config.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 import 'package:http/http.dart' as http;
 
@@ -54,7 +55,7 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
             : configuredApiBaseUrl)
         .replaceAll(RegExp(r'/+$'), '');
 
-    final repos = _extractRepos(settings);
+    final repos = extractConfiguredGithubRepos(settings);
     if (repos.isEmpty) {
       return [];
     }
@@ -124,32 +125,6 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
     }
 
     return commits;
-  }
-
-  List<String> _extractRepos(Map<String, dynamic> settings) {
-    final repos = <String>{};
-    final owner = (settings['owner'] ?? '').toString().trim();
-    final repo = (settings['repo'] ?? '').toString().trim();
-    if (owner.isNotEmpty && repo.isNotEmpty) {
-      repos.add('$owner/$repo');
-    }
-
-    final dynamic reposRaw = settings['repos'];
-    if (reposRaw is List) {
-      for (final entry in reposRaw) {
-        if (entry is String && entry.trim().isNotEmpty) {
-          repos.add(entry.trim());
-        } else if (entry is Map<String, dynamic>) {
-          final eOwner = (entry['owner'] ?? '').toString().trim();
-          final eRepo = (entry['repo'] ?? '').toString().trim();
-          if (eOwner.isNotEmpty && eRepo.isNotEmpty) {
-            repos.add('$eOwner/$eRepo');
-          }
-        }
-      }
-    }
-
-    return repos.toList();
   }
 
   Future<List<Map<String, dynamic>>> _fetchCommits({

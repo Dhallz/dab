@@ -364,6 +364,75 @@ paths:
                         format: date-time
         '401':
           description: Invalid Slack signature
+  /integrations/github/webhook:
+    post:
+      summary: GitHub repository webhook receiver (push commits).
+      description: |
+        Receives signed GitHub webhooks (`X-Hub-Signature-256`).
+        Processes `push` events asynchronously into the live-feed pipeline (`ping` acknowledges only).
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-GitHub-Delivery
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              ref: refs/heads/main
+              repository:
+                full_name: acme/repo
+              commits:
+                - id: abcdef1
+                  distinct: true
+                  message: "Example"
+                  timestamp: "2026-03-01T12:00:00Z"
+                  url: https://github.com/acme/repo/commit/abcdef1
+                  author:
+                    username: coder
+                    name: Coder
+      responses:
+        '200':
+          description: Accepted (processing may be asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['github_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature or missing headers
+        '500':
+          description: Webhook secret not configured for active github provider
   /ws:
     get:
       summary: WebSocket Connection for real-time broadcasts

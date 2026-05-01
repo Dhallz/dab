@@ -61,6 +61,10 @@ Future<void> main() async {
       '/integrations/slack/events',
       ActivityController().receiveSlackEvents,
     )
+    ..post(
+      '/integrations/github/webhook',
+      ActivityController().receiveGitHubWebhook,
+    )
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)

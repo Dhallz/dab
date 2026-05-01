@@ -115,7 +115,13 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 The dedicated Dashboard live endpoint reads only from the Redis live keys
 (`activities:global` and `activities:user:{id}`) and does not query Postgres.
 Slack live events reach these keys through a signed Events API webhook endpoint
-(`POST /integrations/slack/events`) that ingests push callbacks.
+(`POST /integrations/slack/events`) that ingests push callbacks. GitHub push
+callbacks use `POST /integrations/github/webhook` with TLS + HMAC body
+verification.
+
+Optional **webhook dedupe**: short-TTL Redis keys `slack:event:{eventId}` and
+`github:delivery:{delivery}` prevent replayed provider deliveries from
+double-writing during the TTL window.
 
 **Live feed window.** A background job runs at **UTC midnight** and rewrites
 materialized lists `activities:user:*` and `activities:global`, removing entries

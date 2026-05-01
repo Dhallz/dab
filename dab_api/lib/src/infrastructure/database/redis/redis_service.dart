@@ -328,6 +328,26 @@ class RedisService {
     return result != null;
   }
 
+  /// Attempts to reserve a GitHub webhook delivery id for one-time processing.
+  ///
+  /// Returns true when the delivery was not seen recently and is now reserved.
+  /// Returns false on duplicate webhook delivery retries.
+  Future<bool> reserveGitHubDeliveryId(
+    String deliveryId, {
+    Duration ttl = const Duration(hours: 24),
+  }) async {
+    final key = 'github:delivery:$deliveryId';
+    final result = await _cmd.send_object([
+      'SET',
+      key,
+      '1',
+      'NX',
+      'EX',
+      ttl.inSeconds,
+    ]);
+    return result != null;
+  }
+
   /// --- HELPERS ---
 
   String _encodeActivity(Activity activity) {
