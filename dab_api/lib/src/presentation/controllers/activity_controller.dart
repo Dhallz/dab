@@ -9,6 +9,7 @@ import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity/activity_provider.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
+import '../../infrastructure/http/github_webhook_payload.dart';
 import '../../infrastructure/security/github_webhook_verifier.dart';
 import '../../infrastructure/security/slack_request_verifier.dart';
 import '../../service_locator.dart';
@@ -310,11 +311,17 @@ class ActivityController {
       );
     }
 
-    final decoded = jsonDecode(body);
-    if (decoded is! Map<String, dynamic>) {
+    final decoded = decodeGitHubWebhookPayload(body);
+    if (decoded == null) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Invalid GitHub webhook payload'}),
+          jsonEncode({
+            'error': 'Invalid GitHub webhook payload',
+            'hint':
+                'Use Content type application/json in GitHub, or form '
+                'payload= (application/x-www-form-urlencoded). Body must match '
+                'the format used when the webhook secret was generated.',
+          }),
           mimeType: MimeType.json,
         ),
       );

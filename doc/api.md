@@ -199,10 +199,10 @@ For local webhook testing, generate signature headers from the exact raw request
 body using:
 `./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
 
-GitHub true-live commit ingestion uses **`POST /integrations/github/webhook`**. The
-endpoint verifies **`X-Hub-Signature-256`** (HMAC SHA-256 of the raw body with
-`webhookSecret`), **`X-GitHub-Delivery`** (duplicate deliveries are skipped via Redis),
-and **`X-GitHub-Event`**. **`push`** events whose `repository.full_name` is in the
+GitHub sends the JSON body as either **raw JSON** (`Content-Type:
+application/json`) or **URL-encoded** (`application/x-www-form-urlencoded` with a
+`payload` form field). Both are accepted; HMAC is always over the **exact raw
+request bytes** GitHub posts.
 configured allow-list fork into one activity per commit whose webhook author
 login matches a **linked** `user_identities` row (`provider_id: github`), then the
 pipeline matches Slack: Postgres + Redis **`fanOutActivity`** +
