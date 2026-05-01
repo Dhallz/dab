@@ -152,8 +152,10 @@ class ActivityRepository implements AbsIActivityRepository {
 
   @override
   Future<Either<DatabaseFailure, List<Activity>>> getActivitiesByUser(
-    String userId,
-  ) async {
+    String userId, {
+    DateTime? createdOnOrAfterUtc,
+    int? limit,
+  }) async {
     try {
       final query = _db.select(_db.activitiesTable).join([
         leftOuterJoin(
@@ -186,12 +188,24 @@ class ActivityRepository implements AbsIActivityRepository {
             _db.providerConfigsTable.isActive.equals(1),
       );
 
+      if (createdOnOrAfterUtc != null) {
+        query.where(
+          _db.activitiesTable.createdAt.isBiggerOrEqualValue(
+            toPgDateTime(createdOnOrAfterUtc),
+          ),
+        );
+      }
+
       query.orderBy([
         OrderingTerm(
           expression: _db.activitiesTable.createdAt,
           mode: OrderingMode.desc,
         ),
       ]);
+
+      if (limit != null && limit > 0) {
+        query.limit(limit);
+      }
 
       final rows = await query.get();
       return Right(rows.map(_mapRowToActivity).toList());

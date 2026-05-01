@@ -108,7 +108,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), Redis live feed (`/activities/live` with optional `?includeArchived=true`), live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook ingestion (`/integrations/slack/events`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`). Archived entries are retained in Redis only and purged daily at local midnight by `ActivityPurgeScheduler`. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), Redis live feed (`/activities/live` with optional `?includeArchived=true`); when the user’s Redis list is empty (e.g. fresh Redis after deploy), **`/activities/live` falls back** to PostgreSQL for **today’s UTC** rows so the dashboard stays populated. Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook ingestion (`/integrations/slack/events`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`). Archived entries are retained in Redis only and purged daily at local midnight by `ActivityPurgeScheduler`. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
 | `AuthController` | `/auth/*` | Register, login, refresh token |
 | `GroupController` | `/groups/*` | Group management |

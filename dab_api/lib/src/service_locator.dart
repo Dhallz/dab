@@ -292,7 +292,10 @@ Future<void> serviceLocator() async {
     GetRecentActivities(sl<AbsIActivityRepository>()),
   );
   sl.registerSingleton<GetLiveActivities>(
-    GetLiveActivities(sl<RedisService>()),
+    GetLiveActivities(
+      sl<RedisService>(),
+      sl<AbsIActivityRepository>(),
+    ),
   );
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
