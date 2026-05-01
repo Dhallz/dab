@@ -75,3 +75,10 @@ class DashboardBannerDismissed extends DashboardEvent
     with DashboardBannerDismissedMappable {
   const DashboardBannerDismissed();
 }
+
+/// Internal event used to clear the transient reconnect notice.
+@MappableClass()
+class DashboardReconnectNoticeCleared extends DashboardEvent
+    with DashboardReconnectNoticeClearedMappable {
+  const DashboardReconnectNoticeCleared();
+}

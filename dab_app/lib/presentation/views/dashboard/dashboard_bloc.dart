@@ -9,6 +9,7 @@ import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../core/abs_bloc.dart';
 import '../../core/models/view_status.dart';
 import 'dashboard_event.dart';
+import 'models/dashboard_provider_health.dart';
 import 'dashboard_state.dart';
 import 'services/banner_evaluator.dart';
 
@@ -29,6 +30,10 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
 
   StreamSubscription<ActivityLiveEvent>? _activitySubscription;
   Timer? _bannerTimer;
+  Timer? _streamHealthTimer;
+  Timer? _reconnectNoticeTimer;
+  DateTime? _lastLivePulseAt;
+  bool _awaitingReconnectNotice = false;
 
   DashboardBloc(
     this._activityUseCases,
@@ -36,10 +41,10 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     BannerEvaluator? bannerEvaluator,
     DateTime Function()? now,
     Duration bannerTickInterval = const Duration(seconds: 30),
-  })  : _bannerEvaluator = bannerEvaluator ?? const BannerEvaluator(),
-        _now = now ?? DateTime.now,
-        _bannerTickInterval = bannerTickInterval,
-        super(const DashboardState()) {
+  }) : _bannerEvaluator = bannerEvaluator ?? const BannerEvaluator(),
+       _now = now ?? DateTime.now,
+       _bannerTickInterval = bannerTickInterval,
+       super(const DashboardState()) {
     on<DashboardStarted>(_onStarted);
     on<DashboardActivityReceived>(_onActivityReceived);
     on<DashboardActivityArchivedRemotely>(_onActivityArchivedRemotely);
@@ -49,12 +54,18 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     on<DashboardArchivedVisibilityToggled>(_onArchivedVisibilityToggled);
     on<DashboardBannerTick>(_onBannerTick);
     on<DashboardBannerDismissed>(_onBannerDismissed);
+    on<DashboardReconnectNoticeCleared>(_onReconnectNoticeCleared);
   }
 
   Future<void> _onStarted(
     DashboardStarted event,
     Emitter<DashboardState> emit,
   ) async {
+    final now = _now();
+    _lastLivePulseAt = now;
+    _awaitingReconnectNotice = false;
+    _streamHealthTimer?.cancel();
+    _reconnectNoticeTimer?.cancel();
     emit(state.copyWith(status: ViewStatus.loading, errorMessage: null));
 
     // Always request archived entries on hydration so the client has a
@@ -79,6 +90,8 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
             status: ViewStatus.failure,
             errorMessage: failure.message,
             upcomingEvents: upcomingEvents,
+            lastSyncedAt: now,
+            reconnectNoticeAt: null,
           ),
         );
       },
@@ -90,6 +103,9 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
             errorMessage: null,
             activities: activities,
             upcomingEvents: upcomingEvents,
+            providerHealth: _deriveProviderHealth(activities, now),
+            lastSyncedAt: now,
+            reconnectNoticeAt: null,
           ),
         );
       },
@@ -109,6 +125,14 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
       }
     });
 
+    _streamHealthTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      final lastPulse = _lastLivePulseAt;
+      if (lastPulse == null) return;
+      if (_now().difference(lastPulse) > const Duration(seconds: 20)) {
+        _awaitingReconnectNotice = true;
+      }
+    });
+
     _bannerTimer?.cancel();
     _bannerTimer = Timer.periodic(_bannerTickInterval, (_) {
       add(const DashboardBannerTick());
@@ -121,6 +145,8 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     Emitter<DashboardState> emit,
   ) {
     final activity = event.activity as Activity;
+    final now = _now();
+    _lastLivePulseAt = now;
     print(
       '[LIVE_CLIENT] dashboard_event activity_id=${activity.id} user_id=${activity.userId}',
     );
@@ -134,13 +160,29 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     print(
       '[LIVE_CLIENT] dashboard_state_updated total=${updatedList.length} newest=${activity.id}',
     );
-    emit(state.copyWith(activities: updatedList));
+    final shouldShowReconnectNotice = _awaitingReconnectNotice;
+    _awaitingReconnectNotice = false;
+    emit(
+      state.copyWith(
+        activities: updatedList,
+        providerHealth: _deriveProviderHealth(updatedList, now),
+        lastSyncedAt: now,
+        reconnectNoticeAt: shouldShowReconnectNotice ? now : null,
+      ),
+    );
+    if (shouldShowReconnectNotice) {
+      _reconnectNoticeTimer?.cancel();
+      _reconnectNoticeTimer = Timer(const Duration(seconds: 4), () {
+        add(const DashboardReconnectNoticeCleared());
+      });
+    }
   }
 
   void _onActivityArchivedRemotely(
     DashboardActivityArchivedRemotely event,
     Emitter<DashboardState> emit,
   ) {
+    _lastLivePulseAt = _now();
     _updateArchiveFlag(event.activityId, archived: true, emit: emit);
   }
 
@@ -148,6 +190,7 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     DashboardActivityUnarchivedRemotely event,
     Emitter<DashboardState> emit,
   ) {
+    _lastLivePulseAt = _now();
     _updateArchiveFlag(event.activityId, archived: false, emit: emit);
   }
 
@@ -164,17 +207,14 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     final result = await _activityUseCases.archiveLiveActivity.execute(
       event.activityId,
     );
-    result.fold(
-      (_) {
-        if (emit.isDone) return;
-        _updateArchiveFlag(
-          event.activityId,
-          archived: previouslyArchived,
-          emit: emit,
-        );
-      },
-      (_) {},
-    );
+    result.fold((_) {
+      if (emit.isDone) return;
+      _updateArchiveFlag(
+        event.activityId,
+        archived: previouslyArchived,
+        emit: emit,
+      );
+    }, (_) {});
   }
 
   Future<void> _onUnarchiveRequested(
@@ -189,34 +229,24 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     final result = await _activityUseCases.unarchiveLiveActivity.execute(
       event.activityId,
     );
-    result.fold(
-      (_) {
-        if (emit.isDone) return;
-        _updateArchiveFlag(
-          event.activityId,
-          archived: previouslyArchived,
-          emit: emit,
-        );
-      },
-      (_) {},
-    );
+    result.fold((_) {
+      if (emit.isDone) return;
+      _updateArchiveFlag(
+        event.activityId,
+        archived: previouslyArchived,
+        emit: emit,
+      );
+    }, (_) {});
   }
 
   void _onArchivedVisibilityToggled(
     DashboardArchivedVisibilityToggled event,
     Emitter<DashboardState> emit,
   ) {
-    emit(
-      state.copyWith(
-        showArchivedActivities: !state.showArchivedActivities,
-      ),
-    );
+    emit(state.copyWith(showArchivedActivities: !state.showArchivedActivities));
   }
 
-  void _onBannerTick(
-    DashboardBannerTick event,
-    Emitter<DashboardState> emit,
-  ) {
+  void _onBannerTick(DashboardBannerTick event, Emitter<DashboardState> emit) {
     if (state.upcomingEvents.isEmpty) return;
     final banner = _bannerEvaluator.evaluate(
       events: state.upcomingEvents,
@@ -229,10 +259,7 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
     emit(
       state.copyWith(
         activeBanner: banner,
-        lastNotifiedEventIds: [
-          ...state.lastNotifiedEventIds,
-          banner.dedupeKey,
-        ],
+        lastNotifiedEventIds: [...state.lastNotifiedEventIds, banner.dedupeKey],
       ),
     );
   }
@@ -243,6 +270,14 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
   ) {
     if (state.activeBanner == null) return;
     emit(state.copyWith(activeBanner: null));
+  }
+
+  void _onReconnectNoticeCleared(
+    DashboardReconnectNoticeCleared event,
+    Emitter<DashboardState> emit,
+  ) {
+    if (state.reconnectNoticeAt == null) return;
+    emit(state.copyWith(reconnectNoticeAt: null));
   }
 
   void _updateArchiveFlag(
@@ -270,6 +305,40 @@ class DashboardBloc extends AbsBloc<DashboardEvent, DashboardState> {
   Future<void> close() {
     _activitySubscription?.cancel();
     _bannerTimer?.cancel();
+    _streamHealthTimer?.cancel();
+    _reconnectNoticeTimer?.cancel();
     return super.close();
+  }
+
+  List<DashboardProviderHealth> _deriveProviderHealth(
+    List<Activity> activities,
+    DateTime now,
+  ) {
+    if (activities.isEmpty) return const [];
+
+    final byProvider = <String, DateTime>{};
+    for (final activity in activities) {
+      final current = byProvider[activity.provider.name];
+      if (current == null || activity.createdAt.isAfter(current)) {
+        byProvider[activity.provider.name] = activity.createdAt;
+      }
+    }
+
+    final health = byProvider.entries.map((entry) {
+      final elapsed = now.difference(entry.value);
+      final status = elapsed <= const Duration(minutes: 5)
+          ? DashboardProviderHealthStatus.live
+          : elapsed <= const Duration(minutes: 30)
+          ? DashboardProviderHealthStatus.degraded
+          : DashboardProviderHealthStatus.offline;
+      return DashboardProviderHealth(
+        providerName: entry.key,
+        status: status,
+        lastEventAt: entry.value,
+      );
+    }).toList();
+
+    health.sort((a, b) => a.providerName.compareTo(b.providerName));
+    return health;
   }
 }

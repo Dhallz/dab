@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../domain/entities/activity/activity.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
@@ -13,9 +14,9 @@ import 'dashboard_banner_widget.dart';
 import 'upcoming_soon_section.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Renders the dashboard body — Upcoming Soon section, Live Now header
-/// with archive visibility toggle, and the live activity list with triage
-/// actions. Dispatches archive/unarchive/toggle events back to the bloc.
+/// ROLE: Renders the dashboard body as a feed:
+/// Upcoming Soon -> Awaiting Your Reply -> Live Now.
+/// Dispatches archive/unarchive/toggle events back to the bloc.
 class DashboardLiveFeed extends StatelessWidget {
   final DashboardState state;
   final EdgeInsetsGeometry padding;
@@ -35,10 +36,17 @@ class DashboardLiveFeed extends StatelessWidget {
     final bloc = context.read<DashboardBloc>();
     final theme = Theme.of(context);
     final visibleActivities = state.visibleActivities;
+    final sections = _ActivitySections.from(visibleActivities);
 
     return ListView(
       padding: padding,
       children: [
+        _SyncPill(lastSyncedAt: state.lastSyncedAt),
+        const SizedBox(height: 10),
+        if (state.reconnectNoticeAt != null) ...[
+          _ReconnectNoticeBanner(at: state.reconnectNoticeAt!),
+          const SizedBox(height: 10),
+        ],
         if (state.activeBanner != null) ...[
           DashboardBannerWidget(
             banner: state.activeBanner!,
@@ -47,6 +55,33 @@ class DashboardLiveFeed extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         UpcomingSoonSection(events: state.upcomingEvents),
+        const SizedBox(height: 16),
+        _SectionHeader(
+          title: 'Awaiting Your Reply',
+          subtitle: 'Thread follow-ups that likely expect a response.',
+        ),
+        const SizedBox(height: 8),
+        if (sections.awaitingReply.isEmpty)
+          _EmptySectionPlaceholder(
+            icon: AppIcons.history,
+            message: 'No active reply threads right now.',
+          )
+        else
+          ...sections.awaitingReply.map(
+            (activity) => DabActivityCard(
+              activity: activity,
+              onArchive: activity.archived
+                  ? null
+                  : () => bloc.add(
+                      DashboardArchiveActivityRequested(activity.id),
+                    ),
+              onUnarchive: activity.archived
+                  ? () => bloc.add(
+                      DashboardUnarchiveActivityRequested(activity.id),
+                    )
+                  : null,
+            ),
+          ),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -62,38 +97,168 @@ class DashboardLiveFeed extends StatelessWidget {
             DashboardArchiveToggle(
               showArchived: state.showArchivedActivities,
               archivedCount: state.archivedCount,
-              onToggle: () => bloc.add(
-                const DashboardArchivedVisibilityToggled(),
-              ),
+              onToggle: () =>
+                  bloc.add(const DashboardArchivedVisibilityToggled()),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        if (state.status == ViewStatus.failure &&
-            state.activities.isEmpty)
+        if (state.status == ViewStatus.failure && state.activities.isEmpty)
           _FailurePlaceholder(message: state.errorMessage)
-        else if (visibleActivities.isEmpty)
+        else if (sections.liveNow.isEmpty)
           _EmptyLivePlaceholder(
             showingArchived: state.showArchivedActivities,
             hasAnyActivities: state.activities.isNotEmpty,
           )
         else
-          ...visibleActivities.map(
+          ...sections.liveNow.map(
             (activity) => DabActivityCard(
               activity: activity,
               onArchive: activity.archived
                   ? null
                   : () => bloc.add(
-                        DashboardArchiveActivityRequested(activity.id),
-                      ),
+                      DashboardArchiveActivityRequested(activity.id),
+                    ),
               onUnarchive: activity.archived
                   ? () => bloc.add(
-                        DashboardUnarchiveActivityRequested(activity.id),
-                      )
+                      DashboardUnarchiveActivityRequested(activity.id),
+                    )
                   : null,
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SyncPill extends StatelessWidget {
+  final DateTime? lastSyncedAt;
+
+  const _SyncPill({required this.lastSyncedAt});
+
+  @override
+  Widget build(BuildContext context) {
+    if (lastSyncedAt == null) {
+      return const SizedBox.shrink();
+    }
+    final now = DateTime.now();
+    final elapsed = now.difference(lastSyncedAt!);
+    final label = elapsed.inSeconds < 60
+        ? '${elapsed.inSeconds}s ago'
+        : '${elapsed.inMinutes}m ago';
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.onSurface.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
+        ),
+        child: Text(
+          'Live · updated $label',
+          style: theme(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: AppColors.onSurfaceVariant),
+        ),
+      ),
+    );
+  }
+
+  ThemeData theme(BuildContext context) => Theme.of(context);
+}
+
+class _ReconnectNoticeBanner extends StatelessWidget {
+  final DateTime at;
+
+  const _ReconnectNoticeBanner({required this.at});
+
+  @override
+  Widget build(BuildContext context) {
+    final hh = at.hour.toString().padLeft(2, '0');
+    final mm = at.minute.toString().padLeft(2, '0');
+    final ss = at.second.toString().padLeft(2, '0');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.onSurface.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        'Reconnected - caught up through $hh:$mm:$ss',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SectionHeader({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.6,
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.onSurfaceVariantLow,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptySectionPlaceholder extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _EmptySectionPlaceholder({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppColors.onSurfaceVariantLow),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -109,14 +274,60 @@ class _FailurePlaceholder extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
           message ?? 'Failed to load live activities.',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppColors.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       ),
     );
+  }
+}
+
+class _ActivitySections {
+  final List<Activity> awaitingReply;
+  final List<Activity> liveNow;
+
+  const _ActivitySections({
+    required this.awaitingReply,
+    required this.liveNow,
+  });
+
+  factory _ActivitySections.from(List<Activity> activities) {
+    final awaitingReply = <Activity>[];
+    final liveNow = <Activity>[];
+
+    for (final activity in activities) {
+      if (_isAwaitingReply(activity)) {
+        awaitingReply.add(activity);
+      } else {
+        liveNow.add(activity);
+      }
+    }
+
+    return _ActivitySections(
+      awaitingReply: awaitingReply,
+      liveNow: liveNow,
+    );
+  }
+
+  static final _followUpKeywords = <String>{
+    'reply',
+    'follow-up',
+    'follow up',
+    'any update',
+    'ping',
+    'reminder',
+  };
+
+  static bool _isAwaitingReply(Activity activity) {
+    final provider = activity.provider;
+    if (provider is SlackMessageProvider) {
+      if (provider.threadTs != null) return true;
+    }
+    final haystack = '${activity.title} ${activity.content}'.toLowerCase();
+    if (_followUpKeywords.any(haystack.contains)) return true;
+    return haystack.endsWith('?');
   }
 }
 

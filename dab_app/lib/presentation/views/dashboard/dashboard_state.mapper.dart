@@ -18,6 +18,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       ActivityMapper.ensureInitialized();
       UpcomingEventMapper.ensureInitialized();
       DashboardBannerMapper.ensureInitialized();
+      DashboardProviderHealthMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -66,6 +67,41 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     opt: true,
     def: false,
   );
+  static List<DashboardProviderHealth> _$providerHealth(DashboardState v) =>
+      v.providerHealth;
+  static const Field<DashboardState, List<DashboardProviderHealth>>
+  _f$providerHealth = Field(
+    'providerHealth',
+    _$providerHealth,
+    opt: true,
+    def: const [],
+  );
+  static DateTime? _$lastSyncedAt(DashboardState v) => v.lastSyncedAt;
+  static const Field<DashboardState, DateTime> _f$lastSyncedAt = Field(
+    'lastSyncedAt',
+    _$lastSyncedAt,
+    opt: true,
+  );
+  static DateTime? _$reconnectNoticeAt(DashboardState v) => v.reconnectNoticeAt;
+  static const Field<DashboardState, DateTime> _f$reconnectNoticeAt = Field(
+    'reconnectNoticeAt',
+    _$reconnectNoticeAt,
+    opt: true,
+  );
+  static int _$snoozedCount(DashboardState v) => v.snoozedCount;
+  static const Field<DashboardState, int> _f$snoozedCount = Field(
+    'snoozedCount',
+    _$snoozedCount,
+    opt: true,
+    def: 0,
+  );
+  static int _$reviewQueueCount(DashboardState v) => v.reviewQueueCount;
+  static const Field<DashboardState, int> _f$reviewQueueCount = Field(
+    'reviewQueueCount',
+    _$reviewQueueCount,
+    opt: true,
+    def: 0,
+  );
   static String? _$errorMessage(DashboardState v) => v.errorMessage;
   static const Field<DashboardState, String> _f$errorMessage = Field(
     'errorMessage',
@@ -91,6 +127,11 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     #activeBanner: _f$activeBanner,
     #lastNotifiedEventIds: _f$lastNotifiedEventIds,
     #showArchivedActivities: _f$showArchivedActivities,
+    #providerHealth: _f$providerHealth,
+    #lastSyncedAt: _f$lastSyncedAt,
+    #reconnectNoticeAt: _f$reconnectNoticeAt,
+    #snoozedCount: _f$snoozedCount,
+    #reviewQueueCount: _f$reviewQueueCount,
     #errorMessage: _f$errorMessage,
     #visibleActivities: _f$visibleActivities,
     #archivedCount: _f$archivedCount,
@@ -104,6 +145,11 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       activeBanner: data.dec(_f$activeBanner),
       lastNotifiedEventIds: data.dec(_f$lastNotifiedEventIds),
       showArchivedActivities: data.dec(_f$showArchivedActivities),
+      providerHealth: data.dec(_f$providerHealth),
+      lastSyncedAt: data.dec(_f$lastSyncedAt),
+      reconnectNoticeAt: data.dec(_f$reconnectNoticeAt),
+      snoozedCount: data.dec(_f$snoozedCount),
+      reviewQueueCount: data.dec(_f$reviewQueueCount),
       errorMessage: data.dec(_f$errorMessage),
     );
   }
@@ -182,6 +228,16 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
   get activeBanner;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get lastNotifiedEventIds;
+  ListCopyWith<
+    $R,
+    DashboardProviderHealth,
+    DashboardProviderHealthCopyWith<
+      $R,
+      DashboardProviderHealth,
+      DashboardProviderHealth
+    >
+  >
+  get providerHealth;
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
@@ -189,6 +245,11 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     DashboardBanner? activeBanner,
     List<String>? lastNotifiedEventIds,
     bool? showArchivedActivities,
+    List<DashboardProviderHealth>? providerHealth,
+    DateTime? lastSyncedAt,
+    DateTime? reconnectNoticeAt,
+    int? snoozedCount,
+    int? reviewQueueCount,
     String? errorMessage,
   });
   DashboardStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
@@ -234,6 +295,21 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     (v) => call(lastNotifiedEventIds: v),
   );
   @override
+  ListCopyWith<
+    $R,
+    DashboardProviderHealth,
+    DashboardProviderHealthCopyWith<
+      $R,
+      DashboardProviderHealth,
+      DashboardProviderHealth
+    >
+  >
+  get providerHealth => ListCopyWith(
+    $value.providerHealth,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(providerHealth: v),
+  );
+  @override
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
@@ -241,6 +317,11 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     Object? activeBanner = $none,
     List<String>? lastNotifiedEventIds,
     bool? showArchivedActivities,
+    List<DashboardProviderHealth>? providerHealth,
+    Object? lastSyncedAt = $none,
+    Object? reconnectNoticeAt = $none,
+    int? snoozedCount,
+    int? reviewQueueCount,
     Object? errorMessage = $none,
   }) => $apply(
     FieldCopyWithData({
@@ -252,6 +333,11 @@ class _DashboardStateCopyWithImpl<$R, $Out>
         #lastNotifiedEventIds: lastNotifiedEventIds,
       if (showArchivedActivities != null)
         #showArchivedActivities: showArchivedActivities,
+      if (providerHealth != null) #providerHealth: providerHealth,
+      if (lastSyncedAt != $none) #lastSyncedAt: lastSyncedAt,
+      if (reconnectNoticeAt != $none) #reconnectNoticeAt: reconnectNoticeAt,
+      if (snoozedCount != null) #snoozedCount: snoozedCount,
+      if (reviewQueueCount != null) #reviewQueueCount: reviewQueueCount,
       if (errorMessage != $none) #errorMessage: errorMessage,
     }),
   );
@@ -269,6 +355,14 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       #showArchivedActivities,
       or: $value.showArchivedActivities,
     ),
+    providerHealth: data.get(#providerHealth, or: $value.providerHealth),
+    lastSyncedAt: data.get(#lastSyncedAt, or: $value.lastSyncedAt),
+    reconnectNoticeAt: data.get(
+      #reconnectNoticeAt,
+      or: $value.reconnectNoticeAt,
+    ),
+    snoozedCount: data.get(#snoozedCount, or: $value.snoozedCount),
+    reviewQueueCount: data.get(#reviewQueueCount, or: $value.reviewQueueCount),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
   );
 

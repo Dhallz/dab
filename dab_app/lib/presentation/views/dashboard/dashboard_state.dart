@@ -4,6 +4,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/upcoming/upcoming_event.dart';
 import 'models/dashboard_banner.dart';
+import 'models/dashboard_provider_health.dart';
 
 part 'dashboard_state.mapper.dart';
 
@@ -20,6 +21,11 @@ class DashboardState with DashboardStateMappable {
   final DashboardBanner? activeBanner;
   final List<String> lastNotifiedEventIds;
   final bool showArchivedActivities;
+  final List<DashboardProviderHealth> providerHealth;
+  final DateTime? lastSyncedAt;
+  final DateTime? reconnectNoticeAt;
+  final int snoozedCount;
+  final int reviewQueueCount;
   final String? errorMessage;
 
   const DashboardState({
@@ -29,6 +35,11 @@ class DashboardState with DashboardStateMappable {
     this.activeBanner,
     this.lastNotifiedEventIds = const [],
     this.showArchivedActivities = false,
+    this.providerHealth = const [],
+    this.lastSyncedAt,
+    this.reconnectNoticeAt,
+    this.snoozedCount = 0,
+    this.reviewQueueCount = 0,
     this.errorMessage,
   });
 

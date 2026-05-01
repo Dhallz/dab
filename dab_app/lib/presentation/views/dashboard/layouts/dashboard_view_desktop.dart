@@ -5,9 +5,15 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/island_bar.dart';
 import '../widgets/dashboard_island_bar_content.dart';
 import '../widgets/dashboard_live_feed.dart';
+import '../widgets/dashboard_sidebar_content.dart';
 import '../dashboard_bloc.dart';
 import '../dashboard_state.dart';
 
+/// [ARCH: PRESENTATION_LAYOUT]
+/// ROLE: Desktop rendering of the Activity Dashboard.
+/// CONTRACT: Two-column shell — [AppSidebar] plus main column with [IslandBar]
+/// and [DashboardLiveFeed]. Sidebar children are populated when dashboard
+/// chrome (e.g. shortcuts, filters) is defined.
 class DashboardViewDesktop extends StatelessWidget {
   const DashboardViewDesktop({super.key});
 
@@ -21,9 +27,14 @@ class DashboardViewDesktop extends StatelessWidget {
           body: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppSidebar(children: []),
+              AppSidebar(
+                children: [
+                  Expanded(child: DashboardSidebarContent(state: state)),
+                ],
+              ),
               Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const IslandBar(content: DashboardIslandBarContent()),
                     Expanded(

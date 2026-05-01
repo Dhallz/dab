@@ -23,6 +23,7 @@ class DashboardEventMapper extends ClassMapperBase<DashboardEvent> {
       DashboardArchivedVisibilityToggledMapper.ensureInitialized();
       DashboardBannerTickMapper.ensureInitialized();
       DashboardBannerDismissedMapper.ensureInitialized();
+      DashboardReconnectNoticeClearedMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -1330,5 +1331,152 @@ class _DashboardBannerDismissedCopyWithImpl<$R, $Out>
   DashboardBannerDismissedCopyWith<$R2, DashboardBannerDismissed, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _DashboardBannerDismissedCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class DashboardReconnectNoticeClearedMapper
+    extends ClassMapperBase<DashboardReconnectNoticeCleared> {
+  DashboardReconnectNoticeClearedMapper._();
+
+  static DashboardReconnectNoticeClearedMapper? _instance;
+  static DashboardReconnectNoticeClearedMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = DashboardReconnectNoticeClearedMapper._(),
+      );
+      DashboardEventMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'DashboardReconnectNoticeCleared';
+
+  @override
+  final MappableFields<DashboardReconnectNoticeCleared> fields = const {};
+
+  static DashboardReconnectNoticeCleared _instantiate(DecodingData data) {
+    return DashboardReconnectNoticeCleared();
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static DashboardReconnectNoticeCleared fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<DashboardReconnectNoticeCleared>(map);
+  }
+
+  static DashboardReconnectNoticeCleared fromJson(String json) {
+    return ensureInitialized().decodeJson<DashboardReconnectNoticeCleared>(
+      json,
+    );
+  }
+}
+
+mixin DashboardReconnectNoticeClearedMappable {
+  String toJson() {
+    return DashboardReconnectNoticeClearedMapper.ensureInitialized()
+        .encodeJson<DashboardReconnectNoticeCleared>(
+          this as DashboardReconnectNoticeCleared,
+        );
+  }
+
+  Map<String, dynamic> toMap() {
+    return DashboardReconnectNoticeClearedMapper.ensureInitialized()
+        .encodeMap<DashboardReconnectNoticeCleared>(
+          this as DashboardReconnectNoticeCleared,
+        );
+  }
+
+  DashboardReconnectNoticeClearedCopyWith<
+    DashboardReconnectNoticeCleared,
+    DashboardReconnectNoticeCleared,
+    DashboardReconnectNoticeCleared
+  >
+  get copyWith =>
+      _DashboardReconnectNoticeClearedCopyWithImpl<
+        DashboardReconnectNoticeCleared,
+        DashboardReconnectNoticeCleared
+      >(this as DashboardReconnectNoticeCleared, $identity, $identity);
+  @override
+  String toString() {
+    return DashboardReconnectNoticeClearedMapper.ensureInitialized()
+        .stringifyValue(this as DashboardReconnectNoticeCleared);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return DashboardReconnectNoticeClearedMapper.ensureInitialized()
+        .equalsValue(this as DashboardReconnectNoticeCleared, other);
+  }
+
+  @override
+  int get hashCode {
+    return DashboardReconnectNoticeClearedMapper.ensureInitialized().hashValue(
+      this as DashboardReconnectNoticeCleared,
+    );
+  }
+}
+
+extension DashboardReconnectNoticeClearedValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, DashboardReconnectNoticeCleared, $Out> {
+  DashboardReconnectNoticeClearedCopyWith<
+    $R,
+    DashboardReconnectNoticeCleared,
+    $Out
+  >
+  get $asDashboardReconnectNoticeCleared => $base.as(
+    (v, t, t2) =>
+        _DashboardReconnectNoticeClearedCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class DashboardReconnectNoticeClearedCopyWith<
+  $R,
+  $In extends DashboardReconnectNoticeCleared,
+  $Out
+>
+    implements DashboardEventCopyWith<$R, $In, $Out> {
+  @override
+  $R call();
+  DashboardReconnectNoticeClearedCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _DashboardReconnectNoticeClearedCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, DashboardReconnectNoticeCleared, $Out>
+    implements
+        DashboardReconnectNoticeClearedCopyWith<
+          $R,
+          DashboardReconnectNoticeCleared,
+          $Out
+        > {
+  _DashboardReconnectNoticeClearedCopyWithImpl(
+    super.value,
+    super.then,
+    super.then2,
+  );
+
+  @override
+  late final ClassMapperBase<DashboardReconnectNoticeCleared> $mapper =
+      DashboardReconnectNoticeClearedMapper.ensureInitialized();
+  @override
+  $R call() => $apply(FieldCopyWithData({}));
+  @override
+  DashboardReconnectNoticeCleared $make(CopyWithData data) =>
+      DashboardReconnectNoticeCleared();
+
+  @override
+  DashboardReconnectNoticeClearedCopyWith<
+    $R2,
+    DashboardReconnectNoticeCleared,
+    $Out2
+  >
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _DashboardReconnectNoticeClearedCopyWithImpl<$R2, $Out2>(
+        $value,
+        $cast,
+        t,
+      );
 }
 

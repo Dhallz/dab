@@ -39,8 +39,10 @@ class _DabActivityCardState extends State<DabActivityCard> {
   Widget build(BuildContext context) {
     final style = widget.activity.style(context);
     final theme = Theme.of(context);
-    final showsTriage =
-        widget.onArchive != null || widget.onUnarchive != null;
+    final showsTriage = widget.onArchive != null || widget.onUnarchive != null;
+    final showSenderLine =
+        widget.activity.provider is SlackMessageProvider &&
+        widget.activity.authorName.trim().isNotEmpty;
 
     return Semantics(
       label: widget.activity.archived
@@ -119,6 +121,31 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              if (showSenderLine) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      AppIcons.user,
+                                      size: 14,
+                                      color: AppColors.onSurfaceVariantLow,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'From ${widget.activity.authorName}',
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: AppColors.onSurfaceVariant,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Text(
                                 widget.activity.content,
@@ -186,9 +213,57 @@ class _DabActivityCardState extends State<DabActivityCard> {
   }
 
   Future<void> _launchUrl() async {
+    final provider = widget.activity.provider;
+    if (provider is SlackMessageProvider) {
+      await _launchSlack(provider);
+      return;
+    }
+
     final url = widget.activity.url;
-    if (url != null && await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
+    final uri = url == null ? null : Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _launchSlack(SlackMessageProvider provider) async {
+    final teamId = provider.workspaceId?.trim();
+    final channelId = provider.channelId?.trim();
+    final messageTs = provider.messageTs?.trim();
+
+    if (teamId != null && teamId.isNotEmpty) {
+      final openWorkspaceUri = Uri(
+        scheme: 'slack',
+        host: 'open',
+        queryParameters: {'team': teamId.toUpperCase()},
+      );
+      await launchUrl(openWorkspaceUri, mode: LaunchMode.externalApplication);
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+
+    if (channelId != null && channelId.isNotEmpty) {
+      final channelUri = Uri(
+        scheme: 'slack',
+        host: 'channel',
+        queryParameters: {
+          if (teamId != null && teamId.isNotEmpty) 'team': teamId.toUpperCase(),
+          'id': channelId,
+          if (messageTs != null && messageTs.isNotEmpty) 'message': messageTs,
+        },
+      );
+
+      if (await canLaunchUrl(channelUri)) {
+        await launchUrl(channelUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+    }
+
+    // Last fallback keeps us out of an in-app webview while preserving
+    // navigation when Slack deep-link metadata is incomplete.
+    final url = widget.activity.url;
+    final webUri = url == null ? null : Uri.tryParse(url);
+    if (webUri != null && await canLaunchUrl(webUri)) {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
     }
   }
 }
@@ -208,11 +283,11 @@ class _ArchivedBadge extends StatelessWidget {
       child: Text(
         'ARCHIVED',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-              fontSize: 10,
-            ),
+          color: color,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+          fontSize: 10,
+        ),
       ),
     );
   }

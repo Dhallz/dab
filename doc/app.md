@@ -130,7 +130,10 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 
 #### Dashboard (Live Feed + Triage + Upcoming)
 
-- **Live Now** renders `visibleActivities` from `DashboardState` — the subset of the in-memory live feed filtered by the `showArchivedActivities` toggle.
+- **Desktop layout** uses the shared glass `AppSidebar` plus a main column with `IslandBar` and `DashboardLiveFeed` (see `DashboardViewDesktop`).
+- Sidebar content now includes provider health chips, placeholder counters (`Snoozed`, `Review queue`), and a `lastSyncedAt` timestamp from `DashboardState`.
+- Main feed is sectioned: **Upcoming Soon** -> **Awaiting Your Reply** -> **Live Now**.
+- **Live Now** renders the remainder of `visibleActivities` from `DashboardState` after urgency-oriented section routing, while still honoring the `showArchivedActivities` toggle.
 - Each `DabActivityCard` exposes an Archive action (or Unarchive for already-archived entries) routed through `DashboardBloc` with **optimistic UI** and rollback on failure.
 - Remote `ACTIVITY_ARCHIVED` / `ACTIVITY_UNARCHIVED` events on the WS stream are surfaced as `ActivityLiveEvent` subtypes (`ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`) and merged into the same list by flipping the entry's `archived` flag in place.
 - `DashboardArchiveToggle` surfaces the archived count and switches `showArchivedActivities`.
