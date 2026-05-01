@@ -98,6 +98,10 @@ class _ProviderCardState extends State<ProviderCard> {
           config.settings['slackSigningSecret'];
       return (rawValue ?? fallback)?.toString() ?? '';
     }
+    if (field.key == 'webhookSecret') {
+      final fallback = config.settings['webhook_secret'];
+      return (rawValue ?? fallback)?.toString() ?? '';
+    }
 
     return rawValue?.toString() ?? '';
   }
@@ -501,6 +505,11 @@ class _ProviderCardState extends State<ProviderCard> {
           label: 'Personal Access Token',
           isSecret: true,
         ),
+        AdminConfigField(
+          key: 'webhookSecret',
+          label: 'Webhook Secret',
+          isSecret: true,
+        ),
         AdminConfigField(key: 'owner', label: 'Repository Owner'),
         AdminConfigField(key: 'repo', label: 'Repository Name'),
         AdminConfigField(
@@ -551,6 +560,9 @@ class _ProviderCardState extends State<ProviderCard> {
         }
       } else if (key == 'apiBaseUrl' && value.isEmpty) {
         settings.remove('apiBaseUrl');
+      } else if (key == 'webhookSecret' && value.isEmpty) {
+        settings.remove('webhookSecret');
+        settings.remove('webhook_secret');
       } else {
         settings[key] = value;
       }

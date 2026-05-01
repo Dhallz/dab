@@ -126,7 +126,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
 | **Settings** | User personalization | Dynamic forms — tool linking, theming |
-| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
+| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing; GitHub includes **Webhook Secret** for `POST /integrations/github/webhook` HMAC; Slack includes **Signing Secret** for Events API), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
 #### Dashboard (Live Feed + Triage + Upcoming)
 
