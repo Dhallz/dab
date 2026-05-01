@@ -3,12 +3,12 @@ import 'dart:async';
 import '../../infrastructure/database/redis/redis_service.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
-/// ROLE: Runs the daily midnight purge of archived live-feed activities.
-/// CONTRACT: Schedules a one-shot [Timer] to fire at the next local midnight,
-/// triggers [RedisService.purgeArchivedActivities], and reschedules itself
-/// for the following day. Idempotent and safe to re-run (a missed run is
-/// picked up on next startup; running twice is a no-op if no archived items
-/// remain).
+/// ROLE: Runs a daily purge at **UTC midnight**: removes archived live-feed
+/// rows and anything older than the current UTC calendar day from Redis
+/// (`activities:user:*`, `activities:global`).
+/// CONTRACT: Schedules a one-shot [Timer] to fire at the next **UTC** midnight,
+/// triggers [RedisService.purgeStaleLiveFeedActivities], and reschedules itself.
+/// Idempotent and safe to re-run (a missed run is picked up on next startup).
 /// CONSTRAINTS: Owns its own [Timer] instance; [stop] must be called on
 /// shutdown to release it.
 class ActivityPurgeScheduler {
@@ -28,7 +28,7 @@ class ActivityPurgeScheduler {
     if (_running) return;
     _running = true;
     _scheduleNext();
-    print('[TRIAGE_PIPELINE] purge_scheduler_started next=${_nextMidnight()}');
+    print('[TRIAGE_PIPELINE] purge_scheduler_started next=${_nextMidnightUtc()}');
   }
 
   /// Cancels the next scheduled purge. Running purges already in-flight will
@@ -41,20 +41,19 @@ class ActivityPurgeScheduler {
 
   /// Exposed for tests and manual triggers (e.g. an admin-only endpoint).
   Future<Map<String, int>> runNow() async {
-    return await _redis.purgeArchivedActivities();
+    return await _redis.purgeStaleLiveFeedActivities();
   }
 
-  DateTime _nextMidnight() {
-    final now = _now();
-    final tomorrow = DateTime(now.year, now.month, now.day).add(
+  DateTime _nextMidnightUtc() {
+    final now = _now().toUtc();
+    return DateTime.utc(now.year, now.month, now.day).add(
       const Duration(days: 1),
     );
-    return tomorrow;
   }
 
   void _scheduleNext() {
     if (!_running) return;
-    final delay = _nextMidnight().difference(_now());
+    final delay = _nextMidnightUtc().difference(_now().toUtc());
     // Guard against zero/negative delays if we cross midnight exactly.
     final safeDelay = delay.isNegative ? const Duration(minutes: 1) : delay;
     _timer = Timer(safeDelay, _runAndReschedule);
@@ -62,7 +61,7 @@ class ActivityPurgeScheduler {
 
   Future<void> _runAndReschedule() async {
     try {
-      final removed = await _redis.purgeArchivedActivities();
+      final removed = await _redis.purgeStaleLiveFeedActivities();
       print(
         '[TRIAGE_PIPELINE] purge_cycle_complete removed_keys=${removed.length}',
       );

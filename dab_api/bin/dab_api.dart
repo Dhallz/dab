@@ -29,7 +29,8 @@ Future<void> main() async {
   // sl<ActivityService>().startPolling();
   print('Phorge polling started.');
 
-  // 3. Start the daily midnight purge of archived live-feed entries.
+  // 3. Start the daily UTC midnight purge of stale live-feed entries (archived
+  //    or older than the current UTC calendar day).
   sl<ActivityPurgeScheduler>().start();
 
   final app = RelicApp()

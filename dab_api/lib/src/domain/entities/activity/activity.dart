@@ -47,7 +47,7 @@ class Activity with ActivityMappable {
   /// This field is only meaningful for activities currently in the Redis live
   /// feed; it is always `false` when the entity comes from the persistent
   /// database because archive/unarchive is a live-feed-only operation that is
-  /// wiped by the daily midnight purge.
+  /// wiped from Redis on the daily UTC purge (archived or prior calendar days).
   final bool archived;
 
   Activity({

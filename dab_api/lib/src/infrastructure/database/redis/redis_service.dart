@@ -95,9 +95,13 @@ class RedisService {
   /// from Redis live keys. It does not query Postgres.
   ///
   /// When [includeArchived] is false (default), entries whose `archived` flag
-  /// is true are filtered out before the limit is applied. The [limit] is the
-  /// upper bound on the **returned** list, so we over-read internally to avoid
-  /// starving the result when many entries are archived.
+  /// is true are filtered out before the limit is applied. Entries whose
+  /// [Activity.createdAt] is before the start of the current **UTC** calendar
+  /// day are always excluded (live feed is "today" only).
+  ///
+  /// The [limit] is the upper bound on the **returned** list, so we over-read
+  /// internally to avoid starving the result when many entries are archived or
+  /// stale.
   Future<List<Activity>> getLiveActivities({
     required String userId,
     int limit = 50,
@@ -105,8 +109,9 @@ class RedisService {
     bool includeArchived = false,
   }) async {
     final normalizedLimit = limit.clamp(1, 100);
+    final startOfTodayUtc = liveFeedStartOfTodayUtc();
     final key = global ? 'activities:global' : 'activities:user:$userId';
-    // Over-read so filtering by `archived` can still fill up to the limit.
+    // Over-read so filtering by `archived` / date can still fill up to the limit.
     final fetchSize = includeArchived ? normalizedLimit : 100;
     final raw = await _cmd.send_object(['LRANGE', key, 0, fetchSize - 1]);
 
@@ -116,6 +121,7 @@ class RedisService {
     for (final entry in raw) {
       final activity = _decodeActivity(entry);
       if (activity == null) continue;
+      if (activity.createdAt.isBefore(startOfTodayUtc)) continue;
       if (!includeArchived && activity.archived) continue;
       decoded.add(activity);
       if (decoded.length >= normalizedLimit) break;
@@ -159,65 +165,132 @@ class RedisService {
     return null;
   }
 
-  /// Removes every archived entry from every per-user live-feed key.
+  /// Drops live-feed rows that are **archived** or older than the current UTC
+  /// calendar day. Runs for every `activities:user:*` key (full SCAN loop) and
+  /// for `activities:global`.
   ///
-  /// Intended for the daily midnight reset. Rebuilds each list by decoding all
-  /// entries, dropping those with `archived == true`, and rewriting the key in
-  /// a single `DEL` + `RPUSH` cycle so the remaining entries preserve their
-  /// original ordering.
+  /// Intended for the daily UTC midnight job ([ActivityPurgeScheduler]).
+  /// Rebuilds each list by decoding entries, dropping removals, and rewriting in
+  /// a `DEL` + `RPUSH` cycle so order is preserved.
   ///
-  /// Returns a map of `userFeedKey -> removedCount` for observability.
-  Future<Map<String, int>> purgeArchivedActivities() async {
+  /// Returns a map of Redis key -> removedCount for observability.
+  Future<Map<String, int>> purgeStaleLiveFeedActivities() async {
     final removed = <String, int>{};
-    final scan = await _cmd.send_object([
-      'SCAN',
-      '0',
-      'MATCH',
-      'activities:user:*',
-      'COUNT',
-      '500',
-    ]);
-    if (scan is! List || scan.length < 2) return removed;
+    final startOfTodayUtc = liveFeedStartOfTodayUtc();
+    var totalArchived = 0;
+    var totalStale = 0;
 
-    final keys = scan[1];
-    if (keys is! List) return removed;
-
-    for (final key in keys) {
-      final keyStr = key.toString();
-      final raw = await _cmd.send_object(['LRANGE', keyStr, 0, -1]);
-      if (raw is! List) continue;
-
-      final kept = <String>[];
-      var dropped = 0;
-      for (final entry in raw) {
-        final activity = _decodeActivity(entry);
-        if (activity == null) {
-          // Preserve undecodable entries as-is so we don't eat them by mistake.
-          kept.add(entry.toString());
-          continue;
-        }
-        if (activity.archived) {
-          dropped++;
-          continue;
-        }
-        kept.add(entry.toString());
+    for (final keyStr in await _scanAllKeysMatching('activities:user:*')) {
+      final r = await _purgeLiveFeedListKey(keyStr, startOfTodayUtc);
+      if (r.dropped > 0) {
+        removed[keyStr] = r.dropped;
+        totalArchived += r.archived;
+        totalStale += r.staleByDate;
       }
+    }
 
-      if (dropped == 0) continue;
-
-      await _cmd.send_object(['DEL', keyStr]);
-      if (kept.isNotEmpty) {
-        await _cmd.send_object(['RPUSH', keyStr, ...kept]);
-      }
-      removed[keyStr] = dropped;
+    final global = await _purgeLiveFeedListKey('activities:global', startOfTodayUtc);
+    if (global.dropped > 0) {
+      removed['activities:global'] = global.dropped;
+      totalArchived += global.archived;
+      totalStale += global.staleByDate;
     }
 
     if (removed.isNotEmpty) {
+      final n = removed.values.fold(0, (a, b) => a + b);
       print(
-        '[TRIAGE_PIPELINE] purge_complete keys=${removed.length} total_removed=${removed.values.fold(0, (a, b) => a + b)}',
+        '[TRIAGE_PIPELINE] purge_complete keys=${removed.length} total_removed=$n '
+        'removed_archived=$totalArchived removed_stale_by_date=$totalStale',
       );
     }
     return removed;
+  }
+
+  /// Start of the current UTC calendar day. Live feeds only surface activities
+  /// at or after this instant.
+  static DateTime liveFeedStartOfTodayUtc([DateTime? now]) {
+    final u = (now ?? DateTime.now()).toUtc();
+    return DateTime.utc(u.year, u.month, u.day);
+  }
+
+  static bool shouldRemoveFromLiveFeed(Activity activity, DateTime startOfTodayUtc) {
+    return activity.archived || activity.createdAt.isBefore(startOfTodayUtc);
+  }
+
+  Future<List<String>> _scanAllKeysMatching(String pattern) async {
+    final keys = <String>{};
+    var cursor = '0';
+    do {
+      final reply = await _cmd.send_object([
+        'SCAN',
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        '500',
+      ]);
+      if (reply is! List || reply.length < 2) {
+        break;
+      }
+      cursor = reply[0].toString();
+      final batch = reply[1];
+      if (batch is List) {
+        for (final k in batch) {
+          keys.add(k.toString());
+        }
+      }
+    } while (cursor != '0');
+    return keys.toList();
+  }
+
+  /// Returns removed counts for [keyStr] (archive vs calendar staleness).
+  Future<({int dropped, int archived, int staleByDate})> _purgeLiveFeedListKey(
+    String keyStr,
+    DateTime startOfTodayUtc,
+  ) async {
+    final raw = await _cmd.send_object(['LRANGE', keyStr, 0, -1]);
+    if (raw is! List) {
+      return (dropped: 0, archived: 0, staleByDate: 0);
+    }
+
+    final kept = <String>[];
+    var dropped = 0;
+    var archived = 0;
+    var staleByDate = 0;
+    for (final entry in raw) {
+      final activity = _decodeActivity(entry);
+      if (activity == null) {
+        kept.add(entry.toString());
+        continue;
+      }
+      if (activity.archived) {
+        dropped++;
+        archived++;
+        continue;
+      }
+      if (activity.createdAt.isBefore(startOfTodayUtc)) {
+        dropped++;
+        staleByDate++;
+        continue;
+      }
+      kept.add(entry.toString());
+    }
+
+    if (dropped == 0) {
+      return (dropped: 0, archived: 0, staleByDate: 0);
+    }
+
+    await _cmd.send_object(['DEL', keyStr]);
+    if (kept.isNotEmpty) {
+      await _cmd.send_object(['RPUSH', keyStr, ...kept]);
+    }
+    return (dropped: dropped, archived: archived, staleByDate: staleByDate);
+  }
+
+  /// Deprecated name: the midnight job removes **archived** and **pre-today**
+  /// rows. Prefer [purgeStaleLiveFeedActivities].
+  Future<Map<String, int>> purgeArchivedActivities() async {
+    return purgeStaleLiveFeedActivities();
   }
 
   /// --- REDIS STREAMS ---

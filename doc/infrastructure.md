@@ -117,6 +117,12 @@ The dedicated Dashboard live endpoint reads only from the Redis live keys
 Slack live events reach these keys through a signed Events API webhook endpoint
 (`POST /integrations/slack/events`) that ingests push callbacks.
 
+**Live feed window.** A background job runs at **UTC midnight** and rewrites
+materialized lists `activities:user:*` and `activities:global`, removing entries
+that are **archived** or whose `createdAt` is **before** the current UTC day.
+The `GET /activities/live` handler applies the same UTC-day filter so clients
+never see prior days if a purge was missed.
+
 ---
 
 ## WebSocket Real-Time Layer
