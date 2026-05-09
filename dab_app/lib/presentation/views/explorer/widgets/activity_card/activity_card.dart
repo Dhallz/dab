@@ -3,14 +3,16 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../domain/entities/provider/provider_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../presentation/core/extensions/activity_category_l10n.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../../presentation/core/localization/app_localizations.dart';
+import '../../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../../presentation/features/app/app_notifier.dart';
 import 'activity_content.dart';
 import 'activity_footer.dart';
@@ -69,7 +71,9 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Could not launch URL')));
+        ).showSnackBar(
+          SnackBar(content: Text(context.l10n.explorerCouldNotLaunchUrl)),
+        );
       }
     }
   }
@@ -92,6 +96,7 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final configs = ref.watch(appNotifierProvider.select((s) => s.configs));
     final style = widget.activity.style(context);
@@ -182,7 +187,10 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                 children: [
                                   // Category Icon (Functional Accent)
                                   Tooltip(
-                                    message: 'Category: ${style.label}',
+                                    message: l10n.explorerTooltipCategory(
+                                      widget.activity.provider.category
+                                          .abbreviatedLabel(l10n),
+                                    ),
                                     child: Container(
                                       width: 48,
                                       height: 48,
@@ -214,7 +222,8 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                style.label.toUpperCase(),
+                                                widget.activity.provider.category
+                                                    .abbreviatedLabel(l10n),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
@@ -238,6 +247,8 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                             const SizedBox(width: 8),
                                             Text(
                                               _formatDate(
+                                                context,
+                                                l10n,
                                                 widget.activity.createdAt,
                                               ),
                                               style: TextStyle(
@@ -330,13 +341,28 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(
+    BuildContext context,
+    AppLocalizations l10n,
+    DateTime date,
+  ) {
     final now = DateTime.now();
     final difference = now.difference(date);
     if (difference.inDays > 7) {
-      return DateFormat('MMM d, y').format(date);
+      return DateFormat.yMMMd(
+        Localizations.localeOf(context).toString(),
+      ).format(date);
     }
-    return timeago.format(date);
+    if (difference.inDays > 0) {
+      return l10n.dashboardRelativeDaysAgo(difference.inDays);
+    }
+    if (difference.inHours > 0) {
+      return l10n.dashboardRelativeHoursAgo(difference.inHours);
+    }
+    if (difference.inMinutes > 0) {
+      return l10n.dashboardRelativeMinutesAgo(difference.inMinutes);
+    }
+    return l10n.dashboardRelativeJustNow;
   }
 
   String _displayTitle(Activity activity, {required bool isGitHubCommit}) {

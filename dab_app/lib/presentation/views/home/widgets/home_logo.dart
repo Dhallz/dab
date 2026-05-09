@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_layout.dart';
 import '../../../core/styles/app_spacing.dart';
@@ -31,7 +33,7 @@ class HomeLogo extends StatelessWidget {
       children: [
         Icon(AppIcons.brand, color: cs.primary, size: iconSize),
         const SizedBox(width: AppSpacing.s),
-        Text('DAB', style: primaryLabelStyle),
+        Text(context.l10n.brandShortName, style: primaryLabelStyle),
         if (showExpandedName) ...[
           const SizedBox(width: AppSpacing.xs),
           Container(
@@ -44,7 +46,7 @@ class HomeLogo extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            'Dev Activity Board',
+            context.l10n.brandTagline,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: secondaryLabelStyle,

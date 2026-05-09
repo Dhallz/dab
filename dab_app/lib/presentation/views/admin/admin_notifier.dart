@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../domain/entities/system/app_settings.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/user/user_identity_status.dart';
 import '../../../../domain/entities/user/user_role.dart';
 import '../../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../../services/service_locator.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/models/view_status.dart';
+import '../../features/app/app_notifier.dart';
 import 'admin_state.dart';
 import 'models/admin_section.dart';
 import 'models/provider_connection_status.dart';
@@ -117,7 +121,12 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
       _updateStatus(
         providerId,
         ViewStatus.failure,
-        message: e is TimeoutException ? 'Connection timed out' : e.toString(),
+        message: e is TimeoutException
+            ? lookupAppLocalizations(
+                ref.read(appNotifierProvider).settings.resolvedLocale ??
+                    const Locale('en'),
+              ).adminConnectionTimedOut
+            : e.toString(),
       );
     }
   }

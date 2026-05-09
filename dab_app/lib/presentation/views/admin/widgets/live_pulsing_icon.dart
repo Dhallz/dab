@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,7 @@ class _LivePulsingIconState extends State<LivePulsingIcon>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (widget.status == null) return const SizedBox.shrink();
 
     final Color color;
@@ -64,8 +66,8 @@ class _LivePulsingIconState extends State<LivePulsingIcon>
       message:
           widget.status?.message ??
           (widget.status!.status == ViewStatus.success
-              ? 'Connected'
-              : 'Disconnected'),
+              ? l10n.adminConnectionConnected
+              : l10n.adminConnectionDisconnected),
       child: FadeTransition(
         opacity: _pulseAnimation,
         child: Container(

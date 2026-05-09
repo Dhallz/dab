@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
+import '../../../../presentation/core/extensions/activity_category_l10n.dart';
 import '../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../presentation/core/localization/app_localizations.dart';
+import '../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../presentation/core/styles/app_colors.dart';
 import '../../../../presentation/core/styles/app_icons.dart';
 import '../../auth/widgets/auth_glass_card.dart';
@@ -46,10 +49,11 @@ class _DabActivityCardState extends State<DabActivityCard> {
         (widget.activity.provider is SlackMessageProvider ||
             widget.activity.provider is GitHubCommitProvider);
 
+    final l10n = context.l10n;
     return Semantics(
       label: widget.activity.archived
-          ? 'Archived activity: ${widget.activity.title}'
-          : 'Activity: ${widget.activity.title}',
+          ? l10n.activitySemanticsArchived(widget.activity.title)
+          : l10n.activitySemanticsActive(widget.activity.title),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
@@ -92,7 +96,8 @@ class _DabActivityCardState extends State<DabActivityCard> {
                               Row(
                                 children: [
                                   Text(
-                                    style.label,
+                                    widget.activity.provider.category
+                                        .abbreviatedLabel(l10n),
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: style.color,
                                       fontWeight: FontWeight.bold,
@@ -101,11 +106,14 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                   ),
                                   if (widget.activity.archived) ...[
                                     const SizedBox(width: 8),
-                                    _ArchivedBadge(color: style.color),
+                                    _ArchivedBadge(
+                                      color: style.color,
+                                      label: l10n.dashboardCardArchivedBadge,
+                                    ),
                                   ],
                                   const Spacer(),
                                   Text(
-                                    _formatDate(),
+                                    _formatDate(l10n),
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: AppColors.onSurfaceVariantLow,
                                     ),
@@ -182,9 +190,10 @@ class _DabActivityCardState extends State<DabActivityCard> {
   }
 
   Widget _buildTriageAction(BuildContext context) {
+    final l10n = context.l10n;
     if (widget.activity.archived && widget.onUnarchive != null) {
       return IconButton(
-        tooltip: 'Unarchive',
+        tooltip: l10n.activityTooltipUnarchive,
         icon: Icon(AppIcons.refresh),
         color: AppColors.onSurfaceVariant,
         onPressed: widget.onUnarchive,
@@ -192,7 +201,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
     }
     if (!widget.activity.archived && widget.onArchive != null) {
       return IconButton(
-        tooltip: 'Archive',
+        tooltip: l10n.activityTooltipArchive,
         icon: Icon(AppIcons.delete),
         color: AppColors.onSurfaceVariant,
         onPressed: widget.onArchive,
@@ -201,18 +210,18 @@ class _DabActivityCardState extends State<DabActivityCard> {
     return const SizedBox(width: 0);
   }
 
-  String _formatDate() {
+  String _formatDate(AppLocalizations l10n) {
     final now = DateTime.now();
     final difference = now.difference(widget.activity.createdAt);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
+      return l10n.dashboardRelativeDaysAgo(difference.inDays);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
+      return l10n.dashboardRelativeHoursAgo(difference.inHours);
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
+      return l10n.dashboardRelativeMinutesAgo(difference.inMinutes);
     } else {
-      return 'just now';
+      return l10n.dashboardRelativeJustNow;
     }
   }
 
@@ -274,7 +283,9 @@ class _DabActivityCardState extends State<DabActivityCard> {
 
 class _ArchivedBadge extends StatelessWidget {
   final Color color;
-  const _ArchivedBadge({required this.color});
+  final String label;
+
+  const _ArchivedBadge({required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +296,7 @@ class _ArchivedBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        'ARCHIVED',
+        label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.bold,

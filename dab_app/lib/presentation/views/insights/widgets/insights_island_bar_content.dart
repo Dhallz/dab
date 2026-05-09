@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../domain/entities/system/app_settings.dart';
 import '../../../core/localization/l10n_extension.dart';
@@ -39,8 +40,10 @@ class InsightsIslandBarContent extends ConsumerWidget {
     );
     final state = ref.read(insightsNotifierProvider);
     final notifier = ref.read(insightsNotifierProvider.notifier);
+    final localeName = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat.yMd(localeName);
     final dateText =
-        '${state.startDate.month}/${state.startDate.day} - ${state.endDate.month}/${state.endDate.day}';
+        '${dateFmt.format(state.startDate)} – ${dateFmt.format(state.endDate)}';
     return IslandBar(
       content: Row(
         children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_icons.dart';
 import '../explorer_notifier.dart';
 
@@ -18,6 +19,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () async {
@@ -52,7 +54,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
             if (!compact) ...[
               const SizedBox(width: 8),
               Text(
-                'Jump to date',
+                l10n.explorerJumpToDateTooltip,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,

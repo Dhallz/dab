@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 import '../models/dashboard_banner.dart';
 import '../models/dashboard_banner_severity.dart';
@@ -24,6 +26,7 @@ class DashboardBannerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = _accentFor(banner.severity);
 
     return Container(
@@ -51,7 +54,7 @@ class DashboardBannerWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  banner.message,
+                  formatDashboardUpcomingBannerBody(l10n, banner.untilStart),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -62,10 +65,10 @@ class DashboardBannerWidget extends StatelessWidget {
           if (banner.url != null)
             TextButton(
               onPressed: () => _open(banner.url!),
-              child: const Text('Open'),
+              child: Text(l10n.commonOpen),
             ),
           IconButton(
-            tooltip: 'Dismiss',
+            tooltip: l10n.commonDismiss,
             onPressed: onDismiss,
             icon: const Icon(Icons.close),
             color: AppColors.onSurfaceVariant,
@@ -103,4 +106,21 @@ class DashboardBannerWidget extends StatelessWidget {
       await launchUrl(uri);
     }
   }
+}
+
+/// Localized body for upcoming-event banners from [BannerEvaluator].
+String formatDashboardUpcomingBannerBody(
+  AppLocalizations l10n,
+  Duration untilStart,
+) {
+  if (untilStart.isNegative) return l10n.bannerStartingNow;
+  if (untilStart.inMinutes <= 0) return l10n.bannerStartingNow;
+  if (untilStart.inMinutes == 1) return l10n.bannerStartsInOneMinute;
+  if (untilStart.inMinutes < 60) {
+    return l10n.bannerStartsInMinutes(untilStart.inMinutes);
+  }
+  final hours = untilStart.inHours;
+  return hours == 1
+      ? l10n.bannerStartsInOneHour
+      : l10n.bannerStartsInHours(hours);
 }

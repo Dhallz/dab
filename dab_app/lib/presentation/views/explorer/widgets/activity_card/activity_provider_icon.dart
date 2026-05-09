@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../domain/entities/provider/provider_config.dart';
+import '../../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../../presentation/core/styles/provider_icon_resolver.dart';
 
 class ActivityProviderIcon extends StatelessWidget {
@@ -17,6 +18,7 @@ class ActivityProviderIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final providerId = activity.provider.name;
     final iconData = ProviderIconResolver.resolveFallbackIcon(
@@ -50,7 +52,7 @@ class ActivityProviderIcon extends StatelessWidget {
     }
 
     return Tooltip(
-      message: 'Source: ${activity.provider.name}',
+      message: l10n.explorerTooltipSource(activity.provider.name),
       child: Container(
         width: 24,
         height: 24,

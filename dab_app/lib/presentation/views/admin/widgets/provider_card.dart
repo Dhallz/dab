@@ -1,4 +1,6 @@
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
+import 'package:dab_app/presentation/core/localization/app_localizations.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_spacing.dart';
@@ -32,7 +34,6 @@ class ProviderCard extends ConsumerStatefulWidget {
 
 class _ProviderCardState extends ConsumerState<ProviderCard> {
   final Map<String, TextEditingController> _controllers = {};
-  late List<AdminConfigField> _fields;
   bool _showDetails = false;
 
   @override
@@ -78,8 +79,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       _disposeControllers();
     }
 
-    _fields = _getFieldsForProvider(config.id);
-    for (final field in _fields) {
+    final fields = _getFieldsForProvider(
+      config.id,
+      lookupAppLocalizations(const Locale('en')),
+    );
+    for (final field in fields) {
       final rawValue = config.settings[field.key];
       final initialValue = _initialValueForField(config, field, rawValue);
       _controllers[field.key] = TextEditingController(text: initialValue);
@@ -135,6 +139,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     final config = slice.config;
     final isExpanded = _showDetails;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final fields = _getFieldsForProvider(config.id, l10n);
     final isLight = Theme.of(context).brightness == Brightness.light;
     // Elevation shadow only: do not use [AppLayout.glassBlur] here — that sigma is
     // for backdrop blur; large blur + shadow color reads as muddy stripes between list cards.
@@ -230,7 +236,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                             size: AppLayout.iconSmall,
                           ),
                     label: Text(
-                      'Try',
+                      l10n.commonTry,
                       style: AppTextStyles.labelLarge.copyWith(
                         color: cs.primary,
                       ),
@@ -252,7 +258,9 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                     size: AppLayout.iconSmall,
                   ),
                   label: Text(
-                    _showDetails ? 'Hide fields' : 'Show fields',
+                    _showDetails
+                        ? l10n.providerCardHideFields
+                        : l10n.providerCardShowFields,
                     style: AppTextStyles.labelMedium.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
@@ -301,7 +309,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                           color: cs.outline.withValues(alpha: 0.4),
                         ),
                         SizedBox(height: AppSpacing.l),
-                        ..._fields.map((field) {
+                        ...fields.map((field) {
                           final isMultiValueField =
                               field.key == 'repos' || field.key == 'channels';
                           return Padding(
@@ -335,9 +343,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                                     filled: true,
                                     fillColor: cs.surfaceContainer
                                         .withValues(alpha: 0.65),
-                                    hintText: 'Enter ${field.label}...',
+                                    hintText: l10n.providerCardEnterField(
+                                      field.label,
+                                    ),
                                     helperText: isMultiValueField
-                                        ? 'Use one value per line (comma-separated also works).'
+                                        ? l10n.providerCardMultilineHint
                                         : null,
                                     hintStyle: AppTextStyles.bodyMedium
                                         .copyWith(
@@ -391,7 +401,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                               notifier.saveProviderConfig(updatedConfig);
                             },
                             child: Text(
-                              'Save Provider Credentials',
+                              l10n.providerCardSaveCredentials,
                               style: AppTextStyles.labelLarge.copyWith(
                                 color: cs.onPrimary,
                                 fontWeight: FontWeight.w700,
@@ -421,106 +431,142 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return AppIcons.unknownProvider;
   }
 
-  List<AdminConfigField> _getFieldsForProvider(String id) {
+  List<AdminConfigField> _getFieldsForProvider(String id, AppLocalizations l10n) {
     final lowerId = id.toLowerCase();
     if (lowerId.contains('phorge')) {
       return [
-        AdminConfigField(key: 'apiToken', label: 'API Token', isSecret: true),
-        AdminConfigField(key: 'baseUrl', label: 'Base URL'),
+        AdminConfigField(
+          key: 'apiToken',
+          label: l10n.adminFieldApiToken,
+          isSecret: true,
+        ),
+        AdminConfigField(key: 'baseUrl', label: l10n.adminFieldBaseUrl),
       ];
     }
     if (lowerId.contains('linear')) {
       return [
-        AdminConfigField(key: 'apiKey', label: 'API Key', isSecret: true),
+        AdminConfigField(
+          key: 'apiKey',
+          label: l10n.adminFieldApiKey,
+          isSecret: true,
+        ),
       ];
     }
     if (lowerId.contains('jira')) {
       return [
-        AdminConfigField(key: 'apiToken', label: 'API Token', isSecret: true),
-        AdminConfigField(key: 'email', label: 'Atlassian Email'),
+        AdminConfigField(
+          key: 'apiToken',
+          label: l10n.adminFieldApiToken,
+          isSecret: true,
+        ),
+        AdminConfigField(key: 'email', label: l10n.adminFieldAtlassianEmail),
         AdminConfigField(
           key: 'instanceUrl',
-          label: 'Jira Instance URL (e.g. company.atlassian.net)',
+          label: l10n.adminFieldJiraInstanceUrl,
         ),
       ];
     }
     if (lowerId.contains('teams')) {
       return [
-        AdminConfigField(key: 'clientId', label: 'Application (Client) ID'),
+        AdminConfigField(
+          key: 'clientId',
+          label: l10n.adminFieldApplicationClientId,
+        ),
         AdminConfigField(
           key: 'clientSecret',
-          label: 'Client Secret',
+          label: l10n.adminFieldClientSecret,
           isSecret: true,
         ),
-        AdminConfigField(key: 'tenantId', label: 'Directory (Tenant) ID'),
+        AdminConfigField(
+          key: 'tenantId',
+          label: l10n.adminFieldDirectoryTenantId,
+        ),
       ];
     }
     if (lowerId.contains('slack')) {
       return [
-        AdminConfigField(key: 'botToken', label: 'Bot Token', isSecret: true),
+        AdminConfigField(
+          key: 'botToken',
+          label: l10n.adminFieldBotToken,
+          isSecret: true,
+        ),
         AdminConfigField(
           key: 'signingSecret',
-          label: 'Signing Secret',
+          label: l10n.adminFieldSigningSecret,
           isSecret: true,
         ),
         AdminConfigField(
           key: 'workspaceId',
-          label: 'Workspace/Team ID (e.g. T0123456789)',
+          label: l10n.adminFieldWorkspaceTeamId,
         ),
-        AdminConfigField(key: 'channels', label: 'Channel IDs (one per line)'),
+        AdminConfigField(
+          key: 'channels',
+          label: l10n.adminFieldChannelIdsOnePerLine,
+        ),
         AdminConfigField(
           key: 'apiBaseUrl',
-          label: 'API Base URL (optional, defaults to https://slack.com/api)',
+          label: l10n.adminFieldSlackApiBaseOptional,
         ),
       ];
     }
     if (lowerId.contains('discord')) {
       return [
-        AdminConfigField(key: 'botToken', label: 'Bot Token', isSecret: true),
-        AdminConfigField(key: 'guildId', label: 'Guild (Server) ID'),
+        AdminConfigField(
+          key: 'botToken',
+          label: l10n.adminFieldBotToken,
+          isSecret: true,
+        ),
+        AdminConfigField(
+          key: 'guildId',
+          label: l10n.adminFieldGuildServerId,
+        ),
       ];
     }
     if (lowerId.contains('github')) {
       return [
         AdminConfigField(
           key: 'api.token',
-          label: 'Personal Access Token',
+          label: l10n.adminFieldPersonalAccessToken,
           isSecret: true,
         ),
         AdminConfigField(
           key: 'webhookSecret',
-          label: 'Webhook Secret',
+          label: l10n.adminFieldWebhookSecret,
           isSecret: true,
         ),
-        AdminConfigField(key: 'owner', label: 'Repository Owner'),
-        AdminConfigField(key: 'repo', label: 'Repository Name'),
+        AdminConfigField(key: 'owner', label: l10n.adminFieldRepositoryOwner),
+        AdminConfigField(key: 'repo', label: l10n.adminFieldRepositoryName),
         AdminConfigField(
           key: 'branch',
-          label: 'Branch (optional, defaults to repository default)',
+          label: l10n.adminFieldBranchOptional,
         ),
         AdminConfigField(
           key: 'repos',
-          label: 'Repositories (one owner/repo per line, optional)',
+          label: l10n.adminFieldRepositoriesOnePerLine,
         ),
         AdminConfigField(
           key: 'apiBaseUrl',
-          label: 'API Base URL (optional, defaults to https://api.github.com)',
+          label: l10n.adminFieldGithubApiBaseOptional,
         ),
       ];
     }
     if (lowerId.contains('gitlab')) {
       return [
-        AdminConfigField(key: 'apiToken', label: 'API Token', isSecret: true),
+        AdminConfigField(
+          key: 'apiToken',
+          label: l10n.adminFieldApiToken,
+          isSecret: true,
+        ),
         AdminConfigField(
           key: 'instanceUrl',
-          label: 'GitLab Instance URL (e.g. gitlab.com)',
+          label: l10n.adminFieldGitLabInstanceUrl,
         ),
       ];
     }
     return [
       AdminConfigField(
         key: 'token',
-        label: 'API Token / Secret',
+        label: l10n.adminFieldApiTokenOrSecret,
         isSecret: true,
       ),
     ];

@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
@@ -19,7 +20,7 @@ class AdminIslandRefreshTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'Refresh admin data',
+      message: context.l10n.adminIslandRefreshTooltip,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -56,7 +57,7 @@ class AdminIslandRefreshTile extends StatelessWidget {
                     ),
                   const SizedBox(height: 3),
                   Text(
-                    'REFRESH',
+                    context.l10n.adminIslandRefreshLabel,
                     style: AppTextStyles.labelSmall.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w700,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/l10n_extension.dart';
+
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Small chip displaying an icon and a count, used in activity summaries.
 class ActivityStatusSummaryChip extends StatelessWidget {
@@ -19,7 +21,7 @@ class ActivityStatusSummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: '$label: $count',
+      message: context.l10n.activityKindCountTooltip(label, count),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/entities/user/user_role.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +13,7 @@ class RoleDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -36,7 +38,11 @@ class RoleDropdown extends StatelessWidget {
           items: UserRole.values.map((role) {
             return DropdownMenuItem(
               value: role,
-              child: Text(role.name.toUpperCase()),
+              child: Text(switch (role) {
+                UserRole.admin => l10n.adminUserRoleAdmin,
+                UserRole.manager => l10n.adminUserRoleManager,
+                UserRole.standard => l10n.adminUserRoleStandard,
+              }),
             );
           }).toList(),
           onChanged: (newRole) {

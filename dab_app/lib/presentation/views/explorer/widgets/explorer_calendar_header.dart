@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/extensions/date_extensions.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import '../models/explorer_item.dart';
@@ -22,14 +22,14 @@ class ExplorerCalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeName = Localizations.localeOf(context).toString();
     final isRangeMode = state.dateMode == ExplorerDateMode.range;
-    final dayStr = DateFormat('EEEE, MMMM').format(displayDate);
     final dateStr = isRangeMode
-        ? _rangeLabel()
-        : '$dayStr ${displayDate.withOrdinalSuffix}';
+        ? _rangeLabel(localeName)
+        : DateFormat.yMMMMEEEEd(localeName).format(displayDate);
     final shortDate = isRangeMode
-        ? _rangeLabel(short: true)
-        : '${DateFormat('EEE, MMM').format(displayDate)} ${displayDate.withOrdinalSuffix}';
+        ? _rangeLabel(localeName, short: true)
+        : DateFormat.MMMEd(localeName).format(displayDate);
 
     final cs = Theme.of(context).colorScheme;
     if (compact) {
@@ -54,7 +54,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    _buildStatusText(),
+                    _buildStatusText(context),
                     style: TextStyle(
                       fontSize: 11,
                       color: cs.onSurfaceVariant.withValues(alpha: 0.9),
@@ -92,7 +92,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _buildStatusText(),
+                  _buildStatusText(context),
                   style: TextStyle(
                     fontSize: 14,
                     color: cs.onSurfaceVariant.withValues(alpha: 0.9),
@@ -107,27 +107,28 @@ class ExplorerCalendarHeader extends StatelessWidget {
     );
   }
 
-  String _buildStatusText() {
+  String _buildStatusText(BuildContext context) {
+    final l10n = context.l10n;
     final activityCount = state.items.fold<int>(
       0,
       (sum, item) => sum + _countActivities(item),
     );
 
     if (state.dateMode == ExplorerDateMode.range) {
-      return 'Viewing $activityCount archived activities from this range.';
+      return l10n.explorerViewingArchivedFromRange(activityCount);
     }
-    return 'Viewing $activityCount archived activities from this date.';
+    return l10n.explorerViewingArchivedFromDate(activityCount);
   }
 
-  String _rangeLabel({bool short = false}) {
+  String _rangeLabel(String localeName, {bool short = false}) {
     final startDate = state.rangeStartDate ?? displayDate;
     final endDate = state.rangeEndDate ?? displayDate;
     if (short) {
-      final shortFormat = DateFormat('MMM d');
-      return '${shortFormat.format(startDate)} - ${shortFormat.format(endDate)}';
+      final shortFmt = DateFormat.MMMd(localeName);
+      return '${shortFmt.format(startDate)} – ${shortFmt.format(endDate)}';
     }
-    final fullFormat = DateFormat('EEEE, MMMM d');
-    return '${fullFormat.format(startDate)} - ${fullFormat.format(endDate)}';
+    final fullFmt = DateFormat.yMMMMEEEEd(localeName);
+    return '${fullFmt.format(startDate)} – ${fullFmt.format(endDate)}';
   }
 
   int _countActivities(ExplorerItem item) => switch (item) {

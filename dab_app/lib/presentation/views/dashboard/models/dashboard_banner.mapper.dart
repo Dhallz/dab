@@ -32,10 +32,10 @@ class DashboardBannerMapper extends ClassMapperBase<DashboardBanner> {
     'title',
     _$title,
   );
-  static String _$message(DashboardBanner v) => v.message;
-  static const Field<DashboardBanner, String> _f$message = Field(
-    'message',
-    _$message,
+  static Duration _$untilStart(DashboardBanner v) => v.untilStart;
+  static const Field<DashboardBanner, Duration> _f$untilStart = Field(
+    'untilStart',
+    _$untilStart,
   );
   static int _$thresholdMinutes(DashboardBanner v) => v.thresholdMinutes;
   static const Field<DashboardBanner, int> _f$thresholdMinutes = Field(
@@ -67,7 +67,7 @@ class DashboardBannerMapper extends ClassMapperBase<DashboardBanner> {
   final MappableFields<DashboardBanner> fields = const {
     #eventId: _f$eventId,
     #title: _f$title,
-    #message: _f$message,
+    #untilStart: _f$untilStart,
     #thresholdMinutes: _f$thresholdMinutes,
     #url: _f$url,
     #severity: _f$severity,
@@ -78,7 +78,7 @@ class DashboardBannerMapper extends ClassMapperBase<DashboardBanner> {
     return DashboardBanner(
       eventId: data.dec(_f$eventId),
       title: data.dec(_f$title),
-      message: data.dec(_f$message),
+      untilStart: data.dec(_f$untilStart),
       thresholdMinutes: data.dec(_f$thresholdMinutes),
       url: data.dec(_f$url),
       severity: data.dec(_f$severity),
@@ -150,7 +150,7 @@ abstract class DashboardBannerCopyWith<$R, $In extends DashboardBanner, $Out>
   $R call({
     String? eventId,
     String? title,
-    String? message,
+    Duration? untilStart,
     int? thresholdMinutes,
     String? url,
     DashboardBannerSeverity? severity,
@@ -172,7 +172,7 @@ class _DashboardBannerCopyWithImpl<$R, $Out>
   $R call({
     String? eventId,
     String? title,
-    String? message,
+    Duration? untilStart,
     int? thresholdMinutes,
     Object? url = $none,
     DashboardBannerSeverity? severity,
@@ -180,7 +180,7 @@ class _DashboardBannerCopyWithImpl<$R, $Out>
     FieldCopyWithData({
       if (eventId != null) #eventId: eventId,
       if (title != null) #title: title,
-      if (message != null) #message: message,
+      if (untilStart != null) #untilStart: untilStart,
       if (thresholdMinutes != null) #thresholdMinutes: thresholdMinutes,
       if (url != $none) #url: url,
       if (severity != null) #severity: severity,
@@ -190,7 +190,7 @@ class _DashboardBannerCopyWithImpl<$R, $Out>
   DashboardBanner $make(CopyWithData data) => DashboardBanner(
     eventId: data.get(#eventId, or: $value.eventId),
     title: data.get(#title, or: $value.title),
-    message: data.get(#message, or: $value.message),
+    untilStart: data.get(#untilStart, or: $value.untilStart),
     thresholdMinutes: data.get(#thresholdMinutes, or: $value.thresholdMinutes),
     url: data.get(#url, or: $value.url),
     severity: data.get(#severity, or: $value.severity),

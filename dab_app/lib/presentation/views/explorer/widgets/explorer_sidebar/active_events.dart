@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/l10n_extension.dart';
 import '../../explorer_notifier.dart';
 import 'event_chip.dart';
 
@@ -18,12 +19,13 @@ class ActiveEvents extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (availableProviders.isEmpty) return const SizedBox.shrink();
 
+    final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ACTIVITY PROVIDERS',
+          l10n.explorerSectionActivityProviders,
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,

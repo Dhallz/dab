@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/navigation/app_route.dart';
 import '../../../core/widgets/dab_mesh_background.dart';
@@ -17,6 +18,7 @@ class AuthViewMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: DabMeshBackground(
@@ -26,8 +28,8 @@ class AuthViewMobile extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'DAB',
+                Text(
+                  l10n.appBrandShortName,
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
@@ -37,7 +39,7 @@ class AuthViewMobile extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Dev Activity Board',
+                  l10n.brandTagline,
                   style: TextStyle(
                     fontSize: 16,
                     color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
@@ -68,6 +70,7 @@ class _AuthFormPanel extends ConsumerStatefulWidget {
 class _AuthFormPanelState extends ConsumerState<_AuthFormPanel> {
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final state = ref.watch(authFormNotifierProvider);
 
     ref.listen<AuthState>(authFormNotifierProvider, (previous, next) {
@@ -75,7 +78,9 @@ class _AuthFormPanelState extends ConsumerState<_AuthFormPanel> {
         context.go(AppRoute.homeDashboard.path);
       } else if (next.status == ViewStatus.failure) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.errorMessage ?? 'Auth Failed')),
+          SnackBar(
+            content: Text(next.errorMessage ?? l10n.authErrorFailed),
+          ),
         );
       }
     });

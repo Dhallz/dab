@@ -1,4 +1,5 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,10 +34,11 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: Text(
-        'Update Identity Link',
+        l10n.identityDialogUpdateTitle,
         style: TextStyle(
           fontWeight: FontWeight.w900,
           color: cs.onSurface,
@@ -47,7 +49,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Associate ${widget.identity.externalId} with a DAB user account.',
+            l10n.identityLinkAssociateUser(widget.identity.externalId),
             style: TextStyle(
               color: cs.onSurfaceVariant,
               fontSize: 13,
@@ -60,7 +62,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
             decoration: InputDecoration(
               filled: true,
               fillColor: cs.surfaceContainerLow,
-              labelText: 'Target User ID',
+              labelText: l10n.identityTargetUserId,
               labelStyle: TextStyle(
                 color: cs.onSurfaceVariant,
               ),
@@ -81,7 +83,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
             decoration: InputDecoration(
               filled: true,
               fillColor: cs.surfaceContainerLow,
-              labelText: 'Provider Username (optional)',
+              labelText: l10n.identityProviderUsernameOptionalLabel,
               labelStyle: TextStyle(
                 color: cs.onSurfaceVariant,
               ),
@@ -105,7 +107,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            'Cancel',
+            l10n.commonCancel,
             style: TextStyle(color: cs.onSurfaceVariant),
           ),
         ),
@@ -131,8 +133,8 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
                 );
             Navigator.pop(context);
           },
-          child: const Text(
-            'Update Link',
+          child: Text(
+            l10n.identityUpdateLink,
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),

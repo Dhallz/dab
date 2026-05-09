@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../auth_state.dart';
 import 'auth_text_field.dart';
 
@@ -63,13 +64,14 @@ class _AuthFormState extends State<AuthForm> {
   @override
   Widget build(BuildContext context) {
     final isLoading = widget.state.status.isLoading;
+    final l10n = context.l10n;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          widget.state.isLogin ? 'Welcome Back' : 'Create Account',
+          widget.state.isLogin ? l10n.authWelcomeBack : l10n.authCreateAccount,
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
@@ -83,7 +85,7 @@ class _AuthFormState extends State<AuthForm> {
         OutlinedButton.icon(
           onPressed: () {},
           icon: const Icon(Icons.business_outlined, size: 20),
-          label: const Text('Sign in with Company SSO'),
+          label: Text(l10n.authSignInWithSso),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
@@ -103,7 +105,7 @@ class _AuthFormState extends State<AuthForm> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'OR',
+                l10n.commonOr,
                 style: TextStyle(
                   color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
                   fontSize: 12,
@@ -120,8 +122,8 @@ class _AuthFormState extends State<AuthForm> {
 
         if (!widget.state.isLogin) ...[
           AuthTextField(
-            label: 'Name',
-            hint: 'Your full name',
+            label: l10n.authLabelName,
+            hint: l10n.authHintName,
             icon: Icons.person_outline,
             controller: _nameController,
             onChanged: widget.onNameChanged,
@@ -130,8 +132,8 @@ class _AuthFormState extends State<AuthForm> {
         ],
 
         AuthTextField(
-          label: 'Email',
-          hint: 'you@company.com',
+          label: l10n.authLabelEmail,
+          hint: l10n.authHintEmail,
           icon: Icons.email_outlined,
           controller: _emailController,
           onChanged: widget.onEmailChanged,
@@ -140,8 +142,8 @@ class _AuthFormState extends State<AuthForm> {
         const SizedBox(height: 16),
 
         AuthTextField(
-          label: 'Password',
-          hint: '••••••••',
+          label: l10n.authLabelPassword,
+          hint: l10n.commonPasswordMaskHint,
           icon: Icons.lock_outline,
           obscureText: true,
           controller: _passwordController,
@@ -170,7 +172,7 @@ class _AuthFormState extends State<AuthForm> {
                   ),
                 )
               : Text(
-                  widget.state.isLogin ? 'Sign In' : 'Register',
+                  widget.state.isLogin ? l10n.authSignIn : l10n.authRegister,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -183,8 +185,8 @@ class _AuthFormState extends State<AuthForm> {
           onPressed: isLoading ? null : widget.onModeToggled,
           child: Text(
             widget.state.isLogin
-                ? "Don't have an account? Register"
-                : "Already have an account? Sign In",
+                ? l10n.authToggleRegister
+                : l10n.authToggleSignIn,
             style: TextStyle(
               color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
             ),

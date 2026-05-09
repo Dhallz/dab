@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
@@ -29,51 +30,52 @@ class AdminIslandBarContent extends ConsumerWidget {
     );
     final state = ref.read(adminNotifierProvider);
     final notifier = ref.read(adminNotifierProvider.notifier);
+    final l10n = context.l10n;
 
     final m = state.islandBarModel;
 
     final providersTile = AdminIslandStatTile(
       icon: Icons.dns_outlined,
-      title: 'Providers',
+      title: l10n.adminIslandProvidersTitle,
       value: '${m.activeProviders} / ${m.totalProviders}',
-      tooltip: 'Active / total providers',
+      tooltip: l10n.adminIslandProvidersTooltip,
     );
     final unresolvedTile = AdminIslandStatTile(
       icon: AppIcons.warning,
-      title: 'Unresolved',
+      title: l10n.adminIslandUnresolvedTitle,
       value: '${m.unresolvedIdentities}',
-      tooltip: 'Identities not linked',
+      tooltip: l10n.adminIslandUnresolvedTooltip,
       iconColor: m.unresolvedIdentities > 0
           ? Theme.of(context).colorScheme.error
           : Theme.of(context).colorScheme.onSurfaceVariant,
     );
     final usersTile = AdminIslandStatTile(
       icon: AppIcons.profile,
-      title: 'Users',
+      title: l10n.adminIslandUsersTitle,
       value: '${m.usersCount}',
-      tooltip: 'Registered users',
+      tooltip: l10n.adminIslandUsersTooltip,
     );
     final okTile = AdminIslandStatTile(
       icon: AppIcons.success,
-      title: 'Links OK',
+      title: l10n.adminIslandLinksOkTitle,
       value: '${m.connectionOk}',
-      tooltip: 'Active providers with successful connection test',
+      tooltip: l10n.adminIslandLinksOkTooltip,
       iconColor: Theme.of(context).colorScheme.tertiary,
     );
     final failedTile = AdminIslandStatTile(
       icon: AppIcons.error,
-      title: 'Failed',
+      title: l10n.adminIslandFailedTitle,
       value: '${m.connectionFailed}',
-      tooltip: 'Connection failures',
+      tooltip: l10n.adminIslandFailedTooltip,
       iconColor: m.connectionFailed > 0
           ? Theme.of(context).colorScheme.error
           : Theme.of(context).colorScheme.onSurfaceVariant,
     );
     final pendingTile = AdminIslandStatTile(
       icon: AppIcons.info,
-      title: 'Pending',
+      title: l10n.adminIslandPendingTitle,
       value: '${m.connectionUnknown}',
-      tooltip: 'Untested or in progress',
+      tooltip: l10n.adminIslandPendingTooltip,
     );
     final refreshTile = AdminIslandRefreshTile(
       loading: state.status == ViewStatus.loading,

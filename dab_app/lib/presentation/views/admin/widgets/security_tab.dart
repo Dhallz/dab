@@ -1,4 +1,5 @@
 import 'package:dab_app/domain/entities/user/user.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,7 @@ class _SecurityTabState extends State<SecurityTab> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final q = _query.trim().toLowerCase();
     final filtered = q.isEmpty
         ? widget.users
@@ -35,7 +37,7 @@ class _SecurityTabState extends State<SecurityTab> {
         const BootstrapStatusCard(),
         const SizedBox(height: 32),
         Text(
-          'USER MANAGEMENT',
+          l10n.adminSecuritySectionTitle,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -48,7 +50,7 @@ class _SecurityTabState extends State<SecurityTab> {
           onChanged: (v) => setState(() => _query = v),
           style: TextStyle(color: cs.onSurface, fontSize: 14),
           decoration: InputDecoration(
-            hintText: 'Search by name or email',
+            hintText: l10n.adminSecuritySearchHint,
             hintStyle: TextStyle(
               color: cs.onSurfaceVariant.withValues(alpha: 0.5),
             ),

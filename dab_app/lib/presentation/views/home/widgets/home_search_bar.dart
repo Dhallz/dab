@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_layout.dart';
@@ -14,6 +15,7 @@ class HomeSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       width: width,
       height: 36,
@@ -29,7 +31,7 @@ class HomeSearchBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
-              'Search archives...',
+              l10n.homeSearchArchivesPlaceholder,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(

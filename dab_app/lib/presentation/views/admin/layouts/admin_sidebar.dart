@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
@@ -18,7 +19,7 @@ class AdminSidebar extends ConsumerWidget {
     return AppSidebar(
       children: [
         Text(
-          'MANAGEMENT',
+          context.l10n.adminNavManagement,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -28,21 +29,21 @@ class AdminSidebar extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         SelectionTile(
-          label: 'Providers',
+          label: context.l10n.adminNavProviders,
           isSelected: selectedSection == AdminSection.providers,
           iconData: Icons.vibration_outlined,
           onTap: () => notifier.setSection(AdminSection.providers),
         ),
         const SizedBox(height: 8),
         SelectionTile(
-          label: 'Identities',
+          label: context.l10n.adminNavIdentities,
           isSelected: selectedSection == AdminSection.identities,
           iconData: Icons.fingerprint_outlined,
           onTap: () => notifier.setSection(AdminSection.identities),
         ),
         const SizedBox(height: 8),
         SelectionTile(
-          label: 'Security',
+          label: context.l10n.adminNavSecurity,
           isSelected: selectedSection == AdminSection.security,
           iconData: Icons.shield_outlined,
           onTap: () => notifier.setSection(AdminSection.security),

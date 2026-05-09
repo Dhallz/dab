@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -19,11 +20,12 @@ class DashboardArchiveToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final label = showArchived
-        ? 'Hide archived'
+        ? l10n.dashboardArchiveHide
         : archivedCount == 0
-        ? 'Show archived'
-        : 'Show archived ($archivedCount)';
+        ? l10n.dashboardArchiveShow
+        : l10n.dashboardArchiveShowCount(archivedCount);
 
     return TextButton.icon(
       onPressed: archivedCount == 0 && !showArchived ? null : onToggle,

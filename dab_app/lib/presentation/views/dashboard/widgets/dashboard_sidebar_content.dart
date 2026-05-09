@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../dashboard_state.dart';
@@ -12,12 +13,13 @@ class DashboardSidebarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Provider Health',
+            l10n.dashboardProviderHealthTitle,
             style: AppTextStyles.labelLarge.copyWith(
               color: AppColors.onSurfaceVariant,
               letterSpacing: 0.5,
@@ -26,7 +28,7 @@ class DashboardSidebarContent extends StatelessWidget {
           const SizedBox(height: 10),
           if (state.providerHealth.isEmpty)
             Text(
-              'No provider activity yet',
+              l10n.dashboardNoProviderActivity,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -39,14 +41,19 @@ class DashboardSidebarContent extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 20),
-          _CounterTile(label: 'Snoozed', value: state.snoozedCount),
+          _CounterTile(label: l10n.dashboardSnoozed, value: state.snoozedCount),
           const SizedBox(height: 8),
-          _CounterTile(label: 'Review queue', value: state.reviewQueueCount),
+          _CounterTile(
+            label: l10n.dashboardReviewQueue,
+            value: state.reviewQueueCount,
+          ),
           const SizedBox(height: 20),
           Text(
             state.lastSyncedAt == null
-                ? 'No sync yet'
-                : 'Last sync ${_formatSyncTime(state.lastSyncedAt!)}',
+                ? l10n.dashboardNoSyncYet
+                : l10n.dashboardLastSync(
+                    _formatSyncTime(state.lastSyncedAt!),
+                  ),
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.onSurfaceVariant,
             ),

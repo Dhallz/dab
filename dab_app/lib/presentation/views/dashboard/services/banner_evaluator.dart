@@ -48,7 +48,7 @@ class BannerEvaluator {
       final candidate = DashboardBanner(
         eventId: event.id,
         title: event.title,
-        message: _formatMessage(untilStart),
+        untilStart: untilStart,
         thresholdMinutes: threshold,
         url: event.url,
         severity: _severityFor(event.priority, threshold),
@@ -82,17 +82,6 @@ class BannerEvaluator {
       if (minutesUntil <= threshold) return threshold;
     }
     return null;
-  }
-
-  String _formatMessage(Duration untilStart) {
-    if (untilStart.isNegative) return 'Starting now';
-    if (untilStart.inMinutes <= 0) return 'Starting now';
-    if (untilStart.inMinutes == 1) return 'Starts in 1 minute';
-    if (untilStart.inMinutes < 60) {
-      return 'Starts in ${untilStart.inMinutes} minutes';
-    }
-    final hours = untilStart.inHours;
-    return hours == 1 ? 'Starts in 1 hour' : 'Starts in $hours hours';
   }
 
   DashboardBannerSeverity _severityFor(

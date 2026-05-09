@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/group/group_type.dart';
 import '../../../../domain/entities/user/user.dart';
@@ -20,6 +21,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Dialog(
@@ -33,14 +35,14 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create New Group',
+              l10n.explorerCreateNewGroupTitle,
               style: textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'GROUP NAME',
+              l10n.explorerGroupNameSectionLabel,
               style: textTheme.labelSmall?.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -54,7 +56,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
               autofocus: true,
               style: textTheme.bodyMedium,
               decoration: InputDecoration(
-                hintText: 'e.g. Mobile Team',
+                hintText: l10n.explorerGroupNameHintExample,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -63,7 +65,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
             ),
             const SizedBox(height: 24),
             Text(
-              'SELECT MEMBERS',
+              l10n.explorerSelectMembersSectionLabel,
               style: textTheme.labelSmall?.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -122,9 +124,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
-                  ),
+                  child: Text(l10n.explorerCancel),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
@@ -135,7 +135,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
                       vertical: 12,
                     ),
                   ),
-                  child: const Text('Create Group'),
+                  child: Text(l10n.explorerCreateGroupSubmit),
                 ),
               ],
             ),

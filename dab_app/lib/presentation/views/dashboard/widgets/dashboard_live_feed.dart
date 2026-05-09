@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
@@ -34,16 +36,20 @@ class DashboardLiveFeed extends ConsumerWidget {
 
     final notifier = ref.read(dashboardNotifierProvider.notifier);
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final visibleActivities = state.visibleActivities;
     final sections = _ActivitySections.from(visibleActivities);
 
     return ListView(
       padding: padding,
       children: [
-        _SyncPill(lastSyncedAt: state.lastSyncedAt),
+        _SyncPill(lastSyncedAt: state.lastSyncedAt, l10n: l10n),
         const SizedBox(height: 10),
         if (state.reconnectNoticeAt != null) ...[
-          _ReconnectNoticeBanner(at: state.reconnectNoticeAt!),
+          _ReconnectNoticeBanner(
+            at: state.reconnectNoticeAt!,
+            l10n: l10n,
+          ),
           const SizedBox(height: 10),
         ],
         if (state.activeBanner != null) ...[
@@ -56,14 +62,14 @@ class DashboardLiveFeed extends ConsumerWidget {
         UpcomingSoonSection(events: state.upcomingEvents),
         const SizedBox(height: 16),
         _SectionHeader(
-          title: 'Awaiting Your Reply',
-          subtitle: 'Thread follow-ups that likely expect a response.',
+          title: l10n.dashboardAwaitingReplyTitle,
+          subtitle: l10n.dashboardAwaitingReplySubtitle,
         ),
         const SizedBox(height: 8),
         if (sections.awaitingReply.isEmpty)
           _EmptySectionPlaceholder(
             icon: AppIcons.history,
-            message: 'No active reply threads right now.',
+            message: l10n.dashboardNoReplyThreads,
           )
         else
           ...sections.awaitingReply.map(
@@ -81,7 +87,7 @@ class DashboardLiveFeed extends ConsumerWidget {
         Row(
           children: [
             Text(
-              'Live Now',
+              l10n.dashboardLiveNowTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.6,
@@ -98,11 +104,15 @@ class DashboardLiveFeed extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (state.status == ViewStatus.failure && state.activities.isEmpty)
-          _FailurePlaceholder(message: state.errorMessage)
+          _FailurePlaceholder(
+            message: state.errorMessage,
+            fallbackMessage: l10n.dashboardFailedLoadLive,
+          )
         else if (sections.liveNow.isEmpty)
           _EmptyLivePlaceholder(
             showingArchived: state.showArchivedActivities,
             hasAnyActivities: state.activities.isNotEmpty,
+            l10n: l10n,
           )
         else
           ...sections.liveNow.map(
@@ -123,8 +133,9 @@ class DashboardLiveFeed extends ConsumerWidget {
 
 class _SyncPill extends StatelessWidget {
   final DateTime? lastSyncedAt;
+  final AppLocalizations l10n;
 
-  const _SyncPill({required this.lastSyncedAt});
+  const _SyncPill({required this.lastSyncedAt, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +145,8 @@ class _SyncPill extends StatelessWidget {
     final now = DateTime.now();
     final elapsed = now.difference(lastSyncedAt!);
     final label = elapsed.inSeconds < 60
-        ? '${elapsed.inSeconds}s ago'
-        : '${elapsed.inMinutes}m ago';
+        ? l10n.commonTimeAgoSeconds(elapsed.inSeconds)
+        : l10n.commonTimeAgoMinutes(elapsed.inMinutes);
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -146,7 +157,7 @@ class _SyncPill extends StatelessWidget {
           border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
         ),
         child: Text(
-          'Live · updated $label',
+          l10n.dashboardLiveUpdated(label),
           style: theme(
             context,
           ).textTheme.labelSmall?.copyWith(color: AppColors.onSurfaceVariant),
@@ -160,8 +171,9 @@ class _SyncPill extends StatelessWidget {
 
 class _ReconnectNoticeBanner extends StatelessWidget {
   final DateTime at;
+  final AppLocalizations l10n;
 
-  const _ReconnectNoticeBanner({required this.at});
+  const _ReconnectNoticeBanner({required this.at, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +189,7 @@ class _ReconnectNoticeBanner extends StatelessWidget {
         border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.12)),
       ),
       child: Text(
-        'Reconnected - caught up through $hh:$mm:$ss',
+        l10n.dashboardReconnectNotice('$hh:$mm:$ss'),
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.onSurfaceVariant,
           fontWeight: FontWeight.w600,
@@ -255,7 +267,12 @@ class _EmptySectionPlaceholder extends StatelessWidget {
 
 class _FailurePlaceholder extends StatelessWidget {
   final String? message;
-  const _FailurePlaceholder({this.message});
+  final String fallbackMessage;
+
+  const _FailurePlaceholder({
+    this.message,
+    required this.fallbackMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +280,7 @@ class _FailurePlaceholder extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
-          message ?? 'Failed to load live activities.',
+          message ?? fallbackMessage,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
@@ -318,17 +335,20 @@ class _ActivitySections {
 class _EmptyLivePlaceholder extends StatelessWidget {
   final bool showingArchived;
   final bool hasAnyActivities;
+  final AppLocalizations l10n;
+
   const _EmptyLivePlaceholder({
     required this.showingArchived,
     required this.hasAnyActivities,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final message = (!showingArchived && hasAnyActivities)
-        ? 'All caught up — enable "Show archived" to review prior items.'
-        : 'No live activities yet.';
+        ? l10n.dashboardEmptyLiveCaughtUp
+        : l10n.dashboardEmptyLiveNoActivities;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 28),

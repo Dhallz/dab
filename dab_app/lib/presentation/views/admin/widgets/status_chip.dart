@@ -1,4 +1,5 @@
 import 'package:dab_app/domain/entities/user/user_identity_status.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class StatusChip extends StatelessWidget {
@@ -8,6 +9,7 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isLinked = status == UserIdentityStatus.linked;
     final isPending = status == UserIdentityStatus.pending;
 
@@ -27,7 +29,11 @@ class StatusChip extends StatelessWidget {
         ),
       ),
       child: Text(
-        status.name.toUpperCase(),
+        switch (status) {
+          UserIdentityStatus.linked => l10n.adminIdentityStatusLinked,
+          UserIdentityStatus.pending => l10n.adminIdentityStatusPending,
+          UserIdentityStatus.failed => l10n.adminIdentityStatusFailed,
+        },
         style: TextStyle(
           color: isLinked
               ? Colors.green

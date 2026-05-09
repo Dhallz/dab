@@ -18,8 +18,8 @@ class DashboardBanner with DashboardBannerMappable {
   /// Headline shown inside the banner.
   final String title;
 
-  /// Short body copy (e.g. "Starts in 5 minutes").
-  final String message;
+  /// Time remaining until the event starts; used to format banner body copy.
+  final Duration untilStart;
 
   /// Optional deep link surfaced as the banner CTA.
   final String? url;
@@ -33,7 +33,7 @@ class DashboardBanner with DashboardBannerMappable {
   const DashboardBanner({
     required this.eventId,
     required this.title,
-    required this.message,
+    required this.untilStart,
     required this.thresholdMinutes,
     this.url,
     this.severity = DashboardBannerSeverity.info,

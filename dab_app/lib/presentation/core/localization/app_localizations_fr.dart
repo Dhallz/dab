@@ -9,22 +9,19 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get helloWorld => 'Bonjour le monde !';
-
-  @override
   String get dashboardTitle => 'Tableau de bord';
 
   @override
-  String get dashboardOverview => 'Vue d\'ensemble';
+  String get dashboardOverview => 'Synthèse';
 
   @override
-  String get dashboardSubtitle => 'Bientôt : flux d\'activité en direct.';
+  String get dashboardSubtitle => 'Flux bientôt.';
 
   @override
-  String get navExplorer => 'Explorer';
+  String get navExplorer => 'Explorateur';
 
   @override
-  String get navAdmin => 'Admin';
+  String get navAdmin => 'Administration';
 
   @override
   String get explorerModeSingleDay => 'Jour';
@@ -39,7 +36,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get explorerQuickWeek => 'Semaine';
 
   @override
-  String get explorerPickRange => 'Choisir une plage';
+  String get explorerPickRange => 'Choisir pl.';
 
   @override
   String get explorerSectionDirectory => 'Répertoire';
@@ -123,7 +120,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityKindActivity => 'Activité';
 
   @override
-  String get insightsTitle => 'Insights';
+  String get insightsTitle => 'Analyses';
 
   @override
   String get insightsFiltersTitle => 'Filtres';
@@ -141,10 +138,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get insightsPresetToday => 'Aujourd\'hui';
 
   @override
-  String get insightsPresetLast7Days => '7 derniers j';
+  String get insightsPresetLast7Days => '7 j';
 
   @override
-  String get insightsPresetLast30Days => '30 derniers j';
+  String get insightsPresetLast30Days => '30 j';
 
   @override
   String get insightsPresetCustom => 'Personnalisé';
@@ -229,16 +226,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsLanguagePortuguese => 'Portugais';
 
   @override
+  String get settingsLanguageItalian => 'Italien';
+
+  @override
   String get settingsVersionLabel => 'Version';
 
   @override
-  String get settingsIslandBarDashboard => 'Tableau de bord';
+  String get settingsIslandBarDashboard => 'Tbl. bord';
 
   @override
-  String get settingsIslandBarExplorer => 'Explorer';
+  String get settingsIslandBarExplorer => 'Explor.';
 
   @override
-  String get settingsIslandBarInsights => 'Insights';
+  String get settingsIslandBarInsights => 'Analyses';
 
   @override
   String get settingsIslandBarItemTitle => 'Titre';
@@ -247,25 +247,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsIslandBarItemSubtitle => 'Sous-titre';
 
   @override
-  String get settingsIslandBarItemDateControls => 'Contrôles de date';
+  String get settingsIslandBarItemDateControls => 'Dates';
 
   @override
-  String get settingsIslandBarItemQuickPreset => 'Préréglage rapide';
+  String get settingsIslandBarItemQuickPreset => 'Prérég.';
 
   @override
-  String get settingsIslandBarItemDateModeToggle => 'Mode de date';
+  String get settingsIslandBarItemDateModeToggle => 'Mode date';
 
   @override
-  String get settingsIslandBarItemActivitySummary => 'Résumé d\'activité';
+  String get settingsIslandBarItemActivitySummary => 'Résumé act.';
 
   @override
-  String get settingsIslandBarItemHeatBar => 'Barre de chaleur';
+  String get settingsIslandBarItemHeatBar => 'Chaleur';
 
   @override
-  String get settingsIslandBarItemDateRange => 'Plage de dates';
+  String get settingsIslandBarItemDateRange => 'Plage';
 
   @override
-  String get settingsIslandBarItemPresets => 'Préréglages';
+  String get settingsIslandBarItemPresets => 'Prérég.';
 
   @override
   String get settingsSave => 'Enregistrer';
@@ -275,4 +275,610 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsSavedMessage => 'Paramètres enregistrés';
+
+  @override
+  String get brandTagline => 'Dev Activity Board';
+
+  @override
+  String get brandShortName => 'DAB';
+
+  @override
+  String get navFeed => 'Flux';
+
+  @override
+  String get commonCancel => 'Annuler';
+
+  @override
+  String get commonOpen => 'Ouvrir';
+
+  @override
+  String get commonDismiss => 'Fermer';
+
+  @override
+  String get commonTry => 'Réessayer';
+
+  @override
+  String get commonOr => 'OU';
+
+  @override
+  String get commonPasswordMaskHint => '••••••••';
+
+  @override
+  String get authWelcomeBack => 'Welcome Back';
+
+  @override
+  String get authCreateAccount => 'Create Account';
+
+  @override
+  String get authSignInWithSso => 'Sign in with Company SSO';
+
+  @override
+  String get authLabelName => 'Name';
+
+  @override
+  String get authHintName => 'Your full name';
+
+  @override
+  String get authLabelEmail => 'Email';
+
+  @override
+  String get authHintEmail => 'you@company.com';
+
+  @override
+  String get authLabelPassword => 'Password';
+
+  @override
+  String get authSignIn => 'Sign In';
+
+  @override
+  String get authRegister => 'Register';
+
+  @override
+  String get authToggleRegister => 'Don\'t have an account? Register';
+
+  @override
+  String get authToggleSignIn => 'Already have an account? Sign In';
+
+  @override
+  String get adminNavManagement => 'GESTION';
+
+  @override
+  String get adminNavProviders => 'Fournisseurs';
+
+  @override
+  String get adminNavIdentities => 'Identités';
+
+  @override
+  String get adminNavSecurity => 'Sécurité';
+
+  @override
+  String get adminSectionProvidersTitle => 'Configuration fournisseur';
+
+  @override
+  String get adminSectionIdentitiesTitle => 'Gestion des identités';
+
+  @override
+  String get adminSectionSecurityTitle => 'Sécurité système';
+
+  @override
+  String get adminSectionProvidersSubtitle =>
+      'Définir et gérer les connexions aux services externes.';
+
+  @override
+  String get adminSectionIdentitiesSubtitle =>
+      'Résoudre et lier les identités plateforme aux utilisateurs.';
+
+  @override
+  String get adminSectionSecuritySubtitle =>
+      'Gérer les rôles utilisateurs et la sécurité du déploiement.';
+
+  @override
+  String get adminIdentitiesSectionTitle => 'IDENTITÉS EXTERNES';
+
+  @override
+  String get adminIdentitiesSearchHint => 'Search identities…';
+
+  @override
+  String get adminIdentitiesCreateLink => 'Create Link';
+
+  @override
+  String get adminIdentitiesEmpty => 'No identities found';
+
+  @override
+  String get adminTableFullName => 'Full Name';
+
+  @override
+  String get adminTableProvider => 'Provider';
+
+  @override
+  String get adminTableExternalId => 'External ID';
+
+  @override
+  String get adminTableProviderUsername => 'Provider Username';
+
+  @override
+  String get adminTableStatus => 'Status';
+
+  @override
+  String get adminTableActions => 'Actions';
+
+  @override
+  String get adminTooltipAddUsername => 'Add provider username';
+
+  @override
+  String get adminSecuritySectionTitle => 'GESTION DES UTILISATEURS';
+
+  @override
+  String get adminSecuritySearchHint => 'Search by name or email';
+
+  @override
+  String get adminIslandProvidersTitle => 'Fournisseurs';
+
+  @override
+  String get adminIslandProvidersTooltip => 'Active / total providers';
+
+  @override
+  String get adminIslandUnresolvedTitle => 'Non résolues';
+
+  @override
+  String get adminIslandUnresolvedTooltip => 'Identities not linked';
+
+  @override
+  String get adminIslandUsersTitle => 'Utilisateurs';
+
+  @override
+  String get adminIslandUsersTooltip => 'Registered users';
+
+  @override
+  String get adminIslandLinksOkTitle => 'Liens OK';
+
+  @override
+  String get adminIslandLinksOkTooltip =>
+      'Active providers with successful connection test';
+
+  @override
+  String get adminIslandFailedTitle => 'Échecs';
+
+  @override
+  String get adminIslandFailedTooltip => 'Connection failures';
+
+  @override
+  String get adminIslandPendingTitle => 'En attente';
+
+  @override
+  String get adminIslandPendingTooltip => 'Untested or in progress';
+
+  @override
+  String get adminIslandRefreshTooltip => 'Refresh admin data';
+
+  @override
+  String get adminIslandRefreshLabel => 'RAFRAÎCHIR';
+
+  @override
+  String get adminBootstrapLockTitle => 'Bootstrap Lock: ACTIVE';
+
+  @override
+  String get adminBootstrapLockSubtitle =>
+      'System is locked and requires an administrative account.';
+
+  @override
+  String get adminUserRoleAdmin => 'ADMIN';
+
+  @override
+  String get adminUserRoleManager => 'MANAGER';
+
+  @override
+  String get adminUserRoleStandard => 'STANDARD';
+
+  @override
+  String get identityDialogCreateTitle => 'Create Identity Link';
+
+  @override
+  String get identityDialogUpdateTitle => 'Update Identity Link';
+
+  @override
+  String get identityDialogCreateSubtitle =>
+      'Link a provider external identity to a DAB user.';
+
+  @override
+  String get identityFieldDabUser => 'DAB User';
+
+  @override
+  String get identityFieldProvider => 'Provider';
+
+  @override
+  String get identityFieldExternalId =>
+      'External ID (e.g. github login, phorge PHID)';
+
+  @override
+  String get identityFieldProviderUsernameOptional =>
+      'Provider Username (optional, e.g. dlimier)';
+
+  @override
+  String get identityCreateLink => 'Create Link';
+
+  @override
+  String get identityUpdateLink => 'Update Link';
+
+  @override
+  String identityLinkAssociateUser(Object externalId) {
+    return 'Associate $externalId with a DAB user account.';
+  }
+
+  @override
+  String get identityTargetUserId => 'Target User ID';
+
+  @override
+  String get identityProviderUsernameOptionalLabel =>
+      'Provider Username (optional)';
+
+  @override
+  String get providerCardShowFields => 'Show fields';
+
+  @override
+  String get providerCardHideFields => 'Hide fields';
+
+  @override
+  String get providerCardMultilineHint =>
+      'Use one value per line (comma-separated also works).';
+
+  @override
+  String get providerCardSaveCredentials => 'Save Provider Credentials';
+
+  @override
+  String providerCardEnterField(Object fieldLabel) {
+    return 'Enter $fieldLabel…';
+  }
+
+  @override
+  String get adminFieldApiToken => 'API Token';
+
+  @override
+  String get adminFieldBaseUrl => 'Base URL';
+
+  @override
+  String get adminFieldApiKey => 'API Key';
+
+  @override
+  String get adminFieldAtlassianEmail => 'Atlassian Email';
+
+  @override
+  String get adminFieldJiraInstanceUrl =>
+      'Jira Instance URL (e.g. company.atlassian.net)';
+
+  @override
+  String get adminFieldApplicationClientId => 'Application (Client) ID';
+
+  @override
+  String get adminFieldClientSecret => 'Client Secret';
+
+  @override
+  String get adminFieldDirectoryTenantId => 'Directory (Tenant) ID';
+
+  @override
+  String get adminFieldBotToken => 'Bot Token';
+
+  @override
+  String get adminFieldSigningSecret => 'Signing Secret';
+
+  @override
+  String get adminFieldWorkspaceTeamId =>
+      'Workspace/Team ID (e.g. T0123456789)';
+
+  @override
+  String get adminFieldChannelIdsOnePerLine => 'Channel IDs (one per line)';
+
+  @override
+  String get adminFieldSlackApiBaseOptional =>
+      'API Base URL (optional, defaults to https://slack.com/api)';
+
+  @override
+  String get adminFieldGuildServerId => 'Guild (Server) ID';
+
+  @override
+  String get adminFieldPersonalAccessToken => 'Personal Access Token';
+
+  @override
+  String get adminFieldWebhookSecret => 'Webhook Secret';
+
+  @override
+  String get adminFieldRepositoryOwner => 'Repository Owner';
+
+  @override
+  String get adminFieldRepositoryName => 'Repository Name';
+
+  @override
+  String get adminFieldBranchOptional =>
+      'Branch (optional, defaults to repository default)';
+
+  @override
+  String get adminFieldRepositoriesOnePerLine =>
+      'Repositories (one owner/repo per line, optional)';
+
+  @override
+  String get adminFieldGithubApiBaseOptional =>
+      'API Base URL (optional, defaults to https://api.github.com)';
+
+  @override
+  String get adminFieldGitLabInstanceUrl =>
+      'GitLab Instance URL (e.g. gitlab.com)';
+
+  @override
+  String get adminFieldApiTokenOrSecret => 'API Token / Secret';
+
+  @override
+  String get dashboardAwaitingReplyTitle => 'Réponses';
+
+  @override
+  String get dashboardAwaitingReplySubtitle => 'Fils en attente.';
+
+  @override
+  String get dashboardNoReplyThreads => 'Aucun fil.';
+
+  @override
+  String get dashboardLiveNowTitle => 'Direct';
+
+  @override
+  String get dashboardSnoozed => 'Report.';
+
+  @override
+  String get dashboardReviewQueue => 'Revue';
+
+  @override
+  String dashboardLiveUpdated(Object relativeTime) {
+    return 'Direct · maj. $relativeTime';
+  }
+
+  @override
+  String commonTimeAgoSeconds(Object n) {
+    return '${n}s';
+  }
+
+  @override
+  String commonTimeAgoMinutes(Object n) {
+    return '$n min';
+  }
+
+  @override
+  String dashboardReconnectNotice(Object time) {
+    return 'Reconnecté — $time';
+  }
+
+  @override
+  String get dashboardFailedLoadLive => 'Échec chargement.';
+
+  @override
+  String get dashboardEmptyLiveCaughtUp => 'À jour — archives.';
+
+  @override
+  String get dashboardEmptyLiveNoActivities => 'Rien en direct.';
+
+  @override
+  String get dashboardArchiveShow => 'Archives';
+
+  @override
+  String get dashboardArchiveHide => 'Masquer';
+
+  @override
+  String dashboardArchiveShowCount(Object count) {
+    return 'Archives ($count)';
+  }
+
+  @override
+  String get activityTooltipArchive => 'Archiver';
+
+  @override
+  String get activityTooltipUnarchive => 'Restaurer';
+
+  @override
+  String activitySemanticsActive(Object title) {
+    return 'Activité : $title';
+  }
+
+  @override
+  String activitySemanticsArchived(Object title) {
+    return 'Activité archivée : $title';
+  }
+
+  @override
+  String get explorerCouldNotLaunchUrl => 'Could not launch URL';
+
+  @override
+  String explorerTooltipCategory(Object category) {
+    return 'Category: $category';
+  }
+
+  @override
+  String explorerTooltipSource(Object name) {
+    return 'Source: $name';
+  }
+
+  @override
+  String get explorerCreateGroupSubmit => 'Create Group';
+
+  @override
+  String get explorerCreateNewGroupTitle => 'Create New Group';
+
+  @override
+  String get explorerGroupNameSectionLabel => 'GROUP NAME';
+
+  @override
+  String get explorerSelectMembersSectionLabel => 'SELECT MEMBERS';
+
+  @override
+  String get explorerGroupNameHintExample => 'e.g. Mobile Team';
+
+  @override
+  String get settingsVersionPlaceholder => '1.0.0';
+
+  @override
+  String get dashboardProviderHealthTitle => 'Fourniss.';
+
+  @override
+  String dashboardActivityFromAuthor(Object authorName) {
+    return 'De $authorName';
+  }
+
+  @override
+  String get dashboardCardArchivedBadge => 'ARCHIVÉ';
+
+  @override
+  String get dashboardProviderHealthLive => 'Actif';
+
+  @override
+  String get dashboardProviderHealthDegraded => 'Dégradé';
+
+  @override
+  String get dashboardProviderHealthOffline => 'Hors ligne';
+
+  @override
+  String get dashboardUpcomingSourceCalendar => 'Calendrier';
+
+  @override
+  String get dashboardNoProviderActivity => 'Aucune activité.';
+
+  @override
+  String get dashboardNoSyncYet => 'Pas sync';
+
+  @override
+  String dashboardLastSync(Object time) {
+    return 'Sync $time';
+  }
+
+  @override
+  String get dashboardUpcomingSoonTitle => 'À venir';
+
+  @override
+  String get dashboardUpcomingNoEvents => 'Aucun évén.';
+
+  @override
+  String get upcomingRelativeInProgress => 'en cours';
+
+  @override
+  String get upcomingRelativeNow => 'maintenant';
+
+  @override
+  String upcomingRelativeInMinutes(Object count) {
+    return 'dans $count min';
+  }
+
+  @override
+  String upcomingRelativeInHours(Object count) {
+    return 'dans $count h';
+  }
+
+  @override
+  String upcomingRelativeInDays(Object count) {
+    return 'dans $count j';
+  }
+
+  @override
+  String get authErrorFailed => 'Échec de l\'authentification';
+
+  @override
+  String get appBrandShortName => 'DAB';
+
+  @override
+  String get appWindowTitle => 'DAB App';
+
+  @override
+  String dashboardRelativeDaysAgo(Object n) {
+    return 'il y a $n j';
+  }
+
+  @override
+  String dashboardRelativeHoursAgo(Object n) {
+    return 'il y a $n h';
+  }
+
+  @override
+  String dashboardRelativeMinutesAgo(Object n) {
+    return 'il y a $n min';
+  }
+
+  @override
+  String get dashboardRelativeJustNow => 'à l\'instant';
+
+  @override
+  String get bannerStartingNow => 'Commence maintenant';
+
+  @override
+  String get bannerStartsInOneMinute => 'Commence dans 1 minute';
+
+  @override
+  String bannerStartsInMinutes(Object count) {
+    return 'Commence dans $count minutes';
+  }
+
+  @override
+  String get bannerStartsInOneHour => 'Commence dans 1 heure';
+
+  @override
+  String bannerStartsInHours(Object count) {
+    return 'Commence dans $count heures';
+  }
+
+  @override
+  String get explorerNoActivitiesFound => 'No activities found.';
+
+  @override
+  String get explorerNoActivitiesForDate =>
+      'No activities found for this date.';
+
+  @override
+  String explorerViewingArchivedFromRange(Object count) {
+    return 'Viewing $count archived activities from this range.';
+  }
+
+  @override
+  String explorerViewingArchivedFromDate(Object count) {
+    return 'Viewing $count archived activities from this date.';
+  }
+
+  @override
+  String get explorerJumpToDateTooltip => 'Jump to date';
+
+  @override
+  String get explorerSectionActivityProviders => 'ACTIVITY PROVIDERS';
+
+  @override
+  String get homeSearchArchivesPlaceholder => 'Search archives…';
+
+  @override
+  String get adminConnectionConnected => 'Connected';
+
+  @override
+  String get adminConnectionDisconnected => 'Disconnected';
+
+  @override
+  String get adminConnectionTimedOut => 'Connection timed out';
+
+  @override
+  String get adminIdentityStatusLinked => 'LINKED';
+
+  @override
+  String get adminIdentityStatusPending => 'PENDING';
+
+  @override
+  String get adminIdentityStatusFailed => 'FAILED';
+
+  @override
+  String get activityCategoryAbbrevCommit => 'COMMIT';
+
+  @override
+  String get activityCategoryAbbrevRevision => 'REVISION';
+
+  @override
+  String get activityCategoryAbbrevTask => 'TASK';
+
+  @override
+  String get activityCategoryAbbrevMessage => 'MESSAGE';
+
+  @override
+  String get activityCategoryAbbrevGeneric => 'ACTIVITY';
+
+  @override
+  String activityKindCountTooltip(Object label, Object count) {
+    return '$label: $count';
+  }
 }

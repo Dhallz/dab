@@ -64,7 +64,9 @@ class DabApp extends ConsumerWidget {
     final state = ref.watch(appNotifierProvider);
 
     return MaterialApp.router(
-      title: 'DAB App',
+      title: lookupAppLocalizations(
+        state.settings.resolvedLocale ?? const Locale('en'),
+      ).appWindowTitle,
       routerConfig: appRouter.router,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

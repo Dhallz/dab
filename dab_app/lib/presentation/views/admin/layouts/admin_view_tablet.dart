@@ -1,4 +1,5 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/widgets/island_bar.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
@@ -92,8 +93,8 @@ class AdminViewTablet extends ConsumerWidget {
                   AdminSectionSelector(selectedSection: section),
                   const SizedBox(height: 20),
                   AdminSectionHeader(
-                    title: section.title,
-                    subtitle: section.subtitle,
+                    title: section.localizedTitle(context.l10n),
+                    subtitle: section.localizedSubtitle(context.l10n),
                   ),
                   const SizedBox(height: 20),
                   Expanded(

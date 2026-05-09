@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/localization/l10n_extension.dart';
 import '../../core/models/view_status.dart';
 import '../../core/navigation/app_route.dart';
 import '../../core/widgets/dab_mesh_background.dart';
@@ -38,11 +39,12 @@ class _SplashViewState extends ConsumerState<SplashView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       _route(next);
     });
 
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.transparent,
       body: DabMeshBackground(
         child: Center(
@@ -50,7 +52,7 @@ class _SplashViewState extends ConsumerState<SplashView> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'DAB',
+                l10n.appBrandShortName,
                 style: TextStyle(
                   fontSize: 64,
                   fontWeight: FontWeight.bold,

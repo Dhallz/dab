@@ -1,92 +1,1152 @@
 {
   "@@locale": "en",
-  "helloWorld": "Hello World!",
   "dashboardTitle": "Dashboard",
+  "@dashboardTitle": {
+    "description": "dashboardTitle: Dashboard"
+  },
   "dashboardOverview": "Overview",
+  "@dashboardOverview": {
+    "description": "dashboardOverview: Overview"
+  },
   "dashboardSubtitle": "Coming soon: Live activity feed.",
+  "@dashboardSubtitle": {
+    "description": "dashboardSubtitle: Coming soon: Live activity feed."
+  },
   "navExplorer": "Explorer",
+  "@navExplorer": {
+    "description": "navExplorer: Explorer"
+  },
   "navAdmin": "Admin",
+  "@navAdmin": {
+    "description": "navAdmin: Admin"
+  },
   "explorerModeSingleDay": "Day",
+  "@explorerModeSingleDay": {
+    "description": "explorerModeSingleDay: Day"
+  },
   "explorerModeRange": "Range",
+  "@explorerModeRange": {
+    "description": "explorerModeRange: Range"
+  },
   "explorerQuickToday": "Today",
+  "@explorerQuickToday": {
+    "description": "explorerQuickToday: Today"
+  },
   "explorerQuickWeek": "Week",
+  "@explorerQuickWeek": {
+    "description": "explorerQuickWeek: Week"
+  },
   "explorerPickRange": "Pick range",
+  "@explorerPickRange": {
+    "description": "explorerPickRange: Pick range"
+  },
   "explorerSectionDirectory": "Directory",
+  "@explorerSectionDirectory": {
+    "description": "explorerSectionDirectory: Directory"
+  },
   "explorerSectionActivities": "Activities",
+  "@explorerSectionActivities": {
+    "description": "explorerSectionActivities: Activities"
+  },
   "explorerSectionProviders": "Providers",
+  "@explorerSectionProviders": {
+    "description": "explorerSectionProviders: Providers"
+  },
   "explorerDirectoryUsers": "Users",
+  "@explorerDirectoryUsers": {
+    "description": "explorerDirectoryUsers: Users"
+  },
   "explorerDirectoryGroups": "Groups",
+  "@explorerDirectoryGroups": {
+    "description": "explorerDirectoryGroups: Groups"
+  },
   "explorerCreateGroup": "Create group",
+  "@explorerCreateGroup": {
+    "description": "explorerCreateGroup: Create group"
+  },
   "explorerGroupActions": "Group actions",
+  "@explorerGroupActions": {
+    "description": "explorerGroupActions: Group actions"
+  },
   "explorerEditGroupMembers": "Edit group members",
+  "@explorerEditGroupMembers": {
+    "description": "explorerEditGroupMembers: Edit group members"
+  },
   "explorerSelectGroupMembers": "Select members",
+  "@explorerSelectGroupMembers": {
+    "description": "explorerSelectGroupMembers: Select members"
+  },
   "explorerRenameGroup": "Rename group",
+  "@explorerRenameGroup": {
+    "description": "explorerRenameGroup: Rename group"
+  },
   "explorerDeleteGroup": "Delete group",
+  "@explorerDeleteGroup": {
+    "description": "explorerDeleteGroup: Delete group"
+  },
   "explorerGroupNamePlaceholder": "Group name",
+  "@explorerGroupNamePlaceholder": {
+    "description": "explorerGroupNamePlaceholder: Group name"
+  },
   "explorerCancel": "Cancel",
+  "@explorerCancel": {
+    "description": "explorerCancel: Cancel"
+  },
   "explorerSave": "Save",
+  "@explorerSave": {
+    "description": "explorerSave: Save"
+  },
   "explorerActivityFilterCommit": "Commits",
+  "@explorerActivityFilterCommit": {
+    "description": "explorerActivityFilterCommit: Commits"
+  },
   "explorerActivityFilterRevision": "Revisions",
+  "@explorerActivityFilterRevision": {
+    "description": "explorerActivityFilterRevision: Revisions"
+  },
   "explorerActivityFilterTask": "Tasks",
+  "@explorerActivityFilterTask": {
+    "description": "explorerActivityFilterTask: Tasks"
+  },
   "explorerActivityFilterMessage": "Messages",
+  "@explorerActivityFilterMessage": {
+    "description": "explorerActivityFilterMessage: Messages"
+  },
   "explorerActivityFilterGeneric": "Generic",
+  "@explorerActivityFilterGeneric": {
+    "description": "explorerActivityFilterGeneric: Generic"
+  },
   "activityKindComment": "Comment",
+  "@activityKindComment": {
+    "description": "activityKindComment: Comment"
+  },
   "activityKindTag": "Tag",
+  "@activityKindTag": {
+    "description": "activityKindTag: Tag"
+  },
   "activityKindStatus": "Status",
+  "@activityKindStatus": {
+    "description": "activityKindStatus: Status"
+  },
   "activityKindReview": "Review",
+  "@activityKindReview": {
+    "description": "activityKindReview: Review"
+  },
   "activityKindAssignment": "Assignment",
+  "@activityKindAssignment": {
+    "description": "activityKindAssignment: Assignment"
+  },
   "activityKindCommit": "Commit",
+  "@activityKindCommit": {
+    "description": "activityKindCommit: Commit"
+  },
   "activityKindMessage": "Message",
+  "@activityKindMessage": {
+    "description": "activityKindMessage: Message"
+  },
   "activityKindActivity": "Activity",
+  "@activityKindActivity": {
+    "description": "activityKindActivity: Activity"
+  },
   "insightsTitle": "Insights",
+  "@insightsTitle": {
+    "description": "insightsTitle: Insights"
+  },
   "insightsFiltersTitle": "Filters",
+  "@insightsFiltersTitle": {
+    "description": "insightsFiltersTitle: Filters"
+  },
   "insightsUsersSectionTitle": "Users",
+  "@insightsUsersSectionTitle": {
+    "description": "insightsUsersSectionTitle: Users"
+  },
   "insightsProvidersSectionTitle": "Providers",
+  "@insightsProvidersSectionTitle": {
+    "description": "insightsProvidersSectionTitle: Providers"
+  },
   "insightsActivityTypesSectionTitle": "Activity types",
+  "@insightsActivityTypesSectionTitle": {
+    "description": "insightsActivityTypesSectionTitle: Activity types"
+  },
   "insightsPresetToday": "Today",
+  "@insightsPresetToday": {
+    "description": "insightsPresetToday: Today"
+  },
   "insightsPresetLast7Days": "Last 7d",
+  "@insightsPresetLast7Days": {
+    "description": "insightsPresetLast7Days: Last 7d"
+  },
   "insightsPresetLast30Days": "Last 30d",
+  "@insightsPresetLast30Days": {
+    "description": "insightsPresetLast30Days: Last 30d"
+  },
   "insightsPresetCustom": "Custom",
+  "@insightsPresetCustom": {
+    "description": "insightsPresetCustom: Custom"
+  },
   "insightsKpiTotalActivities": "Total activities",
+  "@insightsKpiTotalActivities": {
+    "description": "insightsKpiTotalActivities: Total activities"
+  },
   "insightsKpiActiveUsers": "Active users",
+  "@insightsKpiActiveUsers": {
+    "description": "insightsKpiActiveUsers: Active users"
+  },
   "insightsKpiActiveProviders": "Active providers",
+  "@insightsKpiActiveProviders": {
+    "description": "insightsKpiActiveProviders: Active providers"
+  },
   "insightsKpiTopActivityType": "Top activity type",
+  "@insightsKpiTopActivityType": {
+    "description": "insightsKpiTopActivityType: Top activity type"
+  },
   "insightsTrendTitle": "Activity trend",
+  "@insightsTrendTitle": {
+    "description": "insightsTrendTitle: Activity trend"
+  },
   "insightsBreakdownProviders": "By provider",
+  "@insightsBreakdownProviders": {
+    "description": "insightsBreakdownProviders: By provider"
+  },
   "insightsBreakdownActivityTypes": "By activity type",
+  "@insightsBreakdownActivityTypes": {
+    "description": "insightsBreakdownActivityTypes: By activity type"
+  },
   "insightsBreakdownTopUsers": "Top users",
+  "@insightsBreakdownTopUsers": {
+    "description": "insightsBreakdownTopUsers: Top users"
+  },
   "insightsDetailsTitle": "Details",
+  "@insightsDetailsTitle": {
+    "description": "insightsDetailsTitle: Details"
+  },
   "insightsNoData": "No data",
+  "@insightsNoData": {
+    "description": "insightsNoData: No data"
+  },
   "insightsNoDataForFilters": "No data for selected filters.",
+  "@insightsNoDataForFilters": {
+    "description": "insightsNoDataForFilters: No data for selected filters."
+  },
   "insightsErrorLoading": "Unable to load insights.",
+  "@insightsErrorLoading": {
+    "description": "insightsErrorLoading: Unable to load insights."
+  },
   "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "settingsTitle: Settings"
+  },
   "settingsSectionAppearance": "Appearance",
+  "@settingsSectionAppearance": {
+    "description": "settingsSectionAppearance: Appearance"
+  },
   "settingsSectionLanguage": "Language",
+  "@settingsSectionLanguage": {
+    "description": "settingsSectionLanguage: Language"
+  },
   "settingsSectionIslandBar": "Island Bar",
+  "@settingsSectionIslandBar": {
+    "description": "settingsSectionIslandBar: Island Bar"
+  },
   "settingsSectionAbout": "About",
+  "@settingsSectionAbout": {
+    "description": "settingsSectionAbout: About"
+  },
   "settingsThemeLight": "Light",
+  "@settingsThemeLight": {
+    "description": "settingsThemeLight: Light"
+  },
   "settingsThemeDab": "DAB",
+  "@settingsThemeDab": {
+    "description": "settingsThemeDab: DAB"
+  },
   "settingsThemeDark": "Dark",
+  "@settingsThemeDark": {
+    "description": "settingsThemeDark: Dark"
+  },
   "settingsLanguageSystemDefault": "System default",
+  "@settingsLanguageSystemDefault": {
+    "description": "settingsLanguageSystemDefault: System default"
+  },
   "settingsLanguageEnglish": "English",
+  "@settingsLanguageEnglish": {
+    "description": "settingsLanguageEnglish: English"
+  },
   "settingsLanguageSpanish": "Spanish",
+  "@settingsLanguageSpanish": {
+    "description": "settingsLanguageSpanish: Spanish"
+  },
   "settingsLanguageFrench": "French",
+  "@settingsLanguageFrench": {
+    "description": "settingsLanguageFrench: French"
+  },
   "settingsLanguageGerman": "German",
+  "@settingsLanguageGerman": {
+    "description": "settingsLanguageGerman: German"
+  },
   "settingsLanguagePortuguese": "Portuguese",
+  "@settingsLanguagePortuguese": {
+    "description": "settingsLanguagePortuguese: Portuguese"
+  },
+  "settingsLanguageItalian": "Italian",
+  "@settingsLanguageItalian": {
+    "description": "settingsLanguageItalian: Italian"
+  },
   "settingsVersionLabel": "Version",
+  "@settingsVersionLabel": {
+    "description": "settingsVersionLabel: Version"
+  },
   "settingsIslandBarDashboard": "Dashboard",
+  "@settingsIslandBarDashboard": {
+    "description": "settingsIslandBarDashboard: Dashboard"
+  },
   "settingsIslandBarExplorer": "Explorer",
+  "@settingsIslandBarExplorer": {
+    "description": "settingsIslandBarExplorer: Explorer"
+  },
   "settingsIslandBarInsights": "Insights",
+  "@settingsIslandBarInsights": {
+    "description": "settingsIslandBarInsights: Insights"
+  },
   "settingsIslandBarItemTitle": "Title",
+  "@settingsIslandBarItemTitle": {
+    "description": "settingsIslandBarItemTitle: Title"
+  },
   "settingsIslandBarItemSubtitle": "Subtitle",
+  "@settingsIslandBarItemSubtitle": {
+    "description": "settingsIslandBarItemSubtitle: Subtitle"
+  },
   "settingsIslandBarItemDateControls": "Date controls",
+  "@settingsIslandBarItemDateControls": {
+    "description": "settingsIslandBarItemDateControls: Date controls"
+  },
   "settingsIslandBarItemQuickPreset": "Quick preset",
+  "@settingsIslandBarItemQuickPreset": {
+    "description": "settingsIslandBarItemQuickPreset: Quick preset"
+  },
   "settingsIslandBarItemDateModeToggle": "Date mode toggle",
+  "@settingsIslandBarItemDateModeToggle": {
+    "description": "settingsIslandBarItemDateModeToggle: Date mode toggle"
+  },
   "settingsIslandBarItemActivitySummary": "Activity summary",
+  "@settingsIslandBarItemActivitySummary": {
+    "description": "settingsIslandBarItemActivitySummary: Activity summary"
+  },
   "settingsIslandBarItemHeatBar": "Heat bar",
+  "@settingsIslandBarItemHeatBar": {
+    "description": "settingsIslandBarItemHeatBar: Heat bar"
+  },
   "settingsIslandBarItemDateRange": "Date range",
+  "@settingsIslandBarItemDateRange": {
+    "description": "settingsIslandBarItemDateRange: Date range"
+  },
   "settingsIslandBarItemPresets": "Presets",
+  "@settingsIslandBarItemPresets": {
+    "description": "settingsIslandBarItemPresets: Presets"
+  },
   "settingsSave": "Save",
+  "@settingsSave": {
+    "description": "settingsSave: Save"
+  },
   "settingsClose": "Close",
-  "settingsSavedMessage": "Settings saved"
+  "@settingsClose": {
+    "description": "settingsClose: Close"
+  },
+  "settingsSavedMessage": "Settings saved",
+  "@settingsSavedMessage": {
+    "description": "settingsSavedMessage: Settings saved"
+  },
+  "brandTagline": "Dev Activity Board",
+  "@brandTagline": {
+    "description": "brandTagline: Dev Activity Board"
+  },
+  "brandShortName": "DAB",
+  "@brandShortName": {
+    "description": "brandShortName: DAB"
+  },
+  "navFeed": "Feed",
+  "@navFeed": {
+    "description": "navFeed: Feed"
+  },
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "commonCancel: Cancel"
+  },
+  "commonOpen": "Open",
+  "@commonOpen": {
+    "description": "commonOpen: Open"
+  },
+  "commonDismiss": "Dismiss",
+  "@commonDismiss": {
+    "description": "commonDismiss: Dismiss"
+  },
+  "commonTry": "Try",
+  "@commonTry": {
+    "description": "commonTry: Try"
+  },
+  "commonOr": "OR",
+  "@commonOr": {
+    "description": "commonOr: OR"
+  },
+  "commonPasswordMaskHint": "••••••••",
+  "@commonPasswordMaskHint": {
+    "description": "commonPasswordMaskHint: ••••••••"
+  },
+  "authWelcomeBack": "Welcome Back",
+  "@authWelcomeBack": {
+    "description": "authWelcomeBack: Welcome Back"
+  },
+  "authCreateAccount": "Create Account",
+  "@authCreateAccount": {
+    "description": "authCreateAccount: Create Account"
+  },
+  "authSignInWithSso": "Sign in with Company SSO",
+  "@authSignInWithSso": {
+    "description": "authSignInWithSso: Sign in with Company SSO"
+  },
+  "authLabelName": "Name",
+  "@authLabelName": {
+    "description": "authLabelName: Name"
+  },
+  "authHintName": "Your full name",
+  "@authHintName": {
+    "description": "authHintName: Your full name"
+  },
+  "authLabelEmail": "Email",
+  "@authLabelEmail": {
+    "description": "authLabelEmail: Email"
+  },
+  "authHintEmail": "you@company.com",
+  "@authHintEmail": {
+    "description": "authHintEmail: you@company.com"
+  },
+  "authLabelPassword": "Password",
+  "@authLabelPassword": {
+    "description": "authLabelPassword: Password"
+  },
+  "authSignIn": "Sign In",
+  "@authSignIn": {
+    "description": "authSignIn: Sign In"
+  },
+  "authRegister": "Register",
+  "@authRegister": {
+    "description": "authRegister: Register"
+  },
+  "authToggleRegister": "Don't have an account? Register",
+  "@authToggleRegister": {
+    "description": "authToggleRegister: Don't have an account? Register"
+  },
+  "authToggleSignIn": "Already have an account? Sign In",
+  "@authToggleSignIn": {
+    "description": "authToggleSignIn: Already have an account? Sign In"
+  },
+  "adminNavManagement": "MANAGEMENT",
+  "@adminNavManagement": {
+    "description": "adminNavManagement: MANAGEMENT"
+  },
+  "adminNavProviders": "Providers",
+  "@adminNavProviders": {
+    "description": "adminNavProviders: Providers"
+  },
+  "adminNavIdentities": "Identities",
+  "@adminNavIdentities": {
+    "description": "adminNavIdentities: Identities"
+  },
+  "adminNavSecurity": "Security",
+  "@adminNavSecurity": {
+    "description": "adminNavSecurity: Security"
+  },
+  "adminSectionProvidersTitle": "Provider Config",
+  "@adminSectionProvidersTitle": {
+    "description": "adminSectionProvidersTitle: Provider Config"
+  },
+  "adminSectionIdentitiesTitle": "Identity Management",
+  "@adminSectionIdentitiesTitle": {
+    "description": "adminSectionIdentitiesTitle: Identity Management"
+  },
+  "adminSectionSecurityTitle": "System Security",
+  "@adminSectionSecurityTitle": {
+    "description": "adminSectionSecurityTitle: System Security"
+  },
+  "adminSectionProvidersSubtitle": "Define and manage external service connections.",
+  "@adminSectionProvidersSubtitle": {
+    "description": "adminSectionProvidersSubtitle: Define and manage external service connections."
+  },
+  "adminSectionIdentitiesSubtitle": "Resolve and link platform identities to users.",
+  "@adminSectionIdentitiesSubtitle": {
+    "description": "adminSectionIdentitiesSubtitle: Resolve and link platform identities to users."
+  },
+  "adminSectionSecuritySubtitle": "Manage user roles and deployment security.",
+  "@adminSectionSecuritySubtitle": {
+    "description": "adminSectionSecuritySubtitle: Manage user roles and deployment security."
+  },
+  "adminIdentitiesSectionTitle": "EXTERNAL IDENTITIES",
+  "@adminIdentitiesSectionTitle": {
+    "description": "adminIdentitiesSectionTitle: EXTERNAL IDENTITIES"
+  },
+  "adminIdentitiesSearchHint": "Search identities…",
+  "@adminIdentitiesSearchHint": {
+    "description": "adminIdentitiesSearchHint: Search identities…"
+  },
+  "adminIdentitiesCreateLink": "Create Link",
+  "@adminIdentitiesCreateLink": {
+    "description": "adminIdentitiesCreateLink: Create Link"
+  },
+  "adminIdentitiesEmpty": "No identities found",
+  "@adminIdentitiesEmpty": {
+    "description": "adminIdentitiesEmpty: No identities found"
+  },
+  "adminTableFullName": "Full Name",
+  "@adminTableFullName": {
+    "description": "adminTableFullName: Full Name"
+  },
+  "adminTableProvider": "Provider",
+  "@adminTableProvider": {
+    "description": "adminTableProvider: Provider"
+  },
+  "adminTableExternalId": "External ID",
+  "@adminTableExternalId": {
+    "description": "adminTableExternalId: External ID"
+  },
+  "adminTableProviderUsername": "Provider Username",
+  "@adminTableProviderUsername": {
+    "description": "adminTableProviderUsername: Provider Username"
+  },
+  "adminTableStatus": "Status",
+  "@adminTableStatus": {
+    "description": "adminTableStatus: Status"
+  },
+  "adminTableActions": "Actions",
+  "@adminTableActions": {
+    "description": "adminTableActions: Actions"
+  },
+  "adminTooltipAddUsername": "Add provider username",
+  "@adminTooltipAddUsername": {
+    "description": "adminTooltipAddUsername: Add provider username"
+  },
+  "adminSecuritySectionTitle": "USER MANAGEMENT",
+  "@adminSecuritySectionTitle": {
+    "description": "adminSecuritySectionTitle: USER MANAGEMENT"
+  },
+  "adminSecuritySearchHint": "Search by name or email",
+  "@adminSecuritySearchHint": {
+    "description": "adminSecuritySearchHint: Search by name or email"
+  },
+  "adminIslandProvidersTitle": "Providers",
+  "@adminIslandProvidersTitle": {
+    "description": "adminIslandProvidersTitle: Providers"
+  },
+  "adminIslandProvidersTooltip": "Active / total providers",
+  "@adminIslandProvidersTooltip": {
+    "description": "adminIslandProvidersTooltip: Active / total providers"
+  },
+  "adminIslandUnresolvedTitle": "Unresolved",
+  "@adminIslandUnresolvedTitle": {
+    "description": "adminIslandUnresolvedTitle: Unresolved"
+  },
+  "adminIslandUnresolvedTooltip": "Identities not linked",
+  "@adminIslandUnresolvedTooltip": {
+    "description": "adminIslandUnresolvedTooltip: Identities not linked"
+  },
+  "adminIslandUsersTitle": "Users",
+  "@adminIslandUsersTitle": {
+    "description": "adminIslandUsersTitle: Users"
+  },
+  "adminIslandUsersTooltip": "Registered users",
+  "@adminIslandUsersTooltip": {
+    "description": "adminIslandUsersTooltip: Registered users"
+  },
+  "adminIslandLinksOkTitle": "Links OK",
+  "@adminIslandLinksOkTitle": {
+    "description": "adminIslandLinksOkTitle: Links OK"
+  },
+  "adminIslandLinksOkTooltip": "Active providers with successful connection test",
+  "@adminIslandLinksOkTooltip": {
+    "description": "adminIslandLinksOkTooltip: Active providers with successful connection test"
+  },
+  "adminIslandFailedTitle": "Failed",
+  "@adminIslandFailedTitle": {
+    "description": "adminIslandFailedTitle: Failed"
+  },
+  "adminIslandFailedTooltip": "Connection failures",
+  "@adminIslandFailedTooltip": {
+    "description": "adminIslandFailedTooltip: Connection failures"
+  },
+  "adminIslandPendingTitle": "Pending",
+  "@adminIslandPendingTitle": {
+    "description": "adminIslandPendingTitle: Pending"
+  },
+  "adminIslandPendingTooltip": "Untested or in progress",
+  "@adminIslandPendingTooltip": {
+    "description": "adminIslandPendingTooltip: Untested or in progress"
+  },
+  "adminIslandRefreshTooltip": "Refresh admin data",
+  "@adminIslandRefreshTooltip": {
+    "description": "adminIslandRefreshTooltip: Refresh admin data"
+  },
+  "adminIslandRefreshLabel": "REFRESH",
+  "@adminIslandRefreshLabel": {
+    "description": "adminIslandRefreshLabel: REFRESH"
+  },
+  "adminBootstrapLockTitle": "Bootstrap Lock: ACTIVE",
+  "@adminBootstrapLockTitle": {
+    "description": "adminBootstrapLockTitle: Bootstrap Lock: ACTIVE"
+  },
+  "adminBootstrapLockSubtitle": "System is locked and requires an administrative account.",
+  "@adminBootstrapLockSubtitle": {
+    "description": "adminBootstrapLockSubtitle: System is locked and requires an administrative account."
+  },
+  "adminUserRoleAdmin": "ADMIN",
+  "@adminUserRoleAdmin": {
+    "description": "adminUserRoleAdmin: ADMIN"
+  },
+  "adminUserRoleManager": "MANAGER",
+  "@adminUserRoleManager": {
+    "description": "adminUserRoleManager: MANAGER"
+  },
+  "adminUserRoleStandard": "STANDARD",
+  "@adminUserRoleStandard": {
+    "description": "adminUserRoleStandard: STANDARD"
+  },
+  "identityDialogCreateTitle": "Create Identity Link",
+  "@identityDialogCreateTitle": {
+    "description": "identityDialogCreateTitle: Create Identity Link"
+  },
+  "identityDialogUpdateTitle": "Update Identity Link",
+  "@identityDialogUpdateTitle": {
+    "description": "identityDialogUpdateTitle: Update Identity Link"
+  },
+  "identityDialogCreateSubtitle": "Link a provider external identity to a DAB user.",
+  "@identityDialogCreateSubtitle": {
+    "description": "identityDialogCreateSubtitle: Link a provider external identity to a DAB user."
+  },
+  "identityFieldDabUser": "DAB User",
+  "@identityFieldDabUser": {
+    "description": "identityFieldDabUser: DAB User"
+  },
+  "identityFieldProvider": "Provider",
+  "@identityFieldProvider": {
+    "description": "identityFieldProvider: Provider"
+  },
+  "identityFieldExternalId": "External ID (e.g. github login, phorge PHID)",
+  "@identityFieldExternalId": {
+    "description": "identityFieldExternalId: External ID (e.g. github login, phorge PHID)"
+  },
+  "identityFieldProviderUsernameOptional": "Provider Username (optional, e.g. dlimier)",
+  "@identityFieldProviderUsernameOptional": {
+    "description": "identityFieldProviderUsernameOptional: Provider Username (optional, e.g. dlimier)"
+  },
+  "identityCreateLink": "Create Link",
+  "@identityCreateLink": {
+    "description": "identityCreateLink: Create Link"
+  },
+  "identityUpdateLink": "Update Link",
+  "@identityUpdateLink": {
+    "description": "identityUpdateLink: Update Link"
+  },
+  "identityLinkAssociateUser": "Associate {externalId} with a DAB user account.",
+  "@identityLinkAssociateUser": {
+    "description": "identityLinkAssociateUser: Associate {externalId} with a DAB user account.",
+    "placeholders": {
+      "externalId": {}
+    }
+  },
+  "identityTargetUserId": "Target User ID",
+  "@identityTargetUserId": {
+    "description": "identityTargetUserId: Target User ID"
+  },
+  "identityProviderUsernameOptionalLabel": "Provider Username (optional)",
+  "@identityProviderUsernameOptionalLabel": {
+    "description": "identityProviderUsernameOptionalLabel: Provider Username (optional)"
+  },
+  "providerCardShowFields": "Show fields",
+  "@providerCardShowFields": {
+    "description": "providerCardShowFields: Show fields"
+  },
+  "providerCardHideFields": "Hide fields",
+  "@providerCardHideFields": {
+    "description": "providerCardHideFields: Hide fields"
+  },
+  "providerCardMultilineHint": "Use one value per line (comma-separated also works).",
+  "@providerCardMultilineHint": {
+    "description": "providerCardMultilineHint: Use one value per line (comma-separated also works)."
+  },
+  "providerCardSaveCredentials": "Save Provider Credentials",
+  "@providerCardSaveCredentials": {
+    "description": "providerCardSaveCredentials: Save Provider Credentials"
+  },
+  "providerCardEnterField": "Enter {fieldLabel}…",
+  "@providerCardEnterField": {
+    "description": "providerCardEnterField: Enter {fieldLabel}…",
+    "placeholders": {
+      "fieldLabel": {}
+    }
+  },
+  "adminFieldApiToken": "API Token",
+  "@adminFieldApiToken": {
+    "description": "adminFieldApiToken: API Token"
+  },
+  "adminFieldBaseUrl": "Base URL",
+  "@adminFieldBaseUrl": {
+    "description": "adminFieldBaseUrl: Base URL"
+  },
+  "adminFieldApiKey": "API Key",
+  "@adminFieldApiKey": {
+    "description": "adminFieldApiKey: API Key"
+  },
+  "adminFieldAtlassianEmail": "Atlassian Email",
+  "@adminFieldAtlassianEmail": {
+    "description": "adminFieldAtlassianEmail: Atlassian Email"
+  },
+  "adminFieldJiraInstanceUrl": "Jira Instance URL (e.g. company.atlassian.net)",
+  "@adminFieldJiraInstanceUrl": {
+    "description": "adminFieldJiraInstanceUrl: Jira Instance URL (e.g. company.atlassian.net)"
+  },
+  "adminFieldApplicationClientId": "Application (Client) ID",
+  "@adminFieldApplicationClientId": {
+    "description": "adminFieldApplicationClientId: Application (Client) ID"
+  },
+  "adminFieldClientSecret": "Client Secret",
+  "@adminFieldClientSecret": {
+    "description": "adminFieldClientSecret: Client Secret"
+  },
+  "adminFieldDirectoryTenantId": "Directory (Tenant) ID",
+  "@adminFieldDirectoryTenantId": {
+    "description": "adminFieldDirectoryTenantId: Directory (Tenant) ID"
+  },
+  "adminFieldBotToken": "Bot Token",
+  "@adminFieldBotToken": {
+    "description": "adminFieldBotToken: Bot Token"
+  },
+  "adminFieldSigningSecret": "Signing Secret",
+  "@adminFieldSigningSecret": {
+    "description": "adminFieldSigningSecret: Signing Secret"
+  },
+  "adminFieldWorkspaceTeamId": "Workspace/Team ID (e.g. T0123456789)",
+  "@adminFieldWorkspaceTeamId": {
+    "description": "adminFieldWorkspaceTeamId: Workspace/Team ID (e.g. T0123456789)"
+  },
+  "adminFieldChannelIdsOnePerLine": "Channel IDs (one per line)",
+  "@adminFieldChannelIdsOnePerLine": {
+    "description": "adminFieldChannelIdsOnePerLine: Channel IDs (one per line)"
+  },
+  "adminFieldSlackApiBaseOptional": "API Base URL (optional, defaults to https://slack.com/api)",
+  "@adminFieldSlackApiBaseOptional": {
+    "description": "adminFieldSlackApiBaseOptional: API Base URL (optional, defaults to https://slack.com/api)"
+  },
+  "adminFieldGuildServerId": "Guild (Server) ID",
+  "@adminFieldGuildServerId": {
+    "description": "adminFieldGuildServerId: Guild (Server) ID"
+  },
+  "adminFieldPersonalAccessToken": "Personal Access Token",
+  "@adminFieldPersonalAccessToken": {
+    "description": "adminFieldPersonalAccessToken: Personal Access Token"
+  },
+  "adminFieldWebhookSecret": "Webhook Secret",
+  "@adminFieldWebhookSecret": {
+    "description": "adminFieldWebhookSecret: Webhook Secret"
+  },
+  "adminFieldRepositoryOwner": "Repository Owner",
+  "@adminFieldRepositoryOwner": {
+    "description": "adminFieldRepositoryOwner: Repository Owner"
+  },
+  "adminFieldRepositoryName": "Repository Name",
+  "@adminFieldRepositoryName": {
+    "description": "adminFieldRepositoryName: Repository Name"
+  },
+  "adminFieldBranchOptional": "Branch (optional, defaults to repository default)",
+  "@adminFieldBranchOptional": {
+    "description": "adminFieldBranchOptional: Branch (optional, defaults to repository default)"
+  },
+  "adminFieldRepositoriesOnePerLine": "Repositories (one owner/repo per line, optional)",
+  "@adminFieldRepositoriesOnePerLine": {
+    "description": "adminFieldRepositoriesOnePerLine: Repositories (one owner/repo per line, optional)"
+  },
+  "adminFieldGithubApiBaseOptional": "API Base URL (optional, defaults to https://api.github.com)",
+  "@adminFieldGithubApiBaseOptional": {
+    "description": "adminFieldGithubApiBaseOptional: API Base URL (optional, defaults to https://api.github.com)"
+  },
+  "adminFieldGitLabInstanceUrl": "GitLab Instance URL (e.g. gitlab.com)",
+  "@adminFieldGitLabInstanceUrl": {
+    "description": "adminFieldGitLabInstanceUrl: GitLab Instance URL (e.g. gitlab.com)"
+  },
+  "adminFieldApiTokenOrSecret": "API Token / Secret",
+  "@adminFieldApiTokenOrSecret": {
+    "description": "adminFieldApiTokenOrSecret: API Token / Secret"
+  },
+  "dashboardAwaitingReplyTitle": "Awaiting Your Reply",
+  "@dashboardAwaitingReplyTitle": {
+    "description": "dashboardAwaitingReplyTitle: Awaiting Your Reply"
+  },
+  "dashboardAwaitingReplySubtitle": "Thread follow-ups that likely expect a response.",
+  "@dashboardAwaitingReplySubtitle": {
+    "description": "dashboardAwaitingReplySubtitle: Thread follow-ups that likely expect a response."
+  },
+  "dashboardNoReplyThreads": "No active reply threads right now.",
+  "@dashboardNoReplyThreads": {
+    "description": "dashboardNoReplyThreads: No active reply threads right now."
+  },
+  "dashboardLiveNowTitle": "Live Now",
+  "@dashboardLiveNowTitle": {
+    "description": "dashboardLiveNowTitle: Live Now"
+  },
+  "dashboardSnoozed": "Snoozed",
+  "@dashboardSnoozed": {
+    "description": "dashboardSnoozed: Snoozed"
+  },
+  "dashboardReviewQueue": "Review queue",
+  "@dashboardReviewQueue": {
+    "description": "dashboardReviewQueue: Review queue"
+  },
+  "dashboardLiveUpdated": "Live · updated {relativeTime}",
+  "@dashboardLiveUpdated": {
+    "description": "dashboardLiveUpdated: Live · updated {relativeTime}",
+    "placeholders": {
+      "relativeTime": {}
+    }
+  },
+  "commonTimeAgoSeconds": "{n}s ago",
+  "@commonTimeAgoSeconds": {
+    "description": "commonTimeAgoSeconds: {n}s ago",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "commonTimeAgoMinutes": "{n}m ago",
+  "@commonTimeAgoMinutes": {
+    "description": "commonTimeAgoMinutes: {n}m ago",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dashboardReconnectNotice": "Reconnected — caught up through {time}",
+  "@dashboardReconnectNotice": {
+    "description": "dashboardReconnectNotice: Reconnected — caught up through {time}",
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "dashboardFailedLoadLive": "Failed to load live activities.",
+  "@dashboardFailedLoadLive": {
+    "description": "dashboardFailedLoadLive: Failed to load live activities."
+  },
+  "dashboardEmptyLiveCaughtUp": "All caught up — enable \"Show archived\" to review prior items.",
+  "@dashboardEmptyLiveCaughtUp": {
+    "description": "dashboardEmptyLiveCaughtUp: All caught up — enable \"Show archived\" to review prior items."
+  },
+  "dashboardEmptyLiveNoActivities": "No live activities yet.",
+  "@dashboardEmptyLiveNoActivities": {
+    "description": "dashboardEmptyLiveNoActivities: No live activities yet."
+  },
+  "dashboardArchiveShow": "Show archived",
+  "@dashboardArchiveShow": {
+    "description": "dashboardArchiveShow: Show archived"
+  },
+  "dashboardArchiveHide": "Hide archived",
+  "@dashboardArchiveHide": {
+    "description": "dashboardArchiveHide: Hide archived"
+  },
+  "dashboardArchiveShowCount": "Show archived ({count})",
+  "@dashboardArchiveShowCount": {
+    "description": "dashboardArchiveShowCount: Show archived ({count})",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "activityTooltipArchive": "Archive",
+  "@activityTooltipArchive": {
+    "description": "activityTooltipArchive: Archive"
+  },
+  "activityTooltipUnarchive": "Unarchive",
+  "@activityTooltipUnarchive": {
+    "description": "activityTooltipUnarchive: Unarchive"
+  },
+  "activitySemanticsActive": "Activity: {title}",
+  "@activitySemanticsActive": {
+    "description": "activitySemanticsActive: Activity: {title}",
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "activitySemanticsArchived": "Archived activity: {title}",
+  "@activitySemanticsArchived": {
+    "description": "activitySemanticsArchived: Archived activity: {title}",
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "explorerCouldNotLaunchUrl": "Could not launch URL",
+  "@explorerCouldNotLaunchUrl": {
+    "description": "explorerCouldNotLaunchUrl: Could not launch URL"
+  },
+  "explorerTooltipCategory": "Category: {category}",
+  "@explorerTooltipCategory": {
+    "description": "explorerTooltipCategory: Category: {category}",
+    "placeholders": {
+      "category": {}
+    }
+  },
+  "explorerTooltipSource": "Source: {name}",
+  "@explorerTooltipSource": {
+    "description": "explorerTooltipSource: Source: {name}",
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "explorerCreateGroupSubmit": "Create Group",
+  "@explorerCreateGroupSubmit": {
+    "description": "explorerCreateGroupSubmit: Create Group"
+  },
+  "explorerCreateNewGroupTitle": "Create New Group",
+  "@explorerCreateNewGroupTitle": {
+    "description": "explorerCreateNewGroupTitle: Create New Group"
+  },
+  "explorerGroupNameSectionLabel": "GROUP NAME",
+  "@explorerGroupNameSectionLabel": {
+    "description": "explorerGroupNameSectionLabel: GROUP NAME"
+  },
+  "explorerSelectMembersSectionLabel": "SELECT MEMBERS",
+  "@explorerSelectMembersSectionLabel": {
+    "description": "explorerSelectMembersSectionLabel: SELECT MEMBERS"
+  },
+  "explorerGroupNameHintExample": "e.g. Mobile Team",
+  "@explorerGroupNameHintExample": {
+    "description": "explorerGroupNameHintExample: e.g. Mobile Team"
+  },
+  "settingsVersionPlaceholder": "1.0.0",
+  "@settingsVersionPlaceholder": {
+    "description": "settingsVersionPlaceholder: 1.0.0"
+  },
+  "dashboardProviderHealthTitle": "Provider Health",
+  "@dashboardProviderHealthTitle": {
+    "description": "dashboardProviderHealthTitle: Provider Health"
+  },
+  "dashboardActivityFromAuthor": "From {authorName}",
+  "@dashboardActivityFromAuthor": {
+    "description": "dashboardActivityFromAuthor: Sender line on activity cards (author attribution).",
+    "placeholders": {
+      "authorName": {}
+    }
+  },
+  "dashboardCardArchivedBadge": "ARCHIVED",
+  "@dashboardCardArchivedBadge": {
+    "description": "dashboardCardArchivedBadge: Compact badge when an activity is archived."
+  },
+  "dashboardProviderHealthLive": "Live",
+  "@dashboardProviderHealthLive": {
+    "description": "dashboardProviderHealthLive: Sidebar chip — provider connection healthy."
+  },
+  "dashboardProviderHealthDegraded": "Degraded",
+  "@dashboardProviderHealthDegraded": {
+    "description": "dashboardProviderHealthDegraded: Sidebar chip — provider connection degraded."
+  },
+  "dashboardProviderHealthOffline": "Offline",
+  "@dashboardProviderHealthOffline": {
+    "description": "dashboardProviderHealthOffline: Sidebar chip — provider offline."
+  },
+  "dashboardUpcomingSourceCalendar": "Calendar",
+  "@dashboardUpcomingSourceCalendar": {
+    "description": "dashboardUpcomingSourceCalendar: Source label for calendar-derived upcoming events."
+  },
+  "dashboardNoProviderActivity": "No provider activity yet",
+  "@dashboardNoProviderActivity": {
+    "description": "dashboardNoProviderActivity: No provider activity yet"
+  },
+  "dashboardNoSyncYet": "No sync yet",
+  "@dashboardNoSyncYet": {
+    "description": "dashboardNoSyncYet: No sync yet"
+  },
+  "dashboardLastSync": "Last sync {time}",
+  "@dashboardLastSync": {
+    "description": "dashboardLastSync: Last sync {time}",
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "dashboardUpcomingSoonTitle": "Upcoming Soon",
+  "@dashboardUpcomingSoonTitle": {
+    "description": "dashboardUpcomingSoonTitle: Upcoming Soon"
+  },
+  "dashboardUpcomingNoEvents": "No upcoming events",
+  "@dashboardUpcomingNoEvents": {
+    "description": "dashboardUpcomingNoEvents: No upcoming events"
+  },
+  "upcomingRelativeInProgress": "in progress",
+  "@upcomingRelativeInProgress": {
+    "description": "upcomingRelativeInProgress: in progress"
+  },
+  "upcomingRelativeNow": "now",
+  "@upcomingRelativeNow": {
+    "description": "upcomingRelativeNow: now"
+  },
+  "upcomingRelativeInMinutes": "in {count}m",
+  "@upcomingRelativeInMinutes": {
+    "description": "upcomingRelativeInMinutes: in {count}m",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "upcomingRelativeInHours": "in {count}h",
+  "@upcomingRelativeInHours": {
+    "description": "upcomingRelativeInHours: in {count}h",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "upcomingRelativeInDays": "in {count}d",
+  "@upcomingRelativeInDays": {
+    "description": "upcomingRelativeInDays: in {count}d",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "authErrorFailed": "Auth failed",
+  "@authErrorFailed": {
+    "description": "authErrorFailed: Auth failed"
+  },
+  "appBrandShortName": "DAB",
+  "@appBrandShortName": {
+    "description": "appBrandShortName: DAB"
+  },
+  "appWindowTitle": "DAB App",
+  "@appWindowTitle": {
+    "description": "appWindowTitle: DAB App"
+  },
+  "dashboardRelativeDaysAgo": "{n}d ago",
+  "@dashboardRelativeDaysAgo": {
+    "description": "dashboardRelativeDaysAgo: {n}d ago",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dashboardRelativeHoursAgo": "{n}h ago",
+  "@dashboardRelativeHoursAgo": {
+    "description": "dashboardRelativeHoursAgo: {n}h ago",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dashboardRelativeMinutesAgo": "{n}m ago",
+  "@dashboardRelativeMinutesAgo": {
+    "description": "dashboardRelativeMinutesAgo: {n}m ago",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dashboardRelativeJustNow": "just now",
+  "@dashboardRelativeJustNow": {
+    "description": "dashboardRelativeJustNow: just now"
+  },
+  "bannerStartingNow": "Starting now",
+  "@bannerStartingNow": {
+    "description": "bannerStartingNow: Starting now"
+  },
+  "bannerStartsInOneMinute": "Starts in 1 minute",
+  "@bannerStartsInOneMinute": {
+    "description": "bannerStartsInOneMinute: Starts in 1 minute"
+  },
+  "bannerStartsInMinutes": "Starts in {count} minutes",
+  "@bannerStartsInMinutes": {
+    "description": "bannerStartsInMinutes: Starts in {count} minutes",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "bannerStartsInOneHour": "Starts in 1 hour",
+  "@bannerStartsInOneHour": {
+    "description": "bannerStartsInOneHour: Starts in 1 hour"
+  },
+  "bannerStartsInHours": "Starts in {count} hours",
+  "@bannerStartsInHours": {
+    "description": "bannerStartsInHours: Starts in {count} hours",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "explorerNoActivitiesFound": "No activities found.",
+  "@explorerNoActivitiesFound": {
+    "description": "explorerNoActivitiesFound: No activities found."
+  },
+  "explorerNoActivitiesForDate": "No activities found for this date.",
+  "@explorerNoActivitiesForDate": {
+    "description": "explorerNoActivitiesForDate: No activities found for this date."
+  },
+  "explorerViewingArchivedFromRange": "Viewing {count} archived activities from this range.",
+  "@explorerViewingArchivedFromRange": {
+    "description": "explorerViewingArchivedFromRange: Viewing {count} archived activities from this range.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "explorerViewingArchivedFromDate": "Viewing {count} archived activities from this date.",
+  "@explorerViewingArchivedFromDate": {
+    "description": "explorerViewingArchivedFromDate: Viewing {count} archived activities from this date.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "explorerJumpToDateTooltip": "Jump to date",
+  "@explorerJumpToDateTooltip": {
+    "description": "explorerJumpToDateTooltip: Jump to date"
+  },
+  "explorerSectionActivityProviders": "ACTIVITY PROVIDERS",
+  "@explorerSectionActivityProviders": {
+    "description": "explorerSectionActivityProviders: ACTIVITY PROVIDERS"
+  },
+  "homeSearchArchivesPlaceholder": "Search archives…",
+  "@homeSearchArchivesPlaceholder": {
+    "description": "homeSearchArchivesPlaceholder: Search archives…"
+  },
+  "adminConnectionConnected": "Connected",
+  "@adminConnectionConnected": {
+    "description": "adminConnectionConnected: Connected"
+  },
+  "adminConnectionDisconnected": "Disconnected",
+  "@adminConnectionDisconnected": {
+    "description": "adminConnectionDisconnected: Disconnected"
+  },
+  "adminConnectionTimedOut": "Connection timed out",
+  "@adminConnectionTimedOut": {
+    "description": "adminConnectionTimedOut: Connection timed out"
+  },
+  "adminIdentityStatusLinked": "LINKED",
+  "@adminIdentityStatusLinked": {
+    "description": "adminIdentityStatusLinked: LINKED"
+  },
+  "adminIdentityStatusPending": "PENDING",
+  "@adminIdentityStatusPending": {
+    "description": "adminIdentityStatusPending: PENDING"
+  },
+  "adminIdentityStatusFailed": "FAILED",
+  "@adminIdentityStatusFailed": {
+    "description": "adminIdentityStatusFailed: FAILED"
+  },
+  "activityCategoryAbbrevCommit": "COMMIT",
+  "@activityCategoryAbbrevCommit": {
+    "description": "activityCategoryAbbrevCommit: COMMIT"
+  },
+  "activityCategoryAbbrevRevision": "REVISION",
+  "@activityCategoryAbbrevRevision": {
+    "description": "activityCategoryAbbrevRevision: REVISION"
+  },
+  "activityCategoryAbbrevTask": "TASK",
+  "@activityCategoryAbbrevTask": {
+    "description": "activityCategoryAbbrevTask: TASK"
+  },
+  "activityCategoryAbbrevMessage": "MESSAGE",
+  "@activityCategoryAbbrevMessage": {
+    "description": "activityCategoryAbbrevMessage: MESSAGE"
+  },
+  "activityCategoryAbbrevGeneric": "ACTIVITY",
+  "@activityCategoryAbbrevGeneric": {
+    "description": "activityCategoryAbbrevGeneric: ACTIVITY"
+  },
+  "activityKindCountTooltip": "{label}: {count}",
+  "@activityKindCountTooltip": {
+    "description": "activityKindCountTooltip: {label}: {count}",
+    "placeholders": {
+      "label": {},
+      "count": {}
+    }
+  }
 }

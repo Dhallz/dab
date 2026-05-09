@@ -92,7 +92,10 @@ class _SettingsViewMobileState extends ConsumerState<SettingsViewMobile> {
             context.l10n.settingsVersionLabel,
             style: AppTextStyles.bodyMedium,
           ),
-          trailing: const Text('1.0.0', style: AppTextStyles.labelSmall),
+          trailing: Text(
+            context.l10n.settingsVersionPlaceholder,
+            style: AppTextStyles.labelSmall,
+          ),
         ),
       ],
     );

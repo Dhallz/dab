@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class BootstrapStatusCard extends StatelessWidget {
@@ -36,7 +37,7 @@ class BootstrapStatusCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bootstrap Lock: ACTIVE',
+                      context.l10n.adminBootstrapLockTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -44,7 +45,7 @@ class BootstrapStatusCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'System is locked and requires an administrative account.',
+                      context.l10n.adminBootstrapLockSubtitle,
                       style: TextStyle(
                         color: cs.onSurfaceVariant,
                         fontSize: 13,

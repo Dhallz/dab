@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class AdminSectionSelector extends ConsumerWidget {
       runSpacing: 8,
       children: AdminSection.values.map((section) {
         return ChoiceChip(
-          label: Text(section.title),
+          label: Text(section.localizedTitle(context.l10n)),
           selected: section == selectedSection,
           onSelected: (_) => notifier.setSection(section),
           labelStyle: TextStyle(

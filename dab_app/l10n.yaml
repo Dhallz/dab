@@ -2,3 +2,4 @@ arb-dir: lib/presentation/core/localization/l10n
 output-dir: lib/presentation/core/localization
 output-file: app_localizations.dart
 template-arb-file: app_en.arb
+untranslated-messages-file: lib/presentation/core/localization/untranslated.yaml

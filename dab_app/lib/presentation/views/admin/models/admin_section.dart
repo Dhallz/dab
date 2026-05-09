@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/localization/app_localizations.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
 part 'admin_section.mapper.dart';
@@ -6,15 +7,17 @@ part 'admin_section.mapper.dart';
 enum AdminSection { providers, identities, security }
 
 extension OnAdminSection on AdminSection {
-  String get title => switch (this) {
-    AdminSection.providers => 'Provider Config',
-    AdminSection.identities => 'Identity Management',
-    AdminSection.security => 'System Security',
+  /// Localized section title for admin shell headers and selectors.
+  String localizedTitle(AppLocalizations l10n) => switch (this) {
+    AdminSection.providers => l10n.adminSectionProvidersTitle,
+    AdminSection.identities => l10n.adminSectionIdentitiesTitle,
+    AdminSection.security => l10n.adminSectionSecurityTitle,
   };
 
-  String get subtitle => switch (this) {
-    AdminSection.providers => 'Define and manage external service connections.',
-    AdminSection.identities => 'Resolve and link platform identities to users.',
-    AdminSection.security => 'Manage user roles and deployment security.',
+  /// Localized subtitle shown under the section title.
+  String localizedSubtitle(AppLocalizations l10n) => switch (this) {
+    AdminSection.providers => l10n.adminSectionProvidersSubtitle,
+    AdminSection.identities => l10n.adminSectionIdentitiesSubtitle,
+    AdminSection.security => l10n.adminSectionSecuritySubtitle,
   };
 }

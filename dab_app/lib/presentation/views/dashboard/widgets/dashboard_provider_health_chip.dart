@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../models/dashboard_provider_health.dart';
@@ -11,13 +12,20 @@ class DashboardProviderHealthChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final (label, color) = switch (health.status) {
-      DashboardProviderHealthStatus.live => ('Live', const Color(0xFF22C55E)),
+      DashboardProviderHealthStatus.live => (
+        l10n.dashboardProviderHealthLive,
+        const Color(0xFF22C55E),
+      ),
       DashboardProviderHealthStatus.degraded => (
-        'Degraded',
+        l10n.dashboardProviderHealthDegraded,
         const Color(0xFFF59E0B),
       ),
-      DashboardProviderHealthStatus.offline => ('Offline', AppColors.error),
+      DashboardProviderHealthStatus.offline => (
+        l10n.dashboardProviderHealthOffline,
+        AppColors.error,
+      ),
     };
 
     return Container(

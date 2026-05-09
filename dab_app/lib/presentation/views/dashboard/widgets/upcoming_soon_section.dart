@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../domain/entities/upcoming/upcoming_event.dart';
 import '../../../../domain/entities/upcoming/upcoming_event_priority.dart';
+import '../../../core/localization/app_localizations.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../auth/widgets/auth_glass_card.dart';
 
@@ -24,13 +26,14 @@ class UpcomingSoonSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 8, left: 4),
           child: Text(
-            'Upcoming Soon',
+            l10n.dashboardUpcomingSoonTitle,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: 0.6,
@@ -39,12 +42,12 @@ class UpcomingSoonSection extends StatelessWidget {
           ),
         ),
         if (events.isEmpty)
-          _EmptyState()
+          _EmptyState(l10n: l10n)
         else
           ...events.map(
             (event) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _UpcomingCard(event: event, now: now),
+              child: _UpcomingCard(event: event, now: now, l10n: l10n),
             ),
           ),
       ],
@@ -55,8 +58,13 @@ class UpcomingSoonSection extends StatelessWidget {
 class _UpcomingCard extends StatelessWidget {
   final UpcomingEvent event;
   final DateTime Function() now;
+  final AppLocalizations l10n;
 
-  const _UpcomingCard({required this.event, required this.now});
+  const _UpcomingCard({
+    required this.event,
+    required this.now,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +91,7 @@ class _UpcomingCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        event.source.toUpperCase(),
+                        _localizedSourceLabel(l10n, event.source),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: accent,
                           fontWeight: FontWeight.bold,
@@ -92,7 +100,7 @@ class _UpcomingCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        _countdownLabel(event.startsAt, now()),
+                        _countdownLabel(l10n, event.startsAt, now()),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: AppColors.onSurfaceVariantLow,
                         ),
@@ -113,7 +121,7 @@ class _UpcomingCard extends StatelessWidget {
             if (event.url != null)
               TextButton(
                 onPressed: () => _open(event.url!),
-                child: const Text('Open'),
+                child: Text(l10n.commonOpen),
               ),
           ],
         ),
@@ -134,13 +142,33 @@ class _UpcomingCard extends StatelessWidget {
     }
   }
 
-  String _countdownLabel(DateTime startsAt, DateTime currentTime) {
+  String _countdownLabel(
+    AppLocalizations l10n,
+    DateTime startsAt,
+    DateTime currentTime,
+  ) {
     final diff = startsAt.difference(currentTime);
-    if (diff.isNegative) return 'in progress';
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inMinutes < 60) return 'in ${diff.inMinutes}m';
-    if (diff.inHours < 24) return 'in ${diff.inHours}h';
-    return 'in ${diff.inDays}d';
+    if (diff.isNegative) return l10n.upcomingRelativeInProgress;
+    if (diff.inMinutes < 1) return l10n.upcomingRelativeNow;
+    if (diff.inMinutes < 60) {
+      return l10n.upcomingRelativeInMinutes(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.upcomingRelativeInHours(diff.inHours);
+    }
+    return l10n.upcomingRelativeInDays(diff.inDays);
+  }
+
+  /// Maps known [UpcomingEvent.source] values to localized labels; passes
+  /// through unknown sources unchanged (still uppercased for chrome).
+  static String _localizedSourceLabel(AppLocalizations l10n, String source) {
+    final trimmed = source.trim();
+    final lower = trimmed.toLowerCase();
+    final mapped = switch (lower) {
+      'calendar' => l10n.dashboardUpcomingSourceCalendar,
+      _ => trimmed,
+    };
+    return mapped.toUpperCase();
   }
 
   Future<void> _open(String url) async {
@@ -152,6 +180,10 @@ class _UpcomingCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _EmptyState({required this.l10n});
+
   @override
   Widget build(BuildContext context) {
     return AuthGlassCard(
@@ -165,7 +197,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'No upcoming events',
+              l10n.dashboardUpcomingNoEvents,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),

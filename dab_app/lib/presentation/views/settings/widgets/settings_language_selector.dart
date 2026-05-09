@@ -66,6 +66,13 @@ class SettingsLanguageSelector extends StatelessWidget {
             style: AppTextStyles.bodyMedium,
           ),
         ),
+        DropdownMenuItem<String?>(
+          value: 'it',
+          child: Text(
+            context.l10n.settingsLanguageItalian,
+            style: AppTextStyles.bodyMedium,
+          ),
+        ),
       ],
       onChanged: (value) => onChanged(value),
     );

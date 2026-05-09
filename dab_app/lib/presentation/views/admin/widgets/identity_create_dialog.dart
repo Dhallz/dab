@@ -1,4 +1,5 @@
 import 'package:dab_app/domain/entities/user/user.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -89,6 +90,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final canSubmit =
         _selectedUserId != null &&
         _selectedProviderId != null &&
@@ -97,7 +99,9 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: Text(
-        widget.isUpdateMode ? 'Update Identity Link' : 'Create Identity Link',
+        widget.isUpdateMode
+            ? l10n.identityDialogUpdateTitle
+            : l10n.identityDialogCreateTitle,
         style: TextStyle(
           fontWeight: FontWeight.w900,
           color: cs.onSurface,
@@ -108,7 +112,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Link a provider external identity to a DAB user.',
+            l10n.identityDialogCreateSubtitle,
             style: TextStyle(
               color: cs.onSurfaceVariant,
               fontSize: 13,
@@ -126,7 +130,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
                 )
                 .toList(),
             onChanged: (value) => setState(() => _selectedUserId = value),
-            decoration: _fieldDecoration(context, 'DAB User'),
+            decoration: _fieldDecoration(context, l10n.identityFieldDabUser),
             dropdownColor: cs.surfaceContainerHigh,
           ),
           const SizedBox(height: 12),
@@ -136,7 +140,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
                 .map((id) => DropdownMenuItem(value: id, child: Text(id)))
                 .toList(),
             onChanged: (value) => setState(() => _selectedProviderId = value),
-            decoration: _fieldDecoration(context, 'Provider'),
+            decoration: _fieldDecoration(context, l10n.identityFieldProvider),
             dropdownColor: cs.surfaceContainerHigh,
           ),
           const SizedBox(height: 12),
@@ -147,7 +151,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
             style: TextStyle(color: cs.onSurface),
             decoration: _fieldDecoration(
               context,
-              'External ID (e.g. github login, phorge PHID)',
+              l10n.identityFieldExternalId,
             ),
           ),
           const SizedBox(height: 12),
@@ -157,7 +161,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
             style: TextStyle(color: cs.onSurface),
             decoration: _fieldDecoration(
               context,
-              'Provider Username (optional, e.g. dlimier)',
+              l10n.identityFieldProviderUsernameOptional,
             ),
           ),
         ],
@@ -170,7 +174,7 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            'Cancel',
+            l10n.commonCancel,
             style: TextStyle(color: cs.onSurfaceVariant),
           ),
         ),
@@ -198,7 +202,9 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
                   Navigator.pop(context);
                 },
           child: Text(
-            widget.isUpdateMode ? 'Update Link' : 'Create Link',
+            widget.isUpdateMode
+                ? l10n.identityUpdateLink
+                : l10n.identityCreateLink,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
             ),

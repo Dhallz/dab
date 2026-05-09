@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_theme.dart';
 
@@ -20,6 +21,7 @@ class DabTopMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final glass = Theme.of(context).extension<AppGlassTheme>();
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -44,25 +46,25 @@ class DabTopMenu extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DabTabItem(
-                  label: 'Feed',
+                  label: l10n.navFeed,
                   icon: AppIcons.dashboard,
                   isSelected: activeTab == DabViewTab.feed,
                   onTap: () => onTabChanged(DabViewTab.feed),
                 ),
                 DabTabItem(
-                  label: 'Explorer',
+                  label: l10n.navExplorer,
                   icon: AppIcons.history,
                   isSelected: activeTab == DabViewTab.explorer,
                   onTap: () => onTabChanged(DabViewTab.explorer),
                 ),
                 DabTabItem(
-                  label: 'Insights',
+                  label: l10n.insightsTitle,
                   icon: AppIcons.insights,
                   isSelected: activeTab == DabViewTab.insights,
                   onTap: () => onTabChanged(DabViewTab.insights),
                 ),
                 DabTabItem(
-                  label: 'Admin',
+                  label: l10n.navAdmin,
                   icon: AppIcons.admin,
                   isSelected: activeTab == DabViewTab.admin,
                   onTap: () => onTabChanged(DabViewTab.admin),

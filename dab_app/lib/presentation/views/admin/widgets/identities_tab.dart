@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
@@ -30,11 +31,12 @@ class IdentitiesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'EXTERNAL IDENTITIES',
+          l10n.adminIdentitiesSectionTitle,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -48,7 +50,7 @@ class IdentitiesTab extends StatelessWidget {
           initialValue: searchQuery,
           style: TextStyle(color: cs.onSurface),
           decoration: InputDecoration(
-            hintText: 'Search identities...',
+            hintText: l10n.adminIdentitiesSearchHint,
             hintStyle: TextStyle(color: cs.onSurfaceVariant),
             prefixIcon: Icon(
               Icons.search,
@@ -72,7 +74,7 @@ class IdentitiesTab extends StatelessWidget {
                   IdentityCreateDialog(users: users, providerIds: providerIds),
             ),
             icon: const Icon(Icons.add_link, size: 18),
-            label: const Text('Create Link'),
+            label: Text(l10n.adminIdentitiesCreateLink),
           ),
         ),
         const SizedBox(height: 16),
@@ -80,7 +82,7 @@ class IdentitiesTab extends StatelessWidget {
           child: identities.isEmpty
               ? Center(
                   child: Text(
-                    'No identities found',
+                    l10n.adminIdentitiesEmpty,
                     style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                 )
@@ -96,6 +98,7 @@ class IdentitiesTab extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cs = Theme.of(context).colorScheme;
+        final l10n = context.l10n;
         final minTableWidth = constraints.maxWidth > 980
             ? constraints.maxWidth
             : 980.0;
@@ -116,32 +119,32 @@ class IdentitiesTab extends StatelessWidget {
                 ),
                 columns: [
                   DataColumn(
-                    label: Text('Full Name', style: headerStyle),
+                    label: Text(l10n.adminTableFullName, style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.fullName, ascending),
                   ),
                   DataColumn(
-                    label: Text('Provider', style: headerStyle),
+                    label: Text(l10n.adminTableProvider, style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.provider, ascending),
                   ),
                   DataColumn(
-                    label: Text('External ID', style: headerStyle),
+                    label: Text(l10n.adminTableExternalId, style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.externalId, ascending),
                   ),
                   DataColumn(
-                    label: Text('Provider Username', style: headerStyle),
+                    label: Text(l10n.adminTableProviderUsername, style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.providerUsername, ascending),
                   ),
                   DataColumn(
-                    label: Text('Status', style: headerStyle),
+                    label: Text(l10n.adminTableStatus, style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.status, ascending),
                   ),
                   DataColumn(
-                    label: Text('Actions', style: headerStyle),
+                    label: Text(l10n.adminTableActions, style: headerStyle),
                   ),
                 ],
                 rows: identities.map((identity) {
@@ -189,7 +192,7 @@ class IdentitiesTab extends StatelessWidget {
                       DataCell(
                         missingProviderUsername
                             ? Tooltip(
-                                message: 'Add provider username',
+                                message: l10n.adminTooltipAddUsername,
                                 child: IconButton(
                                   onPressed: () =>
                                       _openQuickLink(context, identity),
