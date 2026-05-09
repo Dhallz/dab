@@ -50,10 +50,12 @@ class HomeMobileNav extends StatelessWidget {
                   Text(
                     tabs[index],
                     style: TextStyle(
-                      color:
-                          isSelected ? Colors.white : const Color(0xFF94A3B8),
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF94A3B8),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                       fontSize: 14,
                     ),
                   ),
@@ -70,9 +72,7 @@ class HomeMobileNav extends StatelessWidget {
                       ),
                       constraints: const BoxConstraints(minWidth: 18),
                       child: Text(
-                        adminTabBadgeCount > 99
-                            ? '99+'
-                            : '$adminTabBadgeCount',
+                        adminTabBadgeCount > 99 ? '99+' : '$adminTabBadgeCount',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,

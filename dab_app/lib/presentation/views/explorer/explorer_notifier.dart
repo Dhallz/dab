@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stream_transform/stream_transform.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/containers/activity_usecases.dart';
 import '../../../../domain/containers/metadata_usecases.dart';
@@ -11,47 +10,53 @@ import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../../domain/entities/activity/activity_search_query.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
+import '../../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
-import '../../core/abs_bloc.dart';
-import 'explorer_event.dart';
-import 'explorer_item.dart';
 import 'explorer_state.dart';
 import 'models/directory_type.dart';
 import 'models/explorer_date_mode.dart';
+import 'models/explorer_item.dart';
 
-class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
+/// **Former `ExplorerEvent` types → methods:** `ExplorerStarted` → [started];
+/// date changes → [scheduleDateChanged], [changeDateMode], [changeDateRange];
+/// directory/filters → [setDirectoryType], [toggleUser], [toggleGroup],
+/// [toggleProvider], [toggleActivityCategory]; groups → [renameGroup], [deleteGroup],
+/// [saveGroup]; `ExplorerRefreshRequested` → [refresh]; `ExplorerStackToggled`
+/// → [toggleStackExpanded].
+///
+/// **`ExplorerActivityReceived`:** not ported — Explorer is search-driven only;
+/// live WS handling belongs on [DashboardNotifier].
+final explorerNotifierProvider =
+    NotifierProvider.autoDispose<ExplorerNotifier, ExplorerState>(
+      () => ExplorerNotifier(
+        sl.activityUseCases,
+        sl.userUseCases,
+        sl.metadataUseCases,
+      ),
+    );
+
+class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
   final ActivityUseCases _activityUseCases;
   final UserUseCases _userUseCases;
   final MetadataUseCases _metadataUseCases;
-  ExplorerBloc(
+
+  Timer? _dateDebounceTimer;
+
+  ExplorerNotifier(
     this._activityUseCases,
     this._userUseCases,
     this._metadataUseCases,
-  ) : super(ExplorerState.initial()) {
-    on<ExplorerStarted>(_onStarted);
-    on<ExplorerDateChanged>(
-      _onDateChanged,
-      transformer: (events, mapper) =>
-          events.debounce(const Duration(milliseconds: 300)).switchMap(mapper),
-    );
-    on<ExplorerDateModeChanged>(_onDateModeChanged);
-    on<ExplorerDateRangeChanged>(_onDateRangeChanged);
-    on<ExplorerDirectoryTypeChanged>(_onDirectoryTypeChanged);
-    on<ExplorerUserToggled>(_onUserToggled);
-    on<ExplorerGroupToggled>(_onGroupToggled);
-    on<ExplorerGroupRenamed>(_onGroupRenamed);
-    on<ExplorerGroupDeleted>(_onGroupDeleted);
-    on<ExplorerActivityCategoryToggled>(_onActivityCategoryToggled);
-    on<ExplorerProviderToggled>(_onProviderToggled);
-    on<ExplorerRefreshRequested>(_onRefreshRequested);
-    on<ExplorerGroupSaved>(_onGroupSaved);
-    on<ExplorerStackToggled>(_onStackToggled);
+  );
+
+  @override
+  ExplorerState build() {
+    ref.onDispose(() {
+      _dateDebounceTimer?.cancel();
+    });
+    return ExplorerState.initial();
   }
 
-  Future<void> _onStarted(
-    ExplorerStarted event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> started(String? connectedUserId) async {
     final results = await Future.wait([
       _userUseCases.getUsers.execute(),
       _userUseCases.getGroups.execute(),
@@ -91,73 +96,58 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
       );
     });
 
-    final connectedUserId = event.connectedUserId;
     if (connectedUserId != null &&
         newState.users.any((user) => user.id == connectedUserId)) {
       newState = newState.copyWith(selectedUserIds: {connectedUserId});
     }
 
-    emit(newState);
-    await _fetchActivities(emit);
+    state = newState;
+    await _fetchActivities();
   }
 
-  Future<void> _onDateChanged(
-    ExplorerDateChanged event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    emit(
-      state.copyWith(
-        selectedDate: event.date,
-        rangeStartDate: event.date,
-        rangeEndDate: event.date,
-        status: ViewStatus.loading,
-      ),
+  void scheduleDateChanged(DateTime date) {
+    state = state.copyWith(
+      selectedDate: date,
+      rangeStartDate: date,
+      rangeEndDate: date,
+      status: ViewStatus.loading,
     );
-    await _fetchActivities(emit);
+    _dateDebounceTimer?.cancel();
+    _dateDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _fetchActivities();
+    });
   }
 
-  Future<void> _onDateModeChanged(
-    ExplorerDateModeChanged event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    if (event.mode == state.dateMode) return;
+  Future<void> changeDateMode(ExplorerDateMode mode) async {
+    if (mode == state.dateMode) return;
 
     final nextState = state.copyWith(
-      dateMode: event.mode,
+      dateMode: mode,
       rangeStartDate: state.rangeStartDate ?? state.selectedDate,
       rangeEndDate: state.rangeEndDate ?? state.selectedDate,
     );
-    emit(nextState.copyWith(status: ViewStatus.loading));
-    await _fetchActivities(emit);
+    state = nextState.copyWith(status: ViewStatus.loading);
+    await _fetchActivities();
   }
 
-  Future<void> _onDateRangeChanged(
-    ExplorerDateRangeChanged event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    final start = event.startDate.isBefore(event.endDate)
-        ? event.startDate
-        : event.endDate;
-    final end = event.startDate.isBefore(event.endDate)
-        ? event.endDate
-        : event.startDate;
-    emit(
-      state.copyWith(
-        rangeStartDate: start,
-        rangeEndDate: end,
-        selectedDate: start,
-        status: ViewStatus.loading,
-      ),
+  Future<void> changeDateRange(DateTime startDate, DateTime endDate) async {
+    final start = startDate.isBefore(endDate) ? startDate : endDate;
+    final end = startDate.isBefore(endDate) ? endDate : startDate;
+    state = state.copyWith(
+      rangeStartDate: start,
+      rangeEndDate: end,
+      selectedDate: start,
+      status: ViewStatus.loading,
     );
-    await _fetchActivities(emit);
+    await _fetchActivities();
   }
 
-  Future<void> _fetchActivities(Emitter<ExplorerState> emit) async {
-    emit(state.copyWith(status: ViewStatus.loading));
+  Future<void> _fetchActivities() async {
+    state = state.copyWith(status: ViewStatus.loading);
 
     final targetIds = _resolveTargetUserIds();
     if (targetIds.isEmpty) {
-      emit(state.copyWith(status: ViewStatus.success, items: const []));
+      state = state.copyWith(status: ViewStatus.success, items: const []);
       return;
     }
 
@@ -177,16 +167,16 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     );
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(
+      (failure) {
+        state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-        ),
-      ),
+        );
+      },
       (activities) {
         final items = groupActivities(activities);
 
-        emit(state.copyWith(status: ViewStatus.success, items: items));
+        state = state.copyWith(status: ViewStatus.success, items: items);
       },
     );
   }
@@ -336,181 +326,150 @@ class ExplorerBloc extends AbsBloc<ExplorerEvent, ExplorerState> {
     }
   }
 
-  void _onDirectoryTypeChanged(
-    ExplorerDirectoryTypeChanged event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    emit(state.copyWith(directoryType: event.type, status: ViewStatus.loading));
-    await _fetchActivities(emit);
+  Future<void> setDirectoryType(DirectoryType type) async {
+    state = state.copyWith(directoryType: type, status: ViewStatus.loading);
+    await _fetchActivities();
   }
 
-  Future<void> _onUserToggled(
-    ExplorerUserToggled event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> toggleUser(String userId) async {
     final updated = Set<String>.from(state.selectedUserIds);
-    if (updated.contains(event.userId)) {
-      updated.remove(event.userId);
+    if (updated.contains(userId)) {
+      updated.remove(userId);
     } else {
-      updated.add(event.userId);
+      updated.add(userId);
     }
-    emit(state.copyWith(selectedUserIds: updated));
-    await _fetchActivities(emit);
+    state = state.copyWith(selectedUserIds: updated);
+    await _fetchActivities();
   }
 
-  Future<void> _onGroupToggled(
-    ExplorerGroupToggled event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> toggleGroup(String groupId) async {
     final updated = Set<String>.from(state.selectedGroupIds);
-    if (updated.contains(event.groupId)) {
-      updated.remove(event.groupId);
+    if (updated.contains(groupId)) {
+      updated.remove(groupId);
     } else {
-      updated.add(event.groupId);
+      updated.add(groupId);
     }
-    emit(state.copyWith(selectedGroupIds: updated));
-    await _fetchActivities(emit);
+    state = state.copyWith(selectedGroupIds: updated);
+    await _fetchActivities();
   }
 
-  Future<void> _onGroupRenamed(
-    ExplorerGroupRenamed event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> renameGroup(String groupId, String name) async {
     final group = state.groups.cast<Group?>().firstWhere(
-      (g) => g?.id == event.groupId,
+      (g) => g?.id == groupId,
       orElse: () => null,
     );
     if (group == null) return;
 
     final result = await _userUseCases.saveGroup.execute(
-      group.copyWith(name: event.name),
+      group.copyWith(name: name),
     );
     result.fold(
-      (failure) => emit(
-        state.copyWith(
+      (failure) {
+        state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-        ),
-      ),
+        );
+      },
       (savedGroup) {
         final updatedGroups = state.groups
             .map((g) => g.id == savedGroup.id ? savedGroup : g)
             .toList();
-        emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
+        state = state.copyWith(
+          groups: updatedGroups,
+          status: ViewStatus.success,
+        );
       },
     );
   }
 
-  Future<void> _onGroupDeleted(
-    ExplorerGroupDeleted event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    final result = await _userUseCases.deleteGroup.execute(event.groupId);
+  Future<void> deleteGroup(String groupId) async {
+    final result = await _userUseCases.deleteGroup.execute(groupId);
     await result.fold(
-      (failure) async => emit(
-        state.copyWith(
+      (failure) async {
+        state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-        ),
-      ),
+        );
+      },
       (_) async {
         final updatedGroups = state.groups
-            .where((g) => g.id != event.groupId)
+            .where((g) => g.id != groupId)
             .toList();
         final updatedSelectedGroups = Set<String>.from(state.selectedGroupIds)
-          ..remove(event.groupId);
-        emit(
-          state.copyWith(
-            groups: updatedGroups,
-            selectedGroupIds: updatedSelectedGroups,
-            status: ViewStatus.success,
-          ),
+          ..remove(groupId);
+        state = state.copyWith(
+          groups: updatedGroups,
+          selectedGroupIds: updatedSelectedGroups,
+          status: ViewStatus.success,
         );
-        await _fetchActivities(emit);
+        await _fetchActivities();
       },
     );
   }
 
-  Future<void> _onActivityCategoryToggled(
-    ExplorerActivityCategoryToggled event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> toggleActivityCategory(ActivityCategory category) async {
     final selected = Set<ActivityCategory>.from(
       state.selectedActivityCategories,
     );
-    if (selected.contains(event.category)) {
-      selected.remove(event.category);
+    if (selected.contains(category)) {
+      selected.remove(category);
     } else {
-      selected.add(event.category);
+      selected.add(category);
     }
 
-    emit(state.copyWith(selectedActivityCategories: selected));
-    await _fetchActivities(emit);
+    state = state.copyWith(selectedActivityCategories: selected);
+    await _fetchActivities();
   }
 
-  FutureOr<void> _onProviderToggled(
-    ExplorerProviderToggled event,
-    Emitter<ExplorerState> emit,
-  ) async {
+  Future<void> toggleProvider(String provider) async {
     final selected = Set<String>.from(state.selectedProviders);
-    if (selected.contains(event.provider)) {
-      selected.remove(event.provider);
+    if (selected.contains(provider)) {
+      selected.remove(provider);
     } else {
-      selected.add(event.provider);
+      selected.add(provider);
     }
 
-    emit(state.copyWith(selectedProviders: selected));
-    await _fetchActivities(emit);
+    state = state.copyWith(selectedProviders: selected);
+    await _fetchActivities();
   }
 
-  Future<void> _onRefreshRequested(
-    ExplorerRefreshRequested event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    await _fetchActivities(emit);
+  Future<void> refresh() async {
+    await _fetchActivities();
   }
 
-  void _onStackToggled(
-    ExplorerStackToggled event,
-    Emitter<ExplorerState> emit,
-  ) {
+  void toggleStackExpanded(String taskId) {
     final updatedItems = state.items.map((item) {
-      if (item is TaskActivityItem && item.taskId == event.taskId) {
+      if (item is TaskActivityItem && item.taskId == taskId) {
         return item.copyWith(isExpanded: !item.isExpanded);
       }
-      if (item is SlackConversationItem &&
-          item.conversationKey == event.taskId) {
+      if (item is SlackConversationItem && item.conversationKey == taskId) {
         return item.copyWith(isExpanded: !item.isExpanded);
       }
       return item;
     }).toList();
-    emit(state.copyWith(items: updatedItems));
+    state = state.copyWith(items: updatedItems);
   }
 
-  Future<void> _onGroupSaved(
-    ExplorerGroupSaved event,
-    Emitter<ExplorerState> emit,
-  ) async {
-    final result = await _userUseCases.saveGroup.execute(event.group);
+  Future<void> saveGroup(Group group) async {
+    final result = await _userUseCases.saveGroup.execute(group);
     await result.fold(
-      (failure) async => emit(
-        state.copyWith(
+      (failure) async {
+        state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-        ),
-      ),
-      (savedGroup) async {
-        final hasExisting = state.groups.any(
-          (group) => group.id == savedGroup.id,
         );
+      },
+      (savedGroup) async {
+        final hasExisting = state.groups.any((g) => g.id == savedGroup.id);
         final updatedGroups = hasExisting
             ? state.groups
-                  .map(
-                    (group) => group.id == savedGroup.id ? savedGroup : group,
-                  )
+                  .map((g) => g.id == savedGroup.id ? savedGroup : g)
                   .toList()
             : [...state.groups, savedGroup];
-        emit(state.copyWith(groups: updatedGroups, status: ViewStatus.success));
+        state = state.copyWith(
+          groups: updatedGroups,
+          status: ViewStatus.success,
+        );
       },
     );
   }

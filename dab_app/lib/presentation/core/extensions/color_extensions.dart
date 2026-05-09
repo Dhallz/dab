@@ -8,10 +8,9 @@ extension OnColor on Color {
   Color get toAccessibleBrandColor {
     // If luminance is too low, we boost the lightness and saturation
     if (computeLuminance() < 0.3) {
-      return HSLColor.fromColor(this)
-          .withLightness(0.7)
-          .withSaturation(0.8)
-          .toColor();
+      return HSLColor.fromColor(
+        this,
+      ).withLightness(0.7).withSaturation(0.8).toColor();
     }
     return this;
   }

@@ -22,19 +22,19 @@ class DashboardArchiveToggle extends StatelessWidget {
     final label = showArchived
         ? 'Hide archived'
         : archivedCount == 0
-            ? 'Show archived'
-            : 'Show archived ($archivedCount)';
+        ? 'Show archived'
+        : 'Show archived ($archivedCount)';
 
     return TextButton.icon(
       onPressed: archivedCount == 0 && !showArchived ? null : onToggle,
       icon: Icon(
-        showArchived ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        showArchived
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
         size: 18,
       ),
       label: Text(label),
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.onSurfaceVariant,
-      ),
+      style: TextButton.styleFrom(foregroundColor: AppColors.onSurfaceVariant),
     );
   }
 }

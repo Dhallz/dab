@@ -1,15 +1,15 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
 import 'role_dropdown.dart';
 
 class UserTile extends StatelessWidget {
   final User user;
-  final AdminBloc bloc;
+  final AdminNotifier notifier;
 
-  const UserTile({super.key, required this.user, required this.bloc});
+  const UserTile({super.key, required this.user, required this.notifier});
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class UserTile extends StatelessWidget {
               ],
             ),
           ),
-          RoleDropdown(user: user, bloc: bloc),
+          RoleDropdown(user: user, notifier: notifier),
         ],
       ),
     );

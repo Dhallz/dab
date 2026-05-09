@@ -1,26 +1,34 @@
 import 'dart:ui';
 
+import 'package:dab_app/domain/containers/metadata_usecases.dart';
+import 'package:dab_app/domain/containers/system_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
+import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_app/presentation/core/localization/app_localizations.dart';
-import 'package:dab_app/presentation/features/app/app_cubit.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/explorer/widgets/activity_card/activity_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAppCubit extends Mock implements AppCubit {}
+class MockSystemUseCases extends Mock implements SystemUseCases {}
+
+class MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+class MockUserRepository extends Mock implements IUserRepository {}
+
+/// Test notifier with stable [AppState] and no async [AppNotifier.init].
+class TestAppNotifier extends AppNotifier {
+  TestAppNotifier()
+    : super(MockSystemUseCases(), MockMetadataUseCases(), MockUserRepository());
+
+  @override
+  AppState build() => const AppState(configs: []);
+}
 
 void main() {
-  late MockAppCubit mockAppCubit;
-
-  setUp(() {
-    mockAppCubit = MockAppCubit();
-    when(() => mockAppCubit.state).thenReturn(const AppState(configs: []));
-    when(() => mockAppCubit.stream).thenAnswer((_) => const Stream.empty());
-  });
-
   const testTitle = 'Test Activity Title';
   const testBody = 'This is broad content for testing purposes.';
 
@@ -38,14 +46,12 @@ void main() {
   );
 
   Widget createWidgetUnderTest() {
-    return MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: BlocProvider<AppCubit>.value(
-          value: mockAppCubit,
-          child: ActivityCard(activity: testActivity),
-        ),
+    return ProviderScope(
+      overrides: [appNotifierProvider.overrideWith(TestAppNotifier.new)],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ActivityCard(activity: testActivity)),
       ),
     );
   }

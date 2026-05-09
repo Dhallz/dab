@@ -1,24 +1,19 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
-import 'package:dab_app/presentation/views/admin/admin_event.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class IdentityLinkDialog extends StatefulWidget {
+class IdentityLinkDialog extends ConsumerStatefulWidget {
   final UserIdentity identity;
-  final AdminBloc bloc;
 
-  const IdentityLinkDialog({
-    super.key,
-    required this.identity,
-    required this.bloc,
-  });
+  const IdentityLinkDialog({super.key, required this.identity});
 
   @override
-  State<IdentityLinkDialog> createState() => _IdentityLinkDialogState();
+  ConsumerState<IdentityLinkDialog> createState() => _IdentityLinkDialogState();
 }
 
-class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
+class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
   final controller = TextEditingController();
   final usernameController = TextEditingController();
 
@@ -40,9 +35,7 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dialogTheme: const DialogThemeData(
-          backgroundColor: Color(0xFF0F172A),
-        ),
+        dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF0F172A)),
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       child: AlertDialog(
@@ -127,16 +120,16 @@ class _IdentityLinkDialogState extends State<IdentityLinkDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () {
-              widget.bloc.add(
-                AdminIdentityLinked(
-                  userId: controller.text.trim().isEmpty
-                      ? widget.identity.userId
-                      : controller.text.trim(),
-                  providerId: widget.identity.providerId,
-                  externalId: widget.identity.externalId,
-                  externalUsername: usernameController.text.trim(),
-                ),
-              );
+              ref
+                  .read(adminNotifierProvider.notifier)
+                  .linkIdentity(
+                    userId: controller.text.trim().isEmpty
+                        ? widget.identity.userId
+                        : controller.text.trim(),
+                    providerId: widget.identity.providerId,
+                    externalId: widget.identity.externalId,
+                    externalUsername: usernameController.text.trim(),
+                  );
               Navigator.pop(context);
             },
             child: const Text(

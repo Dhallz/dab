@@ -15,10 +15,10 @@ class ActivityUseCases {
   final UnarchiveLiveActivity unarchiveLiveActivity;
 
   ActivityUseCases(IActivityRepository repository)
-      : getRecentActivities = GetRecentActivities(repository),
-        getLiveActivities = GetLiveActivities(repository),
-        searchActivities = SearchActivities(repository),
-        watchActivities = WatchActivities(repository),
-        archiveLiveActivity = ArchiveLiveActivity(repository),
-        unarchiveLiveActivity = UnarchiveLiveActivity(repository);
+    : getRecentActivities = GetRecentActivities(repository),
+      getLiveActivities = GetLiveActivities(repository),
+      searchActivities = SearchActivities(repository),
+      watchActivities = WatchActivities(repository),
+      archiveLiveActivity = ArchiveLiveActivity(repository),
+      unarchiveLiveActivity = UnarchiveLiveActivity(repository);
 }

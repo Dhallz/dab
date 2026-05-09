@@ -1,9 +1,9 @@
 import 'package:dab_app/presentation/views/home/home_view.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/auth_cubit.dart';
+import '../../features/auth/auth_notifier.dart';
 import 'app_route.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -14,7 +14,9 @@ class AppRouter {
     initialLocation: AppRoute.splash.path,
 
     redirect: (context, state) {
-      final authState = context.read<AuthCubit>().state;
+      final authState = ProviderScope.containerOf(
+        context,
+      ).read(authNotifierProvider);
       final isLoggedIn = authState.isAuthenticated;
       final isAuthRoute = state.matchedLocation == AppRoute.auth.path;
 

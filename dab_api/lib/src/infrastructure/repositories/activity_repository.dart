@@ -152,10 +152,8 @@ class ActivityRepository implements AbsIActivityRepository {
 
   @override
   Future<Either<DatabaseFailure, List<Activity>>> getActivitiesByUser(
-    String userId, {
-    DateTime? createdOnOrAfterUtc,
-    int? limit,
-  }) async {
+    String userId,
+  ) async {
     try {
       final query = _db.select(_db.activitiesTable).join([
         leftOuterJoin(
@@ -188,24 +186,12 @@ class ActivityRepository implements AbsIActivityRepository {
             _db.providerConfigsTable.isActive.equals(1),
       );
 
-      if (createdOnOrAfterUtc != null) {
-        query.where(
-          _db.activitiesTable.createdAt.isBiggerOrEqualValue(
-            toPgDateTime(createdOnOrAfterUtc),
-          ),
-        );
-      }
-
       query.orderBy([
         OrderingTerm(
           expression: _db.activitiesTable.createdAt,
           mode: OrderingMode.desc,
         ),
       ]);
-
-      if (limit != null && limit > 0) {
-        query.limit(limit);
-      }
 
       final rows = await query.get();
       return Right(rows.map(_mapRowToActivity).toList());
@@ -235,7 +221,8 @@ class ActivityRepository implements AbsIActivityRepository {
       } else if (phorgeData.revisionId != null) {
         provider = PhorgeRevisionProvider(revisionId: phorgeData.revisionId);
       } else {
-        provider = const GenericProvider(name: 'Phorge', category: 'unknown');
+        // Use `generic` so API JSON stays decodable by clients (their enum omits unknown).
+        provider = const GenericProvider(name: 'Phorge', category: 'generic');
       }
     } else if (pName == 'github' && githubData != null) {
       provider = GitHubCommitProvider(

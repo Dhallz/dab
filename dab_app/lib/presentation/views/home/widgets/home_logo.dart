@@ -11,11 +11,7 @@ class HomeLogo extends StatelessWidget {
   final bool showExpandedName;
   final double iconSize;
 
-  const HomeLogo({
-    super.key,
-    this.showExpandedName = true,
-    this.iconSize = 28,
-  });
+  const HomeLogo({super.key, this.showExpandedName = true, this.iconSize = 28});
 
   @override
   Widget build(BuildContext context) {
@@ -33,16 +29,9 @@ class HomeLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          AppIcons.brand,
-          color: AppColors.primary,
-          size: iconSize,
-        ),
+        Icon(AppIcons.brand, color: AppColors.primary, size: iconSize),
         const SizedBox(width: AppSpacing.s),
-        Text(
-          'DAB',
-          style: primaryLabelStyle,
-        ),
+        Text('DAB', style: primaryLabelStyle),
         if (showExpandedName) ...[
           const SizedBox(width: AppSpacing.xs),
           Container(

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
-import '../explorer_bloc.dart';
-import '../explorer_event.dart';
+import '../explorer_notifier.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Button that opens a date picker to quickly navigate the explorer.
 class ExplorerJumpToDateButton extends StatelessWidget {
   final DateTime selectedDate;
-  final ExplorerBloc bloc;
+  final ExplorerNotifier notifier;
   final bool compact;
 
   const ExplorerJumpToDateButton({
     super.key,
     required this.selectedDate,
-    required this.bloc,
+    required this.notifier,
     this.compact = false,
   });
 
@@ -42,7 +41,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
           },
         );
         if (date != null) {
-          bloc.add(ExplorerDateChanged(date));
+          notifier.scheduleDateChanged(date);
         }
       },
       borderRadius: BorderRadius.circular(12),

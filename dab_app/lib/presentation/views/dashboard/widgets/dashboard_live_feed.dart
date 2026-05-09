@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
-import '../dashboard_bloc.dart';
-import '../dashboard_event.dart';
+import '../dashboard_notifier.dart';
 import '../dashboard_state.dart';
 import 'dab_activity_card.dart';
 import 'dashboard_archive_toggle.dart';
@@ -16,8 +15,8 @@ import 'upcoming_soon_section.dart';
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Renders the dashboard body as a feed:
 /// Upcoming Soon -> Awaiting Your Reply -> Live Now.
-/// Dispatches archive/unarchive/toggle events back to the bloc.
-class DashboardLiveFeed extends StatelessWidget {
+/// Dispatches archive/unarchive/toggle actions to [DashboardNotifier].
+class DashboardLiveFeed extends ConsumerWidget {
   final DashboardState state;
   final EdgeInsetsGeometry padding;
 
@@ -28,12 +27,12 @@ class DashboardLiveFeed extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (state.status == ViewStatus.loading && state.activities.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final bloc = context.read<DashboardBloc>();
+    final notifier = ref.read(dashboardNotifierProvider.notifier);
     final theme = Theme.of(context);
     final visibleActivities = state.visibleActivities;
     final sections = _ActivitySections.from(visibleActivities);
@@ -50,7 +49,7 @@ class DashboardLiveFeed extends StatelessWidget {
         if (state.activeBanner != null) ...[
           DashboardBannerWidget(
             banner: state.activeBanner!,
-            onDismiss: () => bloc.add(const DashboardBannerDismissed()),
+            onDismiss: notifier.dismissBanner,
           ),
           const SizedBox(height: 12),
         ],
@@ -72,13 +71,9 @@ class DashboardLiveFeed extends StatelessWidget {
               activity: activity,
               onArchive: activity.archived
                   ? null
-                  : () => bloc.add(
-                      DashboardArchiveActivityRequested(activity.id),
-                    ),
+                  : () => notifier.requestArchive(activity.id),
               onUnarchive: activity.archived
-                  ? () => bloc.add(
-                      DashboardUnarchiveActivityRequested(activity.id),
-                    )
+                  ? () => notifier.requestUnarchive(activity.id)
                   : null,
             ),
           ),
@@ -97,8 +92,7 @@ class DashboardLiveFeed extends StatelessWidget {
             DashboardArchiveToggle(
               showArchived: state.showArchivedActivities,
               archivedCount: state.archivedCount,
-              onToggle: () =>
-                  bloc.add(const DashboardArchivedVisibilityToggled()),
+              onToggle: notifier.toggleArchivedVisibility,
             ),
           ],
         ),
@@ -116,13 +110,9 @@ class DashboardLiveFeed extends StatelessWidget {
               activity: activity,
               onArchive: activity.archived
                   ? null
-                  : () => bloc.add(
-                      DashboardArchiveActivityRequested(activity.id),
-                    ),
+                  : () => notifier.requestArchive(activity.id),
               onUnarchive: activity.archived
-                  ? () => bloc.add(
-                      DashboardUnarchiveActivityRequested(activity.id),
-                    )
+                  ? () => notifier.requestUnarchive(activity.id)
                   : null,
             ),
           ),
@@ -288,10 +278,7 @@ class _ActivitySections {
   final List<Activity> awaitingReply;
   final List<Activity> liveNow;
 
-  const _ActivitySections({
-    required this.awaitingReply,
-    required this.liveNow,
-  });
+  const _ActivitySections({required this.awaitingReply, required this.liveNow});
 
   factory _ActivitySections.from(List<Activity> activities) {
     final awaitingReply = <Activity>[];
@@ -305,10 +292,7 @@ class _ActivitySections {
       }
     }
 
-    return _ActivitySections(
-      awaitingReply: awaitingReply,
-      liveNow: liveNow,
-    );
+    return _ActivitySections(awaitingReply: awaitingReply, liveNow: liveNow);
   }
 
   static final _followUpKeywords = <String>{

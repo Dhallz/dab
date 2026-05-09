@@ -1,4 +1,4 @@
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/identities_tab.dart';
@@ -8,13 +8,13 @@ import 'package:flutter/material.dart';
 
 class AdminSectionBody extends StatelessWidget {
   final AdminState state;
-  final AdminBloc bloc;
+  final AdminNotifier notifier;
   final AdminSection section;
 
   const AdminSectionBody({
     super.key,
     required this.state,
-    required this.bloc,
+    required this.notifier,
     required this.section,
   });
 
@@ -29,9 +29,12 @@ class AdminSectionBody extends StatelessWidget {
         searchQuery: state.identitySearchQuery,
         sortField: state.identitySortField,
         sortAscending: state.identitySortAscending,
-        bloc: bloc,
+        notifier: notifier,
       ),
-      AdminSection.security => SecurityTab(users: state.users, bloc: bloc),
+      AdminSection.security => SecurityTab(
+        users: state.users,
+        notifier: notifier,
+      ),
     };
   }
 }

@@ -25,11 +25,7 @@ class HomeSearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            AppIcons.search,
-            color: AppColors.onSurfaceVariantLow,
-            size: 18,
-          ),
+          Icon(AppIcons.search, color: AppColors.onSurfaceVariantLow, size: 18),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(

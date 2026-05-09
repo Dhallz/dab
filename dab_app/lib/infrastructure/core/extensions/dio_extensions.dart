@@ -31,8 +31,11 @@ extension OnDioException on DioException {
         }
 
         // Handle specific server errors
-        final message = data is Map 
-            ? data['details'] ?? data['error'] ?? data['message'] ?? 'Server error'
+        final message = data is Map
+            ? data['details'] ??
+                  data['error'] ??
+                  data['message'] ??
+                  'Server error'
             : 'Server error';
 
         return ServerFailure(

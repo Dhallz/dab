@@ -37,35 +37,35 @@ class ActivityContent extends StatelessWidget {
               accentColor: accentColor,
             )
           : (isExpanded
-              ? (hasDisplayContent
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: MarkdownBody(
-                        data: _processMarkdown(displayContent),
-                        styleSheet: _getMarkdownStyleSheet(
-                          isExpanded,
-                          accentColor,
-                        ),
-                        onTapLink: (text, href, title) {
-                          if (href != null) {
-                            launchUrl(Uri.parse(href));
-                          }
-                        },
-                      ),
-                    )
-                  : const SizedBox.shrink())
-              : (hasDisplayContent
-                  ? Text(
-                      plainPreview,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.onSurfaceVariantLow,
-                        height: 1.5,
-                      ),
-                    )
-                  : const SizedBox.shrink())),
+                ? (hasDisplayContent
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: MarkdownBody(
+                            data: _processMarkdown(displayContent),
+                            styleSheet: _getMarkdownStyleSheet(
+                              isExpanded,
+                              accentColor,
+                            ),
+                            onTapLink: (text, href, title) {
+                              if (href != null) {
+                                launchUrl(Uri.parse(href));
+                              }
+                            },
+                          ),
+                        )
+                      : const SizedBox.shrink())
+                : (hasDisplayContent
+                      ? Text(
+                          plainPreview,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.onSurfaceVariantLow,
+                            height: 1.5,
+                          ),
+                        )
+                      : const SizedBox.shrink())),
     );
   }
 
@@ -89,10 +89,10 @@ class ActivityContent extends StatelessWidget {
 
   String _getPlainText(String markdown) {
     if (markdown.isEmpty) return '';
-    
+
     // Truncate first to avoid expensive regex on large strings
-    final effectiveContent = markdown.length > 300 
-        ? markdown.substring(0, 300) 
+    final effectiveContent = markdown.length > 300
+        ? markdown.substring(0, 300)
         : markdown;
 
     return effectiveContent

@@ -7,7 +7,7 @@ import '../models/dashboard_banner_severity.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Renders the currently active in-app banner surfaced by
-/// [DashboardBloc] for upcoming events. Shows a title + body, an optional
+/// Dashboard upcoming-events banner. Shows a title + body, an optional
 /// deep-link CTA, and a dismiss button.
 /// CONSTRAINTS: Pure presentational widget; mutation is delegated back to
 /// the bloc via the supplied callbacks.

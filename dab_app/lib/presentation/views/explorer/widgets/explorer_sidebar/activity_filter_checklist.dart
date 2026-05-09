@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../domain/entities/activity/activity_category.dart';
 import '../../../../core/localization/l10n_extension.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
-import '../../explorer_bloc.dart';
-import '../../explorer_event.dart';
+import '../../explorer_notifier.dart';
 import 'selection_tile.dart';
 
-class ActivityFilterChecklist extends StatelessWidget {
+class ActivityFilterChecklist extends ConsumerWidget {
   final Set<ActivityCategory> availableCategories;
   final Set<ActivityCategory> selectedCategories;
 
@@ -20,7 +19,8 @@ class ActivityFilterChecklist extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     return Column(
       children: availableCategories.map((category) {
         return Padding(
@@ -29,9 +29,7 @@ class ActivityFilterChecklist extends StatelessWidget {
             label: _labelFor(context, category),
             isSelected: selectedCategories.contains(category),
             iconData: _iconFor(category),
-            onTap: () => context.read<ExplorerBloc>().add(
-              ExplorerActivityCategoryToggled(category),
-            ),
+            onTap: () => notifier.toggleActivityCategory(category),
           ),
         );
       }).toList(),

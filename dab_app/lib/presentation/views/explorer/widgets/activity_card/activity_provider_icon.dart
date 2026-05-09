@@ -19,18 +19,23 @@ class ActivityProviderIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final providerId = activity.provider.name;
-    final iconData = ProviderIconResolver.resolveFallbackIcon(context, providerId);
-    final brandColor = ProviderIconResolver.resolveBrandColor(context, providerId);
+    final iconData = ProviderIconResolver.resolveFallbackIcon(
+      context,
+      providerId,
+    );
+    final brandColor = ProviderIconResolver.resolveBrandColor(
+      context,
+      providerId,
+    );
     final iconColor = brandColor.computeLuminance() < 0.2
         ? AppColors.onSurface
         : brandColor;
-    final customIconUrl = ProviderIconResolver.resolveIconUrl(providerId, configs);
-
-    Widget fallbackIcon = Icon(
-      iconData,
-      size: 16,
-      color: iconColor,
+    final customIconUrl = ProviderIconResolver.resolveIconUrl(
+      providerId,
+      configs,
     );
+
+    Widget fallbackIcon = Icon(iconData, size: 16, color: iconColor);
 
     Widget icon = fallbackIcon;
 

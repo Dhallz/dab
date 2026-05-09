@@ -14,8 +14,8 @@ import 'core/repository.dart';
 /// ROLE: Orchestrator for Authentication, session management, and identity persistence.
 /// CONTRACT: Implements [IAuthRepository].
 /// CONSTRAINTS: Coordinates between [AuthRemoteDataSource] (API) and [AuthLocalDataSource]/[TokenStorage] (Persistence).
-/// 
-/// This repository is the source of truth for the current user's session state 
+///
+/// This repository is the source of truth for the current user's session state
 /// and provides the necessary credentials for authenticated requests.
 class AuthRepository extends Repository implements IAuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
@@ -102,9 +102,7 @@ class AuthRepository extends Repository implements IAuthRepository {
     }
     final refreshToken = tokens['refreshToken']!;
     return guardedCall(() async {
-      final json = await _remoteDataSource.refresh(
-        refreshToken: refreshToken,
-      );
+      final json = await _remoteDataSource.refresh(refreshToken: refreshToken);
 
       final response = AuthResponseMapper.fromMap(json);
       await saveTokens(response);

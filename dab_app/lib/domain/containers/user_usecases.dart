@@ -13,9 +13,9 @@ class UserUseCases {
   final SaveGroup saveGroup;
 
   UserUseCases(IUserRepository repository)
-      : deleteGroup = DeleteGroup(repository),
-        getGroups = GetGroups(repository),
-        getUser = GetUser(repository),
-        getUsers = GetUsers(repository),
-        saveGroup = SaveGroup(repository);
+    : deleteGroup = DeleteGroup(repository),
+      getGroups = GetGroups(repository),
+      getUser = GetUser(repository),
+      getUsers = GetUsers(repository),
+      saveGroup = SaveGroup(repository);
 }

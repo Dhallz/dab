@@ -112,12 +112,8 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 | `insights:rankings:{yyyy-mm-dd}:total` | ZSET | Global team leaderboard by contribution |
 | `dab:stream:events` | STREAM | Raw provider event ingestion stream |
 
-The dedicated Dashboard live endpoint reads **primarily** from the Redis live keys
-(`activities:global` and `activities:user:{id}`). If a **user-scoped** Redis list is
-empty—common after Redis is reset or replaced—the API **fills from PostgreSQL** with
-rows for the current user whose `created_at` is **on or after the start of the
-current UTC day** (bounded by the same `limit` as the Redis read). Global scope
-remains Redis-only.
+The **dashboard** `GET /activities/live` response is built exclusively from Redis live keys (`activities:global` and `activities:user:{id}`); it never queries Postgres. Explorer uses **`GET /activities/search`**, which aggregates **provider APIs via `UnifiedActivityFetcher`** (no Postgres in that handler).
+
 Slack live events reach these keys through a signed Events API webhook endpoint
 (`POST /integrations/slack/events`) that ingests push callbacks. GitHub push
 callbacks use `POST /integrations/github/webhook` with TLS + HMAC body

@@ -38,7 +38,7 @@ Domain  →  Application  →  Infrastructure  →  Presentation
 | Functional errors | `fpdart` (`Either<Failure, T>`) | `throw` as control flow |
 | DI — API | `GetIt` via `sl<T>()` in `service_locator.dart` | Manual instantiation in business logic |
 | DI — App | Custom `ServiceLocator` | Manual instantiation in business logic |
-| Testing | `mocktail` + `test` / `bloc_test` | `mockito`, inline anonymous mocks |
+| Testing | `mocktail` + `test` / Riverpod `ProviderContainer` | `mockito`, inline anonymous mocks |
 | Test data | Object Mother / Factory (`TestData` class) | Inline entity construction in test bodies |
 | Code generation | `build_runner` | Manual editing of generated files |
 
@@ -100,6 +100,6 @@ All project documentation lives in `doc/` at the repo root.
 | `doc/overview.md` | What DAB is and the problem it solves |
 | `doc/architecture.md` | Layer map, entities, data flow, shared patterns |
 | `doc/api.md` | Backend controllers, patterns, DI, provider roadmap |
-| `doc/app.md` | Flutter client layers, BLoC, routing, design system |
+| `doc/app.md` | Flutter client layers, Riverpod, routing, design system |
 | `doc/infrastructure.md` | PostgreSQL, Redis, WebSocket, Docker |
 | `doc/conventions.md` | Naming rules, tech stack, code style |

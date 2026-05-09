@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../../core/extensions/date_extensions.dart';
-import '../explorer_item.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
+import '../models/explorer_item.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Header display for the active date in the explorer, including activity counts.

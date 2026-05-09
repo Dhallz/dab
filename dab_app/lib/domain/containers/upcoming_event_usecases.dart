@@ -6,5 +6,5 @@ class UpcomingEventUseCases {
   final GetUpcomingEvents getUpcomingEvents;
 
   UpcomingEventUseCases(IUpcomingEventsRepository repository)
-      : getUpcomingEvents = GetUpcomingEvents(repository);
+    : getUpcomingEvents = GetUpcomingEvents(repository);
 }

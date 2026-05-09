@@ -167,8 +167,8 @@ class _EmptyState extends StatelessWidget {
             Text(
               'No upcoming events',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
         ),

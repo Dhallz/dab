@@ -55,7 +55,9 @@ class ProviderConfigRepository extends Repository
   @override
   Future<Either<AppFailure, String>> testProviderConfig(ProviderConfig config) {
     return guardedCall(() async {
-      final response = await _remoteDataSource.testProviderConfig(config.toMap());
+      final response = await _remoteDataSource.testProviderConfig(
+        config.toMap(),
+      );
       final dynamic data = response.data;
       final Map<String, dynamic> map;
 

@@ -13,8 +13,7 @@ import '../../domain/repositories/abs_i_upcoming_events_repository.dart';
 /// CONSTRAINTS: Does not reach out to any network or cache. Intended for
 /// local development and test doubles; production builds should swap this
 /// for the real repository once provider metadata lands.
-class PlaceholderUpcomingEventsRepository
-    implements IUpcomingEventsRepository {
+class PlaceholderUpcomingEventsRepository implements IUpcomingEventsRepository {
   final List<UpcomingEvent> Function() _seedProvider;
 
   PlaceholderUpcomingEventsRepository({
@@ -28,11 +27,13 @@ class PlaceholderUpcomingEventsRepository
   }) async {
     final events = List<UpcomingEvent>.from(_seedProvider());
     events.sort((a, b) => a.startsAt.compareTo(b.startsAt));
-    final windowed = events.where((event) {
-      if (from != null && event.startsAt.isBefore(from)) return false;
-      if (to != null && event.startsAt.isAfter(to)) return false;
-      return true;
-    }).toList(growable: false);
+    final windowed = events
+        .where((event) {
+          if (from != null && event.startsAt.isBefore(from)) return false;
+          if (to != null && event.startsAt.isAfter(to)) return false;
+          return true;
+        })
+        .toList(growable: false);
     return Right(windowed);
   }
 }

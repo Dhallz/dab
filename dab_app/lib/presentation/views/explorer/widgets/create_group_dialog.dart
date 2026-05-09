@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/group/group_type.dart';
 import '../../../../domain/entities/user/user.dart';
-import '../explorer_bloc.dart';
-import '../explorer_event.dart';
+import '../explorer_notifier.dart';
 
-class CreateGroupDialog extends StatefulWidget {
+class CreateGroupDialog extends ConsumerStatefulWidget {
   final List<User> availableUsers;
   const CreateGroupDialog({super.key, required this.availableUsers});
 
   @override
-  State<CreateGroupDialog> createState() => _CreateGroupDialogState();
+  ConsumerState<CreateGroupDialog> createState() => _CreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends State<CreateGroupDialog> {
+class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
   final _nameController = TextEditingController();
   final Set<String> _selectedUserIds = {};
 
@@ -179,7 +178,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
       members: members,
     );
 
-    context.read<ExplorerBloc>().add(ExplorerGroupSaved(group));
+    ref.read(explorerNotifierProvider.notifier).saveGroup(group);
     Navigator.pop(context);
   }
 }

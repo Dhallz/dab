@@ -9,7 +9,7 @@ description: Package-specific rules for DAB App
 > These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
 > Always read the global rules first.
 
-**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_bloc · go_router · ObjectBox · Dio · dart_mappable
+**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · provider · go_router · ObjectBox · Dio · dart_mappable
 
 ---
 
@@ -30,7 +30,7 @@ dab_app/lib/
 ├── presentation/
 │   ├── features/      ← Feature modules (auth/, app/, …)
 │   │   └── <feature>/
-│   │       ├── cubit/         ← BLoC/Cubit state management
+│   │       ├── *_notifier.dart ← Riverpod Notifier + provider
 │   │       ├── widgets/       ← Feature-specific widgets
 │   │       └── screens/       ← Screen-level compositions
 │   ├── core/          ← Shared widgets, theming, routing helpers
@@ -42,14 +42,13 @@ dab_app/lib/
 
 ---
 
-## 🧩 BLoC / Cubit Rules
+## 🧩 Riverpod Notifier Rules
 
-- **One Cubit per feature screen or major UI concern.** Do not create "god cubits" that own multiple unrelated state slices.
-- **Cubits call use cases only** — never datasources or repositories directly.
-- State classes must be defined using `dart_mappable` (`@MappableClass`) or as `sealed` hierarchies (`Initial`, `Loading`, `Success`, `Failure`).
-- Use `bloc_test` for all cubit tests — never manually `emit()` inside tests.
-- Cubits are **stateless orchestrators**: they hold no application state themselves outside what is in the emitted `State` object.
-- Prefer `CubitConsumer` / `BlocBuilder` scoped to the smallest widget that needs the state change.
+- **One `Notifier` per feature screen or major UI concern** — expose a single `NotifierProvider` / `AutoDisposeNotifierProvider` pair next to the notifier file.
+- **Notifiers call use cases only** — never datasources or repositories directly.
+- State classes use `dart_mappable` (`@MappableClass`) with `ViewStatus` + feature fields; complex projections use `extension OnFooState on FooState`.
+- Use **`ProviderContainer`** + **`provider.overrideWith`** in tests; for **autoDispose** providers, **`listen`** during async gaps so notifiers are not torn down mid-await.
+- **`ConsumerWidget` / `ConsumerStatefulWidget`** + **`ref.watch`** / **`ref.read`** — scope watches to the smallest subtree that needs rebuilds.
 
 ---
 
@@ -77,32 +76,32 @@ dab_app/lib/
 - The Dio client is configured exclusively in `infrastructure/core/` (interceptors, base URL, timeouts).
 - Auth token injection and refresh live in a dedicated `AuthInterceptor` — never inline token logic in datasources.
 - All API calls return `Either<Failure, T>` — catch `DioException` in the datasource layer and map to a domain `Failure`.
-- Never add `.catchError` or raw try-catch inside cubits. Error handling belongs in the datasource or repository.
+- Never add `.catchError` or raw try-catch inside notifiers for I/O. Error handling belongs in the datasource or repository.
 
 ---
 
 ## 🔐 Auth & Token Rules (App-Specific)
 
 - `FlutterSecureStorage` is the only acceptable storage for tokens. Never store tokens in `SharedPreferences`, `ObjectBox`, or in-memory singletons.
-- Token refresh is handled entirely by `AuthInterceptor` — cubits must not trigger refresh manually.
-- On logout, clear both the in-memory cubit state **and** secure storage atomically.
+- Token refresh is handled entirely by `AuthInterceptor` — presentation code must not trigger refresh manually.
+- On logout, clear session state via **`authNotifierProvider`** / routing **and** secure storage atomically.
 
 ---
 
 ## 🧪 Testing Rules (App-Specific)
 
-- Test file mirrors source path: `lib/presentation/features/auth/cubit/auth_cubit.dart` → `test/presentation/features/auth/cubit/auth_cubit_test.dart`
-- Use `bloc_test`'s `blocTest<MyCubit, MyState>(...)` for all cubit tests.
-- Use `mocktail` to mock use-case interfaces — never a concrete use-case class.
+- Test file mirrors source path: `lib/presentation/features/auth/auth_notifier.dart` → `test/presentation/features/auth/auth_notifier_test.dart`
+- **Notifier tests:** `ProviderContainer(overrides: [...])`, optional `listen(provider, …)` for autoDispose; no `emit`.
+- Use `mocktail` to mock repository interfaces — construct real use-case containers where integration is needed.
 - Use `TestData` factories for all entity fixtures.
-- Widget tests live in `test/presentation/` and use `pumpWidget` with a minimal `MaterialApp` wrapper.
+- Widget tests live in `test/presentation/` and use `pumpWidget` with `ProviderScope` / overrides as needed.
 - Always run `flutter analyze && flutter test` before declaring a task complete.
 
 ---
 
 ## 🎨 UI / Widget Rules
 
-- **No business logic in widgets.** Widgets read state from cubits and dispatch events — nothing more.
+- **No business logic in widgets.** Widgets read state via `ref.watch` and call notifier methods — nothing more.
 - Shared UI components belong in `presentation/core/widgets/` — never duplicate widget code across features.
 - Use the app's `ThemeData` tokens (colours, text styles) — never hardcode hex values or font sizes inline.
 - Animations use Flutter's built-in animation system (`AnimationController`, `AnimatedWidget`, `Hero`). Avoid third-party animation packages unless a gap is confirmed.

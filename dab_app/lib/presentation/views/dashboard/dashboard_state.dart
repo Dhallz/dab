@@ -10,7 +10,7 @@ part 'dashboard_state.mapper.dart';
 
 /// [ARCH: PRESENTATION_STATE]
 /// ROLE: Snapshot of the Dashboard screen state.
-/// CONTRACT: Immutable; exclusively emitted by [DashboardBloc]. Aggregates
+/// CONTRACT: Immutable; exclusively emitted by [DashboardNotifier]. Aggregates
 /// Live Now activities, Upcoming Soon placeholder events, the currently
 /// active banner, and user-facing triage preferences.
 @MappableClass()

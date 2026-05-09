@@ -7,8 +7,4 @@ part 'dashboard_banner_severity.mapper.dart';
 /// `UpcomingEventPriority` but stays decoupled so the UI layer can tune its
 /// palette independently.
 @MappableEnum()
-enum DashboardBannerSeverity {
-  info,
-  warning,
-  critical,
-}
+enum DashboardBannerSeverity { info, warning, critical }

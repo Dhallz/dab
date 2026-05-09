@@ -23,12 +23,12 @@ class UserRecord {
 
 extension OnUserRecord on UserRecord {
   User get toDomain => User(
-        id: remoteId,
-        name: name ?? 'Unknown',
-        email: email,
-        role: UserRole.values.firstWhere(
-          (e) => e.name == role,
-          orElse: () => UserRole.standard,
-        ),
-      );
+    id: remoteId,
+    name: name ?? 'Unknown',
+    email: email,
+    role: UserRole.values.firstWhere(
+      (e) => e.name == role,
+      orElse: () => UserRole.standard,
+    ),
+  );
 }

@@ -1,6 +1,6 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
 import 'bootstrap_status_card.dart';
@@ -8,9 +8,9 @@ import 'user_tile.dart';
 
 class SecurityTab extends StatefulWidget {
   final List<User> users;
-  final AdminBloc bloc;
+  final AdminNotifier notifier;
 
-  const SecurityTab({super.key, required this.users, required this.bloc});
+  const SecurityTab({super.key, required this.users, required this.notifier});
 
   @override
   State<SecurityTab> createState() => _SecurityTabState();
@@ -22,13 +22,12 @@ class _SecurityTabState extends State<SecurityTab> {
   @override
   Widget build(BuildContext context) {
     final q = _query.trim().toLowerCase();
-    final filtered =
-        q.isEmpty
-            ? widget.users
-            : widget.users.where((u) {
-              return u.name.toLowerCase().contains(q) ||
-                  u.email.toLowerCase().contains(q);
-            }).toList();
+    final filtered = q.isEmpty
+        ? widget.users
+        : widget.users.where((u) {
+            return u.name.toLowerCase().contains(q) ||
+                u.email.toLowerCase().contains(q);
+          }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,16 +66,15 @@ class _SecurityTabState extends State<SecurityTab> {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child:
-              widget.users.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final user = filtered[index];
-                      return UserTile(user: user, bloc: widget.bloc);
-                    },
-                  ),
+          child: widget.users.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final user = filtered[index];
+                    return UserTile(user: user, notifier: widget.notifier);
+                  },
+                ),
         ),
       ],
     );

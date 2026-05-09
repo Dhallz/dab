@@ -20,7 +20,7 @@
 1. **Define Domain contracts** — `IRepository` interfaces + Entities.
 2. **Implement API endpoints** — complete `dab_api` before starting client work.
 3. **Implement Infrastructure (client)** — concrete repositories once API is stable.
-4. **Build UI** — Blocs and Views only after the data flow is verified.
+4. **Build UI** — Riverpod notifiers and views only after the data flow is verified.
 
 ---
 
@@ -37,8 +37,8 @@
 | Repository Impl | `AuthRepository` | `auth_repository.dart` | `lib/infrastructure/repositories/` |
 | Use Case | `Login` | `login.dart` | `lib/domain/usecases/[feature]/` |
 | Use Case Container | `AuthUseCases` | `auth_usecases.dart` | `lib/domain/containers/` |
-| Cubit | `AuthCubit` | `auth_cubit.dart` | `[view]/` or `features/[feature]/` |
-| Cubit State | `AuthState` | `auth_state.dart` | Same folder — always isolated file |
+| Notifier | `AuthNotifier` | `auth_notifier.dart` | `[view]/` or `features/[feature]/` |
+| Feature state | `AuthState` | `auth_state.dart` | Same folder — always isolated file |
 | View | `AuthView` | `auth_view.dart` | `lib/presentation/views/auth/` |
 | Layout | `AuthViewMobile` | `auth_view_mobile.dart` | `lib/presentation/views/auth/layouts/` |
 | Controller (API) | `AuthController` | `auth_controller.dart` | `lib/src/presentation/controllers/` |
@@ -78,7 +78,7 @@
 
 | Concern | Package |
 |---|---|
-| State management | `flutter_bloc` |
+| State management | `flutter_riverpod` |
 | Navigation | `go_router` |
 | Networking | `dio` + `web_socket_channel` + `cached_network_image` |
 | Local persistence | `objectbox` + `objectbox_flutter_libs` |
@@ -86,7 +86,7 @@
 | Formatting | `timeago` + `intl` |
 | Charts / visual analytics | `fl_chart` |
 | Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
-| Testing | `mocktail` + `bloc_test` |
+| Testing | `mocktail` (`ProviderContainer` / overrides for notifiers) |
 
 ---
 
@@ -116,7 +116,7 @@
 
 - Repositories return `Either<AppFailure, T>` — never throw.
 - Datasources catch protocol-specific exceptions (e.g., `DioException`) and map them to `AppFailure` subtypes.
-- Cubits call use cases — they never catch raw exceptions.
+- Presentation notifiers call use cases — they never catch raw exceptions from infra.
 
 ---
 
@@ -127,11 +127,11 @@
 - **Mandatory structure:**
   ```
   [view_name]/
-  ├── [name]_view.dart      ← BlocProvider + LayoutBuilder switcher
+  ├── [name]_view.dart      ← LayoutBuilder + notifier bootstrap (often post-frame)
   ├── layouts/              ← device-specific layouts (mobile, desktop)
   │   ├── [name]_view_mobile.dart
   │   └── [name]_view_desktop.dart
-  ├── [name]_cubit.dart     ← OR: [name]_bloc.dart + [name]_event.dart
+  ├── [name]_notifier.dart  ← Riverpod `Notifier` + `…NotifierProvider`
   ├── [name]_state.dart     ← uses ViewStatus, always isolated file
   ├── models/               ← feature-local enums and data classes
   └── widgets/              ← extracted UI components, strictly one per file
@@ -141,10 +141,9 @@
 
 - **Status Management:** Use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) in all states.
 
-- **Base classes:** Every Cubit must extend `AbsCubit`. Every Bloc must extend `AbsBloc`.
+- **Riverpod:** Prefer `ConsumerWidget` / `ConsumerStatefulWidget` and `ref.watch` / `ref.read` on feature `NotifierProvider`s. Root `ProviderScope` wraps the app in `main.dart`.
 
-- **UI builders:** Always use `AppBlocBuilder`, `AppBlocListener`, or `AppBlocConsumer`.  
-  Use `onInit` callback for one-time initialization — never trigger in `initState`.
+- **Initialization:** Trigger screen load via notifier methods (e.g. `started()`) from `addPostFrameCallback` when the view needs a stable context — avoid duplicating global DI.
 
 ### Networking
 
@@ -156,7 +155,7 @@
 
 - Route names + paths + view builders centralized in `AppRoute`.
 - `AppRouter` encapsulates `GoRouter` config.
-- Auth guards live in the router — not in widgets or cubits.
+- Auth guards live in the router — not in widgets or notifiers.
 
 ### Localization
 
@@ -205,9 +204,9 @@ router.get('/activities', (request) async {
 | Rule | Detail |
 |---|---|
 | Test file mirrors source | `lib/src/application/usecases/auth/login.dart` → `test/application/usecases/auth/login_test.dart` |
-| App mirror example | `lib/presentation/features/auth/auth_cubit.dart` → `test/presentation/features/auth/auth_cubit_test.dart` |
+| App mirror example | `lib/presentation/features/auth/auth_notifier.dart` → `test/presentation/features/auth/auth_notifier_test.dart` |
 | Fixtures | Use `TestData` (Object Mother) factory — never inline entity construction |
 | Mocking | `mocktail` at interface / repository boundaries only |
-| Cubit testing | `bloc_test`'s `blocTest<MyCubit, MyState>(...)` — never call `emit()` manually |
+| Notifier testing | `ProviderContainer` + `provider.overrideWith(...)`; `listen` autoDispose providers during async tests |
 | Integration tests | Tagged `@Tags(['integration'])` — excluded from CI unit runs |
 | Determinism | No real network calls, no `DateTime.now()` without injection |

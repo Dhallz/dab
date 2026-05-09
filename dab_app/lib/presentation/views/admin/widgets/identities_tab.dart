@@ -1,8 +1,7 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
-import 'package:dab_app/presentation/views/admin/admin_event.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +15,7 @@ class IdentitiesTab extends StatelessWidget {
   final String searchQuery;
   final IdentitySortField sortField;
   final bool sortAscending;
-  final AdminBloc bloc;
+  final AdminNotifier notifier;
 
   const IdentitiesTab({
     super.key,
@@ -26,7 +25,7 @@ class IdentitiesTab extends StatelessWidget {
     required this.searchQuery,
     required this.sortField,
     required this.sortAscending,
-    required this.bloc,
+    required this.notifier,
   });
 
   @override
@@ -45,7 +44,7 @@ class IdentitiesTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         TextFormField(
-          onChanged: (value) => bloc.add(AdminIdentitySearchChanged(value)),
+          onChanged: (value) => notifier.setIdentitySearchQuery(value),
           initialValue: searchQuery,
           style: const TextStyle(color: AppColors.white),
           decoration: InputDecoration(
@@ -69,11 +68,8 @@ class IdentitiesTab extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => showDialog(
               context: context,
-              builder: (_) => IdentityCreateDialog(
-                bloc: bloc,
-                users: users,
-                providerIds: providerIds,
-              ),
+              builder: (_) =>
+                  IdentityCreateDialog(users: users, providerIds: providerIds),
             ),
             icon: const Icon(Icons.add_link, size: 18),
             label: const Text('Create Link'),
@@ -81,15 +77,14 @@ class IdentitiesTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child:
-              identities.isEmpty
-                  ? const Center(
-                    child: Text(
-                      'No identities found',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
-                  )
-                  : _buildGrid(context),
+          child: identities.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No identities found',
+                    style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                  ),
+                )
+              : _buildGrid(context),
         ),
       ],
     );
@@ -118,132 +113,126 @@ class IdentitiesTab extends StatelessWidget {
                   AppColors.white.withValues(alpha: 0.02),
                 ),
                 columns: [
-              DataColumn(
-                label: const Text(
-                  'Full Name',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-                onSort: (columnIndex, ascending) => _onSort(
-                  IdentitySortField.fullName,
-                  ascending,
-                ),
-              ),
-              DataColumn(
-                label: const Text(
-                  'Provider',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-                onSort: (columnIndex, ascending) => _onSort(
-                  IdentitySortField.provider,
-                  ascending,
-                ),
-              ),
-              DataColumn(
-                label: const Text(
-                  'External ID',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-                onSort: (columnIndex, ascending) => _onSort(
-                  IdentitySortField.externalId,
-                  ascending,
-                ),
-              ),
-              DataColumn(
-                label: const Text(
-                  'Provider Username',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-                onSort: (columnIndex, ascending) => _onSort(
-                  IdentitySortField.providerUsername,
-                  ascending,
-                ),
-              ),
-              DataColumn(
-                label: const Text(
-                  'Status',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-                onSort: (columnIndex, ascending) =>
-                    _onSort(IdentitySortField.status, ascending),
-              ),
-              const DataColumn(
-                label: Text(
-                  'Actions',
-                  style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                ),
-              ),
+                  DataColumn(
+                    label: const Text(
+                      'Full Name',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                    onSort: (columnIndex, ascending) =>
+                        _onSort(IdentitySortField.fullName, ascending),
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Provider',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                    onSort: (columnIndex, ascending) =>
+                        _onSort(IdentitySortField.provider, ascending),
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'External ID',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                    onSort: (columnIndex, ascending) =>
+                        _onSort(IdentitySortField.externalId, ascending),
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Provider Username',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                    onSort: (columnIndex, ascending) =>
+                        _onSort(IdentitySortField.providerUsername, ascending),
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Status',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                    onSort: (columnIndex, ascending) =>
+                        _onSort(IdentitySortField.status, ascending),
+                  ),
+                  const DataColumn(
+                    label: Text(
+                      'Actions',
+                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    ),
+                  ),
                 ],
                 rows: identities.map((identity) {
                   final fullName =
                       fullNameByUserId[identity.userId] ?? identity.userId;
-                  final providerUsername = identity.externalUsername?.trim() ?? '';
+                  final providerUsername =
+                      identity.externalUsername?.trim() ?? '';
                   final missingProviderUsername = providerUsername.isEmpty;
                   return DataRow(
                     cells: [
-                  DataCell(
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          fullName,
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          identity.userId,
-                          style: const TextStyle(
-                            color: AppColors.onSurfaceVariantLow,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      identity.providerId,
-                      style: const TextStyle(color: AppColors.white),
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      identity.externalId,
-                      style: const TextStyle(color: AppColors.white),
-                    ),
-                  ),
-                  DataCell(
-                    missingProviderUsername
-                        ? Tooltip(
-                            message: 'Add provider username',
-                            child: IconButton(
-                              onPressed: () => _openQuickLink(context, identity),
-                              icon: const Icon(
-                                Icons.add_circle_outline,
-                                color: AppColors.accentIndigo,
-                                size: 18,
+                      DataCell(
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              fullName,
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w700,
                               ),
-                              visualDensity: VisualDensity.compact,
                             ),
-                          )
-                        : Text(
-                            '@$providerUsername',
-                            style: const TextStyle(color: AppColors.white),
-                          ),
-                  ),
-                  DataCell(StatusChip(status: identity.status)),
-                  DataCell(
-                    IconButton(
-                      icon: const Icon(
-                        Icons.link,
-                        size: 20,
-                        color: AppColors.accentIndigo,
+                            Text(
+                              identity.userId,
+                              style: const TextStyle(
+                                color: AppColors.onSurfaceVariantLow,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      onPressed: () => _openLinkDialog(context, identity),
-                    ),
-                  ),
+                      DataCell(
+                        Text(
+                          identity.providerId,
+                          style: const TextStyle(color: AppColors.white),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          identity.externalId,
+                          style: const TextStyle(color: AppColors.white),
+                        ),
+                      ),
+                      DataCell(
+                        missingProviderUsername
+                            ? Tooltip(
+                                message: 'Add provider username',
+                                child: IconButton(
+                                  onPressed: () =>
+                                      _openQuickLink(context, identity),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    color: AppColors.accentIndigo,
+                                    size: 18,
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              )
+                            : Text(
+                                '@$providerUsername',
+                                style: const TextStyle(color: AppColors.white),
+                              ),
+                      ),
+                      DataCell(StatusChip(status: identity.status)),
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(
+                            Icons.link,
+                            size: 20,
+                            color: AppColors.accentIndigo,
+                          ),
+                          onPressed: () => _openLinkDialog(context, identity),
+                        ),
+                      ),
                     ],
                   );
                 }).toList(),
@@ -256,7 +245,7 @@ class IdentitiesTab extends StatelessWidget {
   }
 
   void _onSort(IdentitySortField field, bool ascending) {
-    bloc.add(AdminIdentitySortChanged(sortField: field, ascending: ascending));
+    notifier.setIdentitySort(field, ascending);
   }
 
   int? _sortColumnIndex(IdentitySortField field) {
@@ -273,7 +262,6 @@ class IdentitiesTab extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => IdentityCreateDialog(
-        bloc: bloc,
         users: users,
         providerIds: providerIds,
         initialUserId: identity.userId,
@@ -290,7 +278,6 @@ class IdentitiesTab extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => IdentityCreateDialog(
-        bloc: bloc,
         users: users,
         providerIds: providerIds,
         initialUserId: identity.userId,

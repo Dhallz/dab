@@ -1,10 +1,10 @@
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
-import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_spacing.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'provider_card.dart';
 
@@ -35,33 +35,26 @@ List<ProviderConfig> _sortedProviderConfigs(
   return list;
 }
 
-class ProvidersTab extends StatelessWidget {
+class ProvidersTab extends ConsumerWidget {
   const ProvidersTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return AppBlocConsumer<AdminBloc, AdminState>(
-      listenWhen: (previous, current) => false,
-      listener: (context, state, bloc) {},
-      buildWhen: (previous, current) =>
-          previous.configs != current.configs ||
-          previous.connectionStatuses != current.connectionStatuses,
-      builder: (context, state, bloc) {
-        final sorted = _sortedProviderConfigs(state.configs, state);
-        return ListView.builder(
-          itemCount: sorted.length,
-          padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
-          itemBuilder: (context, index) {
-            final config = sorted[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.l),
-              child: ProviderCard(
-                key: ValueKey(config.id),
-                config: config,
-                bloc: bloc,
-              ),
-            );
-          },
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(
+      adminNotifierProvider.select(
+        (s) => (configs: s.configs, connectionStatuses: s.connectionStatuses),
+      ),
+    );
+    final state = ref.read(adminNotifierProvider);
+    final sorted = _sortedProviderConfigs(state.configs, state);
+    return ListView.builder(
+      itemCount: sorted.length,
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+      itemBuilder: (context, index) {
+        final config = sorted[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.l),
+          child: ProviderCard(key: ValueKey(config.id), config: config),
         );
       },
     );

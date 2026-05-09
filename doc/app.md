@@ -10,7 +10,7 @@
 ```mermaid
 graph TD
     subgraph "Presentation Layer"
-        view["View/Switcher"] --> bloc["BLoC/Cubit"]
+        view["View/Switcher"] --> notifier["Riverpod Notifier"]
         view --> layout["Layouts"]
         view --> local_w["Local Widgets"]
     end
@@ -30,15 +30,15 @@ graph TD
         ob["ObjectBox / Local"]
         api["Dio / RestApiClient"]
     end
-    bloc --> uc
+    notifier --> uc
     uc --> repo_int
-    bloc --> serv
+    notifier --> serv
     serv --> repo_int
     repo_impl -->|implements| repo_int
     repo_impl --> mapper
     repo_impl --> ob
     repo_impl --> api
-    view -. provides .-> bloc
+    view -. watches .-> notifier
 ```
 
 ---
@@ -95,7 +95,7 @@ Implements Domain contracts. Handles protocols, APIs, and databases.
 
 ### 3. Presentation Layer (`lib/presentation/`)
 
-Handles UI and state via `flutter_bloc`.
+Handles UI and state via **`flutter_riverpod`** (`Notifier` / `NotifierProvider`, `ConsumerWidget`).
 
 #### The View Hierarchy (mandatory structure)
 
@@ -103,11 +103,11 @@ Every screen module in `lib/presentation/views/[view_name]/` must follow:
 
 ```
 [view_name]/
-├── [name]_view.dart           ← "Switcher": BlocProvider + LayoutBuilder routing
+├── [name]_view.dart           ← LayoutBuilder + post-frame notifier bootstrap
 ├── layouts/                   ← device-specific layouts (mobile, desktop)
 │   ├── [name]_view_mobile.dart
 │   └── [name]_view_desktop.dart
-├── [name]_cubit.dart          ← OR: [name]_bloc.dart + [name]_event.dart
+├── [name]_notifier.dart       ← Riverpod notifier + provider declaration
 ├── [name]_state.dart          ← immutable, isolated state file using ViewStatus
 ├── models/                    ← feature-local enums and data classes
 └── widgets/                   ← private local widgets (strictly one per file)
@@ -121,7 +121,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 | View | Role | State Pattern |
 |---|---|---|
 | **Splash** | App bootstrap + redirect | Router-driven auth gate handoff |
-| **Login** | Auth gate | Form events handled by `AuthBloc`; session persisted in `AuthCubit` |
+| **Login** | Auth gate | Form via `AuthFormNotifier`; session in `authNotifierProvider` |
 | **Dashboard** | Info capture + upcoming alerts | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream. Renders an **Upcoming Soon** section, a periodic in-app **banner** evaluated from `UpcomingEvent`s, and a **Live Now** feed with per-item Archive/Unarchive triage and a Show/Hide archived toggle. |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
@@ -134,12 +134,12 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 - Sidebar content now includes provider health chips, placeholder counters (`Snoozed`, `Review queue`), and a `lastSyncedAt` timestamp from `DashboardState`.
 - Main feed is sectioned: **Upcoming Soon** -> **Awaiting Your Reply** -> **Live Now**.
 - **Live Now** renders the remainder of `visibleActivities` from `DashboardState` after urgency-oriented section routing, while still honoring the `showArchivedActivities` toggle.
-- Each `DabActivityCard` exposes an Archive action (or Unarchive for already-archived entries) routed through `DashboardBloc` with **optimistic UI** and rollback on failure.
+- Each `DabActivityCard` exposes an Archive action (or Unarchive for already-archived entries) routed through **`dashboardNotifierProvider`** with **optimistic UI** and rollback on failure.
 - **Live feed card copy:** Slack uses channel label + truncated summary as the headline, **From** `{sender}`, then full message below. GitHub commits use **`[branch] {commit subject}`** as the headline (`subject` is the first line of the commit message), **From** **`{linked DAB user name} (@{GitHub login})`**, then the remaining commit description on following lines when present.
 - Remote `ACTIVITY_ARCHIVED` / `ACTIVITY_UNARCHIVED` events on the WS stream are surfaced as `ActivityLiveEvent` subtypes (`ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`) and merged into the same list by flipping the entry's `archived` flag in place.
 - `DashboardArchiveToggle` surfaces the archived count and switches `showArchivedActivities`.
 - **Upcoming Soon** consumes `UpcomingEvent` items from `UpcomingEventUseCases` (currently backed by `PlaceholderUpcomingEventsRepository` until a calendar provider is wired in).
-- A periodic `DashboardBannerTick` (default every 30s) feeds `BannerEvaluator` which chooses at most one active `DashboardBanner` based on priority, time thresholds, and a per-event dedupe key retained in `DashboardState.lastNotifiedEventIds`.
+- A periodic timer on `DashboardNotifier` (default every 30s) invokes banner evaluation (`BannerEvaluator`) and chooses at most one active `DashboardBanner` based on priority, time thresholds, and a per-event dedupe key retained in `DashboardState.lastNotifiedEventIds`.
 - The active banner is dismissable and re-shows only when a different `dedupeKey` becomes eligible.
 
 #### Explorer Historical Cache Strategy
@@ -159,13 +159,13 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 
 ## State Management Rules
 
-- **Base Classes:** Every Cubit extends `AbsCubit`; every Bloc extends `AbsBloc`.
+- **Riverpod:** Feature modules expose **`Notifier` / `AutoDisposeNotifier`** classes registered as **`NotifierProvider`** / **`NotifierProvider.autoDispose`** next to the notifier implementation.
 - **ViewStatus:** All states must use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) for standardized status management.
 - **One Widget Per File:** View and Layout files must not contain private widgets or widget-returning functions. They must be extracted to the `widgets/` folder.
-- **Global AppCubit:** Accessible via the inherited `app` getter in any Bloc/Cubit, or via static `AbsBloc.appCubit` for constructor initializers.
-- **UI Builders:** Always use `AppBlocBuilder`, `AppBlocListener`, or `AppBlocConsumer`. Use the `onInit` callback for one-time initialization logic.
-- **Cubits call use cases only** — never datasources or repositories directly.
-- **No business logic in widgets.** Widgets read state and dispatch events — nothing more.
+- **Global app session:** Cross-cutting concerns use **`appNotifierProvider`**, **`authNotifierProvider`**, and router refresh hooks — no static cubit singletons.
+- **Widgets:** Prefer **`ConsumerWidget`** / **`ConsumerStatefulWidget`** with **`ref.watch`** / **`ref.read`** on the smallest subtree that needs updates.
+- **Notifiers call use cases only** — never datasources or repositories directly.
+- **No business logic in widgets.** Widgets read state and call notifier methods — nothing more.
 
 ---
 
@@ -192,7 +192,7 @@ All routes are declared in `presentation/core/navigation/app_route.dart` and wir
 
 ## Dynamic Deep-Linking & Provider Config Resolution
 
-1. **Bootstrap:** On init, `AppCubit` fetches `List<ProviderConfig>` from `/metadata/configs`.
+1. **Bootstrap:** On init, **`AppNotifier`** (via `appNotifierProvider`) fetches `List<ProviderConfig>` from `/metadata/configs`.
 2. **Resolution:** `ActivityCard` matches `Activity.provider.name` against the loaded configs.
 3. **URL Joining:** If the backend provides a relative path (e.g., `/T123`), the card prepends `ProviderConfig.baseUrl`.
 4. **Icons:** Provider icon resolution is centralized in `ProviderIconResolver`:
@@ -203,8 +203,8 @@ All routes are declared in `presentation/core/navigation/app_route.dart` and wir
 ## Auth & Token Security
 
 - JWTs stored exclusively in `FlutterSecureStorage` (native OS Keychain / Keystore).
-- Token refresh handled entirely by `AuthInterceptor` — cubits must not trigger refresh manually.
-- On logout: clear both cubit state and secure storage atomically.
+- Token refresh handled entirely by `AuthInterceptor` — presentation code must not trigger refresh manually.
+- On logout: clear session via **`authNotifierProvider`** / routing **and** secure storage atomically.
 - **Phorge Identity Linking:** Client maps `User.ownerPHID` to their DAB `userId` to filter personal backlogs.
 
 ---

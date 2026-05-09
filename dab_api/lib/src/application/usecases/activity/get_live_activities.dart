@@ -2,20 +2,18 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 
 /// [ARCH: APPLICATION_USECASE]
-/// ROLE: Retrieves Redis-backed live activities for dashboard consumption.
-/// CONTRACT: Reads from Redis materialized live feeds; when the user-specific
-/// Redis list is empty (e.g. ephemeral Redis wiped on deploy), falls back to
-/// PostgreSQL rows for **today (UTC)** so the dashboard stays populated.
-/// CONSTRAINTS: Global scope remains Redis-only. Does not invoke external providers.
+/// ROLE: Serves **`GET /activities/live`** for the Dashboard.
+/// CONTRACT: Reads **only** from Redis (`activities:user:{id}`, `activities:global`).
+/// CONSTRAINTS: **No** Postgres and **no** provider polling here — ephemeral Redis means
+/// the live slice can legitimately be empty. Explorer historical views use **`SearchActivities`**
+/// / **`GET /activities/search`** (not this use case).
 class GetLiveActivities {
   final RedisService _redisService;
-  final AbsIActivityRepository _activityRepository;
 
-  GetLiveActivities(this._redisService, this._activityRepository);
+  GetLiveActivities(this._redisService);
 
   Future<Either<DatabaseFailure, List<Activity>>> execute({
     required String userId,
@@ -23,24 +21,13 @@ class GetLiveActivities {
     bool global = false,
     bool includeArchived = false,
   }) async {
-    final normalizedLimit = limit.clamp(1, 100);
     try {
-      var activities = await _redisService.getLiveActivities(
+      final activities = await _redisService.getLiveActivities(
         userId: userId,
-        limit: normalizedLimit,
+        limit: limit,
         global: global,
         includeArchived: includeArchived,
       );
-      if (!global && activities.isEmpty) {
-        final fallback = await _activityRepository.getActivitiesByUser(
-          userId,
-          createdOnOrAfterUtc: RedisService.liveFeedStartOfTodayUtc(),
-          limit: normalizedLimit,
-        );
-        activities =
-            fallback.getOrElse((_) => const <Activity>[]);
-      }
-
       return Right(activities);
     } catch (error) {
       return Left(

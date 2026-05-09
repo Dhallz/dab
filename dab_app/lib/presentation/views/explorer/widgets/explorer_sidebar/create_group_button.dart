@@ -1,5 +1,5 @@
+import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/localization/l10n_extension.dart';
 import '../../../../core/styles/app_colors.dart';
@@ -7,11 +7,10 @@ import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_layout.dart';
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../explorer_bloc.dart';
 import '../create_group_dialog.dart';
 
 class CreateGroupButton extends StatelessWidget {
-  final List<dynamic> availableUsers;
+  final List<User> availableUsers;
 
   const CreateGroupButton({super.key, required this.availableUsers});
 
@@ -19,12 +18,10 @@ class CreateGroupButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        showDialog(
+        showDialog<void>(
           context: context,
-          builder: (dialogContext) => BlocProvider.value(
-            value: context.read<ExplorerBloc>(),
-            child: CreateGroupDialog(availableUsers: availableUsers as dynamic),
-          ),
+          builder: (dialogContext) =>
+              CreateGroupDialog(availableUsers: availableUsers),
         );
       },
       borderRadius: BorderRadius.circular(AppLayout.radiusSmall),

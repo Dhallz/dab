@@ -73,7 +73,7 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | API Cache | Redis (Vegas versional clock) |
 | API Transport | WebSocket (WSS) + REST |
 | App Framework | Flutter |
-| App State | flutter_bloc (BLoC / Cubit) |
+| App State | flutter_riverpod (`Notifier` / `NotifierProvider`) |
 | App Navigation | go_router |
 | App Local Storage | ObjectBox |
 | App Networking | Dio + WebSocket (`web_socket_channel`) |

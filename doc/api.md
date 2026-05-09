@@ -96,6 +96,7 @@ Orchestrates use cases and coordinates Domain + Infrastructure without coupling 
 
 - **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `PresenceService`.
 - **Activity query use cases:** `GetRecentActivities`, `SearchActivities`, and `FetchRemoteActivities`.
+- **`GetLiveActivities`:** Serves **`GET /activities/live`** from Redis lists only (no Postgres). Explorer historical browsing uses **`SearchActivities`** (**`GET /activities/search`**), not Redis.
 - **Auth workflows:** Implemented through `AuthUseCases` (`RegisterUser`, `AuthenticateUser`, `RefreshUserToken`, etc.).
 
 ---
@@ -108,7 +109,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), Redis live feed (`/activities/live` with optional `?includeArchived=true`); when the user’s Redis list is empty (e.g. fresh Redis after deploy), **`/activities/live` falls back** to PostgreSQL for **today’s UTC** rows so the dashboard stays populated. Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook ingestion (`/integrations/slack/events`), date search (`/activities/search`), authenticated WebSocket stream (`/ws`). Archived entries are retained in Redis only and purged daily at local midnight by `ActivityPurgeScheduler`. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; no Postgres). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook (`/integrations/slack/events`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
 | `AuthController` | `/auth/*` | Register, login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
@@ -124,6 +125,7 @@ Thin entry points only. No business logic.
 - **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
+- **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is parsed as UTC midnight; identical start/end expands one UTC day (`ActivityController`). **`dab_app`** sends `YYYY-MM-DD` slices from Explorer's selected local calendar day.
 
 ---
 

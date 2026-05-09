@@ -44,10 +44,9 @@ template_replace() {
   sed -e "s/dashboard/$NAME/g" -e "s/Dashboard/$PASCAL_NAME/g" "$1" > "$2"
 }
 
-# Generate files
+# Generate files (from dashboard Riverpod template — no `*_event.dart`)
 template_replace "$DASH_PATH/dashboard_view.dart" "$BASE_PATH/${NAME}_view.dart"
-template_replace "$DASH_PATH/dashboard_bloc.dart" "$BASE_PATH/${NAME}_bloc.dart"
-template_replace "$DASH_PATH/dashboard_event.dart" "$BASE_PATH/${NAME}_event.dart"
+template_replace "$DASH_PATH/dashboard_notifier.dart" "$BASE_PATH/${NAME}_notifier.dart"
 template_replace "$DASH_PATH/dashboard_state.dart" "$BASE_PATH/${NAME}_state.dart"
 template_replace "$DASH_PATH/layout/dashboard_view_desktop.dart" "$BASE_PATH/layout/${NAME}_view_desktop.dart"
 template_replace "$DASH_PATH/layout/dashboard_view_mobile.dart" "$BASE_PATH/layout/${NAME}_view_mobile.dart"

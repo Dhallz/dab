@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/auth_cubit.dart';
-import '../../../../services/service_locator.dart';
-import 'explorer_bloc.dart';
-import 'explorer_event.dart';
+import '../../features/auth/auth_notifier.dart';
+import 'explorer_notifier.dart';
 import 'layouts/explorer_view_desktop.dart';
 import 'layouts/explorer_view_mobile.dart';
 
-class ExplorerView extends StatelessWidget {
+class ExplorerView extends ConsumerStatefulWidget {
   const ExplorerView({super.key});
 
   @override
+  ConsumerState<ExplorerView> createState() => _ExplorerViewState();
+}
+
+class _ExplorerViewState extends ConsumerState<ExplorerView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final connectedUserId = ref.read(authNotifierProvider).user?.id;
+      ref.read(explorerNotifierProvider.notifier).started(connectedUserId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final connectedUserId = context.read<AuthCubit>().state.user?.id;
-    return BlocProvider(
-      create: (context) => ExplorerBloc(
-        sl.activityUseCases,
-        sl.userUseCases,
-        sl.metadataUseCases,
-      )..add(ExplorerStarted(connectedUserId: connectedUserId)),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 900) {
-            return const ExplorerViewDesktop();
-          }
-          return const ExplorerViewMobile();
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 900) {
+          return const ExplorerViewDesktop();
+        }
+        return const ExplorerViewMobile();
+      },
     );
   }
 }

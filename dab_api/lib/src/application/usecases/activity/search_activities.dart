@@ -5,22 +5,18 @@ import 'fetch_remote_activities.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Orchestrates on-demand activity search by user and time range.
-/// CONTRACT: Resolves internal User entities and triggers [FetchRemoteActivities].
-/// CONSTRAINTS: Only searches for valid DAB users. Returns an empty list on failure.
-///
-/// This use case acts as a higher-level coordinator that prepares
-/// the context (User entities) for the parallel fetching engine.
+/// CONTRACT: Runs [FetchRemoteActivities] only — **`GET /activities/search`** aggregates
+/// provider APIs via [UnifiedActivityFetcher]. **Does not** query PostgreSQL; ingested rows
+/// on disk are surfaced elsewhere (`GET /activities`, live Redis fan-out).
+/// CONSTRAINTS: Only searches for valid DAB users. Returns an empty list on fetch failure.
 class SearchActivities {
   final AbsIAuthRepository _authRepo;
   final FetchRemoteActivities _fetchRemoteActivities;
 
   SearchActivities(this._authRepo, this._fetchRemoteActivities);
 
-  /// Executes the search operation.
-  ///
   /// 1. Resolves all [targetUserIds] into full [User] entities.
   /// 2. Delegates the parallel protocol I/O to [FetchRemoteActivities].
-  /// 3. Returns the aggregated results.
   Future<List<Activity>> execute({
     required List<String> targetUserIds,
     required DateTime startDate,
@@ -29,7 +25,6 @@ class SearchActivities {
   }) async {
     List<User> targetUsers = [];
 
-    // Preparation Phase: Resolve IDs to Entities
     for (final userId in targetUserIds) {
       final userResult = await _authRepo.findById(userId);
       userResult.map((u) {
@@ -39,7 +34,6 @@ class SearchActivities {
 
     if (targetUsers.isEmpty) return [];
 
-    // Orchestration Phase: Coordinate the fetch
     final result = await _fetchRemoteActivities.execute(
       targetUsers: targetUsers,
       startDate: startDate,

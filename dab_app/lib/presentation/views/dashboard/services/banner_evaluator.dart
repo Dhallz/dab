@@ -56,7 +56,8 @@ class BannerEvaluator {
       if (alreadyNotified.contains(candidate.dedupeKey)) continue;
 
       final weight = event.priority.weight;
-      final isBetter = winner == null ||
+      final isBetter =
+          winner == null ||
           weight > (winnerPriorityWeight ?? -1) ||
           (weight == winnerPriorityWeight &&
               untilStart < (winnerUntilStart ?? const Duration(days: 365)));

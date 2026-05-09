@@ -8,10 +8,15 @@ import 'provider_styles.dart';
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: Deterministic resolver for provider icons/colors across UI surfaces.
 class ProviderIconResolver {
-  static String? resolveIconUrl(String providerId, List<ProviderConfig> configs) {
+  static String? resolveIconUrl(
+    String providerId,
+    List<ProviderConfig> configs,
+  ) {
     final normalizedProvider = providerId.toLowerCase();
     final config =
-        configs.where((c) => c.id.toLowerCase() == normalizedProvider).firstOrNull ??
+        configs
+            .where((c) => c.id.toLowerCase() == normalizedProvider)
+            .firstOrNull ??
         configs
             .where((c) => normalizedProvider.contains(c.id.toLowerCase()))
             .firstOrNull;
@@ -35,7 +40,10 @@ class ProviderIconResolver {
     return mappedStyle?.brandColor ?? AppColors.onSurfaceVariantLow;
   }
 
-  static ProviderStyle? _providerStyle(BuildContext context, String providerId) {
+  static ProviderStyle? _providerStyle(
+    BuildContext context,
+    String providerId,
+  ) {
     final theme = Theme.of(context);
     final extension = theme.extension<ProviderStyles>();
     return extension?.tryStyleOf(providerId) ??
@@ -48,7 +56,8 @@ class ProviderIconResolver {
     if (key.contains('gitlab')) return AppIcons.gitlab;
     if (key.contains('jira') || key.contains('jora')) return AppIcons.jira;
     if (key.contains('slack')) return AppIcons.slack;
-    if (key.contains('teams') || key.contains('microsoft')) return AppIcons.teams;
+    if (key.contains('teams') || key.contains('microsoft'))
+      return AppIcons.teams;
     if (key.contains('discord')) return AppIcons.discord;
     if (key.contains('linear')) return AppIcons.linear;
     return null;

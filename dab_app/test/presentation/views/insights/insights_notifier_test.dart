@@ -1,4 +1,3 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
@@ -9,11 +8,11 @@ import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_app/presentation/views/insights/insights_bloc.dart';
-import 'package:dab_app/presentation/views/insights/insights_event.dart';
+import 'package:dab_app/presentation/views/insights/insights_notifier.dart';
 import 'package:dab_app/presentation/views/insights/insights_state.dart';
 import 'package:dab_app/presentation/views/insights/models/insights_date_preset.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -25,7 +24,6 @@ class MockProviderConfigRepository extends Mock
     implements IProviderConfigRepository {}
 
 void main() {
-  late InsightsBloc insightsBloc;
   late MockActivityRepository mockActivityRepository;
   late MockUserRepository mockUserRepository;
   late MockProviderConfigRepository mockProviderConfigRepository;
@@ -49,12 +47,6 @@ void main() {
     activityUseCases = ActivityUseCases(mockActivityRepository);
     userUseCases = UserUseCases(mockUserRepository);
     metadataUseCases = MetadataUseCases(mockProviderConfigRepository);
-
-    insightsBloc = InsightsBloc(
-      activityUseCases,
-      userUseCases,
-      metadataUseCases,
-    );
 
     when(
       () => mockUserRepository.getUsers(),
@@ -91,48 +83,56 @@ void main() {
     );
   });
 
-  tearDown(() async {
-    await insightsBloc.close();
+  InsightsNotifier createNotifier() =>
+      InsightsNotifier(activityUseCases, userUseCases, metadataUseCases);
+
+  void subscribeInsights(ProviderContainer container) {
+    final sub = container.listen(insightsNotifierProvider, (_, _) {});
+    addTearDown(sub.close);
+  }
+
+  test('preselects connected user and queries by selected filters', () async {
+    final container = ProviderContainer(
+      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
+    );
+    subscribeInsights(container);
+    addTearDown(container.dispose);
+
+    await container.read(insightsNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+
+    expect(container.read(insightsNotifierProvider).selectedUserIds, {'u1'});
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>()
+              .having((query) => query.users, 'users', ['u1'])
+              .having((query) => query.providers, 'providers', {
+                'slack',
+                'github',
+              }),
+        ),
+      ),
+    ).called(1);
   });
 
-  blocTest<InsightsBloc, InsightsState>(
-    'preselects connected user and queries by selected filters',
-    build: () => insightsBloc,
-    act: (bloc) => bloc.add(const InsightsStarted(connectedUserId: 'u1')),
-    wait: const Duration(milliseconds: 80),
-    verify: (bloc) {
-      expect(bloc.state.selectedUserIds, {'u1'});
-      verify(
-        () => mockActivityRepository.searchActivities(
-          any(
-            that: isA<ActivitySearchQuery>()
-                .having((query) => query.users, 'users', ['u1'])
-                .having((query) => query.providers, 'providers', {
-                  'slack',
-                  'github',
-                }),
-          ),
-        ),
-      ).called(1);
-    },
-  );
+  test('switches to last 30 days preset', () async {
+    final container = ProviderContainer(
+      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
+    );
+    subscribeInsights(container);
+    addTearDown(container.dispose);
 
-  blocTest<InsightsBloc, InsightsState>(
-    'switches to last 30 days preset',
-    build: () => insightsBloc,
-    act: (bloc) {
-      bloc.add(const InsightsStarted(connectedUserId: 'u1'));
-      bloc.add(const InsightsDatePresetChanged(InsightsDatePreset.last30Days));
-    },
-    wait: const Duration(milliseconds: 100),
-    verify: (bloc) {
-      expect(bloc.state.datePreset, InsightsDatePreset.last30Days);
-      final dayDiff = bloc.state.endDate
-          .difference(bloc.state.startDate)
-          .inDays;
-      expect(dayDiff, 29);
-    },
-  );
+    final notifier = container.read(insightsNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.setDatePreset(InsightsDatePreset.last30Days);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    final state = container.read(insightsNotifierProvider);
+    expect(state.datePreset, InsightsDatePreset.last30Days);
+    final dayDiff = state.endDate.difference(state.startDate).inDays;
+    expect(dayDiff, 29);
+  });
 
   test('projects analytics counters from fetched activities', () async {
     when(() => mockActivityRepository.searchActivities(any())).thenAnswer(
@@ -160,12 +160,19 @@ void main() {
       ]),
     );
 
-    insightsBloc.add(const InsightsStarted());
+    final container = ProviderContainer(
+      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
+    );
+    subscribeInsights(container);
+    addTearDown(container.dispose);
+
+    await container.read(insightsNotifierProvider.notifier).started(null);
     await Future<void>.delayed(const Duration(milliseconds: 80));
 
-    expect(insightsBloc.state.totalActivities, 2);
-    expect(insightsBloc.state.activeUsersCount, 2);
-    expect(insightsBloc.state.activeProvidersCount, 2);
-    expect(insightsBloc.state.mostFrequentCategory, isNotNull);
+    final state = container.read(insightsNotifierProvider);
+    expect(state.totalActivities, 2);
+    expect(state.activeUsersCount, 2);
+    expect(state.activeProvidersCount, 2);
+    expect(state.mostFrequentCategory, isNotNull);
   });
 }

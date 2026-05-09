@@ -25,12 +25,11 @@ class ActivityProviderIcon extends StatelessWidget {
       context,
       providerId,
     );
-    final customIconUrl = ProviderIconResolver.resolveIconUrl(providerId, configs);
-    final fallbackIcon = Icon(
-      fallbackIconData,
-      color: color,
-      size: 22,
+    final customIconUrl = ProviderIconResolver.resolveIconUrl(
+      providerId,
+      configs,
     );
+    final fallbackIcon = Icon(fallbackIconData, color: color, size: 22);
 
     Widget icon = fallbackIcon;
     if (customIconUrl != null) {

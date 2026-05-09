@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/styles/provider_icon_resolver.dart';
-import '../../explorer_bloc.dart';
-import '../../explorer_event.dart';
+import '../../explorer_notifier.dart';
 import 'selection_tile.dart';
 
-class ProviderFilterChecklist extends StatelessWidget {
+class ProviderFilterChecklist extends ConsumerWidget {
   final List<String> availableProviders;
   final Set<String> selectedProviders;
 
@@ -18,7 +17,8 @@ class ProviderFilterChecklist extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     if (availableProviders.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -34,9 +34,7 @@ class ProviderFilterChecklist extends StatelessWidget {
               context,
               provider,
             ),
-            onTap: () => context.read<ExplorerBloc>().add(
-              ExplorerProviderToggled(provider),
-            ),
+            onTap: () => notifier.toggleProvider(provider),
           ),
         );
       }).toList(),

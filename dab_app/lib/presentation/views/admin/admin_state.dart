@@ -73,7 +73,9 @@ extension OnAdminState on AdminState {
 
   List<UserIdentity> get filteredSortedIdentities {
     final lowerQuery = identitySearchQuery.trim().toLowerCase();
-    final fullNameByUserId = {for (final user in users) user.id: user.name.trim()};
+    final fullNameByUserId = {
+      for (final user in users) user.id: user.name.trim(),
+    };
 
     final filtered = identities.where((identity) {
       if (lowerQuery.isEmpty) {
@@ -94,18 +96,20 @@ extension OnAdminState on AdminState {
 
     filtered.sort((a, b) {
       final comparison = switch (identitySortField) {
-        IdentitySortField.fullName => (fullNameByUserId[a.userId] ?? a.userId)
-            .toLowerCase()
-            .compareTo((fullNameByUserId[b.userId] ?? b.userId).toLowerCase()),
+        IdentitySortField.fullName =>
+          (fullNameByUserId[a.userId] ?? a.userId).toLowerCase().compareTo(
+            (fullNameByUserId[b.userId] ?? b.userId).toLowerCase(),
+          ),
         IdentitySortField.provider => a.providerId.toLowerCase().compareTo(
           b.providerId.toLowerCase(),
         ),
         IdentitySortField.externalId => a.externalId.toLowerCase().compareTo(
           b.externalId.toLowerCase(),
         ),
-        IdentitySortField.providerUsername => (a.externalUsername ?? '')
-            .toLowerCase()
-            .compareTo((b.externalUsername ?? '').toLowerCase()),
+        IdentitySortField.providerUsername =>
+          (a.externalUsername ?? '').toLowerCase().compareTo(
+            (b.externalUsername ?? '').toLowerCase(),
+          ),
         IdentitySortField.status => a.status.name.compareTo(b.status.name),
       };
       return identitySortAscending ? comparison : -comparison;

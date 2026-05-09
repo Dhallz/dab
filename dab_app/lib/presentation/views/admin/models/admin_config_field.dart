@@ -5,5 +5,9 @@ class AdminConfigField {
   final String label;
   final bool isSecret;
 
-  AdminConfigField({required this.key, required this.label, this.isSecret = false});
+  AdminConfigField({
+    required this.key,
+    required this.label,
+    this.isSecret = false,
+  });
 }

@@ -32,9 +32,7 @@ class AdminSectionHeader extends StatelessWidget {
           subtitle,
           style: TextStyle(
             fontSize: 16,
-            color: AppColors.onSurfaceVariantLow.withValues(
-              alpha: 0.8,
-            ),
+            color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.8),
           ),
         ),
       ],

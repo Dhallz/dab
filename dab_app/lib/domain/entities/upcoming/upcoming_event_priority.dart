@@ -14,9 +14,9 @@ enum UpcomingEventPriority {
 
   /// Integer weight used for sorting; higher wins.
   int get weight => switch (this) {
-        UpcomingEventPriority.low => 0,
-        UpcomingEventPriority.normal => 1,
-        UpcomingEventPriority.high => 2,
-        UpcomingEventPriority.critical => 3,
-      };
+    UpcomingEventPriority.low => 0,
+    UpcomingEventPriority.normal => 1,
+    UpcomingEventPriority.high => 2,
+    UpcomingEventPriority.critical => 3,
+  };
 }

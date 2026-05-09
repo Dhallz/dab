@@ -13,13 +13,13 @@ abstract class IUserRepository {
   Future<Either<AppFailure, List<Group>>> getGroups();
   Future<Either<AppFailure, Group>> saveGroup(Group group);
   Future<Either<AppFailure, void>> deleteGroup(String id);
-  
+
   /// Admin: Fetch all platform identity candidates.
   Future<Either<AppFailure, List<UserIdentity>>> getIdentities();
 
   /// Admin: Count of identities in [pending] or [failed] state (for shell badge).
   Future<Either<AppFailure, int>> getIdentityResolutionSummary();
-  
+
   /// Admin: Link a candidate identity to a DAB user.
   Future<Either<AppFailure, UserIdentity>> linkIdentity({
     required String userId,

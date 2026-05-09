@@ -9,11 +9,6 @@ abstract class AbsIActivityRepository {
     int limit = 50,
   });
   Future<Either<DatabaseFailure, List<Activity>>> getActivitiesByUser(
-    String userId, {
-    /// When set (UTC), excludes rows strictly before this instant.
-    DateTime? createdOnOrAfterUtc,
-
-    /// When set, caps how many rows are read after ordering (newest first).
-    int? limit,
-  });
+    String userId,
+  );
 }

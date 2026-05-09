@@ -1,4 +1,3 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/upcoming_event_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
@@ -6,10 +5,10 @@ import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_upcoming_events_repository.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
-import 'package:dab_app/presentation/views/dashboard/dashboard_bloc.dart';
-import 'package:dab_app/presentation/views/dashboard/dashboard_event.dart';
+import 'package:dab_app/presentation/views/dashboard/dashboard_notifier.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -21,7 +20,6 @@ class _MockUpcomingRepository extends Mock
 void main() {
   late _MockActivityRepository repository;
   late _MockUpcomingRepository upcomingRepository;
-  late DashboardBloc bloc;
 
   setUpAll(() {
     registerFallbackValue(const ActivitySearchQuery());
@@ -30,9 +28,6 @@ void main() {
   setUp(() {
     repository = _MockActivityRepository();
     upcomingRepository = _MockUpcomingRepository();
-    final useCases = ActivityUseCases(repository);
-    final upcomingUseCases = UpcomingEventUseCases(upcomingRepository);
-    bloc = DashboardBloc(useCases, upcomingUseCases);
     when(
       () => repository.watchActivities(),
     ).thenAnswer((_) => const Stream.empty());
@@ -44,56 +39,59 @@ void main() {
     ).thenAnswer((_) async => const Right([]));
   });
 
-  tearDown(() async {
-    await bloc.close();
+  ProviderContainer containerWithOverrides(
+    DashboardNotifier Function() create,
+  ) {
+    return ProviderContainer(
+      overrides: [dashboardNotifierProvider.overrideWith(create)],
+    );
+  }
+
+  test('loads live activities on start', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer(
+      (_) async => Right([
+        Activity(
+          id: 'a-1',
+          userId: 'u-1',
+          provider: const SlackMessageProvider(channelId: 'C1'),
+          title: 'Slack message',
+          content: 'Hello from Slack',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
+        ),
+      ]),
+    );
+
+    final container = containerWithOverrides(
+      () => DashboardNotifier(
+        ActivityUseCases(repository),
+        UpcomingEventUseCases(upcomingRepository),
+      ),
+    );
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    final state = container.read(dashboardNotifierProvider);
+    expect(state.status, ViewStatus.success);
+    expect(state.activities.length, 1);
   });
 
-  blocTest<DashboardBloc, DashboardState>(
-    'loads live activities on start',
-    build: () {
-      when(
-        () => repository.getLiveActivities(
-          limit: 50,
-          global: false,
-          includeArchived: true,
-        ),
-      ).thenAnswer(
-        (_) async => Right([
-          Activity(
-            id: 'a-1',
-            userId: 'u-1',
-            provider: const SlackMessageProvider(channelId: 'C1'),
-            title: 'Slack message',
-            content: 'Hello from Slack',
-            authorName: 'Alice',
-            commentCount: 0,
-            createdAt: DateTime.utc(2026, 1, 1, 10),
-          ),
-        ]),
-      );
-      return bloc;
-    },
-    act: (bloc) => bloc.add(const DashboardStarted()),
-    wait: const Duration(milliseconds: 80),
-    expect: () => [
-      isA<DashboardState>().having(
-        (s) => s.status,
-        'status',
-        ViewStatus.loading,
-      ),
-      isA<DashboardState>()
-          .having((s) => s.status, 'status', ViewStatus.success)
-          .having((s) => s.activities.length, 'activities length', 1),
-    ],
-  );
-
-  // Regression: on app restart we must hydrate archived entries so the user's
-  // triage state survives. They stay hidden by default (visibleActivities
-  // filters them), and toggling 'Show archived' must reveal them *without*
-  // issuing a second API call.
-  blocTest<DashboardBloc, DashboardState>(
+  test(
     'hydrates archived entries on start and reveals them via visibility toggle',
-    build: () {
+    () async {
       when(
         () => repository.getLiveActivities(
           limit: 50,
@@ -125,33 +123,44 @@ void main() {
           ),
         ]),
       );
-      return bloc;
-    },
-    act: (bloc) async {
-      bloc.add(const DashboardStarted());
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      bloc.add(const DashboardArchivedVisibilityToggled());
-    },
-    wait: const Duration(milliseconds: 100),
-    verify: (bloc) {
-      expect(bloc.state.activities.length, 2);
+
+      final container = containerWithOverrides(
+        () => DashboardNotifier(
+          ActivityUseCases(repository),
+          UpcomingEventUseCases(upcomingRepository),
+        ),
+      );
+      final keepAlive = container.listen<DashboardState>(
+        dashboardNotifierProvider,
+        (_, _) {},
+      );
+      addTearDown(keepAlive.close);
+      addTearDown(container.dispose);
+
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+
+      final notifier = container.read(dashboardNotifierProvider.notifier);
+      notifier.toggleArchivedVisibility();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+
+      final state = container.read(dashboardNotifierProvider);
+      expect(state.activities.length, 2);
       expect(
-        bloc.state.activities.where((a) => a.archived).length,
+        state.activities.where((a) => a.archived).length,
         1,
         reason: 'archived flag must survive hydration',
       );
       expect(
-        bloc.state.showArchivedActivities,
+        state.showArchivedActivities,
         true,
         reason: 'toggle must flip to show archived',
       );
       expect(
-        bloc.state.visibleActivities.length,
+        state.visibleActivities.length,
         2,
         reason: 'archived entry must become visible after toggle',
       );
 
-      // Exactly one hydration call; toggling must not trigger a refetch.
       verify(
         () => repository.getLiveActivities(
           limit: 50,

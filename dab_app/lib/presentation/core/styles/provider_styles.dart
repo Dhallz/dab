@@ -9,10 +9,7 @@ class ProviderStyle {
   final Color brandColor;
   final IconData icon;
 
-  const ProviderStyle({
-    required this.brandColor,
-    required this.icon,
-  });
+  const ProviderStyle({required this.brandColor, required this.icon});
 
   ProviderStyle lerp(ProviderStyle? other, double t) {
     if (other == null) return this;

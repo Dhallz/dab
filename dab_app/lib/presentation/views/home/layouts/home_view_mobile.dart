@@ -1,11 +1,9 @@
-import 'package:dab_app/presentation/core/app_bloc_consumer.dart';
-import 'package:dab_app/presentation/features/app/app_cubit.dart';
-import 'package:dab_app/presentation/features/app/app_state.dart';
-import 'package:dab_app/presentation/features/auth/auth_cubit.dart';
-import 'package:dab_app/presentation/features/auth/auth_state.dart';
 import 'package:dab_app/presentation/core/navigation/app_route.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/dab_mesh_background.dart';
@@ -14,64 +12,62 @@ import '../widgets/home_mobile_nav.dart';
 
 /// [ARCH: PRESENTATION_LAYOUT]
 /// ROLE: Mobile-optimized layout for the home view.
-class HomeViewMobile extends StatelessWidget {
+class HomeViewMobile extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const HomeViewMobile({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
-    final authState = context.select<AuthCubit, AuthState>((cubit) => cubit.state);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider);
     final userName = _displayName(authState);
     final userInitials = _displayInitials(userName);
 
-    return AppBlocConsumer<AppCubit, AppState>(
-      listenWhen: (p, c) => false,
-      listener: (context, state, bloc) {},
-      buildWhen: (p, c) =>
-          p.unresolvedIdentityCount != c.unresolvedIdentityCount,
-      builder: (context, appState, _) {
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: DabMeshBackground(
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  HomeMobileHeader(userInitials: userInitials),
-                  HomeMobileNav(
-                    navigationShell: navigationShell,
-                    adminTabBadgeCount: appState.unresolvedIdentityCount,
-                    onBranchSelected: (index) {
-                      final previousIndex = navigationShell.currentIndex;
-                      navigationShell.goBranch(
-                        index,
-                        initialLocation: index == navigationShell.currentIndex,
-                      );
-                      if (previousIndex != index &&
-                          navigationShell.currentIndex == previousIndex) {
-                        final targetPath = switch (index) {
-                          0 => AppRoute.homeDashboard.path,
-                          1 => AppRoute.homeExplorer.path,
-                          2 => AppRoute.homeInsight.path,
-                          _ => AppRoute.homeAdmin.path,
-                        };
-                        context.go(targetPath);
-                      }
-                      if (index == 3) {
-                        context.read<AppCubit>().refreshIdentityResolutionBadge(
-                          context.read<AuthCubit>().state,
+    final adminBadgeCount = ref.watch(
+      appNotifierProvider.select((s) => s.unresolvedIdentityCount),
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: DabMeshBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              HomeMobileHeader(userInitials: userInitials),
+              HomeMobileNav(
+                navigationShell: navigationShell,
+                adminTabBadgeCount: adminBadgeCount,
+                onBranchSelected: (index) {
+                  final previousIndex = navigationShell.currentIndex;
+                  navigationShell.goBranch(
+                    index,
+                    initialLocation: index == navigationShell.currentIndex,
+                  );
+                  if (previousIndex != index &&
+                      navigationShell.currentIndex == previousIndex) {
+                    final targetPath = switch (index) {
+                      0 => AppRoute.homeDashboard.path,
+                      1 => AppRoute.homeExplorer.path,
+                      2 => AppRoute.homeInsight.path,
+                      _ => AppRoute.homeAdmin.path,
+                    };
+                    context.go(targetPath);
+                  }
+                  if (index == 3) {
+                    ref
+                        .read(appNotifierProvider.notifier)
+                        .refreshIdentityResolutionBadge(
+                          ref.read(authNotifierProvider),
                         );
-                      }
-                    },
-                  ),
-                  Expanded(child: navigationShell),
-                ],
+                  }
+                },
               ),
-            ),
+              Expanded(child: navigationShell),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

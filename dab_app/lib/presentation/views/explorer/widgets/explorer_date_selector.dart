@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../explorer_bloc.dart';
-import '../explorer_event.dart';
+import '../explorer_notifier.dart';
 import '../explorer_state.dart';
 import 'explorer_calendar_date_button.dart';
 
@@ -9,7 +8,7 @@ import 'explorer_calendar_date_button.dart';
 /// ROLE: Interactive horizontal date selector for the explorer timeline.
 class ExplorerDateSelector extends StatelessWidget {
   final ExplorerState state;
-  final ExplorerBloc bloc;
+  final ExplorerNotifier notifier;
   final PageController pageController;
   final DateTime anchorDate;
   final DateTime displayDate;
@@ -20,7 +19,7 @@ class ExplorerDateSelector extends StatelessWidget {
   const ExplorerDateSelector({
     super.key,
     required this.state,
-    required this.bloc,
+    required this.notifier,
     required this.pageController,
     required this.anchorDate,
     required this.displayDate,
@@ -86,7 +85,7 @@ class ExplorerDateSelector extends StatelessWidget {
                               date,
                               state.selectedDate,
                             )) {
-                              bloc.add(ExplorerDateChanged(date));
+                              notifier.scheduleDateChanged(date);
                             }
                             pageController.animateToPage(
                               index,

@@ -42,8 +42,7 @@ class AuthInterceptor extends Interceptor {
   }
 
   static bool _skipBearer(RequestOptions options) {
-    return _isPublicApiPath(options.uri.path) ||
-        _isPublicApiPath(options.path);
+    return _isPublicApiPath(options.uri.path) || _isPublicApiPath(options.path);
   }
 
   static bool _isRefreshRequest(RequestOptions options) {

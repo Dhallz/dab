@@ -4,8 +4,9 @@ import 'package:dab_app/domain/containers/user_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_app/presentation/views/explorer/explorer_bloc.dart';
-import 'package:dab_app/presentation/views/explorer/explorer_item.dart';
+import 'package:dab_app/presentation/views/explorer/explorer_notifier.dart';
+import 'package:dab_app/presentation/views/explorer/models/explorer_item.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -16,33 +17,36 @@ class MockUserRepository extends Mock implements IUserRepository {}
 class MockMetadataUseCases extends Mock implements MetadataUseCases {}
 
 void main() {
-  late ExplorerBloc explorerBloc;
-  late ActivityUseCases activityUseCases;
-  late UserUseCases userUseCases;
-  late MockMetadataUseCases mockMetadataUseCases;
-  late MockActivityRepository mockActivityRepository;
-  late MockUserRepository mockUserRepository;
+  late ProviderContainer container;
+  late ExplorerNotifier notifier;
 
   setUp(() {
-    mockActivityRepository = MockActivityRepository();
-    mockUserRepository = MockUserRepository();
-    mockMetadataUseCases = MockMetadataUseCases();
+    final mockActivityRepository = MockActivityRepository();
+    final mockUserRepository = MockUserRepository();
+    final mockMetadataUseCases = MockMetadataUseCases();
 
-    activityUseCases = ActivityUseCases(mockActivityRepository);
-    userUseCases = UserUseCases(mockUserRepository);
+    final activityUseCases = ActivityUseCases(mockActivityRepository);
+    final userUseCases = UserUseCases(mockUserRepository);
 
-    explorerBloc = ExplorerBloc(
-      activityUseCases,
-      userUseCases,
-      mockMetadataUseCases,
+    container = ProviderContainer(
+      overrides: [
+        explorerNotifierProvider.overrideWith(
+          () => ExplorerNotifier(
+            activityUseCases,
+            userUseCases,
+            mockMetadataUseCases,
+          ),
+        ),
+      ],
     );
+    notifier = container.read(explorerNotifierProvider.notifier);
   });
 
   tearDown(() {
-    explorerBloc.close();
+    container.dispose();
   });
 
-  group('ExplorerBloc Grouping', () {
+  group('ExplorerNotifier grouping', () {
     test('should group activities correctly', () {
       final date = DateTime.now();
       final activities = [
@@ -78,7 +82,7 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
 
       expect(items.length, 2);
       expect(items[0], isA<TaskActivityItem>());
@@ -105,7 +109,7 @@ void main() {
 
       final activities = [activity1, activity1];
 
-      final items = explorerBloc.groupActivities(activities);
+      final items = notifier.groupActivities(activities);
 
       expect(items.length, 1);
       expect(items[0], isA<SingleActivityItem>());
@@ -145,7 +149,7 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
       expect(items.length, 1);
       expect(items.first, isA<SlackConversationItem>());
       final grouped = items.first as SlackConversationItem;
@@ -187,7 +191,7 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
       expect(items.length, 2);
       expect(items.whereType<SlackConversationItem>().length, 0);
       expect(items.every((i) => i is SingleActivityItem), isTrue);
@@ -211,7 +215,7 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
       expect(items.length, 1);
       expect(items.first, isA<SingleActivityItem>());
     });
@@ -247,7 +251,7 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
       expect(items.length, 1);
       expect(items.first, isA<SlackConversationItem>());
       final grouped = items.first as SlackConversationItem;
@@ -286,16 +290,9 @@ void main() {
         ),
       ];
 
-      final items = explorerBloc.testGroupActivities(activities);
+      final items = notifier.groupActivities(activities);
       expect(items.length, 2);
       expect(items.every((item) => item is SingleActivityItem), isTrue);
     });
   });
-}
-
-// Extension to expose protected method for testing
-extension ExplorerBlocTest on ExplorerBloc {
-  List<ExplorerItem> testGroupActivities(List<Activity> activities) {
-    return groupActivities(activities);
-  }
 }

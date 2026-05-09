@@ -14,7 +14,7 @@ It is maintained as part of the codebase and must be kept up to date with every 
 | [overview.md](./overview.md) | What DAB is, the problem it solves, and the high-level design |
 | [architecture.md](./architecture.md) | Full cross-package architecture, layer rules, and data flow |
 | [api.md](./api.md) | DAB API (backend) — layers, patterns, endpoints, DI |
-| [app.md](./app.md) | DAB App (Flutter client) — layers, BLoC, routing, design system |
+| [app.md](./app.md) | DAB App (Flutter client) — layers, Riverpod, routing, design system |
 | [infrastructure.md](./infrastructure.md) | Infrastructure stack — PostgreSQL, Redis, WebSocket, Docker |
 | [conventions.md](./conventions.md) | Coding standards and naming rules for both packages |
 | [openapi.yaml](./openapi.yaml) | OpenAPI contract aligned with Bruno API definitions |

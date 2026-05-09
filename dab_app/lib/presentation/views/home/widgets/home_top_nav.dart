@@ -55,10 +55,7 @@ class HomeTopNav extends StatelessWidget {
                   ),
                 ],
               ),
-              HomeRightSection(
-                userName: userName,
-                userInitials: userInitials,
-              ),
+              HomeRightSection(userName: userName, userInitials: userInitials),
             ],
           ),
         ),

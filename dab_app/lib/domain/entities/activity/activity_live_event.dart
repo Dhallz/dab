@@ -22,10 +22,7 @@ class ActivityReceivedEvent extends ActivityLiveEvent {
 class ActivityArchivedEvent extends ActivityLiveEvent {
   final String activityId;
   final String userId;
-  const ActivityArchivedEvent({
-    required this.activityId,
-    required this.userId,
-  });
+  const ActivityArchivedEvent({required this.activityId, required this.userId});
 }
 
 /// An existing live-feed entry was un-archived.

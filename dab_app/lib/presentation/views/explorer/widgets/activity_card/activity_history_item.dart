@@ -47,11 +47,7 @@ class ActivityHistoryItem extends StatelessWidget {
                   child: Center(
                     child: Tooltip(
                       message: activity.granularLabel(context),
-                      child: Icon(
-                        iconData,
-                        size: 14,
-                        color: accentColor,
-                      ),
+                      child: Icon(iconData, size: 14, color: accentColor),
                     ),
                   ),
                 ),

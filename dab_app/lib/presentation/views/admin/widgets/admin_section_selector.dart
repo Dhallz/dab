@@ -1,17 +1,17 @@
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
-import 'package:dab_app/presentation/views/admin/admin_event.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AdminSectionSelector extends StatelessWidget {
+class AdminSectionSelector extends ConsumerWidget {
   final AdminSection selectedSection;
 
   const AdminSectionSelector({super.key, required this.selectedSection});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(adminNotifierProvider.notifier);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -19,8 +19,7 @@ class AdminSectionSelector extends StatelessWidget {
         return ChoiceChip(
           label: Text(section.title),
           selected: section == selectedSection,
-          onSelected: (_) =>
-              context.read<AdminBloc>().add(AdminSectionChanged(section)),
+          onSelected: (_) => notifier.setSection(section),
           labelStyle: TextStyle(
             color: section == selectedSection
                 ? AppColors.onPrimary

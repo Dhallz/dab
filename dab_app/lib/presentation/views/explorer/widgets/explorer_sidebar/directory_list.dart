@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../domain/entities/group/group.dart';
 import '../../../../../domain/entities/user/user.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/localization/l10n_extension.dart';
-import '../../explorer_bloc.dart';
-import '../../explorer_event.dart';
+import '../../explorer_notifier.dart';
 import '../../explorer_state.dart';
 import '../../models/directory_type.dart';
 import 'create_group_button.dart';
 import 'selection_tile.dart';
 
-class DirectoryList extends StatelessWidget {
+class DirectoryList extends ConsumerWidget {
   final ExplorerState state;
 
   const DirectoryList({super.key, required this.state});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     final bool isUsers = state.directoryType == DirectoryType.users;
 
     return Column(
@@ -35,8 +35,7 @@ class DirectoryList extends StatelessWidget {
                 isSelected: isSelected,
                 avatarUrl: u.avatarUrl,
                 iconData: u.avatarUrl == null ? AppIcons.user : null,
-                onTap: () =>
-                    context.read<ExplorerBloc>().add(ExplorerUserToggled(u.id)),
+                onTap: () => notifier.toggleUser(u.id),
               ),
             );
           })
@@ -49,10 +48,8 @@ class DirectoryList extends StatelessWidget {
                 label: g.name,
                 isSelected: isSelected,
                 iconData: AppIcons.users,
-                trailing: _buildGroupActions(context, g, state.users),
-                onTap: () => context.read<ExplorerBloc>().add(
-                  ExplorerGroupToggled(g.id),
-                ),
+                trailing: _buildGroupActions(context, ref, g, state.users),
+                onTap: () => notifier.toggleGroup(g.id),
               ),
             );
           }),
@@ -66,9 +63,11 @@ class DirectoryList extends StatelessWidget {
 
   Widget _buildGroupActions(
     BuildContext context,
+    WidgetRef ref,
     Group group,
     List<User> users,
   ) {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     return PopupMenuButton<_GroupAction>(
       tooltip: context.l10n.explorerGroupActions,
       icon: Icon(AppIcons.settings, size: AppSpacing.s + 2),
@@ -88,19 +87,24 @@ class DirectoryList extends StatelessWidget {
       ],
       onSelected: (action) {
         if (action == _GroupAction.editMembers) {
-          _showEditMembersDialog(context, group, users);
+          _showEditMembersDialog(context, ref, group, users);
           return;
         }
         if (action == _GroupAction.rename) {
-          _showRenameDialog(context, group);
+          _showRenameDialog(context, ref, group);
           return;
         }
-        context.read<ExplorerBloc>().add(ExplorerGroupDeleted(group.id));
+        notifier.deleteGroup(group.id);
       },
     );
   }
 
-  Future<void> _showRenameDialog(BuildContext context, Group group) async {
+  Future<void> _showRenameDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Group group,
+  ) async {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     final controller = TextEditingController(text: group.name);
     final renamed = await showDialog<String>(
       context: context,
@@ -132,16 +136,16 @@ class DirectoryList extends StatelessWidget {
     final nextName = renamed?.trim() ?? '';
     if (nextName.isEmpty || nextName == group.name) return;
     if (!context.mounted) return;
-    context.read<ExplorerBloc>().add(
-      ExplorerGroupRenamed(groupId: group.id, name: nextName),
-    );
+    notifier.renameGroup(group.id, nextName);
   }
 
   Future<void> _showEditMembersDialog(
     BuildContext context,
+    WidgetRef ref,
     Group group,
     List<User> users,
   ) async {
+    final notifier = ref.read(explorerNotifierProvider.notifier);
     final selectedUserIds = group.members.map((member) => member.id).toSet();
     final updatedIds = await showDialog<Set<String>>(
       context: context,
@@ -206,9 +210,7 @@ class DirectoryList extends StatelessWidget {
     final updatedMembers = users
         .where((user) => updatedIds.contains(user.id))
         .toList();
-    context.read<ExplorerBloc>().add(
-      ExplorerGroupSaved(group.copyWith(members: updatedMembers)),
-    );
+    notifier.saveGroup(group.copyWith(members: updatedMembers));
   }
 }
 

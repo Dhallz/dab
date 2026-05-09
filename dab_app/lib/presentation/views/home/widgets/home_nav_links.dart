@@ -60,8 +60,9 @@ class HomeNavLinks extends StatelessWidget {
                           color: isSelected
                               ? AppColors.onSurfaceHighlight
                               : AppColors.onSurfaceVariantLow,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                         ),
                       ),
                       if (showBadge) ...[

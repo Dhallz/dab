@@ -76,10 +76,7 @@ class AppTheme {
         centerTitle: true,
         titleTextStyle: AppTextStyles.titleLarge,
       ),
-      extensions: [
-        ActivityCategoryStyles.dark(),
-        ProviderStyles.dark(),
-      ],
+      extensions: [ActivityCategoryStyles.dark(), ProviderStyles.dark()],
     );
   }
 }

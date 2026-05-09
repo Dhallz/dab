@@ -1,83 +1,76 @@
 import 'package:dab_app/presentation/core/styles/app_theme.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as pv;
 
 import 'domain/repositories/abs_i_auth_repository.dart';
 import 'domain/repositories/abs_i_monitoring_repository.dart';
-import 'presentation/core/abs_bloc.dart';
-import 'presentation/core/abs_cubit.dart';
 import 'presentation/core/localization/app_localizations.dart';
 import 'presentation/core/navigation/app_router.dart';
-import 'presentation/features/app/app_cubit.dart';
-import 'presentation/features/app/app_state.dart';
-import 'presentation/features/auth/auth_cubit.dart';
-import 'presentation/views/dashboard/dashboard_bloc.dart';
 import 'services/service_locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize all dependencies via the transversal ServiceLocator
   await sl.init();
 
-  final appCubit = AppCubit(
-    sl.systemUseCases,
-    sl.metadataUseCases,
-    sl.userRepository,
-  )..init();
-
-  // Initialize base class resolvers
-  AbsBloc.appCubit = appCubit;
-  AbsCubit.appCubit = appCubit;
-
   runApp(
-    MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: sl.objectBoxStore),
-        RepositoryProvider<IAuthRepository>.value(value: sl.authRepository),
-        RepositoryProvider<IMonitoringRepository>.value(
-          value: sl.monitoringRepository,
-        ),
-      ],
-      child: MultiBlocProvider(
+    ProviderScope(
+      child: pv.MultiProvider(
         providers: [
-          BlocProvider.value(value: appCubit),
-          BlocProvider(
-            create: (context) => AuthCubit(sl.authUseCases)..checkAuth(),
-          ),
-          BlocProvider(
-            create: (context) => DashboardBloc(
-              sl.activityUseCases,
-              sl.upcomingEventUseCases,
-            ),
+          pv.Provider.value(value: sl.objectBoxStore),
+          pv.Provider<IAuthRepository>.value(value: sl.authRepository),
+          pv.Provider<IMonitoringRepository>.value(
+            value: sl.monitoringRepository,
           ),
         ],
-        child: DabApp(appRouter: sl.appRouter),
+        child: _AuthRouterRefresh(child: DabApp(appRouter: sl.appRouter)),
       ),
     ),
   );
 }
 
-class DabApp extends StatelessWidget {
+/// Re-evaluates [GoRouter] redirects when session state changes.
+class _AuthRouterRefresh extends ConsumerStatefulWidget {
+  const _AuthRouterRefresh({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_AuthRouterRefresh> createState() => _AuthRouterRefreshState();
+}
+
+class _AuthRouterRefreshState extends ConsumerState<_AuthRouterRefresh> {
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      sl.appRouter.router.refresh();
+    });
+    return widget.child;
+  }
+}
+
+class DabApp extends ConsumerWidget {
   final AppRouter appRouter;
 
   const DabApp({super.key, required this.appRouter});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AppCubit, AppState>(
-      builder: (context, state) {
-        return MaterialApp.router(
-          title: 'DAB App',
-          routerConfig: appRouter.router,
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: AppTheme.dark, // We can define a light theme later
-          darkTheme: AppTheme.dark,
-          themeMode: state.settings.themeMode,
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appNotifierProvider);
+
+    return MaterialApp.router(
+      title: 'DAB App',
+      routerConfig: appRouter.router,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: state.settings.themeMode,
     );
   }
 }

@@ -132,10 +132,7 @@ class UserRepository extends Repository implements IUserRepository {
     return guardedCall(() async {
       await _client.dio.post(
         '/admin/users/role',
-        data: {
-          'userId': userId,
-          'role': role.name,
-        },
+        data: {'userId': userId, 'role': role.name},
       );
     });
   }

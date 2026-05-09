@@ -149,7 +149,7 @@ External Provider (Phorge, GitHub, Slack, …)
                           ObjectBox (local cache)
                                    │
                                    ▼
-                          BLoC / Cubit ──► Flutter UI
+                          Riverpod notifiers ──► Flutter UI
 ```
 
 ---
@@ -223,7 +223,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/github/webhook` | Fetch historical feed, fetch Redis live feed (with Postgres fallback when user Redis list is empty), receive Slack and GitHub push webhooks, search activities, and serve authenticated realtime stream |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/github/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`), receive Slack and GitHub push webhooks, search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |

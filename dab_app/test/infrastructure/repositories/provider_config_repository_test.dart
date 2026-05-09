@@ -41,13 +41,17 @@ void main() {
       'data': [
         {
           'id': 'github',
+          'name': 'GitHub',
           'baseUrl': 'https://github.com',
           'iconUrl': 'https://github.com/favicon.ico',
+          'isActive': true,
         },
         {
           'id': 'phorge',
+          'name': 'Phorge',
           'baseUrl': 'https://phorge.com',
           'iconUrl': 'https://phorge.com/favicon.ico',
+          'isActive': true,
         },
       ],
     };

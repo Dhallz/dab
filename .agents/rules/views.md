@@ -1,12 +1,12 @@
 ---
 trigger: glob
-description: Rules for Flutter views — hierarchy, naming, BLoC/Cubit, layouts
+description: Rules for Flutter views — hierarchy, Riverpod notifiers, layouts
 globs: dab_app/lib/presentation/views/**/*.dart
 ---
 
 # Views — Presentation Layer Rules
 
-These rules define how all Flutter views, layouts, BLoC/Blocs, events, and states must be structured in `dab_app`. Follow these patterns exactly when creating any new screen or feature area.
+These rules define how Flutter views, layouts, `Notifier`s, and states are structured in `dab_app`. Follow these patterns when creating or editing screens.
 
 ---
 
@@ -16,164 +16,63 @@ Every screen is a **self-contained folder** under `lib/presentation/views/<featu
 
 ```
 views/
-└── explorer/                     ← Feature folder — snake_case name
-    ├── explorer_view.dart         ← Entry point: BlocProvider + LayoutBuilder only
-    ├── explorer_bloc.dart         ← Business logic (extends AbsBloc or Cubit)
-    ├── explorer_event.dart        ← Sealed event hierarchy (@MappableClass)
-    ├── explorer_state.dart        ← Single state class (@MappableClass)
-    ├── explorer_item.dart         ← Optional: local domain models for the view
+└── explorer/
+    ├── explorer_view.dart           ← Entry: post-frame init + LayoutBuilder
+    ├── explorer_notifier.dart       ← Riverpod Notifier + provider declaration
+    ├── explorer_state.dart          ← Immutable screen state (@MappableClass)
+    ├── explorer_item.dart           ← Optional local models for the view
     ├── layouts/
-    │   ├── explorer_view_desktop.dart   ← Desktop layout widget
-    │   └── explorer_view_mobile.dart    ← Mobile layout widget
+    │   ├── explorer_view_desktop.dart
+    │   └── explorer_view_mobile.dart
     ├── widgets/
-    │   ├── activity_card.dart           ← Private local widgets, one per file
-    │   └── ...
     └── models/
-        ├── explorer_filter.dart         ← UI-specific data classes
-        └── ...
 ```
 
-All files must be named in `snake_case` with the feature prefix.
+Do **not** add presentation `*_event.dart` hierarchies; **user actions** are **notifier methods** on the screen’s `Notifier`.
 
 ---
 
-## 📋 File Responsibilities (Non-Negotiable)
+## 📋 File Responsibilities
 
 | File | Responsibility | What it must NOT do |
 |---|---|---|
-| `*_view.dart` | Provide `BlocProvider`, dispatch the init event, delegate to `LayoutBuilder` | Contain any business logic or UI code |
-| `*_bloc.dart` / `*_cubit.dart` | Handle events, call use cases, emit state | Call HTTP, interact with DB, or build widgets |
-| `*_event.dart` | Sealed event hierarchy | Contain any logic |
-| `*_state.dart` | Single immutable snapshot of screen state | Contain computed logic — use getters or extensions |
-| `*_view_desktop.dart` | Build the desktop layout | Provide BLoC. NEVER use widget helper functions or define private widgets here. |
-| `*_view_mobile.dart` | Build the mobile layout | Same as above. |
-| `widgets/*.dart` | **Exactly one** focused, reusable widget per file | Depend on anything from `infrastructure` |
-| `models/*.dart` | View-supporting enums or data classes | Contain business logic (move to domain instead) |
+| `*_view.dart` | Schedule init (`started(...)`), delegate to `LayoutBuilder` | Own business rules beyond routing glue |
+| `*_notifier.dart` | Orchestrate use cases, expose methods for UI actions | Call HTTP or DB directly |
+| `*_state.dart` | Single immutable snapshot | Heavy computation — prefer extensions (`OnFooState`) |
+| `*_view_desktop.dart` / `*_view_mobile.dart` | Layout only | Provide repositories / Dio |
 
 ---
 
 ## 🔑 View Entry Point Pattern
 
-The `*_view.dart` does exactly three things:
-1. Provides the BLoC/Cubit via `BlocProvider`.
-2. Dispatches the initial event (e.g., `ExplorerStarted`).
-3. Delegates to `LayoutBuilder` to switch between mobile/desktop layouts.
-
-```dart
-// ✅ Correct — explorer_view.dart
-class ExplorerView extends StatelessWidget {
-  const ExplorerView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ExplorerBloc(
-        sl.activityUseCases,
-        sl.userUseCases,
-        sl.metadataUseCases,
-      )..add(const ExplorerStarted()), // ← dispatch init event here
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 900) return const ExplorerViewDesktop();
-          return const ExplorerViewMobile();
-        },
-      ),
-    );
-  }
-}
-```
+1. Root uses **`ProviderScope`** (see `main.dart`).
+2. Screen triggers **`ref.read(..notifier).started(...)`** in `addPostFrameCallback` where bootstrap needs layout/context.
+3. Layouts are **`ConsumerWidget`** / **`ConsumerStatefulWidget`** and **`ref.watch`** the relevant `…NotifierProvider`.
 
 ---
 
-## 🎯 BLoC vs Cubit
+## 🎯 Riverpod Notifier Rules
 
-- Use **`Bloc<Event, State>`** when the feature has **explicit, discrete user interactions** (e.g., button presses, filters) that must map to named events.
-- Use **`Cubit<State>`** for simpler features where state changes are driven by a handful of method calls without complex event logic.
-- All Blocs must extend `AbsBloc<E, S>`. All Cubits must extend a base Cubit if one exists.
-- **Never use `Bloc` when a `Cubit` is sufficient.** Keep complexity proportional.
-
----
-
-## ⚡ Event Rules (BLoC only)
-
-Events form a **`sealed` class hierarchy** using `dart_mappable`:
-
-```dart
-// ✅ Correct — explorer_event.dart
-@MappableClass()
-sealed class ExplorerEvent with ExplorerEventMappable {
-  const ExplorerEvent();
-}
-
-@MappableClass()
-class ExplorerStarted extends ExplorerEvent with ExplorerStartedMappable {
-  const ExplorerStarted();
-}
-
-@MappableClass()
-class ExplorerDateChanged extends ExplorerEvent with ExplorerDateChangedMappable {
-  final DateTime date;
-  const ExplorerDateChanged(this.date);
-}
-```
-
-- One event class per user action or system trigger.
-- Event names use `[Feature][Action]` naming: `ExplorerDateChanged`, `AuthLogoutRequested`.
-- Events are **always `const`** — they carry no mutable data.
-- Register all event handlers in the Bloc constructor using `on<EventType>(_handler)`.
+- Declare providers next to the notifier: `final fooNotifierProvider = NotifierProvider.autoDispose<FooNotifier, FooState>(...)`.
+- Notifiers **call use cases only** (same as former BLoC rule).
+- Prefer **`AutoDisposeNotifier`** for screens that should tear down with navigation.
+- Replace discrete “events” with **methods** on the notifier (`toggleProvider`, `setDatePreset`, …).
+- For **`ProviderContainer`** tests, **`listen`** autoDispose providers during async work so they are not disposed mid-await.
 
 ---
 
 ## 🧊 State Rules
 
-State is a **single immutable class** using `dart_mappable`, not a sealed hierarchy:
-
-```dart
-// ✅ Correct — explorer_state.dart
-import 'package:dab_app/presentation/core/models/view_status.dart';
-
-@MappableClass()
-class ExplorerState with ExplorerStateMappable {
-  final ViewStatus status;
-  final List<Activity> items;
-  final String? errorMessage;
-
-  const ExplorerState({
-    this.status = ViewStatus.initial,
-    this.items = const [],
-    this.errorMessage,
-  });
-
-  factory ExplorerState.initial() => const ExplorerState();
-}
-```
-
-- Always include a `status` field using the generic `ViewStatus` enum from `presentation/core/models/view_status.dart`.
-- ViewStatus values: `initial`, `loading`, `success`, `failure`.
-- Always provide a `factory [State].initial()` constructor.
-- Always include `errorMessage` for the failure case.
-- Use `copyWith` (generated) for every state update — never construct a new state from scratch in the Bloc.
+- Single **`@MappableClass` state** with `ViewStatus`, `errorMessage`, and feature fields.
+- **`factory FooState.initial()`** where applicable.
+- Derived UI projections live in **`extension OnFooState on FooState`** in the same library file as state when they help widgets stay dumb.
 
 ---
 
 ## 🖥️ Layout Rules
 
-- **Breakpoint**: `> 900px` → desktop layout; `≤ 900px` → mobile layout.
-- Layout widgets (`*_view_desktop.dart`, `*_view_mobile.dart`) access the BLoC via `context.read<FeatureBloc>()` or `context.watch<FeatureBloc>()` — they do **not** provide it.
-- `BlocBuilder` and `BlocConsumer` must be scoped to the **smallest widget that needs a rebuild**. Never wrap an entire page layout in a `BlocBuilder`.
-
-```dart
-// ✅ Correct — scoped to only the widget that needs the data
-BlocSelector<ExplorerBloc, ExplorerState, ViewStatus>(
-  selector: (state) => state.status,
-  builder: (context, status) => StatusWidget(status: status),
-)
-
-// ❌ Wrong — rebuilds the entire layout on every state change
-BlocBuilder<ExplorerBloc, ExplorerState>(
-  builder: (context, state) => Scaffold( ... entire page ... ),
-)
-```
+- **Breakpoint**: `> 900px` → desktop; `≤ 900px` → mobile (unless a feature overrides).
+- Scope **`ref.watch`** / **`Consumer`** to the smallest subtree that needs rebuilds.
 
 ---
 
@@ -182,24 +81,16 @@ BlocBuilder<ExplorerBloc, ExplorerState>(
 | Artifact | Pattern | Example |
 |---|---|---|
 | View entry | `[Feature]View` | `ExplorerView` |
-| BLoC | `[Feature]Bloc` | `ExplorerBloc` |
-| Cubit | `[Feature]Cubit` | `AuthCubit` |
-| Event base | `[Feature]Event` | `ExplorerEvent` |
-| Event subclass | `[Feature][Action]` | `ExplorerDateChanged` |
+| Notifier | `[Feature]Notifier` | `ExplorerNotifier` |
+| Provider | `[feature]NotifierProvider` | `explorerNotifierProvider` |
 | State class | `[Feature]State` | `ExplorerState` |
-| Status enum | `ViewStatus` | `ViewStatus.initial` |
 | Desktop layout | `[Feature]ViewDesktop` | `ExplorerViewDesktop` |
-| Mobile layout | `[Feature]ViewMobile` | `ExplorerViewMobile` |
 
 ---
 
 ## 🚫 What Not to Do
 
-- **Never use widget-returning functions** (e.g., `Widget _buildRow()`). Create a dedicated widget class instead.
-- **Never define private widgets** (`class _PrivateWidget`) in a layout file. Move them to the `widgets/` folder.
-- **Never include multiple classes** in a `_state.dart` or `_event.dart` file (except for `sealed` event hierarchies).
-- **Never call use cases or repositories directly from a widget.** All calls go through the BLoC/Cubit.
-- **Never `emit()` inside tests manually.** Use `bloc_test`'s `blocTest<>()`.
-- **Never use `BuildContext` across async gaps** without checking `mounted` first.
-- **Never combine two unrelated feature BLoCs** into one file or one class.
-- **Never use a state `sealed` hierarchy** (e.g., `Loading extends State`, `Success extends State`) — use a single class with a `ViewStatus` enum instead.
+- No business logic in widgets beyond wiring `ref` / navigation.
+- No use cases or repositories imported from `layouts/` widgets — only notifiers via `ref`.
+- Notifier tests use **`ProviderContainer`** + overrides + **`listen`** for autoDispose — no manual `emit`.
+- No `BuildContext` across async gaps without `mounted` / lifecycle awareness.

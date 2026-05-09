@@ -1,13 +1,12 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
-import 'package:dab_app/presentation/views/admin/admin_event.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum IdentityCreateFocusField { externalId, externalUsername }
 
-class IdentityCreateDialog extends StatefulWidget {
-  final AdminBloc bloc;
+class IdentityCreateDialog extends ConsumerStatefulWidget {
   final List<User> users;
   final List<String> providerIds;
   final String? initialUserId;
@@ -19,7 +18,6 @@ class IdentityCreateDialog extends StatefulWidget {
 
   const IdentityCreateDialog({
     super.key,
-    required this.bloc,
     required this.users,
     required this.providerIds,
     this.initialUserId,
@@ -31,10 +29,11 @@ class IdentityCreateDialog extends StatefulWidget {
   });
 
   @override
-  State<IdentityCreateDialog> createState() => _IdentityCreateDialogState();
+  ConsumerState<IdentityCreateDialog> createState() =>
+      _IdentityCreateDialogState();
 }
 
-class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
+class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
   final _externalIdController = TextEditingController();
   final _externalUsernameController = TextEditingController();
   final _externalIdFocusNode = FocusNode();
@@ -97,9 +96,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
 
     return Theme(
       data: Theme.of(context).copyWith(
-        dialogTheme: const DialogThemeData(
-          backgroundColor: Color(0xFF0F172A),
-        ),
+        dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF0F172A)),
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       child: AlertDialog(
@@ -138,12 +135,7 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             DropdownButtonFormField<String>(
               initialValue: _selectedProviderId,
               items: widget.providerIds
-                  .map(
-                    (id) => DropdownMenuItem(
-                      value: id,
-                      child: Text(id),
-                    ),
-                  )
+                  .map((id) => DropdownMenuItem(value: id, child: Text(id)))
                   .toList(),
               onChanged: (value) => setState(() => _selectedProviderId = value),
               decoration: _fieldDecoration('Provider'),
@@ -170,7 +162,10 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             ),
           ],
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        actionsPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -190,14 +185,15 @@ class _IdentityCreateDialogState extends State<IdentityCreateDialog> {
             onPressed: !canSubmit
                 ? null
                 : () {
-                    widget.bloc.add(
-                      AdminIdentityLinked(
-                        userId: _selectedUserId!,
-                        providerId: _selectedProviderId!,
-                        externalId: _externalIdController.text.trim(),
-                        externalUsername: _externalUsernameController.text.trim(),
-                      ),
-                    );
+                    ref
+                        .read(adminNotifierProvider.notifier)
+                        .linkIdentity(
+                          userId: _selectedUserId!,
+                          providerId: _selectedProviderId!,
+                          externalId: _externalIdController.text.trim(),
+                          externalUsername: _externalUsernameController.text
+                              .trim(),
+                        );
                     Navigator.pop(context);
                   },
             child: Text(

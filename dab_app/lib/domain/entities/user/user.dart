@@ -6,7 +6,7 @@ part 'user.mapper.dart';
 /// [ARCH: DOMAIN_ENTITY]
 /// ROLE: Representation of a User identity in the DAB Client.
 /// CONTRACT: Immutable Plain Old Data (POD) object.
-/// CONSTRAINTS: Must be serializable via [UserMappable]. 
+/// CONSTRAINTS: Must be serializable via [UserMappable].
 @MappableClass()
 class User with UserMappable {
   final String id;

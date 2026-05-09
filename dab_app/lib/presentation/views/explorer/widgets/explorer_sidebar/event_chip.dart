@@ -21,11 +21,16 @@ class EventChip extends StatelessWidget {
       context,
       provider,
     ).toAccessibleBrandColor;
-    final iconData = ProviderIconResolver.resolveFallbackIcon(context, provider);
+    final iconData = ProviderIconResolver.resolveFallbackIcon(
+      context,
+      provider,
+    );
 
     final displayColor = isSelected
         ? color
-        : HSLColor.fromColor(color).withSaturation(0.15).withLightness(0.5).toColor();
+        : HSLColor.fromColor(
+            color,
+          ).withSaturation(0.15).withLightness(0.5).toColor();
 
     return GestureDetector(
       onTap: onTap,

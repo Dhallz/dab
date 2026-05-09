@@ -1,15 +1,14 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/core/styles/app_colors.dart';
-import 'package:dab_app/presentation/views/admin/admin_bloc.dart';
-import 'package:dab_app/presentation/views/admin/admin_event.dart';
+import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
 class RoleDropdown extends StatelessWidget {
   final User user;
-  final AdminBloc bloc;
+  final AdminNotifier notifier;
 
-  const RoleDropdown({super.key, required this.user, required this.bloc});
+  const RoleDropdown({super.key, required this.user, required this.notifier});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +41,7 @@ class RoleDropdown extends StatelessWidget {
           }).toList(),
           onChanged: (newRole) {
             if (newRole != null && newRole != user.role) {
-              bloc.add(AdminUserRoleUpdated(userId: user.id, role: newRole));
+              notifier.updateUserRole(user.id, newRole);
             }
           },
         ),

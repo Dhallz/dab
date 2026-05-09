@@ -18,7 +18,11 @@ class AdminProfileCard extends StatelessWidget {
           const CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.accentIndigo,
-            child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 20),
+            child: Icon(
+              Icons.admin_panel_settings,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

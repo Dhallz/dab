@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/styles/app_colors.dart';
-import '../../explorer_bloc.dart';
-import '../../explorer_event.dart';
+import '../../explorer_notifier.dart';
 import 'event_chip.dart';
 
-class ActiveEvents extends StatelessWidget {
+class ActiveEvents extends ConsumerWidget {
   final List<String> availableProviders;
   final Set<String> selectedProviders;
 
@@ -17,7 +16,7 @@ class ActiveEvents extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (availableProviders.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -42,9 +41,9 @@ class ActiveEvents extends StatelessWidget {
               provider: provider,
               isSelected: isSelected,
               onTap: () {
-                context.read<ExplorerBloc>().add(
-                  ExplorerProviderToggled(provider),
-                );
+                ref
+                    .read(explorerNotifierProvider.notifier)
+                    .toggleProvider(provider);
               },
             );
           }).toList(),
