@@ -14,14 +14,18 @@ class GroupController {
   final GroupUseCases _group = sl<GroupUseCases>();
 
   Future<Response> getGroups(Request request) async {
-    try {
-      final groups = await _group.getGroups.execute();
-      final jsonList = groups.map((g) => g.toMap()).toList();
-
-      return Response.ok(
+    final result = await _group.getGroups.execute();
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (groups) => Response.ok(
         body: Body.fromString(
           jsonEncode({
-            'data': jsonList,
+            'data': groups.map((g) => g.toMap()).toList(),
             'meta': {
               'dataType': 'list:group',
               'timestamp': DateTime.now().toIso8601String(),
@@ -29,15 +33,8 @@ class GroupController {
           }),
           mimeType: MimeType.json,
         ),
-      );
-    } catch (e) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': e.toString()}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+      ),
+    );
   }
 
   Future<Response> saveGroup(Request request) async {
@@ -46,18 +43,26 @@ class GroupController {
       final data = jsonDecode(body);
       final group = GroupMapper.fromMap(data);
 
-      final savedGroup = await _group.saveGroup.execute(group);
+      final result = await _group.saveGroup.execute(group);
 
-      return Response.ok(
-        body: Body.fromString(
-          jsonEncode({
-            'data': savedGroup.toMap(),
-            'meta': {
-              'dataType': 'group',
-              'timestamp': DateTime.now().toIso8601String(),
-            },
-          }),
-          mimeType: MimeType.json,
+      return result.fold(
+        (failure) => Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        ),
+        (savedGroup) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({
+              'data': savedGroup.toMap(),
+              'meta': {
+                'dataType': 'group',
+                'timestamp': DateTime.now().toIso8601String(),
+              },
+            }),
+            mimeType: MimeType.json,
+          ),
         ),
       );
     } catch (e) {
@@ -74,16 +79,15 @@ class GroupController {
     final id = request.pathParameters.raw[#id];
     if (id == null) return Response.badRequest();
 
-    try {
-      await _group.deleteGroup.execute(id);
-      return Response.ok();
-    } catch (e) {
-      return Response.internalServerError(
+    final result = await _group.deleteGroup.execute(id);
+    return result.fold(
+      (failure) => Response.internalServerError(
         body: Body.fromString(
-          jsonEncode({'error': e.toString()}),
+          jsonEncode({'error': failure.message}),
           mimeType: MimeType.json,
         ),
-      );
-    }
+      ),
+      (_) => Response.ok(),
+    );
   }
 }

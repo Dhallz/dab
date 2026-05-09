@@ -9,7 +9,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -69,7 +69,12 @@ void main() {
     userRepo = _MockUserRepo();
     source = _FakeSource();
     registry = ConnectorRegistry()..register<String>(source, _FakeMapper());
-    sut = UnifiedActivityFetcher(registry, configRepo, userRepo);
+    sut = UnifiedActivityFetcher(
+      registry,
+      configRepo,
+      userRepo,
+      (_, {String level = 'INFO', Map<String, dynamic>? extra}) {},
+    );
   });
 
   test('filters users per provider by linked identities', () async {

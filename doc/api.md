@@ -46,7 +46,7 @@ graph TD
 
 ### 1. Domain Layer (`lib/src/domain/`)
 
-The innermost layer. **Zero imports from Infrastructure or Application.**
+The innermost layer. **No imports from Infrastructure or Application.**
 
 - **Entities:** Pure data classes using `dart_mappable`. Current entities:
   - `Activity` — normalized event with `ActivityProvider` sealed metadata
@@ -58,7 +58,11 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
   - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
   - `ProviderMetadata` — registered connector metadata
 
-- **Mappers (`IActivityMapper`):** Define the business rules for transforming provider-specific DTOs into a `DAB Activity`. Mappers live in Domain because they encode business meaning (e.g., "a Phorge transaction of type COMMENT becomes an Activity of type comment").
+- **`entities/provider_payloads/`:** Provider-native shapes that are **inputs to `IActivityMapper`** (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundle`). Sources build or return these; mappers consume them — all without importing Infrastructure.
+
+- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>`).
+
+- **Mappers (`IActivityMapper`):** Business rules for transforming provider payloads into a `DAB Activity`.
 
 - **Repository Interfaces:** Abstract contracts prefixed with `I` (e.g., `IActivityRepository`). Return `Either<Failure, T>` via `fpdart`.
 
@@ -68,7 +72,7 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`sources/`):** Specialized provider fetchers returning provider-specific DTOs — never domain entities.
+- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `provider_payloads` types — never full domain `Activity` entities (mapping stays in Domain).
 
 - **`protocols/`:** Reusable outbound HTTP wire adapters (`ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol`). Sources decide *what* to pull for DAB; protocols own *how* requests are encoded (Conduit form bodies, JSON REST, GraphQL envelope, Slack `ok`). Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions.
 
@@ -76,7 +80,7 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 - **`database/`:** Drift schema definitions, DAOs, and `MigrationStrategy`. Never hand-edit generated `*.g.dart` files.
 
-- **`dtos/`:** Provider-specific Data Transfer Objects. Never leak outside Infrastructure.
+- **`dtos/`:** Leftover **wire** parse types (e.g. Phorge Conduit JSON helpers). **Mapper contract types** live under **`domain/entities/provider_payloads/`**.
 
 - **`security/`:** JWT signing/verification (via `dart_jsonwebtoken`), bcrypt password hashing. All secrets come from `Config`.
 
@@ -88,7 +92,7 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 ### 3. Application Layer (`lib/src/application/`)
 
-Orchestrates use cases and coordinates Domain + Infrastructure without coupling to either.
+Orchestrates use cases. Use cases return `Either<Failure, T>` where failures matter; controllers map `Left` to HTTP status. **`UnifiedActivityFetcher`** logs per-connector errors via an injected log callback (e.g. `LoggingService.record`) without importing infrastructure types.
 
 - **`ConnectorRegistry`:** Single source of truth for all registered provider connectors. Pairs each `IActivitySource` with its corresponding `IActivityMapper` at boot.
 

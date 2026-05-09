@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
-import '../../../infrastructure/dtos/teams/teams_message_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/teams/teams_message_dto.dart';
 
 /// [ARCH: DOMAIN_MAPPER]
 /// ROLE: Business Logic definer for MS Teams Message interpretation.

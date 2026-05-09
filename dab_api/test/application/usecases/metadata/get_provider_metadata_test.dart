@@ -61,7 +61,9 @@ void main() {
     );
 
     final out = await useCase.execute('uid');
-    expect(out.length, 1);
-    expect(out.single.provider.toLowerCase(), 'phorge');
+    expect(out.isRight(), true);
+    final list = out.getRight().toNullable()!;
+    expect(list.length, 1);
+    expect(list.single.provider.toLowerCase(), 'phorge');
   });
 }

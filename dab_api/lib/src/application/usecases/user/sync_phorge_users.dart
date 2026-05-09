@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failure.dart';
+import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
@@ -47,14 +48,22 @@ class SyncPhorgeUsers {
   ///    - Persists the new [User] record.
   /// 
   /// Returns the count of newly synced users.
-  Future<Either<DatabaseFailure, int>> execute() async {
+  Future<Either<Failure, int>> execute() async {
     try {
       // Kill-switch (DAB-40): Check if Phorge provider is active.
       final configsResult = await _configRepo.getConfigs();
-      final configs = configsResult.getOrElse((_) => []);
-      final phorgeConfig = configs.firstWhere((c) => c.id == 'phorge', 
-          orElse: () => throw Exception('Phorge provider configuration not found'));
-      
+      final configs = configsResult.getOrElse((_) => <ProviderConfig>[]);
+      ProviderConfig? phorgeConfig;
+      for (final c in configs) {
+        if (c.id == 'phorge') {
+          phorgeConfig = c;
+          break;
+        }
+      }
+      if (phorgeConfig == null) {
+        return const Left(NotFoundFailure('Phorge provider configuration not found'));
+      }
+
       if (!phorgeConfig.isActive) {
         return const Right(0); // Deactivated, skip sync.
       }

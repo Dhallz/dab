@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
-import 'package:dab_api/src/infrastructure/dtos/slack/slack_message_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/slack/slack_message_dto.dart';
 import 'package:test/test.dart';
 
 import '../../../test_factories.dart';

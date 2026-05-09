@@ -1,10 +1,10 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_bundle.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_data.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_transaction_data.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_task_data.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_transaction_data.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: low-level I/O for Phorge (Phabricator) Tasks and Transactions.

@@ -234,6 +234,7 @@ Future<void> serviceLocator() async {
     registry,
     sl<AbsIProviderConfigRepository>(),
     sl<IUserRepository>(),
+    sl<LoggingService>().record,
   );
   sl.registerSingleton<UnifiedActivityFetcher>(fetcher);
 

@@ -2,7 +2,7 @@ import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
-import 'package:dab_api/src/infrastructure/dtos/github/github_commit_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/github/github_commit_dto.dart';
 import 'package:uuid/uuid.dart';
 
 /// [ARCH: DOMAIN_MAPPER]

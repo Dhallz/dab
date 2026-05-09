@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_revision_data.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_revision_data.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Low-level I/O for Phorge Differential Revisions (Code Reviews).

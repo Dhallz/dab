@@ -2,8 +2,8 @@ import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_bundle.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_transaction_data.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_transaction_data.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../entities/sprint_context.dart';

@@ -17,7 +17,19 @@ class UnifiedActivityFetcher {
   final AbsIProviderConfigRepository _configRepo;
   final IUserRepository _userRepo;
 
-  UnifiedActivityFetcher(this._registry, this._configRepo, this._userRepo);
+  /// Structured log sink (e.g. `sl<LoggingService>().record`); keeps Application free of I/O types.
+  final void Function(
+    String message, {
+    String level,
+    Map<String, dynamic>? extra,
+  }) _log;
+
+  UnifiedActivityFetcher(
+    this._registry,
+    this._configRepo,
+    this._userRepo,
+    this._log,
+  );
 
   /// Aggregates and synchronizes activities from all registered sources.
   ///
@@ -94,9 +106,13 @@ class UnifiedActivityFetcher {
                 .toList();
           } catch (e) {
             // Individual source failure SHOULD NOT break the entire aggregation.
-            // We log the error and return an empty list for this pair.
-            print(
-              'UnifiedActivityFetcher: Error fetching from ${pair.mapper.providerName}: $e',
+            _log(
+              'UnifiedActivityFetcher: connector fetch failed',
+              level: 'WARNING',
+              extra: {
+                'provider': pair.mapper.providerName,
+                'error': e.toString(),
+              },
             );
             return <Activity>[];
           }

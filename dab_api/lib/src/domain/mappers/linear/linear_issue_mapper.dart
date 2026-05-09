@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
-import '../../../infrastructure/dtos/linear/linear_issue_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/linear/linear_issue_dto.dart';
 
 /// [ARCH: DOMAIN_MAPPER]
 /// ROLE: Business Logic definer for Linear Issue interpretation.

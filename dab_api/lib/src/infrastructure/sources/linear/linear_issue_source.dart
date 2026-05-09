@@ -1,10 +1,10 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
 import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failure.dart';
-import '../../dtos/linear/linear_issue_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/linear/linear_issue_dto.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Raw I/O Handler for Linear Issue retrieval.

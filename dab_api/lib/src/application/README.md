@@ -14,7 +14,7 @@ The Application layer is the **Glue Layer**. It coordinates Domain business rule
 
 ## 🛡️ Architectural Guardrails (STRICT)
 
-- **🚫 NO SQL / NO HTTP**: This layer must **NEVER** contain direct SQL queries or HTTP protocol logic (those are Infrastructure).
+- **🚫 NO SQL / NO HTTP**: This layer must **NEVER** contain direct SQL queries or HTTP protocol logic (those are Infrastructure). Prefer injecting narrow callbacks (e.g. structured logging) instead of importing infrastructure service types.
 - **🚫 NO BUSINESS RULES**: Mapping and categorization rules live in the Domain. This layer only coordinates their usage.
 - **✅ ISOLATE-SAFE**: Use `Isolate.run()` or `Compute` for heavy processing (fan-out, data transformation) to keep the main event loop responsive.
 - **✅ USECASES**: All controller actions MUST delegate to a UseCase. No complex logic is allowed in controllers.

@@ -13,14 +13,18 @@ class UserController {
   final UserUseCases _user = sl<UserUseCases>();
 
   Future<Response> getUsers(Request request) async {
-    try {
-      final users = await _user.getUsers.execute();
-      final jsonList = users.map((u) => u.toMap()).toList();
-
-      return Response.ok(
+    final result = await _user.getUsers.execute();
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (users) => Response.ok(
         body: Body.fromString(
           jsonEncode({
-            'data': jsonList,
+            'data': users.map((u) => u.toMap()).toList(),
             'meta': {
               'dataType': 'list:user',
               'timestamp': DateTime.now().toIso8601String(),
@@ -28,72 +32,61 @@ class UserController {
           }),
           mimeType: MimeType.json,
         ),
-      );
-    } catch (e) {
+      ),
+    );
+  }
+
+  Future<Response> getUser(Request request) async {
+    final id = request.pathParameters.raw[#id];
+    if (id == null) return Response.badRequest();
+
+    final result = await _user.getUserById.execute(id);
+    return result.fold(
+      (failure) => Response.notFound(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (user) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': user.toMap(),
+            'meta': {
+              'dataType': 'user',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> syncUsers(Request request) async {
+    final result = await _user.syncPhorgeUsers.execute();
+    if (result.isLeft()) {
       return Response.internalServerError(
         body: Body.fromString(
-          jsonEncode({'error': e.toString()}),
+          jsonEncode({'error': result.getLeft().toNullable()!.message}),
           mimeType: MimeType.json,
         ),
       );
     }
+    final count = result.getRight().toNullable()!;
+    unawaited(sl<IdentityDiscoveryService>().runFullDiscovery());
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'createdCount': count},
+          'meta': {
+            'dataType': 'sync_result',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
   }
-
-   Future<Response> getUser(Request request) async {
-     final id = request.pathParameters.raw[#id];
-     if (id == null) return Response.badRequest();
-
-     try {
-       final user = await _user.getUserById.execute(id);
-       return Response.ok(
-         body: Body.fromString(
-           jsonEncode({
-             'data': user.toMap(),
-             'meta': {
-               'dataType': 'user',
-               'timestamp': DateTime.now().toIso8601String(),
-             },
-           }),
-           mimeType: MimeType.json,
-         ),
-       );
-     } catch (e) {
-       return Response.notFound(
-         body: Body.fromString(
-           jsonEncode({'error': e.toString()}),
-           mimeType: MimeType.json,
-         ),
-       );
-     }
-   }
-
-   Future<Response> syncUsers(Request request) async {
-     try {
-       final result = await _user.syncPhorgeUsers.execute();
-       final count = result.getOrElse((l) => throw Exception(l.message));
-
-       // Trigger background discovery for all users (DAB-40)
-       unawaited(sl<IdentityDiscoveryService>().runFullDiscovery());
-
-       return Response.ok(
-         body: Body.fromString(
-           jsonEncode({
-             'data': {'createdCount': count},
-             'meta': {
-               'dataType': 'sync_result',
-               'timestamp': DateTime.now().toIso8601String(),
-             },
-           }),
-           mimeType: MimeType.json,
-         ),
-       );
-     } catch (e) {
-       return Response.internalServerError(
-         body: Body.fromString(
-           jsonEncode({'error': e.toString()}),
-           mimeType: MimeType.json,
-         ),
-       );
-     }
-   }
- }
+}

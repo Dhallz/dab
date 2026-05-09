@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
-import '../../dtos/discord/discord_message_dto.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/discord/discord_message_dto.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Raw I/O Handler for Discord Message retrieval.

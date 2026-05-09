@@ -1,5 +1,5 @@
 import 'package:dab_api/src/domain/mappers/github/github_commit_mapper.dart';
-import 'package:dab_api/src/infrastructure/dtos/github/github_commit_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/github/github_commit_dto.dart';
 import 'package:test/test.dart';
 
 import '../../../test_factories.dart';

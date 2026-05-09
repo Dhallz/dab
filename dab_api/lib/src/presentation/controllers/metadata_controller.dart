@@ -17,35 +17,33 @@ class MetadataController {
 
   Future<Response> getProviders(Request request) async {
     final userId = userIdProperty.get(request);
-    print('User $userId fetching metadata...');
-
-    try {
-      final metadata = await _metadata.getProviderMetadata.execute(userId);
-      final jsonList = metadata.map((m) => m.toMap()).toList();
-
-      return Response.ok(
-        body: Body.fromString(
-          jsonEncode({
-            'data': jsonList,
-            'meta': {
-              'dataType': 'list:provider_metadata',
-              'timestamp': DateTime.now().toIso8601String(),
-            },
-          }),
-          mimeType: MimeType.json,
-        ),
-      );
-    } catch (e) {
-      return Response.internalServerError(
+    final result = await _metadata.getProviderMetadata.execute(userId);
+    return result.fold(
+      (failure) => Response.internalServerError(
         body: Body.fromString(
           jsonEncode({
             'error': 'Failed to fetch metadata',
-            'details': e.toString(),
+            'details': failure.message,
           }),
           mimeType: MimeType.json,
         ),
-      );
-    }
+      ),
+      (metadata) {
+        final jsonList = metadata.map((m) => m.toMap()).toList();
+        return Response.ok(
+          body: Body.fromString(
+            jsonEncode({
+              'data': jsonList,
+              'meta': {
+                'dataType': 'list:provider_metadata',
+                'timestamp': DateTime.now().toIso8601String(),
+              },
+            }),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+    );
   }
 
   Future<Response> getCapabilities(Request request) async {
@@ -77,36 +75,37 @@ class MetadataController {
   }
 
   Future<Response> getConfigs(Request request) async {
-    try {
-      final configs = await _metadata.getProviderConfigs.execute();
-      final jsonList = configs.map((c) => c.toMap()).toList();
-      final statusResult = await _metadata.getSystemStatus.execute();
-      final isSystemConfigured = statusResult.getOrElse((_) => false);
-
-      return Response.ok(
-        body: Body.fromString(
-          jsonEncode({
-            'data': jsonList,
-            'meta': {
-              'dataType': 'list:provider_config',
-              'isSystemConfigured': isSystemConfigured,
-              'timestamp': DateTime.now().toIso8601String(),
-            },
-          }),
-          mimeType: MimeType.json,
-        ),
-      );
-    } catch (e) {
+    final result = await _metadata.getProviderConfigs.execute();
+    if (result.isLeft()) {
+      final failure = result.getLeft().toNullable()!;
       return Response.internalServerError(
         body: Body.fromString(
           jsonEncode({
             'error': 'Failed to fetch provider configurations',
-            'details': e.toString(),
+            'details': failure.message,
           }),
           mimeType: MimeType.json,
         ),
       );
     }
+    final configs = result.getRight().toNullable()!;
+    final jsonList = configs.map((c) => c.toMap()).toList();
+    final statusResult = await _metadata.getSystemStatus.execute();
+    final isSystemConfigured = statusResult.getOrElse((_) => false);
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': jsonList,
+          'meta': {
+            'dataType': 'list:provider_config',
+            'isSystemConfigured': isSystemConfigured,
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
   }
 
   Future<Response> getStatus(Request request) async {

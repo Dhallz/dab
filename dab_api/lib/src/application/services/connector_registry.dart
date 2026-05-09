@@ -1,5 +1,5 @@
 import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 
 /// [ARCH: APPLICATION]
 /// ROLE: A structural container pairing a Source (I/O) with a Mapper (Logic).

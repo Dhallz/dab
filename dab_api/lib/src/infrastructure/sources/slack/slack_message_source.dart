@@ -5,11 +5,11 @@ import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
-import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failure.dart';
-import '../../dtos/slack/slack_message_dto.dart';
+import 'package:dab_api/src/domain/entities/provider_payloads/slack/slack_message_dto.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Raw I/O Handler for Slack Message retrieval.

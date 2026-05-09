@@ -17,7 +17,7 @@ alwaysApply: false
 
 ```
 dab_api/lib/src/
-├── domain/            ← Entities, interfaces (I*), domain mappers — ZERO external imports
+├── domain/            ← Entities, provider_payloads/, ports/, I*, mappers — ZERO infra imports
 ├── application/       ← Use cases, services, ConnectorRegistry
 │   ├── services/
 │   ├── usecases/

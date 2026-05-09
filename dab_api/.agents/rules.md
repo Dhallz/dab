@@ -17,7 +17,7 @@ description: Package-specific rules for DAB API
 
 ```
 dab_api/lib/src/
-├── domain/            ← Entities, interfaces (I*), domain mappers — ZERO external imports
+├── domain/            ← Entities (incl. entities/provider_payloads/), ports/, I* repos, mappers — ZERO infra imports
 ├── application/       ← Use cases, services, ConnectorRegistry
 │   ├── services/
 │   ├── usecases/

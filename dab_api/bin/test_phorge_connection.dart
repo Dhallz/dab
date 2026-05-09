@@ -63,7 +63,12 @@ void main() async {
   final mockConfigRepo = _MockProviderConfigRepo();
 
   // Application Orchestrator
-  final fetcher = UnifiedActivityFetcher(registry, mockConfigRepo, mockUserRepo);
+  final fetcher = UnifiedActivityFetcher(
+    registry,
+    mockConfigRepo,
+    mockUserRepo,
+    (_, {String level = 'INFO', Map<String, dynamic>? extra}) {},
+  );
 
   try {
     print('==========================================');

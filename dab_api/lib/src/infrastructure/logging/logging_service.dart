@@ -3,6 +3,15 @@ import 'dart:convert';
 import 'package:relic/relic.dart';
 
 class LoggingService {
+  /// Instance API for DI; identical output to [log].
+  void record(
+    String message, {
+    String level = 'INFO',
+    Map<String, dynamic>? extra,
+  }) {
+    log(message, level: level, extra: extra);
+  }
+
   static void log(
     String message, {
     String level = 'INFO',

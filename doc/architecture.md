@@ -14,7 +14,7 @@ Domain  ──►  Application  ──►  Infrastructure  ──►  Presentati
 | Layer | Role | Import Constraint |
 |---|---|---|
 | **Domain** | Pure business entities, interfaces, mappers | **Zero** external or cross-layer imports |
-| **Application** | Use cases, service orchestration | May import Domain; never imports Infrastructure directly |
+| **Application** | Use cases, service orchestration | May import Domain; avoids importing Infrastructure (composition root / use-case specifics may still reference infrastructure types sparingly) |
 | **Infrastructure** | DB, HTTP, caches, protocols | Implements Domain contracts; never leaks upward |
 | **Presentation** | API controllers / Flutter UI | Delegates entirely to Application; holds no business logic |
 
@@ -35,9 +35,10 @@ dab/
 ```
 dab_api/lib/src/
 ├── domain/
-│   ├── entities/        ← Subject Folders: activity/, group/, provider/, user/
+│   ├── entities/        ← Core model + provider_payloads/ (mapper input shapes)
+│   ├── ports/           ← e.g. IActivitySource<T> — implemented by infrastructure sources
 │   ├── repositories/    ← Abstract interfaces prefixed I*
-│   ├── mappers/         ← IActivityMapper — transforms provider DTOs to domain Activity
+│   ├── mappers/         ← IActivityMapper — transforms provider payloads to Activity
 │   └── services/        ← Domain-level service contracts
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
@@ -45,10 +46,10 @@ dab_api/lib/src/
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
 │   ├── protocols/       ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
-│   ├── sources/         ← IActivitySource implementations and raw fetchers
+│   ├── sources/         ← IActivitySource<T> implementations (domain port)
 │   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
 │   ├── database/        ← Drift schema, DAOs, migrations
-│   ├── dtos/            ← Provider-specific Data Transfer Objects (including Phorge Conduit DTOs)
+│   ├── dtos/            ← Residual wire DTOs (e.g. Phorge Conduit parse shapes); mapper inputs live in domain/entities/provider_payloads/
 │   ├── http/            ← HTTP client helpers
 │   ├── security/        ← JWT, bcrypt
 │   ├── config/          ← Config, env loading
