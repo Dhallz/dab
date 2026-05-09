@@ -14,6 +14,7 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
   static AppSettingsMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AppSettingsMapper._());
+      AppThemeVariantMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -21,12 +22,27 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
   @override
   final String id = 'AppSettings';
 
-  static ThemeMode _$themeMode(AppSettings v) => v.themeMode;
-  static const Field<AppSettings, ThemeMode> _f$themeMode = Field(
-    'themeMode',
-    _$themeMode,
+  static AppThemeVariant _$appThemeVariant(AppSettings v) => v.appThemeVariant;
+  static const Field<AppSettings, AppThemeVariant> _f$appThemeVariant = Field(
+    'appThemeVariant',
+    _$appThemeVariant,
     opt: true,
-    def: ThemeMode.system,
+    def: AppThemeVariant.dab,
+  );
+  static String? _$localeCode(AppSettings v) => v.localeCode;
+  static const Field<AppSettings, String> _f$localeCode = Field(
+    'localeCode',
+    _$localeCode,
+    opt: true,
+  );
+  static Map<String, List<String>> _$islandBarSelections(AppSettings v) =>
+      v.islandBarSelections;
+  static const Field<AppSettings, Map<String, List<String>>>
+  _f$islandBarSelections = Field(
+    'islandBarSelections',
+    _$islandBarSelections,
+    opt: true,
+    def: appSettingsDefaultIslandBarSelections,
   );
   static String? _$syncToken(AppSettings v) => v.syncToken;
   static const Field<AppSettings, String> _f$syncToken = Field(
@@ -37,13 +53,17 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
 
   @override
   final MappableFields<AppSettings> fields = const {
-    #themeMode: _f$themeMode,
+    #appThemeVariant: _f$appThemeVariant,
+    #localeCode: _f$localeCode,
+    #islandBarSelections: _f$islandBarSelections,
     #syncToken: _f$syncToken,
   };
 
   static AppSettings _instantiate(DecodingData data) {
     return AppSettings(
-      themeMode: data.dec(_f$themeMode),
+      appThemeVariant: data.dec(_f$appThemeVariant),
+      localeCode: data.dec(_f$localeCode),
+      islandBarSelections: data.dec(_f$islandBarSelections),
       syncToken: data.dec(_f$syncToken),
     );
   }
@@ -108,7 +128,19 @@ extension AppSettingsValueCopy<$R, $Out>
 
 abstract class AppSettingsCopyWith<$R, $In extends AppSettings, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({ThemeMode? themeMode, String? syncToken});
+  MapCopyWith<
+    $R,
+    String,
+    List<String>,
+    ObjectCopyWith<$R, List<String>, List<String>>
+  >
+  get islandBarSelections;
+  $R call({
+    AppThemeVariant? appThemeVariant,
+    String? localeCode,
+    Map<String, List<String>>? islandBarSelections,
+    String? syncToken,
+  });
   AppSettingsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -121,15 +153,40 @@ class _AppSettingsCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AppSettings> $mapper =
       AppSettingsMapper.ensureInitialized();
   @override
-  $R call({ThemeMode? themeMode, Object? syncToken = $none}) => $apply(
+  MapCopyWith<
+    $R,
+    String,
+    List<String>,
+    ObjectCopyWith<$R, List<String>, List<String>>
+  >
+  get islandBarSelections => MapCopyWith(
+    $value.islandBarSelections,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(islandBarSelections: v),
+  );
+  @override
+  $R call({
+    AppThemeVariant? appThemeVariant,
+    Object? localeCode = $none,
+    Map<String, List<String>>? islandBarSelections,
+    Object? syncToken = $none,
+  }) => $apply(
     FieldCopyWithData({
-      if (themeMode != null) #themeMode: themeMode,
+      if (appThemeVariant != null) #appThemeVariant: appThemeVariant,
+      if (localeCode != $none) #localeCode: localeCode,
+      if (islandBarSelections != null)
+        #islandBarSelections: islandBarSelections,
       if (syncToken != $none) #syncToken: syncToken,
     }),
   );
   @override
   AppSettings $make(CopyWithData data) => AppSettings(
-    themeMode: data.get(#themeMode, or: $value.themeMode),
+    appThemeVariant: data.get(#appThemeVariant, or: $value.appThemeVariant),
+    localeCode: data.get(#localeCode, or: $value.localeCode),
+    islandBarSelections: data.get(
+      #islandBarSelections,
+      or: $value.islandBarSelections,
+    ),
     syncToken: data.get(#syncToken, or: $value.syncToken),
   );
 

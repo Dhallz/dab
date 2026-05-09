@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../../../core/styles/app_icons.dart';
+import '../../../core/styles/app_theme.dart';
 
 import '../models/dab_view_tab.dart';
 import 'dab_tab_item.dart';
@@ -18,16 +19,23 @@ class DabTopMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final glass = Theme.of(context).extension<AppGlassTheme>();
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        filter: ImageFilter.blur(
+          sigmaX: glass?.blurSigma ?? 30,
+          sigmaY: glass?.blurSigma ?? 30,
+        ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withOpacity(0.7),
+            color: glass?.surface ?? scheme.surfaceContainer.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(
+              color: glass?.border ?? scheme.outline.withValues(alpha: 0.2),
+            ),
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,

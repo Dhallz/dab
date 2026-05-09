@@ -11,7 +11,6 @@ import '../../../../../domain/entities/provider/provider_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
-import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/features/app/app_notifier.dart';
 import 'activity_content.dart';
 import 'activity_footer.dart';
@@ -93,6 +92,7 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final configs = ref.watch(appNotifierProvider.select((s) => s.configs));
     final style = widget.activity.style(context);
     final brandColor = widget.activity.brandColor(context);
@@ -148,14 +148,14 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                   child: Container(
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow.withValues(
-                        alpha: _isHovering ? 0.6 : 0.4,
+                      color: cs.surfaceContainerLow.withValues(
+                        alpha: _isHovering ? 0.75 : 0.55,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: _isHovering
                             ? style.color.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.1),
+                            : cs.outline.withValues(alpha: 0.35),
                       ),
                       boxShadow: _isHovering
                           ? [
@@ -229,9 +229,9 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                             Container(
                                               width: 4,
                                               height: 4,
-                                              decoration: const BoxDecoration(
-                                                color: AppColors
-                                                    .surfaceContainerHighest,
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    cs.surfaceContainerHighest,
                                                 shape: BoxShape.circle,
                                               ),
                                             ),
@@ -240,10 +240,9 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                               _formatDate(
                                                 widget.activity.createdAt,
                                               ),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 10,
-                                                color: AppColors
-                                                    .onSurfaceVariantLow,
+                                                color: cs.onSurfaceVariant,
                                               ),
                                             ),
                                           ],
@@ -253,10 +252,10 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                           displayTitle,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.onSurface,
+                                            color: cs.onSurface,
                                             letterSpacing: -0.2,
                                           ),
                                         ),
@@ -266,10 +265,9 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                             commitSha,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
-                                              color:
-                                                  AppColors.onSurfaceVariantLow,
+                                              color: cs.onSurfaceVariant,
                                               fontFamily: 'Roboto Mono',
                                             ),
                                           ),

@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
@@ -23,13 +22,14 @@ class AdminIslandStatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: tooltip,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer.withValues(alpha: 0.55),
+          color: cs.surfaceContainer.withValues(alpha: 0.55),
           borderRadius: AppLayout.borderMedium,
-          border: Border.all(color: AppColors.outline.withValues(alpha: 0.45)),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.45)),
         ),
         child: Padding(
           // Explorer calendar buttons use compact vertical-only padding.
@@ -40,13 +40,13 @@ class AdminIslandStatTile extends StatelessWidget {
               Icon(
                 icon,
                 size: 13,
-                color: iconColor ?? AppColors.onSurfaceVariant,
+                color: iconColor ?? cs.onSurfaceVariant,
               ),
               const SizedBox(height: 3),
               Text(
                 value,
                 style: AppTextStyles.titleSmall.copyWith(
-                  color: AppColors.onSurface,
+                  color: cs.onSurface,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.2,
                 ),
@@ -57,7 +57,7 @@ class AdminIslandStatTile extends StatelessWidget {
               Text(
                 title.toUpperCase(),
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                   fontSize: 8,

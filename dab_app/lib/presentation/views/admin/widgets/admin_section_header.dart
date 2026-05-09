@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Header for a section in the Admin Console.
@@ -15,15 +14,16 @@ class AdminSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: AppColors.white,
+            color: cs.onSurface,
             letterSpacing: -1,
           ),
         ),
@@ -32,7 +32,7 @@ class AdminSectionHeader extends StatelessWidget {
           subtitle,
           style: TextStyle(
             fontSize: 16,
-            color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.8),
+            color: cs.onSurfaceVariant.withValues(alpha: 0.9),
           ),
         ),
       ],

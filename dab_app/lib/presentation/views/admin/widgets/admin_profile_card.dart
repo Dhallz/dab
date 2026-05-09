@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AdminProfileCard extends StatelessWidget {
@@ -6,21 +5,22 @@ class AdminProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.05),
+        color: cs.onSurface.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.accentIndigo,
+            backgroundColor: cs.primary,
             child: Icon(
               Icons.admin_panel_settings,
-              color: Colors.white,
+              color: cs.onPrimary,
               size: 20,
             ),
           ),
@@ -29,10 +29,10 @@ class AdminProfileCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Admin Console',
                   style: TextStyle(
-                    color: AppColors.white,
+                    color: cs.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -40,7 +40,7 @@ class AdminProfileCard extends StatelessWidget {
                 Text(
                   'v1.0.0-beta',
                   style: TextStyle(
-                    color: AppColors.onSurfaceVariantLow,
+                    color: cs.onSurfaceVariant,
                     fontSize: 11,
                   ),
                 ),

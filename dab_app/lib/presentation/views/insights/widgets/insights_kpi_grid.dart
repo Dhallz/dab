@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../insights_state.dart';
@@ -74,6 +73,7 @@ class _KpiTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InsightsGlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +82,7 @@ class _KpiTile extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -91,7 +91,7 @@ class _KpiTile extends StatelessWidget {
           Text(
             value,
             style: AppTextStyles.headlineSmall.copyWith(
-              color: AppColors.onSurfaceHighlight,
+              color: cs.onSurface,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

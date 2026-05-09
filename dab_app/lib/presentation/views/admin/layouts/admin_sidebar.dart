@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
@@ -15,14 +14,15 @@ class AdminSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(adminNotifierProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
     return AppSidebar(
       children: [
-        const Text(
+        Text(
           'MANAGEMENT',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: AppColors.onSurfaceVariantLow,
+            color: cs.onSurfaceVariant,
             letterSpacing: 1.2,
           ),
         ),

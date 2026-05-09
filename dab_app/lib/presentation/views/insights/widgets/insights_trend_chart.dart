@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/provider_styles.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
@@ -39,6 +38,7 @@ class InsightsTrendChart extends StatelessWidget {
     final providerKeys = providerCountsByDay.keys.toList()..sort();
     final providerStyles =
         Theme.of(context).extension<ProviderStyles>() ?? ProviderStyles.dark();
+    final cs = Theme.of(context).colorScheme;
     final series = providerKeys.map((provider) {
       final spots = <FlSpot>[
         for (final day in days)
@@ -66,7 +66,7 @@ class InsightsTrendChart extends StatelessWidget {
           Text(
             context.l10n.insightsTrendTitle,
             style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.onSurfaceHighlight,
+              color: cs.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.s),
@@ -91,7 +91,7 @@ class InsightsTrendChart extends StatelessWidget {
                         Text(
                           item.provider,
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -113,7 +113,7 @@ class InsightsTrendChart extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: (maxY / 4).clamp(1, 100000),
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: AppColors.outline.withValues(alpha: 0.35),
+                    color: cs.outline.withValues(alpha: 0.35),
                     strokeWidth: 1,
                   ),
                 ),
@@ -127,7 +127,7 @@ class InsightsTrendChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) => Text(
                         value.toInt().toString(),
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -147,7 +147,7 @@ class InsightsTrendChart extends StatelessWidget {
                     LineChartBarData(
                       spots: const [FlSpot(0, 0)],
                       isCurved: true,
-                      color: AppColors.primary,
+                      color: cs.primary,
                       barWidth: 2,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
@@ -156,8 +156,8 @@ class InsightsTrendChart extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppColors.primary.withValues(alpha: 0.2),
-                            AppColors.primary.withValues(alpha: 0.01),
+                            cs.primary.withValues(alpha: 0.2),
+                            cs.primary.withValues(alpha: 0.01),
                           ],
                         ),
                       ),
@@ -173,7 +173,7 @@ class InsightsTrendChart extends StatelessWidget {
                         getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
                           radius: 2.5,
                           color: item.color,
-                          strokeColor: AppColors.onSurfaceHighlight,
+                          strokeColor: cs.surface,
                           strokeWidth: 1,
                         ),
                       ),

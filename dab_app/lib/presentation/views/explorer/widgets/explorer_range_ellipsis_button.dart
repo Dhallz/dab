@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_layout.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -21,6 +20,7 @@ class _ExplorerRangeEllipsisButtonState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -33,7 +33,7 @@ class _ExplorerRangeEllipsisButtonState
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: _isHovered
-                ? Colors.white.withValues(alpha: 0.05)
+                ? cs.onSurface.withValues(alpha: 0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppLayout.radiusMedium),
           ),
@@ -45,7 +45,7 @@ class _ExplorerRangeEllipsisButtonState
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.9),
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 4),
@@ -54,7 +54,7 @@ class _ExplorerRangeEllipsisButtonState
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.9),
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.9),
                 ),
               ),
             ],

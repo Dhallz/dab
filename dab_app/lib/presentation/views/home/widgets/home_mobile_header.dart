@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 import 'home_logo.dart';
 
@@ -12,6 +11,7 @@ class HomeMobileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
         final showExpandedName = constraints.maxWidth >= 380;
@@ -33,11 +33,11 @@ class HomeMobileHeader extends StatelessWidget {
               const SizedBox(width: AppSpacing.m),
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                backgroundColor: scheme.primary.withValues(alpha: 0.2),
                 child: Text(
                   userInitials,
                   style: TextStyle(
-                    color: AppColors.onSurfaceHighlight,
+                    color: scheme.onSurface,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),

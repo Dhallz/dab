@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/localization/l10n_extension.dart';
-import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/core/styles/app_icons.dart';
 import 'activity_avatar.dart';
 import 'activity_intensity_bar.dart';
@@ -25,6 +24,7 @@ class ActivityFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final style = activity.style(context);
     final hasMultiple = activities != null && activities!.length > 1;
 
@@ -38,9 +38,9 @@ class ActivityFooter extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           _formatAuthorLabel(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppColors.onSurfaceVariant,
+            color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -108,7 +108,7 @@ class ActivityFooter extends StatelessWidget {
     }
 
     final totalCount = activities!.length;
-    final heatColor = _getHeatColor(totalCount);
+    final heatColor = _getHeatColor(totalCount, Theme.of(context).colorScheme.primary);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -145,11 +145,11 @@ class ActivityFooter extends StatelessWidget {
     );
   }
 
-  Color _getHeatColor(int count) {
+  Color _getHeatColor(int count, Color primaryFallback) {
     if (count >= 8) return const Color(0xFFFF1744); // Red
     if (count >= 6) return const Color(0xFFFF3D00); // Orange
     if (count >= 4) return const Color(0xFFAEEA00); // Lime
     if (count >= 2) return const Color(0xFF00E5FF); // Cyan
-    return AppColors.primary; // Fallback
+    return primaryFallback;
   }
 }

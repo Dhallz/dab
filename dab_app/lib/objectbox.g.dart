@@ -68,7 +68,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(2, 4174291376144611737),
     name: 'AppSettingsRecord',
-    lastPropertyId: const obx_int.IdUid(3, 3503005441903137361),
+    lastPropertyId: const obx_int.IdUid(5, 3281782940868744179),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -86,6 +86,18 @@ final _entities = <obx_int.ModelEntity>[
       obx_int.ModelProperty(
         id: const obx_int.IdUid(3, 3503005441903137361),
         name: 'syncToken',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 4782039018344160783),
+        name: 'localeCode',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 3281782940868744179),
+        name: 'islandBarSelectionsJson',
         type: 9,
         flags: 0,
       ),
@@ -406,10 +418,18 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final syncTokenOffset = object.syncToken == null
             ? null
             : fbb.writeString(object.syncToken!);
-        fbb.startTable(4);
+        final localeCodeOffset = object.localeCode == null
+            ? null
+            : fbb.writeString(object.localeCode!);
+        final islandBarSelectionsJsonOffset = fbb.writeString(
+          object.islandBarSelectionsJson,
+        );
+        fbb.startTable(6);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, themeModeOffset);
         fbb.addOffset(2, syncTokenOffset);
+        fbb.addOffset(3, localeCodeOffset);
+        fbb.addOffset(4, islandBarSelectionsJsonOffset);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -425,12 +445,20 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final themeModeParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 6, '');
+        final localeCodeParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 10);
+        final islandBarSelectionsJsonParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
         final syncTokenParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGetNullable(buffer, rootOffset, 8);
         final object = AppSettingsRecord(
           id: idParam,
           themeMode: themeModeParam,
+          localeCode: localeCodeParam,
+          islandBarSelectionsJson: islandBarSelectionsJsonParam,
           syncToken: syncTokenParam,
         );
 
@@ -720,6 +748,15 @@ class AppSettingsRecord_ {
   static final syncToken = obx.QueryStringProperty<AppSettingsRecord>(
     _entities[1].properties[2],
   );
+
+  /// See [AppSettingsRecord.localeCode].
+  static final localeCode = obx.QueryStringProperty<AppSettingsRecord>(
+    _entities[1].properties[3],
+  );
+
+  /// See [AppSettingsRecord.islandBarSelectionsJson].
+  static final islandBarSelectionsJson =
+      obx.QueryStringProperty<AppSettingsRecord>(_entities[1].properties[4]);
 }
 
 /// [AuthCredentialRecord] entity fields to define ObjectBox queries.

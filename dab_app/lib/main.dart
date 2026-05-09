@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as pv;
 
+import 'domain/entities/system/app_settings.dart';
 import 'domain/repositories/abs_i_auth_repository.dart';
 import 'domain/repositories/abs_i_monitoring_repository.dart';
 import 'presentation/core/localization/app_localizations.dart';
@@ -68,9 +69,9 @@ class DabApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: AppTheme.dark,
-      darkTheme: AppTheme.dark,
-      themeMode: state.settings.themeMode,
+      locale: state.settings.resolvedLocale,
+      theme: AppTheme.themeFor(state.settings.appThemeVariant),
+      themeMode: ThemeMode.light,
     );
   }
 }

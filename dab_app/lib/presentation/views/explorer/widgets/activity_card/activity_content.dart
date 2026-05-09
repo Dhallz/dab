@@ -3,7 +3,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
-import '../../../../../presentation/core/styles/app_colors.dart';
 import 'activity_history_list.dart';
 
 class ActivityContent extends StatelessWidget {
@@ -22,6 +21,7 @@ class ActivityContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final hasHistory = activities != null && activities!.length > 1;
     final displayContent = _resolveDisplayContent(activity);
     final plainPreview = _getPlainText(displayContent);
@@ -43,6 +43,7 @@ class ActivityContent extends StatelessWidget {
                           child: MarkdownBody(
                             data: _processMarkdown(displayContent),
                             styleSheet: _getMarkdownStyleSheet(
+                              context,
                               isExpanded,
                               accentColor,
                             ),
@@ -59,9 +60,9 @@ class ActivityContent extends StatelessWidget {
                           plainPreview,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.onSurfaceVariantLow,
+                            color: cs.onSurfaceVariant,
                             height: 1.5,
                           ),
                         )
@@ -120,47 +121,52 @@ class ActivityContent extends StatelessWidget {
     return processed;
   }
 
-  MarkdownStyleSheet _getMarkdownStyleSheet(bool expanded, Color accentColor) {
+  MarkdownStyleSheet _getMarkdownStyleSheet(
+    BuildContext context,
+    bool expanded,
+    Color accentColor,
+  ) {
+    final cs = Theme.of(context).colorScheme;
     return MarkdownStyleSheet(
       p: TextStyle(
         fontSize: 14,
-        color: AppColors.onSurfaceVariantLow,
+        color: cs.onSurfaceVariant,
         height: 1.5,
         fontWeight: expanded ? FontWeight.w500 : FontWeight.normal,
       ),
-      h1: const TextStyle(
+      h1: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: AppColors.onSurface,
+        color: cs.onSurface,
       ),
-      h2: const TextStyle(
+      h2: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: AppColors.onSurface,
+        color: cs.onSurface,
       ),
-      h3: const TextStyle(
+      h3: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.onSurface,
+        color: cs.onSurface,
       ),
-      strong: const TextStyle(
+      strong: TextStyle(
         fontWeight: FontWeight.bold,
-        color: AppColors.onSurface,
+        color: cs.onSurface,
       ),
       em: const TextStyle(fontStyle: FontStyle.italic),
       code: TextStyle(
-        backgroundColor: Colors.white.withValues(alpha: 0.05),
+        backgroundColor: cs.onSurface.withValues(alpha: 0.06),
         color: accentColor,
         fontSize: 12,
         fontFamily: 'Roboto Mono',
       ),
       codeblockDecoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.2),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
-      blockquote: const TextStyle(
-        color: AppColors.onSurfaceVariantLow,
+      blockquote: TextStyle(
+        color: cs.onSurfaceVariant,
         fontStyle: FontStyle.italic,
       ),
       blockquoteDecoration: BoxDecoration(
@@ -171,7 +177,7 @@ class ActivityContent extends StatelessWidget {
         decoration: TextDecoration.underline,
         decorationColor: accentColor.withValues(alpha: 0.5),
       ),
-      listBullet: const TextStyle(color: AppColors.onSurfaceVariantLow),
+      listBullet: TextStyle(color: cs.onSurfaceVariant),
     );
   }
 }

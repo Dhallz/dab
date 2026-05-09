@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 
 import 'home_logo.dart';
@@ -15,6 +14,7 @@ class HomeTopNav extends StatelessWidget {
   final int adminTabBadgeCount;
   final String userName;
   final String userInitials;
+  final VoidCallback onOpenSettings;
 
   const HomeTopNav({
     super.key,
@@ -23,10 +23,12 @@ class HomeTopNav extends StatelessWidget {
     this.adminTabBadgeCount = 0,
     required this.userName,
     required this.userInitials,
+    required this.onOpenSettings,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
@@ -36,9 +38,9 @@ class HomeTopNav extends StatelessWidget {
             vertical: AppSpacing.m,
           ),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainer.withValues(alpha: 0.6),
+            color: scheme.surfaceContainer.withValues(alpha: 0.6),
             border: Border(
-              bottom: BorderSide(color: AppColors.white.withValues(alpha: 0.1)),
+              bottom: BorderSide(color: scheme.outline.withValues(alpha: 0.25)),
             ),
           ),
           child: Row(
@@ -55,7 +57,11 @@ class HomeTopNav extends StatelessWidget {
                   ),
                 ],
               ),
-              HomeRightSection(userName: userName, userInitials: userInitials),
+              HomeRightSection(
+                userName: userName,
+                userInitials: userInitials,
+                onOpenSettings: onOpenSettings,
+              ),
             ],
           ),
         ),

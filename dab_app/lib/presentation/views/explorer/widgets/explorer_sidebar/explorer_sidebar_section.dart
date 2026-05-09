@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/styles/app_text_styles.dart';
@@ -21,6 +20,7 @@ class ExplorerSidebarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,7 +34,8 @@ class ExplorerSidebarSection extends StatelessWidget {
                   child: Text(
                     title.toUpperCase(),
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.outlineVariant,
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -42,7 +43,7 @@ class ExplorerSidebarSection extends StatelessWidget {
                 Icon(
                   isExpanded ? AppIcons.visibilityOff : AppIcons.visibility,
                   size: AppSpacing.s,
-                  color: AppColors.onSurfaceVariantLow,
+                  color: cs.onSurfaceVariant,
                 ),
               ],
             ),

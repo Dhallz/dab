@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_layout.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -27,6 +26,7 @@ class _ExplorerModeToggleButtonState extends State<ExplorerModeToggleButton> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -39,11 +39,11 @@ class _ExplorerModeToggleButtonState extends State<ExplorerModeToggleButton> {
           padding: EdgeInsets.symmetric(vertical: widget.isSelected ? 8 : 6),
           decoration: BoxDecoration(
             color: _isHovered && !widget.isSelected
-                ? Colors.white.withValues(alpha: 0.05)
+                ? cs.onSurface.withValues(alpha: 0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppLayout.radiusMedium),
             border: widget.isSelected
-                ? Border.all(color: AppColors.primary.withValues(alpha: 0.35))
+                ? Border.all(color: cs.primary.withValues(alpha: 0.35))
                 : null,
           ),
           child: Center(
@@ -53,8 +53,8 @@ class _ExplorerModeToggleButtonState extends State<ExplorerModeToggleButton> {
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 color: widget.isSelected
-                    ? AppColors.primary
-                    : AppColors.onSurfaceVariant.withValues(alpha: 0.75),
+                    ? cs.primary
+                    : cs.onSurfaceVariant.withValues(alpha: 0.75),
               ),
             ),
           ),

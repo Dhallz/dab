@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 
@@ -9,16 +9,19 @@ class HomeProfile extends StatelessWidget {
   final bool showName;
   final String userName;
   final String userInitials;
+  final VoidCallback onOpenSettings;
 
   const HomeProfile({
     super.key,
     this.showName = true,
     required this.userName,
     required this.userInitials,
+    required this.onOpenSettings,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xxs,
@@ -36,30 +39,46 @@ class HomeProfile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.onSurfaceVariantLow,
+                  color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
             const SizedBox(width: AppSpacing.s),
           ],
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary.withValues(alpha: 0.2),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.4),
+          PopupMenuButton<_HomeProfileMenuAction>(
+            tooltip: context.l10n.settingsTitle,
+            onSelected: (action) {
+              switch (action) {
+                case _HomeProfileMenuAction.settings:
+                  onOpenSettings();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<_HomeProfileMenuAction>(
+                value: _HomeProfileMenuAction.settings,
+                child: Text(context.l10n.settingsTitle),
               ),
-            ),
-            child: Center(
-              child: Text(
-                userInitials,
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+            ],
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: scheme.primary.withValues(alpha: 0.2),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  userInitials,
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -69,3 +88,5 @@ class HomeProfile extends StatelessWidget {
     );
   }
 }
+
+enum _HomeProfileMenuAction { settings }

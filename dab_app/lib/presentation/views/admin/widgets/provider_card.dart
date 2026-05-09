@@ -1,5 +1,4 @@
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_spacing.dart';
@@ -135,19 +134,24 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     final status = slice.connection;
     final config = slice.config;
     final isExpanded = _showDetails;
+    final cs = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    // Elevation shadow only: do not use [AppLayout.glassBlur] here — that sigma is
+    // for backdrop blur; large blur + shadow color reads as muddy stripes between list cards.
+    final cardShadows = <BoxShadow>[
+      BoxShadow(
+        color: cs.shadow.withValues(alpha: isLight ? 0.06 : 0.16),
+        blurRadius: isLight ? 10 : 14,
+        offset: Offset(0, isLight ? 2 : 4),
+      ),
+    ];
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: AppLayout.borderLarge,
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.45)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.25),
-            blurRadius: AppLayout.glassBlur,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: cs.outline.withValues(alpha: 0.45)),
+        boxShadow: cardShadows,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -160,15 +164,15 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.s),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainer.withValues(alpha: 0.9),
+                    color: cs.surfaceContainer.withValues(alpha: 0.9),
                     borderRadius: AppLayout.borderMedium,
                     border: Border.all(
-                      color: AppColors.outline.withValues(alpha: 0.35),
+                      color: cs.outline.withValues(alpha: 0.35),
                     ),
                   ),
                   child: Icon(
                     icon,
-                    color: AppColors.onSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                     size: AppLayout.iconMedium,
                   ),
                 ),
@@ -180,7 +184,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                       Text(
                         config.name,
                         style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.onSurfaceHighlight,
+                          color: cs.onSurface,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.25,
                         ),
@@ -189,7 +193,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                       Text(
                         config.id.toUpperCase(),
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.onSurfaceVariantLow,
+                          color: cs.onSurfaceVariant,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -213,12 +217,12 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                             notifier.testConnection(configToTest);
                           },
                     icon: status?.status.isLoading == true
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.primary,
+                              color: cs.primary,
                             ),
                           )
                         : Icon(
@@ -228,11 +232,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                     label: Text(
                       'Try',
                       style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: cs.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.m,
                       ),
@@ -250,7 +254,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                   label: Text(
                     _showDetails ? 'Hide fields' : 'Show fields',
                     style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.onSurfaceVariantLow,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                   style: TextButton.styleFrom(
@@ -264,10 +268,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                   child: Switch(
                     value: config.isActive,
                     onChanged: (val) => notifier.toggleProvider(config.id, val),
-                    activeThumbColor: AppColors.primary,
-                    activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-                    inactiveThumbColor: AppColors.onSurfaceVariantLow,
-                    inactiveTrackColor: AppColors.surfaceContainerHigh
+                    activeThumbColor: cs.primary,
+                    activeTrackColor: cs.primary.withValues(alpha: 0.35),
+                    inactiveThumbColor: cs.onSurfaceVariant,
+                    inactiveTrackColor: cs.surfaceContainerHigh
                         .withValues(alpha: 0.5),
                   ),
                 ),
@@ -294,7 +298,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                         Divider(
                           height: 1,
                           thickness: 1,
-                          color: AppColors.outline.withValues(alpha: 0.4),
+                          color: cs.outline.withValues(alpha: 0.4),
                         ),
                         SizedBox(height: AppSpacing.l),
                         ..._fields.map((field) {
@@ -310,7 +314,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                                 Text(
                                   field.label.toUpperCase(),
                                   style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.onSurfaceVariantLow,
+                                    color: cs.onSurfaceVariant,
                                     letterSpacing: 1.1,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -325,11 +329,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                                   minLines: isMultiValueField ? 3 : 1,
                                   maxLines: isMultiValueField ? 6 : 1,
                                   style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.onSurfaceHighlight,
+                                    color: cs.onSurface,
                                   ),
                                   decoration: InputDecoration(
                                     filled: true,
-                                    fillColor: AppColors.surfaceContainer
+                                    fillColor: cs.surfaceContainer
                                         .withValues(alpha: 0.65),
                                     hintText: 'Enter ${field.label}...',
                                     helperText: isMultiValueField
@@ -337,7 +341,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                                         : null,
                                     hintStyle: AppTextStyles.bodyMedium
                                         .copyWith(
-                                          color: AppColors.onSurfaceVariantLow
+                                          color: cs.onSurfaceVariant
                                               .withValues(alpha: 0.35),
                                         ),
                                     contentPadding: const EdgeInsets.symmetric(
@@ -350,8 +354,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: AppLayout.borderMedium,
-                                      borderSide: const BorderSide(
-                                        color: AppColors.primary,
+                                      borderSide: BorderSide(
+                                        color: cs.primary,
                                         width: 1.5,
                                       ),
                                     ),
@@ -366,8 +370,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                           width: double.infinity,
                           child: FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.onPrimary,
+                              backgroundColor: cs.primary,
+                              foregroundColor: cs.onPrimary,
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.m,
                               ),
@@ -389,7 +393,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                             child: Text(
                               'Save Provider Credentials',
                               style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.onPrimary,
+                                color: cs.onPrimary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

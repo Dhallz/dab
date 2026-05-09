@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../models/insights_detail_row.dart';
@@ -14,6 +13,7 @@ class InsightsDetailsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InsightsGlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -21,7 +21,7 @@ class InsightsDetailsTable extends StatelessWidget {
           Text(
             context.l10n.insightsDetailsTitle,
             style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.onSurfaceHighlight,
+              color: cs.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.s),
@@ -29,7 +29,7 @@ class InsightsDetailsTable extends StatelessWidget {
             Text(
               context.l10n.insightsNoData,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
             )
           else
@@ -44,7 +44,7 @@ class InsightsDetailsTable extends StatelessWidget {
                           child: Text(
                             '${_kindLabel(context, row.kind)}: ${row.label}',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.onSurface,
+                              color: cs.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -54,7 +54,7 @@ class InsightsDetailsTable extends StatelessWidget {
                         Text(
                           row.count.toString(),
                           style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.onSurfaceHighlight,
+                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s),
@@ -64,7 +64,7 @@ class InsightsDetailsTable extends StatelessWidget {
                             row.share,
                             textAlign: TextAlign.right,
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ),

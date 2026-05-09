@@ -45,6 +45,7 @@ class ExplorerDateSelector extends StatelessWidget {
             ? 48.0
             : (boundedHeight ? (maxH - 12).clamp(56.0, maxH) : 70.0);
 
+        final cs = Theme.of(context).colorScheme;
         return Align(
           alignment: Alignment.centerLeft,
           child: SizedBox(
@@ -58,10 +59,10 @@ class ExplorerDateSelector extends StatelessWidget {
                   width: itemWidth - (compact ? 6 : 10),
                   height: highlightH,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    color: cs.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                      color: cs.primary.withValues(alpha: 0.22),
                     ),
                   ),
                 ),

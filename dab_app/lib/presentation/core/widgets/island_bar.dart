@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../styles/app_colors.dart';
 import '../styles/app_layout.dart';
+import '../styles/app_theme.dart';
 
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: Shared top “island” for home branches — fixed size and position; only [content] swaps.
@@ -16,6 +16,8 @@ class IslandBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final glass = Theme.of(context).extension<AppGlassTheme>();
     return Padding(
       padding: AppLayout.islandBarOuterPadding,
       child: SizedBox(
@@ -25,19 +27,19 @@ class IslandBar extends StatelessWidget {
           borderRadius: AppLayout.borderLarge,
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: AppLayout.glassBlur,
-              sigmaY: AppLayout.glassBlur,
+              sigmaX: glass?.blurSigma ?? AppLayout.glassBlur,
+              sigmaY: glass?.blurSigma ?? AppLayout.glassBlur,
             ),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainer.withValues(alpha: 0.6),
+                color: glass?.surface ?? scheme.surfaceContainer.withValues(alpha: 0.6),
                 borderRadius: AppLayout.borderLarge,
                 border: Border.all(
-                  color: AppColors.outline.withValues(alpha: 0.35),
+                  color: glass?.border ?? scheme.outline.withValues(alpha: 0.35),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.25),
+                    color: glass?.shadow ?? scheme.shadow.withValues(alpha: 0.25),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),

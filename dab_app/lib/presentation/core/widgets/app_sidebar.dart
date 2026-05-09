@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../styles/app_theme.dart';
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
@@ -16,16 +17,21 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final glass = Theme.of(context).extension<AppGlassTheme>();
     return ClipRRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        filter: ImageFilter.blur(
+          sigmaX: glass?.blurSigma ?? 30,
+          sigmaY: glass?.blurSigma ?? 30,
+        ),
         child: Container(
           width: width,
           padding: padding,
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withOpacity(0.6),
+            color: glass?.surface ?? scheme.surfaceContainer.withValues(alpha: 0.6),
             border: Border(
-              right: BorderSide(color: Colors.white.withOpacity(0.1)),
+              right: BorderSide(color: glass?.border ?? scheme.outline.withValues(alpha: 0.2)),
             ),
           ),
           child: Column(

@@ -30,24 +30,43 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
     opt: true,
     def: ViewStatus.initial,
   );
-  static AppSettings _$settings(SettingsState v) => v.settings;
-  static const Field<SettingsState, AppSettings> _f$settings = Field(
-    'settings',
-    _$settings,
+  static AppSettings _$persistedSettings(SettingsState v) =>
+      v.persistedSettings;
+  static const Field<SettingsState, AppSettings> _f$persistedSettings = Field(
+    'persistedSettings',
+    _$persistedSettings,
     opt: true,
     def: const AppSettings(),
+  );
+  static AppSettings _$draftSettings(SettingsState v) => v.draftSettings;
+  static const Field<SettingsState, AppSettings> _f$draftSettings = Field(
+    'draftSettings',
+    _$draftSettings,
+    opt: true,
+    def: const AppSettings(),
+  );
+  static bool _$isDirty(SettingsState v) => v.isDirty;
+  static const Field<SettingsState, bool> _f$isDirty = Field(
+    'isDirty',
+    _$isDirty,
+    opt: true,
+    def: false,
   );
 
   @override
   final MappableFields<SettingsState> fields = const {
     #status: _f$status,
-    #settings: _f$settings,
+    #persistedSettings: _f$persistedSettings,
+    #draftSettings: _f$draftSettings,
+    #isDirty: _f$isDirty,
   };
 
   static SettingsState _instantiate(DecodingData data) {
     return SettingsState(
       status: data.dec(_f$status),
-      settings: data.dec(_f$settings),
+      persistedSettings: data.dec(_f$persistedSettings),
+      draftSettings: data.dec(_f$draftSettings),
+      isDirty: data.dec(_f$isDirty),
     );
   }
 
@@ -113,8 +132,14 @@ extension SettingsStateValueCopy<$R, $Out>
 
 abstract class SettingsStateCopyWith<$R, $In extends SettingsState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings;
-  $R call({ViewStatus? status, AppSettings? settings});
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get persistedSettings;
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get draftSettings;
+  $R call({
+    ViewStatus? status,
+    AppSettings? persistedSettings,
+    AppSettings? draftSettings,
+    bool? isDirty,
+  });
   SettingsStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -127,19 +152,36 @@ class _SettingsStateCopyWithImpl<$R, $Out>
   late final ClassMapperBase<SettingsState> $mapper =
       SettingsStateMapper.ensureInitialized();
   @override
-  AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings =>
-      $value.settings.copyWith.$chain((v) => call(settings: v));
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get persistedSettings =>
+      $value.persistedSettings.copyWith.$chain(
+        (v) => call(persistedSettings: v),
+      );
   @override
-  $R call({ViewStatus? status, AppSettings? settings}) => $apply(
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get draftSettings =>
+      $value.draftSettings.copyWith.$chain((v) => call(draftSettings: v));
+  @override
+  $R call({
+    ViewStatus? status,
+    AppSettings? persistedSettings,
+    AppSettings? draftSettings,
+    bool? isDirty,
+  }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
-      if (settings != null) #settings: settings,
+      if (persistedSettings != null) #persistedSettings: persistedSettings,
+      if (draftSettings != null) #draftSettings: draftSettings,
+      if (isDirty != null) #isDirty: isDirty,
     }),
   );
   @override
   SettingsState $make(CopyWithData data) => SettingsState(
     status: data.get(#status, or: $value.status),
-    settings: data.get(#settings, or: $value.settings),
+    persistedSettings: data.get(
+      #persistedSettings,
+      or: $value.persistedSettings,
+    ),
+    draftSettings: data.get(#draftSettings, or: $value.draftSettings),
+    isDirty: data.get(#isDirty, or: $value.isDirty),
   );
 
   @override

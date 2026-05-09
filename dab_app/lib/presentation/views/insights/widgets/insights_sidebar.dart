@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../core/widgets/app_sidebar.dart';
@@ -28,12 +27,13 @@ class InsightsSidebar extends ConsumerWidget {
     );
     final state = ref.read(insightsNotifierProvider);
     final notifier = ref.read(insightsNotifierProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
     return AppSidebar(
       children: [
         Text(
           context.l10n.insightsFiltersTitle,
           style: AppTextStyles.titleMedium.copyWith(
-            color: AppColors.onSurfaceHighlight,
+            color: cs.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.m),
@@ -48,7 +48,7 @@ class InsightsSidebar extends ConsumerWidget {
             title: Text(
               user.name,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurface,
+                color: cs.onSurface,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -67,7 +67,7 @@ class InsightsSidebar extends ConsumerWidget {
             title: Text(
               provider,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurface,
+                color: cs.onSurface,
               ),
             ),
           ),
@@ -84,7 +84,7 @@ class InsightsSidebar extends ConsumerWidget {
             title: Text(
               _categoryLabel(context, category),
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurface,
+                color: cs.onSurface,
               ),
             ),
           ),
@@ -110,12 +110,13 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
       child: Text(
         title,
         style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.onSurfaceVariant,
+          color: cs.onSurfaceVariant,
         ),
       ),
     );

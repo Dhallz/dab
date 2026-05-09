@@ -3,7 +3,6 @@ import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../insights_state.dart';
@@ -30,6 +29,7 @@ class InsightsBreakdownCharts extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final cs = Theme.of(context).colorScheme;
         final isWide = constraints.maxWidth > 920;
         final cards = [
           _BreakdownCard(
@@ -37,7 +37,7 @@ class InsightsBreakdownCharts extends StatelessWidget {
             rows: providerData
                 .map((entry) => _BreakdownRow(entry.key, entry.value))
                 .toList(),
-            color: AppColors.primary,
+            color: cs.primary,
           ),
           _BreakdownCard(
             title: context.l10n.insightsBreakdownActivityTypes,
@@ -49,7 +49,7 @@ class InsightsBreakdownCharts extends StatelessWidget {
                   ),
                 )
                 .toList(),
-            color: AppColors.tertiary,
+            color: cs.tertiary,
           ),
           _BreakdownCard(
             title: context.l10n.insightsBreakdownTopUsers,
@@ -62,7 +62,7 @@ class InsightsBreakdownCharts extends StatelessWidget {
                   ),
                 )
                 .toList(),
-            color: AppColors.secondary,
+            color: cs.secondary,
           ),
         ];
 
@@ -116,6 +116,7 @@ class _BreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final maxValue = rows.isEmpty
         ? 1.0
         : rows
@@ -145,7 +146,7 @@ class _BreakdownCard extends StatelessWidget {
           Text(
             title,
             style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.onSurfaceHighlight,
+              color: cs.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.s),
@@ -153,7 +154,7 @@ class _BreakdownCard extends StatelessWidget {
             Text(
               context.l10n.insightsNoData,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
             )
           else ...[
@@ -169,7 +170,7 @@ class _BreakdownCard extends StatelessWidget {
                     drawVerticalLine: false,
                     horizontalInterval: (maxValue / 3).clamp(1, 100000),
                     getDrawingHorizontalLine: (_) => FlLine(
-                      color: AppColors.outline.withValues(alpha: 0.35),
+                      color: cs.outline.withValues(alpha: 0.35),
                       strokeWidth: 1,
                     ),
                   ),
@@ -196,7 +197,7 @@ class _BreakdownCard extends StatelessWidget {
                           return Text(
                             '${index + 1}',
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           );
                         },
@@ -219,7 +220,7 @@ class _BreakdownCard extends StatelessWidget {
                           child: Text(
                             row.label,
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.onSurface,
+                              color: cs.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -229,7 +230,7 @@ class _BreakdownCard extends StatelessWidget {
                         Text(
                           row.value.toString(),
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -239,8 +240,8 @@ class _BreakdownCard extends StatelessWidget {
                       height: 4,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
-                        color: AppColors.surfaceContainerHigh.withValues(
-                          alpha: 0.4,
+                        color: cs.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
                         ),
                       ),
                       child: FractionallySizedBox(

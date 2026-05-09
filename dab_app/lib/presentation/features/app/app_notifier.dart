@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
+import '../../../domain/entities/system/app_settings.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../services/service_locator.dart';
@@ -15,7 +15,7 @@ import 'app_state.dart';
 /// CONTRACT: Manages [AppState]. Orchestrates initialization and cross-cutting updates (Theme).
 /// CONSTRAINTS: Directly interacts with [SystemUseCases] and [MetadataUseCases].
 ///
-/// **Settings screen:** former `SettingsThemeModeChanged` → [updateThemeMode]; bootstrap
+/// **Settings screen:** theme updates flow through [setAppSettings]; bootstrap
 /// (`SettingsStarted`) is covered by [init].
 final appNotifierProvider = NotifierProvider<AppNotifier, AppState>(
   () => AppNotifier(sl.systemUseCases, sl.metadataUseCases, sl.userRepository),
@@ -68,11 +68,7 @@ class AppNotifier extends Notifier<AppState> {
     );
   }
 
-  Future<void> updateThemeMode(ThemeMode mode) async {
-    final newSettings = state.settings.copyWith(themeMode: mode);
-    state = state.copyWith(settings: newSettings);
-
-    final result = await _systemUseCases.saveAppSettings.execute(newSettings);
-    result.fold((failure) => null, (_) => null);
+  void setAppSettings(AppSettings settings) {
+    state = state.copyWith(settings: settings);
   }
 }

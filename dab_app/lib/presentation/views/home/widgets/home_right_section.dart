@@ -8,11 +8,13 @@ import 'home_profile.dart';
 class HomeRightSection extends StatelessWidget {
   final String userName;
   final String userInitials;
+  final VoidCallback onOpenSettings;
 
   const HomeRightSection({
     super.key,
     required this.userName,
     required this.userInitials,
+    required this.onOpenSettings,
   });
 
   @override
@@ -26,6 +28,7 @@ class HomeRightSection extends StatelessWidget {
           showName: true,
           userName: userName,
           userInitials: userInitials,
+          onOpenSettings: onOpenSettings,
         ),
       ],
     );

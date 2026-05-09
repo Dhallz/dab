@@ -2,7 +2,6 @@ import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_layout.dart';
 import '../../../../core/styles/app_spacing.dart';
@@ -16,6 +15,7 @@ class CreateGroupButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
         showDialog<void>(
@@ -35,20 +35,20 @@ class CreateGroupButton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.xxs),
               decoration: BoxDecoration(
-                color: AppColors.accentIndigo.withValues(alpha: 0.1),
+                color: cs.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppLayout.radiusSmall - 2),
               ),
               child: Icon(
                 AppIcons.add,
                 size: AppSpacing.s,
-                color: AppColors.accentIndigo,
+                color: cs.primary,
               ),
             ),
             const SizedBox(width: AppSpacing.xs + 2),
             Text(
               context.l10n.explorerCreateGroup,
               style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.accentIndigo,
+                color: cs.primary,
               ),
             ),
           ],

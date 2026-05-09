@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../domain/entities/system/app_settings.dart';
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../core/widgets/island_bar.dart';
+import '../../../features/app/app_notifier.dart';
 import '../insights_notifier.dart';
 import '../insights_state.dart';
 import '../models/insights_date_preset.dart';
@@ -16,6 +17,17 @@ class InsightsIslandBarContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final settings = ref.watch(appNotifierProvider.select((s) => s.settings));
+    final showDateRange = settings.isIslandBarItemSelected(
+      appSettingsIslandBarViewInsights,
+      'dateRange',
+    );
+    final showPresets = settings.isIslandBarItemSelected(
+      appSettingsIslandBarViewInsights,
+      'presets',
+    );
+
     ref.watch(
       insightsNotifierProvider.select(
         (s) => (
@@ -32,57 +44,60 @@ class InsightsIslandBarContent extends ConsumerWidget {
     return IslandBar(
       content: Row(
         children: [
-          Icon(AppIcons.insights, color: AppColors.primary),
+          Icon(AppIcons.insights, color: scheme.primary),
           const SizedBox(width: AppSpacing.s),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: showDateRange
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        context.l10n.insightsTitle,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        dateText,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (showPresets)
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
               children: [
-                Text(
-                  context.l10n.insightsTitle,
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.onSurfaceHighlight,
-                  ),
+                _PresetButton(
+                  label: context.l10n.insightsPresetToday,
+                  isSelected: state.datePreset == InsightsDatePreset.today,
+                  onTap: () => notifier.setDatePreset(InsightsDatePreset.today),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  dateText,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
+                _PresetButton(
+                  label: context.l10n.insightsPresetLast7Days,
+                  isSelected: state.datePreset == InsightsDatePreset.last7Days,
+                  onTap: () =>
+                      notifier.setDatePreset(InsightsDatePreset.last7Days),
+                ),
+                _PresetButton(
+                  label: context.l10n.insightsPresetLast30Days,
+                  isSelected: state.datePreset == InsightsDatePreset.last30Days,
+                  onTap: () =>
+                      notifier.setDatePreset(InsightsDatePreset.last30Days),
+                ),
+                _PresetButton(
+                  label: context.l10n.insightsPresetCustom,
+                  isSelected: state.datePreset == InsightsDatePreset.custom,
+                  onTap: () => _pickCustomRange(context, notifier, state),
                 ),
               ],
             ),
-          ),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              _PresetButton(
-                label: context.l10n.insightsPresetToday,
-                isSelected: state.datePreset == InsightsDatePreset.today,
-                onTap: () => notifier.setDatePreset(InsightsDatePreset.today),
-              ),
-              _PresetButton(
-                label: context.l10n.insightsPresetLast7Days,
-                isSelected: state.datePreset == InsightsDatePreset.last7Days,
-                onTap: () =>
-                    notifier.setDatePreset(InsightsDatePreset.last7Days),
-              ),
-              _PresetButton(
-                label: context.l10n.insightsPresetLast30Days,
-                isSelected: state.datePreset == InsightsDatePreset.last30Days,
-                onTap: () =>
-                    notifier.setDatePreset(InsightsDatePreset.last30Days),
-              ),
-              _PresetButton(
-                label: context.l10n.insightsPresetCustom,
-                isSelected: state.datePreset == InsightsDatePreset.custom,
-                onTap: () => _pickCustomRange(context, notifier, state),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -128,10 +143,11 @@ class _PresetButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Material(
       color: isSelected
-          ? AppColors.primary.withValues(alpha: 0.25)
-          : AppColors.surfaceContainerLow.withValues(alpha: 0.35),
+          ? scheme.primary.withValues(alpha: 0.2)
+          : scheme.surfaceContainerLow.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
@@ -144,7 +160,7 @@ class _PresetButton extends StatelessWidget {
           child: Text(
             label,
             style: AppTextStyles.labelMedium.copyWith(
-              color: isSelected ? AppColors.primary : AppColors.onSurface,
+              color: isSelected ? scheme.primary : scheme.onSurface,
             ),
           ),
         ),

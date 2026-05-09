@@ -20,8 +20,10 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Dialog(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: scheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         width: 400,
@@ -30,21 +32,19 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Create New Group',
-              style: TextStyle(
-                fontSize: 20,
+              style: textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'GROUP NAME',
-              style: TextStyle(
+              style: textTheme.labelSmall?.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF64748B),
+                color: scheme.onSurfaceVariant,
                 letterSpacing: 1.2,
               ),
             ),
@@ -52,16 +52,9 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
             TextField(
               controller: _nameController,
               autofocus: true,
-              style: const TextStyle(color: Colors.white),
+              style: textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: 'e.g. Mobile Team',
-                hintStyle: const TextStyle(color: Color(0xFF475569)),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -69,12 +62,12 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'SELECT MEMBERS',
-              style: TextStyle(
+              style: textTheme.labelSmall?.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF64748B),
+                color: scheme.onSurfaceVariant,
                 letterSpacing: 1.2,
               ),
             ),
@@ -82,9 +75,9 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
             Container(
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.02),
+                color: scheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: scheme.outlineVariant),
               ),
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -105,10 +98,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
                     },
                     title: Text(
                       user.name,
-                      style: const TextStyle(
-                        color: Color(0xFFCBD5E1),
-                        fontSize: 13,
-                      ),
+                      style: textTheme.bodySmall,
                     ),
                     secondary: user.avatarUrl != null
                         ? CircleAvatar(
@@ -116,9 +106,9 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
                             backgroundImage: NetworkImage(user.avatarUrl!),
                           )
                         : null,
-                    activeColor: const Color(0xFF4245F0),
-                    checkColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    activeColor: scheme.primary,
+                    checkColor: scheme.onPrimary,
+                    side: BorderSide(color: scheme.outline),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -134,21 +124,15 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Cancel',
-                    style: TextStyle(color: Color(0xFF64748B)),
                   ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: _onCreate,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4245F0),
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   child: const Text('Create Group'),

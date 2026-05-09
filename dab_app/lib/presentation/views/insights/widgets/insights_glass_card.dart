@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_layout.dart';
 import '../../../core/styles/app_spacing.dart';
+import '../../../core/styles/app_theme.dart';
 
 class InsightsGlassCard extends StatelessWidget {
   final Widget child;
@@ -18,21 +18,26 @@ class InsightsGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final glass = Theme.of(context).extension<AppGlassTheme>();
+    final blur = glass?.blurSigma ?? AppLayout.glassBlur;
     return ClipRRect(
       borderRadius: AppLayout.borderLarge,
       child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: AppLayout.glassBlur,
-          sigmaY: AppLayout.glassBlur,
-        ),
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.glassSurface,
+            color: glass?.surface ??
+                scheme.surfaceContainer.withValues(alpha: 0.72),
             borderRadius: AppLayout.borderLarge,
-            border: Border.all(color: AppColors.glassBorder),
+            border: Border.all(
+              color: glass?.border ??
+                  scheme.outline.withValues(alpha: 0.22),
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.glassGlow,
+                color: glass?.shadow ??
+                    scheme.shadow.withValues(alpha: 0.12),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),

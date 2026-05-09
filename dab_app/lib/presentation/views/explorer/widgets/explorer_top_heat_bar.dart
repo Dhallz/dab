@@ -17,12 +17,14 @@ class ExplorerTopHeatBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final heatCount = state.heatMetricForActivityTotal(totalCount);
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       width: 70,
       child: Center(
         child: ActivityIntensityBar(
           activityCount: heatCount,
-          accentColor: state.heatAccentColorForIntensity(heatCount),
+          accentColor:
+              state.heatAccentColorForIntensity(heatCount, cs.primary),
           direction: Axis.vertical,
         ),
       ),

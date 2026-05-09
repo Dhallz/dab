@@ -1,5 +1,4 @@
 import 'package:dab_app/domain/entities/user/user.dart';
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +20,7 @@ class _SecurityTabState extends State<SecurityTab> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final q = _query.trim().toLowerCase();
     final filtered = q.isEmpty
         ? widget.users
@@ -34,26 +34,26 @@ class _SecurityTabState extends State<SecurityTab> {
       children: [
         const BootstrapStatusCard(),
         const SizedBox(height: 32),
-        const Text(
+        Text(
           'USER MANAGEMENT',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppColors.onSurfaceVariantLow,
+            color: cs.onSurfaceVariant,
             letterSpacing: 1.1,
           ),
         ),
         const SizedBox(height: 16),
         TextField(
           onChanged: (v) => setState(() => _query = v),
-          style: const TextStyle(color: AppColors.white, fontSize: 14),
+          style: TextStyle(color: cs.onSurface, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Search by name or email',
             hintStyle: TextStyle(
-              color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.5),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             filled: true,
-            fillColor: AppColors.white.withValues(alpha: 0.05),
+            fillColor: cs.surfaceContainerLow,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

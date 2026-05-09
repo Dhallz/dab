@@ -1,5 +1,4 @@
 import 'package:dab_app/domain/entities/user/user.dart';
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -13,23 +12,24 @@ class UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.03),
+        color: cs.onSurface.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppColors.accentIndigo.withValues(alpha: 0.1),
+            backgroundColor: cs.primary.withValues(alpha: 0.12),
             child: Text(
               user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: AppColors.accentIndigo,
+              style: TextStyle(
+                color: cs.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -41,16 +41,16 @@ class UserTile extends StatelessWidget {
               children: [
                 Text(
                   user.name,
-                  style: const TextStyle(
-                    color: AppColors.white,
+                  style: TextStyle(
+                    color: cs.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
                 Text(
                   user.email,
-                  style: const TextStyle(
-                    color: AppColors.onSurfaceVariantLow,
+                  style: TextStyle(
+                    color: cs.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),

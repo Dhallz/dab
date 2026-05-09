@@ -1,5 +1,4 @@
 import 'package:dab_app/presentation/core/models/view_status.dart';
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
@@ -45,8 +44,8 @@ class AdminIslandBarContent extends ConsumerWidget {
       value: '${m.unresolvedIdentities}',
       tooltip: 'Identities not linked',
       iconColor: m.unresolvedIdentities > 0
-          ? AppColors.error
-          : AppColors.onSurfaceVariant,
+          ? Theme.of(context).colorScheme.error
+          : Theme.of(context).colorScheme.onSurfaceVariant,
     );
     final usersTile = AdminIslandStatTile(
       icon: AppIcons.profile,
@@ -59,7 +58,7 @@ class AdminIslandBarContent extends ConsumerWidget {
       title: 'Links OK',
       value: '${m.connectionOk}',
       tooltip: 'Active providers with successful connection test',
-      iconColor: AppColors.tertiary,
+      iconColor: Theme.of(context).colorScheme.tertiary,
     );
     final failedTile = AdminIslandStatTile(
       icon: AppIcons.error,
@@ -67,8 +66,8 @@ class AdminIslandBarContent extends ConsumerWidget {
       value: '${m.connectionFailed}',
       tooltip: 'Connection failures',
       iconColor: m.connectionFailed > 0
-          ? AppColors.error
-          : AppColors.onSurfaceVariant,
+          ? Theme.of(context).colorScheme.error
+          : Theme.of(context).colorScheme.onSurfaceVariant,
     );
     final pendingTile = AdminIslandStatTile(
       icon: AppIcons.info,

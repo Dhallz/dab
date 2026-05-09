@@ -5,7 +5,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +96,13 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('pt'),
+  ];
 
   /// No description provided for @helloWorld.
   ///
@@ -106,11 +116,29 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboardTitle;
 
+  /// No description provided for @dashboardOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get dashboardOverview;
+
   /// No description provided for @dashboardSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Coming soon: Live activity feed.'**
   String get dashboardSubtitle;
+
+  /// No description provided for @navExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer'**
+  String get navExplorer;
+
+  /// No description provided for @navAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get navAdmin;
 
   /// No description provided for @explorerModeSingleDay.
   ///
@@ -429,6 +457,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to load insights.'**
   String get insightsErrorLoading;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsSectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsSectionIslandBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Island Bar'**
+  String get settingsSectionIslandBar;
+
+  /// No description provided for @settingsSectionAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsSectionAbout;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDab.
+  ///
+  /// In en, this message translates to:
+  /// **'DAB'**
+  String get settingsThemeDab;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsLanguageSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsLanguageSystemDefault;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get settingsLanguageSpanish;
+
+  /// No description provided for @settingsLanguageFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get settingsLanguageFrench;
+
+  /// No description provided for @settingsLanguageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get settingsLanguageGerman;
+
+  /// No description provided for @settingsLanguagePortuguese.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get settingsLanguagePortuguese;
+
+  /// No description provided for @settingsVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersionLabel;
+
+  /// No description provided for @settingsIslandBarDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get settingsIslandBarDashboard;
+
+  /// No description provided for @settingsIslandBarExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer'**
+  String get settingsIslandBarExplorer;
+
+  /// No description provided for @settingsIslandBarInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get settingsIslandBarInsights;
+
+  /// No description provided for @settingsIslandBarItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get settingsIslandBarItemTitle;
+
+  /// No description provided for @settingsIslandBarItemSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle'**
+  String get settingsIslandBarItemSubtitle;
+
+  /// No description provided for @settingsIslandBarItemDateControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Date controls'**
+  String get settingsIslandBarItemDateControls;
+
+  /// No description provided for @settingsIslandBarItemQuickPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick preset'**
+  String get settingsIslandBarItemQuickPreset;
+
+  /// No description provided for @settingsIslandBarItemDateModeToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Date mode toggle'**
+  String get settingsIslandBarItemDateModeToggle;
+
+  /// No description provided for @settingsIslandBarItemActivitySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity summary'**
+  String get settingsIslandBarItemActivitySummary;
+
+  /// No description provided for @settingsIslandBarItemHeatBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat bar'**
+  String get settingsIslandBarItemHeatBar;
+
+  /// No description provided for @settingsIslandBarItemDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date range'**
+  String get settingsIslandBarItemDateRange;
+
+  /// No description provided for @settingsIslandBarItemPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get settingsIslandBarItemPresets;
+
+  /// No description provided for @settingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get settingsSave;
+
+  /// No description provided for @settingsClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get settingsClose;
+
+  /// No description provided for @settingsSavedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved'**
+  String get settingsSavedMessage;
 }
 
 class _AppLocalizationsDelegate
@@ -442,7 +650,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+      <String>['de', 'en', 'es', 'fr', 'pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -451,8 +659,16 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'pt':
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(

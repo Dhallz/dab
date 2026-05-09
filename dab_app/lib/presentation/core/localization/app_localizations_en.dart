@@ -15,7 +15,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardTitle => 'Dashboard';
 
   @override
+  String get dashboardOverview => 'Overview';
+
+  @override
   String get dashboardSubtitle => 'Coming soon: Live activity feed.';
+
+  @override
+  String get navExplorer => 'Explorer';
+
+  @override
+  String get navAdmin => 'Admin';
 
   @override
   String get explorerModeSingleDay => 'Day';
@@ -175,4 +184,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get insightsErrorLoading => 'Unable to load insights.';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String get settingsSectionIslandBar => 'Island Bar';
+
+  @override
+  String get settingsSectionAbout => 'About';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDab => 'DAB';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsLanguageSystemDefault => 'System default';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get settingsLanguageSpanish => 'Spanish';
+
+  @override
+  String get settingsLanguageFrench => 'French';
+
+  @override
+  String get settingsLanguageGerman => 'German';
+
+  @override
+  String get settingsLanguagePortuguese => 'Portuguese';
+
+  @override
+  String get settingsVersionLabel => 'Version';
+
+  @override
+  String get settingsIslandBarDashboard => 'Dashboard';
+
+  @override
+  String get settingsIslandBarExplorer => 'Explorer';
+
+  @override
+  String get settingsIslandBarInsights => 'Insights';
+
+  @override
+  String get settingsIslandBarItemTitle => 'Title';
+
+  @override
+  String get settingsIslandBarItemSubtitle => 'Subtitle';
+
+  @override
+  String get settingsIslandBarItemDateControls => 'Date controls';
+
+  @override
+  String get settingsIslandBarItemQuickPreset => 'Quick preset';
+
+  @override
+  String get settingsIslandBarItemDateModeToggle => 'Date mode toggle';
+
+  @override
+  String get settingsIslandBarItemActivitySummary => 'Activity summary';
+
+  @override
+  String get settingsIslandBarItemHeatBar => 'Heat bar';
+
+  @override
+  String get settingsIslandBarItemDateRange => 'Date range';
+
+  @override
+  String get settingsIslandBarItemPresets => 'Presets';
+
+  @override
+  String get settingsSave => 'Save';
+
+  @override
+  String get settingsClose => 'Close';
+
+  @override
+  String get settingsSavedMessage => 'Settings saved';
 }

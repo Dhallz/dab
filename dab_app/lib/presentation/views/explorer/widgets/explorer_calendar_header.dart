@@ -31,6 +31,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
         ? _rangeLabel(short: true)
         : '${DateFormat('EEE, MMM').format(displayDate)} ${displayDate.withOrdinalSuffix}';
 
+    final cs = Theme.of(context).colorScheme;
     if (compact) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -43,10 +44,10 @@ class ExplorerCalendarHeader extends StatelessWidget {
                 children: [
                   Text(
                     shortDate,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFF1F5F9),
+                      color: cs.onSurface,
                       letterSpacing: -0.2,
                     ),
                     maxLines: 1,
@@ -56,7 +57,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
                     _buildStatusText(),
                     style: TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFF94A3B8).withValues(alpha: 0.85),
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.9),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -81,10 +82,10 @@ class ExplorerCalendarHeader extends StatelessWidget {
               children: [
                 Text(
                   dateStr,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFF1F5F9),
+                    color: cs.onSurface,
                     letterSpacing: -0.5,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -94,7 +95,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
                   _buildStatusText(),
                   style: TextStyle(
                     fontSize: 14,
-                    color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.9),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

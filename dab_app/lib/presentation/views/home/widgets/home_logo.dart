@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_layout.dart';
 import '../../../core/styles/app_spacing.dart';
@@ -15,13 +14,14 @@ class HomeLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final primaryLabelStyle = AppTextStyles.titleLarge.copyWith(
-      color: AppColors.onSurfaceHighlight,
+      color: cs.onSurface,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.3,
     );
     final secondaryLabelStyle = AppTextStyles.labelSmall.copyWith(
-      color: AppColors.onSurfaceVariantLow,
+      color: cs.onSurfaceVariant,
       fontWeight: FontWeight.w600,
       height: 1.05,
     );
@@ -29,7 +29,7 @@ class HomeLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(AppIcons.brand, color: AppColors.primary, size: iconSize),
+        Icon(AppIcons.brand, color: cs.primary, size: iconSize),
         const SizedBox(width: AppSpacing.s),
         Text('DAB', style: primaryLabelStyle),
         if (showExpandedName) ...[
@@ -38,7 +38,7 @@ class HomeLogo extends StatelessWidget {
             width: 1,
             height: iconSize,
             decoration: BoxDecoration(
-              color: AppColors.outline.withValues(alpha: 0.5),
+              color: cs.outlineVariant.withValues(alpha: 0.75),
               borderRadius: AppLayout.borderSmall,
             ),
           ),

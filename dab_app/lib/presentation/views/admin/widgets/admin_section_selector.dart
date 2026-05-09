@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ class AdminSectionSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(adminNotifierProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -22,16 +22,16 @@ class AdminSectionSelector extends ConsumerWidget {
           onSelected: (_) => notifier.setSection(section),
           labelStyle: TextStyle(
             color: section == selectedSection
-                ? AppColors.onPrimary
-                : AppColors.onSurfaceVariantLow,
+                ? cs.onPrimary
+                : cs.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
-          selectedColor: AppColors.primary,
-          backgroundColor: AppColors.surfaceContainer.withValues(alpha: 0.7),
+          selectedColor: cs.primary,
+          backgroundColor: cs.surfaceContainer.withValues(alpha: 0.7),
           side: BorderSide(
             color: section == selectedSection
-                ? AppColors.primary
-                : AppColors.outline.withValues(alpha: 0.4),
+                ? cs.primary
+                : cs.outline.withValues(alpha: 0.4),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

@@ -56,8 +56,9 @@ class ProviderIconResolver {
     if (key.contains('gitlab')) return AppIcons.gitlab;
     if (key.contains('jira') || key.contains('jora')) return AppIcons.jira;
     if (key.contains('slack')) return AppIcons.slack;
-    if (key.contains('teams') || key.contains('microsoft'))
+    if (key.contains('teams') || key.contains('microsoft')) {
       return AppIcons.teams;
+    }
     if (key.contains('discord')) return AppIcons.discord;
     if (key.contains('linear')) return AppIcons.linear;
     return null;

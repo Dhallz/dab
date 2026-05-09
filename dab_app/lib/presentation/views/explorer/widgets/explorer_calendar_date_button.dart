@@ -28,6 +28,7 @@ class _ExplorerCalendarDateButtonState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isWeekend =
         widget.date.weekday == DateTime.saturday ||
         widget.date.weekday == DateTime.sunday;
@@ -48,7 +49,7 @@ class _ExplorerCalendarDateButtonState
           ),
           decoration: BoxDecoration(
             color: _isHovered && !widget.isSelected
-                ? Colors.white.withValues(alpha: 0.05)
+                ? cs.onSurface.withValues(alpha: 0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -61,10 +62,10 @@ class _ExplorerCalendarDateButtonState
                   fontSize: widget.compact ? 8 : 10,
                   fontWeight: FontWeight.bold,
                   color: widget.isSelected
-                      ? const Color(0xFF6366F1)
+                      ? cs.primary
                       : isWeekend
-                      ? const Color(0xFF64748B).withValues(alpha: 0.5)
-                      : const Color(0xFF94A3B8).withValues(alpha: 0.6),
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.45)
+                      : cs.onSurfaceVariant.withValues(alpha: 0.75),
                 ),
               ),
               SizedBox(height: widget.compact ? 2 : 4),
@@ -74,10 +75,10 @@ class _ExplorerCalendarDateButtonState
                   fontSize: widget.compact ? 14 : 18,
                   fontWeight: FontWeight.bold,
                   color: widget.isSelected
-                      ? const Color(0xFF6366F1)
+                      ? cs.primary
                       : isWeekend
-                      ? const Color(0xFF94A3B8).withValues(alpha: 0.7)
-                      : const Color(0xFF94A3B8),
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.8)
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ],

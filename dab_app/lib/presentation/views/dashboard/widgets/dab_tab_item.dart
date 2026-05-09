@@ -16,6 +16,7 @@ class DabTabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -24,7 +25,7 @@ class DabTabItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF6366F1).withOpacity(0.15)
+              ? scheme.primary.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -34,8 +35,8 @@ class DabTabItem extends StatelessWidget {
               icon,
               size: 18,
               color: isSelected
-                  ? const Color(0xFF6366F1)
-                  : const Color(0xFF94A3B8).withOpacity(0.7),
+                  ? scheme.primary
+                  : scheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
             const SizedBox(width: 8),
             Text(
@@ -44,8 +45,8 @@ class DabTabItem extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected
-                    ? Colors.white
-                    : const Color(0xFF94A3B8).withOpacity(0.7),
+                    ? scheme.onSurface
+                    : scheme.onSurfaceVariant.withValues(alpha: 0.7),
                 letterSpacing: 0.2,
               ),
             ),
@@ -54,8 +55,8 @@ class DabTabItem extends StatelessWidget {
               Container(
                 width: 4,
                 height: 4,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6366F1),
+                decoration: BoxDecoration(
+                  color: scheme.primary,
                   shape: BoxShape.circle,
                 ),
               ),

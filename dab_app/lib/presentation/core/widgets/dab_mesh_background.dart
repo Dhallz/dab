@@ -7,12 +7,11 @@ class DabMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         // Base background
-        Positioned.fill(
-          child: Container(color: const Color(0xFF0F172A)), // Primary BG
-        ),
+        Positioned.fill(child: ColoredBox(color: scheme.surface)),
         // Corner Mesh Glow 1
         Positioned(
           top: -100,
@@ -24,8 +23,8 @@ class DabMeshBackground extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF6366F1).withOpacity(0.1), // Accent Primary
-                  const Color(0xFF6366F1).withOpacity(0),
+                  scheme.primary.withValues(alpha: 0.12),
+                  scheme.primary.withValues(alpha: 0),
                 ],
               ),
             ),
@@ -42,8 +41,8 @@ class DabMeshBackground extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF1E1B4B).withOpacity(0.2), // Mesh Corner
-                  const Color(0xFF1E1B4B).withOpacity(0),
+                  scheme.tertiaryContainer.withValues(alpha: 0.2),
+                  scheme.tertiaryContainer.withValues(alpha: 0),
                 ],
               ),
             ),

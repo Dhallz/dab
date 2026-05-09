@@ -1,45 +1,58 @@
+import 'package:dab_app/domain/entities/system/app_theme_variant.dart';
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
+
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_text_styles.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Theme mode selector for settings.
+/// ROLE: Theme variant selector for settings (Light, DAB, grayscale Dark).
 class SettingsThemeSelector extends StatelessWidget {
-  final ThemeMode currentMode;
-  final ValueChanged<ThemeMode?> onChanged;
+  final AppThemeVariant currentVariant;
+  final ValueChanged<AppThemeVariant> onChanged;
 
   const SettingsThemeSelector({
     super.key,
-    required this.currentMode,
+    required this.currentVariant,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        RadioListTile<ThemeMode>(
-          title: const Text('System Default', style: AppTextStyles.bodyMedium),
-          value: ThemeMode.system,
-          groupValue: currentMode,
-          onChanged: onChanged,
-          activeColor: AppColors.primary,
+    return DropdownButtonFormField<AppThemeVariant>(
+      key: ValueKey(currentVariant),
+      initialValue: currentVariant,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(),
+      ),
+      items: [
+        DropdownMenuItem(
+          value: AppThemeVariant.light,
+          child: Text(
+            context.l10n.settingsThemeLight,
+            style: AppTextStyles.bodyMedium,
+          ),
         ),
-        RadioListTile<ThemeMode>(
-          title: const Text('Light Mode', style: AppTextStyles.bodyMedium),
-          value: ThemeMode.light,
-          groupValue: currentMode,
-          onChanged: onChanged,
-          activeColor: AppColors.primary,
+        DropdownMenuItem(
+          value: AppThemeVariant.dab,
+          child: Text(
+            context.l10n.settingsThemeDab,
+            style: AppTextStyles.bodyMedium,
+          ),
         ),
-        RadioListTile<ThemeMode>(
-          title: const Text('Dark Mode', style: AppTextStyles.bodyMedium),
-          value: ThemeMode.dark,
-          groupValue: currentMode,
-          onChanged: onChanged,
-          activeColor: AppColors.primary,
+        DropdownMenuItem(
+          value: AppThemeVariant.greyscale,
+          child: Text(
+            context.l10n.settingsThemeDark,
+            style: AppTextStyles.bodyMedium,
+          ),
         ),
       ],
+      onChanged: (variant) {
+        if (variant != null) {
+          onChanged(variant);
+        }
+      },
     );
   }
 }

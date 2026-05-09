@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_icons.dart';
 
 class SelectionTile extends StatelessWidget {
@@ -23,6 +22,53 @@ class SelectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
+    final subtleFillDark = cs.onSurface.withValues(alpha: 0.06);
+    final subtleBorderDark = cs.outline.withValues(alpha: 0.35);
+
+    late final Color rowFill;
+    late final Color borderColor;
+    late final List<BoxShadow> shadows;
+    late final Color iconChipFill;
+    late final Color checkColor;
+    late final double checkSize;
+
+    if (isLight) {
+      rowFill = isSelected
+          ? cs.surfaceContainerHigh
+          : cs.surfaceContainerLow;
+      borderColor = isSelected
+          ? cs.outline
+          : cs.outlineVariant.withValues(alpha: 0.75);
+      shadows = [];
+      iconChipFill = isSelected
+          ? cs.surfaceContainer
+          : cs.surfaceContainerLow;
+      checkColor = cs.primary.withValues(alpha: 0.72);
+      checkSize = 15;
+    } else {
+      rowFill = subtleFillDark;
+      borderColor = isSelected
+          ? cs.primary.withValues(alpha: 0.55)
+          : subtleBorderDark;
+      shadows = isSelected
+          ? [
+              BoxShadow(
+                color: cs.primary.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ]
+          : [];
+      iconChipFill = isSelected
+          ? cs.primary.withValues(alpha: 0.12)
+          : subtleFillDark;
+      checkColor = cs.primary;
+      checkSize = 16;
+    }
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -32,47 +78,30 @@ class SelectionTile extends StatelessWidget {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppColors.white.withValues(alpha: 0.05),
+          color: rowFill,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.accentIndigo.withValues(alpha: 0.5)
-                : AppColors.white.withValues(alpha: 0.05),
-            width: 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.accentIndigo.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
+          border: Border.all(color: borderColor, width: 1),
+          boxShadow: shadows,
         ),
         child: Row(
           children: [
             if (avatarUrl != null)
               CircleAvatar(
                 radius: 12,
-                backgroundColor: AppColors.white.withValues(alpha: 0.1),
+                backgroundColor: cs.onSurface.withValues(alpha: 0.1),
                 backgroundImage: NetworkImage(avatarUrl!),
               )
             else if (iconData != null)
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.accentIndigo.withValues(alpha: 0.1)
-                      : AppColors.white.withValues(alpha: 0.05),
+                  color: iconChipFill,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   iconData,
                   size: 14,
-                  color: isSelected
-                      ? AppColors.accentIndigo
-                      : AppColors.onSurfaceVariantLow,
+                  color: isSelected ? cs.primary : cs.onSurfaceVariant,
                 ),
               ),
             const SizedBox(width: 12),
@@ -82,9 +111,7 @@ class SelectionTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected
-                      ? AppColors.white
-                      : AppColors.onSurfaceVariant,
+                  color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -92,7 +119,7 @@ class SelectionTile extends StatelessWidget {
             if (trailing != null)
               trailing!
             else if (isSelected)
-              Icon(AppIcons.selected, size: 16, color: AppColors.accentIndigo),
+              Icon(AppIcons.selected, size: checkSize, color: checkColor),
           ],
         ),
       ),

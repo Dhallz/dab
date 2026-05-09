@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
-import '../../../../../presentation/core/styles/app_colors.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Individual item within the activity history timeline.
@@ -23,6 +22,7 @@ class ActivityHistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final iconData = activity.granularIcon(context);
 
     return IntrinsicHeight(
@@ -73,17 +73,17 @@ class ActivityHistoryItem extends StatelessWidget {
                   children: [
                     Text(
                       DateFormat('HH:mm').format(activity.createdAt),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.onSurface,
+                        color: cs.onSurface,
                       ),
                     ),
                     Text(
                       _formatDateDetailed(activity.createdAt),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.onSurfaceVariantLow,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -92,13 +92,13 @@ class ActivityHistoryItem extends StatelessWidget {
                 MarkdownBody(
                   data: activity.content,
                   styleSheet: MarkdownStyleSheet(
-                    p: const TextStyle(
+                    p: TextStyle(
                       fontSize: 13,
                       height: 1.4,
-                      color: AppColors.onSurfaceVariantLow,
+                      color: cs.onSurfaceVariant,
                     ),
                     code: TextStyle(
-                      backgroundColor: Colors.white.withValues(alpha: 0.05),
+                      backgroundColor: cs.onSurface.withValues(alpha: 0.06),
                       color: accentColor,
                       fontSize: 11,
                       fontFamily: 'Roboto Mono',

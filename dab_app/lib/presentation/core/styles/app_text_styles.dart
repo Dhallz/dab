@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
-
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: Central repository for all typography styles, based on Material 3 roles.
 class AppTextStyles {
@@ -16,7 +14,6 @@ class AppTextStyles {
   static const TextStyle displayLarge = TextStyle(
     fontSize: 57,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: -1.0,
   );
@@ -24,7 +21,6 @@ class AppTextStyles {
   static const TextStyle displayMedium = TextStyle(
     fontSize: 45,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: -0.8,
   );
@@ -32,7 +28,6 @@ class AppTextStyles {
   static const TextStyle displaySmall = TextStyle(
     fontSize: 36,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: -0.5,
   );
@@ -41,7 +36,6 @@ class AppTextStyles {
   static const TextStyle headlineLarge = TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: -0.5,
   );
@@ -49,14 +43,12 @@ class AppTextStyles {
   static const TextStyle headlineMedium = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
   static const TextStyle headlineSmall = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
@@ -64,14 +56,12 @@ class AppTextStyles {
   static const TextStyle titleLarge = TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
   static const TextStyle titleMedium = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: 0.1,
   );
@@ -79,7 +69,6 @@ class AppTextStyles {
   static const TextStyle titleSmall = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: 0.1,
   );
@@ -88,21 +77,18 @@ class AppTextStyles {
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
   static const TextStyle bodySmall = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
   );
 
@@ -110,7 +96,6 @@ class AppTextStyles {
   static const TextStyle labelLarge = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: 0.1,
   );
@@ -118,7 +103,6 @@ class AppTextStyles {
   static const TextStyle labelMedium = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: 0.5,
   );
@@ -126,7 +110,6 @@ class AppTextStyles {
   static const TextStyle labelSmall = TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.w600,
-    color: AppColors.onSurface,
     fontFamily: fontFamily,
     letterSpacing: 0.5,
   );
@@ -135,13 +118,11 @@ class AppTextStyles {
   static TextStyle get dashboardTitle => displaySmall.copyWith(
     fontSize: 24,
     fontWeight: FontWeight.w800,
-    color: AppColors.onSurfaceHighlight,
     letterSpacing: -0.5,
   );
 
-  static TextStyle get bodySubtitle =>
-      bodyMedium.copyWith(color: AppColors.onSurfaceVariantLow);
+  static TextStyle get bodySubtitle => bodyMedium;
 
   static TextStyle get codeSnippet =>
-      monospaced.copyWith(fontSize: 12, color: AppColors.secondary);
+      monospaced.copyWith(fontSize: 12);
 }

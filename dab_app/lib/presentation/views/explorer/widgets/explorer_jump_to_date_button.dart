@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../explorer_notifier.dart';
 
@@ -19,6 +18,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () async {
         final date = await showDatePicker(
@@ -26,19 +26,6 @@ class ExplorerJumpToDateButton extends StatelessWidget {
           initialDate: selectedDate,
           firstDate: DateTime(2020),
           lastDate: DateTime.now(),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.dark(
-                  primary: AppColors.primary,
-                  onPrimary: AppColors.onPrimary,
-                  surface: AppColors.surfaceContainer,
-                  onSurface: AppColors.onSurface,
-                ),
-              ),
-              child: child!,
-            );
-          },
         );
         if (date != null) {
           notifier.scheduleDateChanged(date);
@@ -51,7 +38,7 @@ class ExplorerJumpToDateButton extends StatelessWidget {
           vertical: compact ? 8 : 12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: cs.onSurface.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -59,17 +46,17 @@ class ExplorerJumpToDateButton extends StatelessWidget {
           children: [
             Icon(
               AppIcons.calendar,
-              color: AppColors.onSurfaceVariantLow,
+              color: cs.onSurfaceVariant,
               size: compact ? 20 : 18,
             ),
             if (!compact) ...[
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Jump to date',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.onSurfaceVariantLow,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],

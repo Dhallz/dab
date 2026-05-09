@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failures.dart';
@@ -30,7 +32,9 @@ class SystemRepository extends Repository implements ISystemRepository {
     return guardedCall(() async {
       await _localDataSource.saveSettings(
         AppSettingsRecord(
-          themeMode: settings.themeMode.name,
+          themeMode: settings.appThemeVariant.name,
+          localeCode: settings.localeCode,
+          islandBarSelectionsJson: jsonEncode(settings.islandBarSelections),
           syncToken: settings.syncToken,
         ),
       );

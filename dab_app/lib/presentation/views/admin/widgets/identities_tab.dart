@@ -1,6 +1,5 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
@@ -30,15 +29,16 @@ class IdentitiesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'EXTERNAL IDENTITIES',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppColors.onSurfaceVariantLow,
+            color: cs.onSurfaceVariant,
             letterSpacing: 1.1,
           ),
         ),
@@ -46,16 +46,16 @@ class IdentitiesTab extends StatelessWidget {
         TextFormField(
           onChanged: (value) => notifier.setIdentitySearchQuery(value),
           initialValue: searchQuery,
-          style: const TextStyle(color: AppColors.white),
+          style: TextStyle(color: cs.onSurface),
           decoration: InputDecoration(
             hintText: 'Search identities...',
-            hintStyle: const TextStyle(color: AppColors.onSurfaceVariantLow),
-            prefixIcon: const Icon(
+            hintStyle: TextStyle(color: cs.onSurfaceVariant),
+            prefixIcon: Icon(
               Icons.search,
-              color: AppColors.onSurfaceVariantLow,
+              color: cs.onSurfaceVariant,
             ),
             filled: true,
-            fillColor: AppColors.white.withValues(alpha: 0.04),
+            fillColor: cs.surfaceContainerLow,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -78,10 +78,10 @@ class IdentitiesTab extends StatelessWidget {
         const SizedBox(height: 16),
         Expanded(
           child: identities.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
                     'No identities found',
-                    style: TextStyle(color: AppColors.onSurfaceVariantLow),
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                 )
               : _buildGrid(context),
@@ -95,9 +95,11 @@ class IdentitiesTab extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final cs = Theme.of(context).colorScheme;
         final minTableWidth = constraints.maxWidth > 980
             ? constraints.maxWidth
             : 980.0;
+        final headerStyle = TextStyle(color: cs.onSurfaceVariant);
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
@@ -107,57 +109,39 @@ class IdentitiesTab extends StatelessWidget {
                 sortColumnIndex: _sortColumnIndex(sortField),
                 sortAscending: sortAscending,
                 headingRowColor: WidgetStatePropertyAll(
-                  AppColors.white.withValues(alpha: 0.06),
+                  cs.surfaceContainerHigh.withValues(alpha: 0.55),
                 ),
                 dataRowColor: WidgetStatePropertyAll(
-                  AppColors.white.withValues(alpha: 0.02),
+                  cs.surfaceContainerLow.withValues(alpha: 0.35),
                 ),
                 columns: [
                   DataColumn(
-                    label: const Text(
-                      'Full Name',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                    label: Text('Full Name', style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.fullName, ascending),
                   ),
                   DataColumn(
-                    label: const Text(
-                      'Provider',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                    label: Text('Provider', style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.provider, ascending),
                   ),
                   DataColumn(
-                    label: const Text(
-                      'External ID',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                    label: Text('External ID', style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.externalId, ascending),
                   ),
                   DataColumn(
-                    label: const Text(
-                      'Provider Username',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                    label: Text('Provider Username', style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.providerUsername, ascending),
                   ),
                   DataColumn(
-                    label: const Text(
-                      'Status',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                    label: Text('Status', style: headerStyle),
                     onSort: (columnIndex, ascending) =>
                         _onSort(IdentitySortField.status, ascending),
                   ),
-                  const DataColumn(
-                    label: Text(
-                      'Actions',
-                      style: TextStyle(color: AppColors.onSurfaceVariantLow),
-                    ),
+                  DataColumn(
+                    label: Text('Actions', style: headerStyle),
                   ),
                 ],
                 rows: identities.map((identity) {
@@ -175,15 +159,15 @@ class IdentitiesTab extends StatelessWidget {
                           children: [
                             Text(
                               fullName,
-                              style: const TextStyle(
-                                color: AppColors.white,
+                              style: TextStyle(
+                                color: cs.onSurface,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
                               identity.userId,
-                              style: const TextStyle(
-                                color: AppColors.onSurfaceVariantLow,
+                              style: TextStyle(
+                                color: cs.onSurfaceVariant,
                                 fontSize: 12,
                               ),
                             ),
@@ -193,13 +177,13 @@ class IdentitiesTab extends StatelessWidget {
                       DataCell(
                         Text(
                           identity.providerId,
-                          style: const TextStyle(color: AppColors.white),
+                          style: TextStyle(color: cs.onSurface),
                         ),
                       ),
                       DataCell(
                         Text(
                           identity.externalId,
-                          style: const TextStyle(color: AppColors.white),
+                          style: TextStyle(color: cs.onSurface),
                         ),
                       ),
                       DataCell(
@@ -209,9 +193,9 @@ class IdentitiesTab extends StatelessWidget {
                                 child: IconButton(
                                   onPressed: () =>
                                       _openQuickLink(context, identity),
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.add_circle_outline,
-                                    color: AppColors.accentIndigo,
+                                    color: cs.primary,
                                     size: 18,
                                   ),
                                   visualDensity: VisualDensity.compact,
@@ -219,16 +203,16 @@ class IdentitiesTab extends StatelessWidget {
                               )
                             : Text(
                                 '@$providerUsername',
-                                style: const TextStyle(color: AppColors.white),
+                                style: TextStyle(color: cs.onSurface),
                               ),
                       ),
                       DataCell(StatusChip(status: identity.status)),
                       DataCell(
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.link,
                             size: 20,
-                            color: AppColors.accentIndigo,
+                            color: cs.primary,
                           ),
                           onPressed: () => _openLinkDialog(context, identity),
                         ),

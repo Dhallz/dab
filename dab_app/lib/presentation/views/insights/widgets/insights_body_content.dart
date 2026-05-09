@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_layout.dart';
 import '../../../core/styles/app_spacing.dart';
@@ -80,6 +79,7 @@ class _FeedbackState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -91,13 +91,13 @@ class _FeedbackState extends StatelessWidget {
             Icon(
               icon,
               size: 48,
-              color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.45),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.45),
             ),
             const SizedBox(height: AppSpacing.s),
             Text(
               message,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

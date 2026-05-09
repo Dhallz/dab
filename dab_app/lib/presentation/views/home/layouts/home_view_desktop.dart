@@ -35,6 +35,7 @@ class HomeViewDesktop extends ConsumerWidget {
               adminTabBadgeCount: adminBadgeCount,
               userName: userName,
               userInitials: userInitials,
+              onOpenSettings: () => context.go(AppRoute.settings.path),
             ),
             Expanded(child: navigationShell),
           ],

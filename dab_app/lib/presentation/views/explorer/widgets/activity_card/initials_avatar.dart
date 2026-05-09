@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../presentation/core/styles/app_colors.dart';
-
 class InitialsAvatar extends StatelessWidget {
   final String authorName;
 
@@ -9,6 +7,7 @@ class InitialsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final String initials = authorName.isNotEmpty
         ? authorName
               .trim()
@@ -21,8 +20,8 @@ class InitialsAvatar extends StatelessWidget {
     return Center(
       child: Text(
         initials,
-        style: const TextStyle(
-          color: AppColors.accentIndigo,
+        style: TextStyle(
+          color: cs.primary,
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),

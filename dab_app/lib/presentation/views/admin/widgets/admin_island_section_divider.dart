@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -8,13 +7,14 @@ class AdminIslandSectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: VerticalDivider(
         width: 1,
         thickness: 1,
         indent: 6,
         endIndent: 6,
-        color: AppColors.outline.withValues(alpha: 0.55),
+        color: cs.outline.withValues(alpha: 0.55),
       ),
     );
   }

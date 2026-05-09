@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/styles/app_colors.dart';
 import '../../explorer_notifier.dart';
 import 'event_chip.dart';
 
@@ -19,15 +18,16 @@ class ActiveEvents extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (availableProviders.isEmpty) return const SizedBox.shrink();
 
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'ACTIVITY PROVIDERS',
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: AppColors.outlineVariant,
+            color: cs.outline,
             letterSpacing: 1.2,
           ),
         ),

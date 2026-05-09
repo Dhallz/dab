@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class BootstrapStatusCard extends StatelessWidget {
@@ -6,12 +5,13 @@ class BootstrapStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.05),
+        color: cs.onSurface.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +31,7 @@ class BootstrapStatusCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -40,13 +40,13 @@ class BootstrapStatusCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.white,
+                        color: cs.onSurface,
                       ),
                     ),
                     Text(
                       'System is locked and requires an administrative account.',
                       style: TextStyle(
-                        color: AppColors.onSurfaceVariantLow,
+                        color: cs.onSurfaceVariant,
                         fontSize: 13,
                       ),
                     ),

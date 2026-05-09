@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/view_status.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../explorer_notifier.dart';
 import '../models/explorer_item.dart';
@@ -49,6 +48,7 @@ class _ExplorerDesktopActivityPane extends ConsumerWidget {
     );
 
     final userNameById = {for (final user in pane.users) user.id: user.name};
+    final cs = Theme.of(context).colorScheme;
     return pane.status == ViewStatus.loading
         ? const Center(child: CircularProgressIndicator())
         : pane.items.isEmpty
@@ -59,14 +59,14 @@ class _ExplorerDesktopActivityPane extends ConsumerWidget {
               Icon(
                 AppIcons.history,
                 size: 64,
-                color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.3),
+                color: cs.onSurfaceVariant.withValues(alpha: 0.35),
               ),
               const SizedBox(height: 24),
               Text(
                 'No activities found for this date.',
                 style: TextStyle(
                   fontSize: 16,
-                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.85),
                 ),
               ),
             ],

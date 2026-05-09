@@ -10,7 +10,6 @@ import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/user/user.dart';
 import '../../core/extensions/activity_extensions.dart';
 import '../../core/extensions/string_extensions.dart';
-import '../../core/styles/app_colors.dart';
 import 'models/directory_type.dart';
 import 'models/explorer_activity_kind_summary.dart';
 import 'models/explorer_date_mode.dart';
@@ -138,7 +137,7 @@ extension OnExplorerState on ExplorerState {
   }
 
   /// Accent color for a heat [count] (island bar strip + vertical bar).
-  Color heatAccentColorForIntensity(int count) {
+  Color heatAccentColorForIntensity(int count, Color calmPrimary) {
     if (count >= 8) {
       return const Color(0xFFFF1744);
     }
@@ -151,7 +150,7 @@ extension OnExplorerState on ExplorerState {
     if (count >= 2) {
       return const Color(0xFF00E5FF);
     }
-    return AppColors.primary;
+    return calmPrimary;
   }
 
   /// One summary chip per known granular key for the Explorer island bar.
@@ -173,6 +172,7 @@ extension OnExplorerState on ExplorerState {
     final activities = flattenedExplorerActivities;
     final totalActivityCount = activities.length;
     final totalHeatCount = heatMetricForActivityTotal(totalActivityCount);
+    final cs = Theme.of(context).colorScheme;
 
     for (final activity in activities) {
       final key = activity.granularKey();
@@ -183,10 +183,10 @@ extension OnExplorerState on ExplorerState {
     return allKeys.map((key) {
       final count = key == 'activity' ? totalActivityCount : (counts[key] ?? 0);
       final color = count == 0
-          ? const Color(0xFF64748B)
+          ? cs.onSurfaceVariant.withValues(alpha: 0.45)
           : (key == 'activity'
-                ? heatAccentColorForIntensity(totalHeatCount)
-                : (activeColors[key] ?? const Color(0xFF94A3B8)));
+                ? heatAccentColorForIntensity(totalHeatCount, cs.primary)
+                : (activeColors[key] ?? cs.onSurfaceVariant));
       return ExplorerActivityKindSummary(
         label: key.islandSummaryLabel(context),
         count: count,

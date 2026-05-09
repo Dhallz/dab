@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/styles/app_colors.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
@@ -18,6 +17,7 @@ class AdminIslandRefreshTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: 'Refresh admin data',
       child: Material(
@@ -27,10 +27,10 @@ class AdminIslandRefreshTile extends StatelessWidget {
           borderRadius: AppLayout.borderMedium,
           child: Ink(
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer.withValues(alpha: 0.55),
+              color: cs.surfaceContainer.withValues(alpha: 0.55),
               borderRadius: AppLayout.borderMedium,
               border: Border.all(
-                color: AppColors.outline.withValues(alpha: 0.45),
+                color: cs.outline.withValues(alpha: 0.45),
               ),
             ),
             child: Padding(
@@ -40,25 +40,25 @@ class AdminIslandRefreshTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (loading)
-                    const SizedBox(
+                    SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                     )
                   else
                     Icon(
                       AppIcons.refresh,
                       size: 13,
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                   const SizedBox(height: 3),
                   Text(
                     'REFRESH',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
                       fontSize: 8,

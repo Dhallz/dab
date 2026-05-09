@@ -41,7 +41,7 @@
     },
     {
       "id": "2:4174291376144611737",
-      "lastPropertyId": "3:3503005441903137361",
+      "lastPropertyId": "5:3281782940868744179",
       "name": "AppSettingsRecord",
       "properties": [
         {
@@ -58,6 +58,16 @@
         {
           "id": "3:3503005441903137361",
           "name": "syncToken",
+          "type": 9
+        },
+        {
+          "id": "4:4782039018344160783",
+          "name": "localeCode",
+          "type": 9
+        },
+        {
+          "id": "5:3281782940868744179",
+          "name": "islandBarSelectionsJson",
           "type": 9
         }
       ],

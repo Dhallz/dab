@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../domain/entities/provider/provider_config.dart';
-import '../../../../../presentation/core/styles/app_colors.dart';
 import '../../../../../presentation/core/styles/provider_icon_resolver.dart';
 
 class ActivityProviderIcon extends StatelessWidget {
@@ -18,6 +17,7 @@ class ActivityProviderIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final providerId = activity.provider.name;
     final iconData = ProviderIconResolver.resolveFallbackIcon(
       context,
@@ -28,7 +28,7 @@ class ActivityProviderIcon extends StatelessWidget {
       providerId,
     );
     final iconColor = brandColor.computeLuminance() < 0.2
-        ? AppColors.onSurface
+        ? cs.onSurface
         : brandColor;
     final customIconUrl = ProviderIconResolver.resolveIconUrl(
       providerId,
@@ -55,10 +55,10 @@ class ActivityProviderIcon extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh.withValues(alpha: 0.45),
+          color: cs.surfaceContainerHigh.withValues(alpha: 0.45),
           shape: BoxShape.circle,
           border: Border.all(
-            color: AppColors.onSurfaceVariantLow.withValues(alpha: 0.35),
+            color: cs.onSurfaceVariant.withValues(alpha: 0.35),
           ),
         ),
         alignment: Alignment.center,

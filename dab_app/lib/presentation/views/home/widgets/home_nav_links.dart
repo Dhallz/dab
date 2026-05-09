@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
+import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 
@@ -19,7 +19,13 @@ class HomeNavLinks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ['Dashboard', 'Explorer', 'Insights', 'Admin'];
+    final scheme = Theme.of(context).colorScheme;
+    final tabs = [
+      context.l10n.dashboardTitle,
+      context.l10n.navExplorer,
+      context.l10n.insightsTitle,
+      context.l10n.navAdmin,
+    ];
     return Row(
       children: List.generate(tabs.length, (index) {
         final isSelected = currentIndex == index;
@@ -45,7 +51,7 @@ class HomeNavLinks extends StatelessWidget {
                     border: Border(
                       bottom: BorderSide(
                         color: isSelected
-                            ? AppColors.primary
+                            ? scheme.primary
                             : Colors.transparent,
                         width: 2,
                       ),
@@ -58,8 +64,8 @@ class HomeNavLinks extends StatelessWidget {
                         tabs[index],
                         style: AppTextStyles.labelLarge.copyWith(
                           color: isSelected
-                              ? AppColors.onSurfaceHighlight
-                              : AppColors.onSurfaceVariantLow,
+                              ? scheme.onSurface
+                              : scheme.onSurfaceVariant,
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w500,
@@ -73,7 +79,7 @@ class HomeNavLinks extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.error,
+                            color: scheme.error,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           constraints: const BoxConstraints(minWidth: 18),

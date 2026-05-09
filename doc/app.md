@@ -60,7 +60,7 @@ Pure Dart. Zero Flutter or third-party framework imports.
   - `ProviderConfig` — external tool settings (`baseUrl`, `iconUrl`, `configJson`)
   - `Presence` — real-time online/offline status
   - `AuthResponse` — JWT + refresh token pair
-  - `AppSettings` — persisted client settings (`themeMode`, `syncToken`)
+  - `AppSettings` — persisted client settings (`appThemeVariant`: Light, DAB dark, or grayscale Dark with DAB indigo accent; optional `localeCode`; per-view `islandBarSelections`; `syncToken`)
   - `SprintContext` — optional sprint metadata attached to provider payloads
 
 - **Entities use `dart_mappable`** for serialization, equality, and `copyWith`.
@@ -125,7 +125,7 @@ The home shell branding uses `DAB` as the primary mark and keeps `Dev Activity B
 | **Dashboard** | Info capture + upcoming alerts | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream. Renders an **Upcoming Soon** section, a periodic in-app **banner** evaluated from `UpcomingEvent`s, and a **Live Now** feed with per-item Archive/Unarchive triage and a Show/Hide archived toggle. |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
-| **Settings** | User personalization | Dynamic forms — tool linking, theming |
+| **Settings** | User personalization | Dynamic forms for theme variant (Light, DAB, grayscale Dark), runtime language selection, and per-view Island Bar item visibility (Dashboard/Explorer/Insights) |
 | **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing; GitHub includes **Webhook Secret** for `POST /integrations/github/webhook` HMAC; Slack includes **Signing Secret** for Events API), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
 #### Dashboard (Live Feed + Triage + Upcoming)
@@ -220,6 +220,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 | **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **JetBrains Mono** for monospaced text |
 | **Layout** | [app_layout.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_layout.dart) | Viewport constraints, standard border radii (12-24px) |
 | **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application (`flutty_heroicons` for non-provider UI, `simple_icons` for provider brands) |
+| **Themes** | [app_theme.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_theme.dart) | `AppTheme.light` (warm neutral canvas, white elevated cards with soft shadow, stone foreground roles, soft input borders, frosted glass with neutral grey border; icons stay primary/indigo; Explorer sidebar `SelectionTile` / `DirectoryTile` use neutral surface fills and grey borders—no primary glow), `AppTheme.dab`, `AppTheme.greyscale` |
 
 ### Premium Glassmorphism
 - **Surface**: `AppColors.glassSurface` (low opacity slate) + backdrop blur `σ 8–12`.
