@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
 import '../../service_locator.dart';
-import '../../infrastructure/connectors/phorge/phorge_client.dart';
+import '../../infrastructure/protocols/conduit/conduit_protocol.dart';
+import '../../infrastructure/protocols/conduit/http_conduit_protocol.dart';
 import '../middlewares/auth_middleware.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]
@@ -199,7 +200,7 @@ class MetadataController {
           );
         }
 
-        final client = PhorgeClient(
+        final ConduitProtocol client = HttpConduitProtocol(
           baseUrl: config.baseUrl,
           apiToken: apiToken.toString(),
         );

@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_revision_data.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
@@ -11,7 +11,7 @@ import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 /// This source handles binary protocol communication with Phorge to retrieve 
 /// Differential Revisions (D-numbers) within specific time bounds.
 class PhorgeRevisionSource implements IActivitySource<PhorgeRevisionData> {
-  final PhorgeClient _client;
+  final ConduitProtocol _client;
 
   PhorgeRevisionSource(this._client);
 

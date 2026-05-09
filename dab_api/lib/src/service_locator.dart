@@ -65,7 +65,14 @@ import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 // infrastructure
 import 'package:dab_api/src/infrastructure/config/config.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/http_conduit_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/rest/http_json_rest_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/graphql/http_graphql_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/slack/http_slack_web_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
 import 'package:dab_api/src/infrastructure/database/app_database.dart';
 import 'package:dab_api/src/infrastructure/database/postgres_client.dart';
 import 'package:dab_api/src/infrastructure/database/postgres_health_repository.dart';
@@ -115,8 +122,17 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<RedisService>(RedisService(redisClient));
 
   // clients
-  final phorgeClient = PhorgeClient();
-  sl.registerSingleton<PhorgeClient>(phorgeClient);
+  final conduitProtocol = HttpConduitProtocol();
+  sl.registerSingleton<ConduitProtocol>(conduitProtocol);
+
+  final jsonRestProtocol = HttpJsonRestProtocol();
+  sl.registerSingleton<JsonRestProtocol>(jsonRestProtocol);
+
+  final slackWebProtocol = HttpSlackWebProtocol();
+  sl.registerSingleton<SlackWebProtocol>(slackWebProtocol);
+
+  final graphqlProtocol = HttpGraphqlProtocol();
+  sl.registerSingleton<GraphqlProtocol>(graphqlProtocol);
   sl.registerSingleton<JwtProvider>(JwtProvider());
   sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
   sl.registerSingleton<GitHubWebhookVerifier>(GitHubWebhookVerifier());
@@ -138,11 +154,11 @@ Future<void> serviceLocator() async {
   final phorgeRevisionMapper = PhorgeRevisionMapper();
 
   // Infrastructure Sources (Raw I/O)
-  final phorgeTaskSource = PhorgeTaskSource(phorgeClient, phorgeSprintService);
-  final phorgeRevisionSource = PhorgeRevisionSource(phorgeClient);
-  final phorgeUserSource = PhorgeUserSource(phorgeClient);
+  final phorgeTaskSource = PhorgeTaskSource(conduitProtocol, phorgeSprintService);
+  final phorgeRevisionSource = PhorgeRevisionSource(conduitProtocol);
+  final phorgeUserSource = PhorgeUserSource(conduitProtocol);
   final phorgeProjectSource = PhorgeProjectSource(
-    phorgeClient,
+    conduitProtocol,
     phorgeSprintService,
   );
 
@@ -151,19 +167,21 @@ Future<void> serviceLocator() async {
   final slackSource = SlackMessageSource(
     providerConfigRepository,
     userRepository,
+    slackWebProtocol,
   );
   final teamsMapper = TeamsMessageMapper();
   final teamsSource = TeamsMessageSource();
   final jiraMapper = JiraIssueMapper();
   final jiraSource = JiraIssueSource();
   final linearMapper = LinearIssueMapper();
-  final linearSource = LinearIssueSource();
+  final linearSource = LinearIssueSource(graphqlProtocol);
   final discordMapper = DiscordMessageMapper();
   final discordSource = DiscordMessageSource();
   final githubCommitMapper = GitHubCommitMapper();
   final githubSource = GitHubCommitSource(
     providerConfigRepository,
     userRepository,
+    jsonRestProtocol,
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);

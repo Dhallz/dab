@@ -1,5 +1,6 @@
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
+import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failure.dart';
@@ -10,8 +11,12 @@ import '../../dtos/linear/linear_issue_dto.dart';
 /// CONTRACT: Fetches technical [LinearIssueDto] from Linear GraphQL API.
 /// CONSTRAINTS: Must be READ-ONLY. Placeholder implementation.
 class LinearIssueSource implements IActivitySource<LinearIssueDto>, IDiscoverySource {
-  /// Placeholder for the Linear GraphQL Client.
-  LinearIssueSource();
+  /// Wired for Linear GraphQL reads (currently unused while fetch is stubbed).
+  // ignore: unused_field
+  final GraphqlProtocol _graphql;
+
+  /// Wire adapter for Linear GraphQL (`graphql_protocol`).
+  LinearIssueSource(this._graphql);
 
   @override
   Future<List<LinearIssueDto>> fetchRawData(

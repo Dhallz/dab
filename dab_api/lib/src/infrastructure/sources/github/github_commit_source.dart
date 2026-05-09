@@ -1,13 +1,12 @@
-import 'dart:convert';
-
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/dtos/github/github_commit_dto.dart';
+import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
+import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_repo_config.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
-import 'package:http/http.dart' as http;
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Fetches read-only commit activity from GitHub REST API.
@@ -16,13 +15,13 @@ import 'package:http/http.dart' as http;
 class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
-  final http.Client _httpClient;
+  final JsonRestProtocol _jsonRest;
 
   GitHubCommitSource(
     this._configRepository,
-    this._userRepository, {
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+    this._userRepository,
+    this._jsonRest,
+  );
 
   @override
   Future<List<GitHubCommitDto>> fetchRawData(
@@ -146,26 +145,18 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
           if (branch != null && branch.isNotEmpty) 'sha': branch,
         },
       );
-      final response = await _httpClient
-          .get(
-            uri,
-            headers: {
-              'Accept': 'application/vnd.github+json',
-              'Authorization': 'Bearer $token',
-              'User-Agent': 'dab-api',
-              'X-GitHub-Api-Version': '2022-11-28',
-            },
-          )
-          .timeout(const Duration(seconds: 12));
-      if (response.statusCode != 200) {
-        return const [];
-      }
-
-      final decoded = jsonDecode(response.body);
-      if (decoded is! List) {
-        return const [];
-      }
+      final decoded = await _jsonRest.getJsonList(
+        uri,
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer $token',
+          'User-Agent': 'dab-api',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      );
       return decoded.whereType<Map<String, dynamic>>().toList();
+    } on ProtocolException catch (_) {
+      return const [];
     } catch (_) {
       return const [];
     }

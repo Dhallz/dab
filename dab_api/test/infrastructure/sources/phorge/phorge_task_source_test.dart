@@ -1,22 +1,22 @@
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 import '../../../test_factories.dart';
 
-class _MockPhorgeClient extends Mock implements PhorgeClient {}
+class _MockConduitProtocol extends Mock implements ConduitProtocol {}
 
 class _MockSprintService extends Mock implements PhorgeSprintService {}
 
 void main() {
-  late _MockPhorgeClient client;
+  late _MockConduitProtocol client;
   late _MockSprintService sprintService;
   late PhorgeTaskSource source;
 
   setUp(() {
-    client = _MockPhorgeClient();
+    client = _MockConduitProtocol();
     sprintService = _MockSprintService();
     source = PhorgeTaskSource(client, sprintService);
   });

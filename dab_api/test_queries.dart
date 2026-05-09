@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/http_conduit_protocol.dart';
 
 void main() async {
-  final client = PhorgeClient();
+  final client = HttpConduitProtocol();
 
   try {
     final whoami = await client.call('user.whoami', {});

@@ -1,30 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
+import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
 import '../../config/config.dart';
 
-/// [ARCH: INFRASTRUCTURE_CLIENT]
-/// ROLE: Low-level HTTP client for the Phorge (Conduit) API.
-/// CONTRACT: Handles authentication (api.token) and protocol-specific serialization.
-/// CONSTRAINTS: Must handle x-www-form-urlencoded deep objects for Phorge.
-///
-/// This client is the "Protocol Layer." It speaks specifically to the Phorge 
-/// API's quirks, including the requirement for `api.token` and its custom 
-/// form-encoded parameter flattening.
-class PhorgeClient {
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: HTTP implementation of [ConduitProtocol] for Phorge / Conduit APIs.
+/// CONTRACT: Form-urlencoded bodies with flattened params; `api.token` in body.
+/// CONSTRAINTS: Read-only; never log tokens or response bodies.
+class HttpConduitProtocol implements ConduitProtocol {
   final String _baseUrl;
   final String _apiToken;
   final http.Client _client;
 
-  PhorgeClient({http.Client? client, String? baseUrl, String? apiToken})
+  HttpConduitProtocol({http.Client? client, String? baseUrl, String? apiToken})
     : _baseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(RegExp(r'/+$'), ''),
       _apiToken = (apiToken ?? Config().phorgeApiToken).trim(),
       _client = client ?? _createInsecureClient();
 
-  // Accept self-signed or internal corporate certificates
+  /// Accept self-signed or internal corporate certificates (matches legacy client).
   static http.Client _createInsecureClient() {
     final ioClient = HttpClient()
       ..badCertificateCallback =
@@ -32,17 +31,15 @@ class PhorgeClient {
     return IOClient(ioClient);
   }
 
+  @override
   Future<Map<String, dynamic>> call(
     String method,
     Map<String, dynamic> params,
   ) async {
     final url = Uri.parse('$_baseUrl/api/$method');
 
-    // Conduit expects api.token in the body for most requests
     final body = {...params, 'api.token': _apiToken};
 
-    // Conduit requires deep array serialization for application/x-www-form-urlencoded
-    // e.g. constraints: { query: 'tag' } -> constraints[query]=tag
     final formBody = <String, String>{};
 
     void flattenParams(String prefix, dynamic value) {
@@ -72,25 +69,30 @@ class PhorgeClient {
       );
 
       if (response.statusCode != 200) {
-        throw Exception(
-          'Phorge API call failed: ${response.statusCode} ${response.body}',
+        throw ConduitException(
+          code: 'HTTP_${response.statusCode}',
+          info: 'Conduit request failed for method $method',
         );
       }
 
       final dynamic decoded = jsonDecode(response.body);
-      
+
       if (decoded is! Map<String, dynamic>) {
-        throw Exception(
-          'Phorge API returned unexpected JSON format (expected Map, got ${decoded.runtimeType}): ${response.body}',
+        throw ConduitException(
+          code: 'INVALID_RESPONSE',
+          info:
+              'Conduit returned unexpected JSON (expected Map, got ${decoded.runtimeType})',
         );
       }
 
       final json = decoded;
 
       if (json['error_code'] != null) {
-        throw PhorgeException(
+        throw ConduitException(
           code: json['error_code'].toString(),
-          info: json['error_info']?.toString() ?? 'Unknown error informational message',
+          info:
+              json['error_info']?.toString() ??
+              'Unknown error informational message',
         );
       }
 
@@ -98,29 +100,28 @@ class PhorgeClient {
       if (result is Map<String, dynamic>) {
         return result;
       } else if (result is List) {
-        return {'data': result}; // Wrap list results to maintain Map return type
+        return {'data': result};
       } else {
         return {'value': result};
       }
-    } on PhorgeException {
+    } on ConduitException {
       rethrow;
-    } catch (e) {
-      print('[CRITICAL] Phorge Client Unexpected Exception: $e');
-      throw PhorgeException(code: 'CLIENT_ERROR', info: e.toString());
+    } catch (e, st) {
+      LoggingService.log(
+        'Conduit protocol unexpected error',
+        level: 'ERROR',
+        extra: {
+          'method': method,
+          'errorType': e.runtimeType.toString(),
+          'stack': st.toString(),
+        },
+      );
+      throw ConduitException(code: 'CLIENT_ERROR', info: e.toString());
     }
   }
 
+  @override
   void dispose() {
     _client.close();
   }
-}
-
-class PhorgeException implements Exception {
-  final String code;
-  final String info;
-
-  PhorgeException({required this.code, required this.info});
-
-  @override
-  String toString() => 'PhorgeException: [$code] $info';
 }

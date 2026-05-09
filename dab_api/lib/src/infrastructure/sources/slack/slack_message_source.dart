@@ -1,13 +1,12 @@
-import 'dart:convert';
-
 import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
+import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../domain/core/failure.dart';
 import '../../dtos/slack/slack_message_dto.dart';
@@ -20,13 +19,13 @@ class SlackMessageSource
     implements IActivitySource<SlackMessageDto>, IDiscoverySource {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
-  final http.Client _httpClient;
+  final SlackWebProtocol _slack;
 
   SlackMessageSource(
     this._configRepository,
-    this._userRepository, {
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+    this._userRepository,
+    this._slack,
+  );
 
   @override
   Future<List<SlackMessageDto>> fetchRawData(
@@ -203,34 +202,19 @@ class SlackMessageSource
       '${_resolveApiBaseUrl(config.settings)}/users.lookupByEmail',
     ).replace(queryParameters: {'email': normalizedEmail});
     try {
-      final response = await _httpClient
-          .get(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json; charset=utf-8',
-            },
-          )
-          .timeout(const Duration(seconds: 12));
-      if (response.statusCode != 200) {
-        return const Right(null);
-      }
-
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        return const Right(null);
-      }
-
-      final ok = decoded['ok'] == true;
-      if (!ok) {
-        return const Right(null);
-      }
+      final decoded = await _slack.getJson(
+        uri,
+        bearerToken: token,
+        timeout: const Duration(seconds: 12),
+      );
       final user = decoded['user'] as Map<String, dynamic>?;
       final userId = user?['id']?.toString().trim();
       if (userId == null || userId.isEmpty) {
         return const Right(null);
       }
       return Right(userId);
+    } on ProtocolException catch (_) {
+      return const Right(null);
     } catch (_) {
       return const Right(null);
     }
@@ -263,23 +247,11 @@ class SlackMessageSource
       ).replace(queryParameters: queryParameters);
 
       try {
-        final response = await _httpClient
-            .get(
-              uri,
-              headers: {
-                'Authorization': 'Bearer $token',
-                'Content-Type': 'application/json; charset=utf-8',
-              },
-            )
-            .timeout(const Duration(seconds: 12));
-        if (response.statusCode != 200) {
-          return const [];
-        }
-
-        final decoded = jsonDecode(response.body);
-        if (decoded is! Map<String, dynamic> || decoded['ok'] != true) {
-          return const [];
-        }
+        final decoded = await _slack.getJson(
+          uri,
+          bearerToken: token,
+          timeout: const Duration(seconds: 12),
+        );
 
         final messages = decoded['messages'];
         if (messages is List) {
@@ -294,6 +266,8 @@ class SlackMessageSource
 
         cursor = nextCursor;
         pages += 1;
+      } on ProtocolException catch (_) {
+        return const [];
       } catch (_) {
         return const [];
       }
@@ -358,24 +332,15 @@ class SlackMessageSource
   }) async {
     try {
       final uri = Uri.parse('$apiBaseUrl/auth.test');
-      final response = await _httpClient
-          .post(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json; charset=utf-8',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode != 200) {
-        return null;
-      }
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic> || decoded['ok'] != true) {
-        return null;
-      }
+      final decoded = await _slack.postJson(
+        uri,
+        bearerToken: token,
+        timeout: const Duration(seconds: 10),
+      );
       final teamId = _extractTeamId(decoded['team_id']?.toString() ?? '');
       return teamId;
+    } on ProtocolException catch (_) {
+      return null;
     } catch (_) {
       return null;
     }
@@ -509,22 +474,11 @@ class SlackMessageSource
       final uri = Uri.parse('$apiBaseUrl/users.info').replace(
         queryParameters: {'user': slackId},
       );
-      final response = await _httpClient
-          .get(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json; charset=utf-8',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode != 200) {
-        return null;
-      }
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic> || decoded['ok'] != true) {
-        return null;
-      }
+      final decoded = await _slack.getJson(
+        uri,
+        bearerToken: token,
+        timeout: const Duration(seconds: 10),
+      );
       final user = decoded['user'] as Map<String, dynamic>?;
       final profile = user?['profile'] as Map<String, dynamic>?;
       final username = user?['name']?.toString().trim();
@@ -535,6 +489,8 @@ class SlackMessageSource
       if (username != null && username.isNotEmpty) {
         return username;
       }
+      return null;
+    } on ProtocolException catch (_) {
       return null;
     } catch (_) {
       return null;
@@ -550,22 +506,11 @@ class SlackMessageSource
       final uri = Uri.parse('$apiBaseUrl/conversations.info').replace(
         queryParameters: {'channel': channelId},
       );
-      final response = await _httpClient
-          .get(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json; charset=utf-8',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode != 200) {
-        return '#$channelId';
-      }
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic> || decoded['ok'] != true) {
-        return '#$channelId';
-      }
+      final decoded = await _slack.getJson(
+        uri,
+        bearerToken: token,
+        timeout: const Duration(seconds: 10),
+      );
       final channel = decoded['channel'] as Map<String, dynamic>? ?? const {};
       final isIm = channel['is_im'] == true;
       if (isIm) {
@@ -588,6 +533,8 @@ class SlackMessageSource
       if (name.isNotEmpty) {
         return '#$name';
       }
+      return '#$channelId';
+    } on ProtocolException catch (_) {
       return '#$channelId';
     } catch (_) {
       return '#$channelId';

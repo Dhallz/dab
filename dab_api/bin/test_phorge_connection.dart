@@ -15,7 +15,7 @@ import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 import 'package:dab_api/src/infrastructure/config/config.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/http_conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
@@ -37,7 +37,7 @@ void main() async {
 
   print('\n🔗 Connecting to Phorge at ${config.phorgeUrl}...\n');
 
-  final client = PhorgeClient();
+  final client = HttpConduitProtocol();
   final sprintService = PhorgeSprintService();
   final mockUserRepo = _MockUserRepo();
 

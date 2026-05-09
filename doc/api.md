@@ -70,7 +70,9 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 - **`IActivitySource` implementations (`sources/`):** Specialized provider fetchers returning provider-specific DTOs — never domain entities.
 
-- **`connectors/`:** Provider HTTP clients / protocol adapters (for example, Phorge Conduit client + endpoint wrappers).
+- **`protocols/`:** Reusable outbound HTTP wire adapters (`ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol`). Sources decide *what* to pull for DAB; protocols own *how* requests are encoded (Conduit form bodies, JSON REST, GraphQL envelope, Slack `ok`). Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions.
+
+- **`connectors/`:** Provider-specific artifacts still colocated here (e.g. some Phorge DTOs). Generic HTTP clients live under **`protocols/`**, not here.
 
 - **`repositories/`:** Concrete SQL implementations using Drift + PostgreSQL. Implement Table-Per-Type polymorphism via `leftOuterJoin`.
 
@@ -149,6 +151,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Application | `ConnectorRegistry`, `UnifiedActivityFetcher`, activity/auth use-case containers |
 | Services | `PresenceService`, `LoggingService`, `IdentityDiscoveryService` |
 | Repositories | `ActivityRepository`, `AuthRepository`, `UserRepository`, `ProviderConfigRepository` |
+| Protocols | `ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol` (`Http*` implementations, singletons) |
 
 **Rule:** `singleton` for stateful services, `factory` for stateless use cases.
 
@@ -162,7 +165,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | GitHub | ✅ Active (Commits v1) | REST (+ push webhook) |
 | Slack | ✅ Active (Messages v1) | Slack Web API |
 | Jira | 🧪 Scaffolded | REST |
-| Linear | 🧪 Scaffolded | REST |
+| Linear | 🧪 Scaffolded | GraphQL |
 | Teams | 🧪 Scaffolded | REST |
 | Discord | 🧪 Scaffolded | REST |
 | GitLab | 🔜 Planned | REST |

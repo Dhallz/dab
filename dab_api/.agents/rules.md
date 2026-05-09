@@ -22,11 +22,12 @@ dab_api/lib/src/
 │   ├── services/
 │   ├── usecases/
 │   └── containers/
-├── infrastructure/    ← DB, HTTP, connectors, DTOs, security
-│   ├── connectors/    ← IActivitySource implementations (one per provider)
+├── infrastructure/    ← DB, HTTP, protocols, DTOs, security
+│   ├── protocols/     ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
+│   ├── connectors/    ← Legacy/provider-specific artifacts (not IActivitySource)
 │   ├── database/      ← Drift schemas and DAOs
 │   ├── repositories/  ← Implements domain IRepository interfaces
-│   ├── sources/       ← Raw data fetchers (one per provider/data type)
+│   ├── sources/       ← IActivitySource raw data fetchers (one per provider/data type)
 │   ├── dtos/          ← Provider-specific DTOs (never leak into domain)
 │   ├── http/          ← HTTP client helpers
 │   ├── security/      ← JWT, bcrypt helpers

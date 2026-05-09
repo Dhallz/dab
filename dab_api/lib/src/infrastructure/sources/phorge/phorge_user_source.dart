@@ -1,5 +1,5 @@
 import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/phorge_client.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:dab_api/src/domain/core/failure.dart';
@@ -9,7 +9,7 @@ import 'package:dab_api/src/domain/core/failure.dart';
 /// CONTRACT: Fetches raw User PHIDs and DTOs from the Phorge Conduit API.
 /// CONSTRAINTS: Must be READ-ONLY. Implements heuristic identity resolution.
 class PhorgeUserSource implements IDiscoverySource {
-  final PhorgeClient _client;
+  final ConduitProtocol _client;
 
   PhorgeUserSource(this._client);
 

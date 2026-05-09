@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
@@ -18,25 +16,76 @@ class _MockProviderConfigRepo extends Mock
 
 class _MockUserRepo extends Mock implements IUserRepository {}
 
-class _MockHttpClient extends Mock implements http.Client {}
+/// Deterministic [SlackWebProtocol] for tests (no mocktail arity issues).
+class _FakeSlackWeb implements SlackWebProtocol {
+  @override
+  Duration get defaultTimeout => const Duration(seconds: 12);
+
+  @override
+  Future<Map<String, dynamic>> getJson(
+    Uri uri, {
+    required String bearerToken,
+    Duration? timeout,
+  }) async {
+    final s = uri.toString();
+    if (s.contains('users.lookupByEmail')) {
+      return {
+        'ok': true,
+        'user': {'id': 'U999'},
+      };
+    }
+    if (s.contains('conversations.history')) {
+      return {
+        'ok': true,
+        'messages': [
+          {'user': 'U111', 'text': 'linked message', 'ts': '1712523471.0123'},
+          {
+            'user': 'U222',
+            'text': 'unlinked message',
+            'ts': '1712523472.0123',
+          },
+        ],
+        'response_metadata': {'next_cursor': ''},
+      };
+    }
+    if (s.contains('conversations.info')) {
+      return {
+        'ok': true,
+        'channel': {'name': 'general', 'is_im': false},
+      };
+    }
+    if (s.contains('users.info')) {
+      return {
+        'ok': true,
+        'user': {
+          'name': 'stub',
+          'profile': {'display_name': ''},
+        },
+      };
+    }
+    return {'ok': true};
+  }
+
+  @override
+  Future<Map<String, dynamic>> postJson(
+    Uri uri, {
+    required String bearerToken,
+    Duration? timeout,
+  }) async {
+    // No team_id so permalink uses https [ProviderConfig.baseUrl]/archives/...
+    return {'ok': true};
+  }
+}
 
 void main() {
   late _MockProviderConfigRepo configRepo;
   late _MockUserRepo userRepo;
-  late _MockHttpClient httpClient;
   late SlackMessageSource source;
-
-  setUpAll(() {
-    registerFallbackValue(Uri.parse('https://example.com'));
-    registerFallbackValue(<String>[]);
-    registerFallbackValue(<String, String>{});
-  });
 
   setUp(() {
     configRepo = _MockProviderConfigRepo();
     userRepo = _MockUserRepo();
-    httpClient = _MockHttpClient();
-    source = SlackMessageSource(configRepo, userRepo, httpClient: httpClient);
+    source = SlackMessageSource(configRepo, userRepo, _FakeSlackWeb());
   });
 
   test('fetchRawData returns only linked and attributed messages', () async {
@@ -72,25 +121,6 @@ void main() {
         ),
       ]),
     );
-    when(
-      () => httpClient.get(any(), headers: any(named: 'headers')),
-    ).thenAnswer(
-      (_) async => http.Response(
-        jsonEncode({
-          'ok': true,
-          'messages': [
-            {'user': 'U111', 'text': 'linked message', 'ts': '1712523471.0123'},
-            {
-              'user': 'U222',
-              'text': 'unlinked message',
-              'ts': '1712523472.0123',
-            },
-          ],
-          'response_metadata': {'next_cursor': ''},
-        }),
-        200,
-      ),
-    );
 
     final result = await source.fetchRawData(
       users,
@@ -115,17 +145,6 @@ void main() {
           settings: {'botToken': 'xoxb-test'},
         ),
       ]),
-    );
-    when(
-      () => httpClient.get(any(), headers: any(named: 'headers')),
-    ).thenAnswer(
-      (_) async => http.Response(
-        jsonEncode({
-          'ok': true,
-          'user': {'id': 'U999'},
-        }),
-        200,
-      ),
     );
 
     final result = await source.lookupExternalId('Alice', 'alice@acme.com');
