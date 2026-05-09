@@ -8,6 +8,7 @@ import 'package:dab_api/src/application/containers/user_usecases.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
+import 'package:dab_api/src/application/services/register_activity_connectors.dart';
 import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
@@ -54,6 +55,7 @@ import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
 import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
 import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
 import 'package:dab_api/src/domain/mappers/teams/teams_message_mapper.dart';
+import 'package:dab_api/src/domain/ports/phorge_user_directory_port.dart';
 // domain
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
@@ -185,6 +187,7 @@ Future<void> serviceLocator() async {
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
+  sl.registerSingleton<PhorgeUserDirectoryPort>(phorgeUserSource);
   sl.registerSingleton<PhorgeProjectSource>(phorgeProjectSource);
   sl.registerSingleton<SlackMessageSource>(slackSource);
   sl.registerSingleton<TeamsMessageSource>(teamsSource);
@@ -192,18 +195,27 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<LinearIssueSource>(linearSource);
   sl.registerSingleton<GitHubCommitSource>(githubSource);
 
-  // Application Orchestration: Mapping Sources to Mappers
+  // Application Orchestration: Mapping Sources to Mappers (single registration site)
   final registry = ConnectorRegistry();
-  registry.register(phorgeTaskSource, phorgeTaskMapper);
-  registry.register(phorgeRevisionSource, phorgeRevisionMapper);
-
-  // Registering new scaffolds
-  registry.register(slackSource, slackMapper);
-  registry.register(teamsSource, teamsMapper);
-  registry.register(jiraSource, jiraMapper);
-  registry.register(linearSource, linearMapper);
-  registry.register(discordSource, discordMapper);
-  registry.register(githubSource, githubCommitMapper);
+  registerActivityConnectors(
+    registry: registry,
+    phorgeTaskSource: phorgeTaskSource,
+    phorgeTaskMapper: phorgeTaskMapper,
+    phorgeRevisionSource: phorgeRevisionSource,
+    phorgeRevisionMapper: phorgeRevisionMapper,
+    slackSource: slackSource,
+    slackMapper: slackMapper,
+    teamsSource: teamsSource,
+    teamsMapper: teamsMapper,
+    jiraSource: jiraSource,
+    jiraMapper: jiraMapper,
+    linearSource: linearSource,
+    linearMapper: linearMapper,
+    discordSource: discordSource,
+    discordMapper: discordMapper,
+    githubSource: githubSource,
+    githubMapper: githubCommitMapper,
+  );
 
   sl.registerSingleton<ConnectorRegistry>(registry);
   sl.registerSingleton<GitHubCommitMapper>(githubCommitMapper);
@@ -357,8 +369,9 @@ Future<void> serviceLocator() async {
   sl.registerLazySingleton<SyncPhorgeUsers>(
     () => SyncPhorgeUsers(
       sl<IUserRepository>(),
-      sl<PhorgeUserSource>(),
+      sl<PhorgeUserDirectoryPort>(),
       sl<AbsIProviderConfigRepository>(),
+      allowedDomain: sl<Config>().allowedDomain,
     ),
   );
   sl.registerSingleton<GetUsers>(GetUsers(sl<IUserRepository>()));

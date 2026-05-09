@@ -34,11 +34,14 @@ class UserRepository implements IUserRepository {
 
   /// Fetches a specific user by its primary identifier.
   @override
-  Future<Either<DatabaseFailure, User>> getUser(String id) async {
+  Future<Either<Failure, User>> getUser(String id) async {
     try {
       final row = await (_db.select(
         _db.usersTable,
-      )..where((t) => t.id.equals(id))).getSingle();
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) {
+        return left(NotFoundFailure('User not found: $id'));
+      }
       return right(userFromUsersRow(row));
     } catch (e) {
       return left(DatabaseFailure(e.toString()));

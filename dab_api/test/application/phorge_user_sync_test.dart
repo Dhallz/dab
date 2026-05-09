@@ -1,17 +1,17 @@
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
+import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/ports/phorge_user_directory_port.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_user_dto.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 class MockUserRepository extends Mock implements IUserRepository {}
 
-class MockPhorgeUserSource extends Mock implements PhorgeUserSource {}
+class MockPhorgeDirectory extends Mock implements PhorgeUserDirectoryPort {}
 
 class MockProviderConfigRepository extends Mock
     implements AbsIProviderConfigRepository {}
@@ -19,18 +19,18 @@ class MockProviderConfigRepository extends Mock
 void main() {
   late SyncPhorgeUsers syncUseCase;
   late MockUserRepository mockRepo;
-  late MockPhorgeUserSource mockSource;
+  late MockPhorgeDirectory mockDirectory;
   late MockProviderConfigRepository mockConfigRepo;
 
   setUp(() {
     mockRepo = MockUserRepository();
-    mockSource = MockPhorgeUserSource();
+    mockDirectory = MockPhorgeDirectory();
     mockConfigRepo = MockProviderConfigRepository();
     syncUseCase = SyncPhorgeUsers(
       mockRepo,
-      mockSource,
+      mockDirectory,
       mockConfigRepo,
-      allowedDomainOverride: 'necs.com',
+      allowedDomain: 'necs.com',
     );
     registerFallbackValue(
       User(id: '', name: '', email: '', createdAt: DateTime.now()),
@@ -39,14 +39,13 @@ void main() {
 
   group('SyncPhorgeUsers', () {
     test('should create missing users and skip existing ones', () async {
-      // Arrange
       final pUsers = [
-        PhorgeUserDto(
+        const PhorgeDirectoryUser(
           phid: 'PHID-USER-1',
           userName: 'user1',
           realName: 'User One',
         ),
-        PhorgeUserDto(
+        const PhorgeDirectoryUser(
           phid: 'PHID-USER-2',
           userName: 'user2',
           realName: 'User Two',
@@ -64,9 +63,10 @@ void main() {
         ]),
       );
 
-      when(() => mockSource.fetchAllUsers()).thenAnswer((_) async => pUsers);
+      when(() => mockDirectory.fetchDirectoryUsers()).thenAnswer(
+        (_) async => Right(pUsers),
+      );
 
-      // Users list containing the first user
       when(() => mockRepo.getUsers()).thenAnswer(
         (_) async => Right([
           User(
@@ -82,7 +82,6 @@ void main() {
         () => mockRepo.saveUser(any()),
       ).thenAnswer((_) async => const Right(null));
 
-      // Act
       final result = await syncUseCase.execute();
       final createdCount = result.getOrElse((l) => -1);
 

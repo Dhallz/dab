@@ -224,7 +224,7 @@ class _MockUserRepo implements IUserRepository {
       const Left(DatabaseFailure('Not implemented in test script'));
 
   @override
-  Future<Either<DatabaseFailure, User>> getUser(String id) async =>
+  Future<Either<Failure, User>> getUser(String id) async =>
       const Left(DatabaseFailure('Not implemented in test script'));
 
   @override

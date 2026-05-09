@@ -60,11 +60,11 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 - **`entities/provider_payloads/`:** Provider-native shapes that are **inputs to `IActivityMapper`** (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundle`). Sources build or return these; mappers consume them — all without importing Infrastructure.
 
-- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>`).
+- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>`, `PhorgeUserDirectoryPort` for sync provisioning).
 
 - **Mappers (`IActivityMapper`):** Business rules for transforming provider payloads into a `DAB Activity`.
 
-- **Repository Interfaces:** Abstract contracts prefixed with `I` (e.g., `IActivityRepository`). Return `Either<Failure, T>` via `fpdart`.
+- **Repository Interfaces:** Abstract contracts prefixed with `I` (e.g., `IActivityRepository`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
 ---
 
@@ -94,9 +94,9 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 Orchestrates use cases. Use cases return `Either<Failure, T>` where failures matter; controllers map `Left` to HTTP status. **`UnifiedActivityFetcher`** logs per-connector errors via an injected log callback (e.g. `LoggingService.record`) without importing infrastructure types.
 
-- **`ConnectorRegistry`:** Single source of truth for all registered provider connectors. Pairs each `IActivitySource` with its corresponding `IActivityMapper` at boot.
+- **`ConnectorRegistry`:** Holds **`TypedConnectorPair<T>`** entries. **`register_activity_connectors.dart`** is the single bootstrap function that registers every source + mapper pair.
 
-- **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. Aggregates results into a unified stream.
+- **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. If **`getConfigs()`** fails, emits a **WARNING** log and skips all connectors (empty active set). Per-connector failures still log WARNING and return an empty slice for that provider only.
 
 - **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `PresenceService`.
 - **Activity query use cases:** `GetRecentActivities`, `SearchActivities`, and `FetchRemoteActivities`.

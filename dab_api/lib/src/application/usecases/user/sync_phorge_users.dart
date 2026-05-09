@@ -6,51 +6,32 @@ import '../../../domain/core/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
+import '../../../domain/ports/phorge_user_directory_port.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/config/config.dart';
-import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Automated Provisioning of DAB Users from Phorge Directory.
 /// CONTRACT: Fetches all active Phorge users and creates matching DAB identities.
-/// CONSTRAINTS: Must generate emails using [allowedDomain]. Must initialize with a default password.
-/// 
-/// This use case is the "Onboarding Factory" for the system. It ensures 
-/// that every Phorge developer has a corresponding DAB account without 
-/// manual intervention.
+/// CONSTRAINTS: Uses [allowedDomain] for generated emails; no Infrastructure imports.
+
 class SyncPhorgeUsers {
   final IUserRepository _repo;
   final AbsIProviderConfigRepository _configRepo;
-  final PhorgeUserSource _phorgeUserSource;
-  final Config _config;
-  /// When non-null (e.g. in tests), used instead of [Config.allowedDomain].
-  final String? _allowedDomainOverride;
+  final PhorgeUserDirectoryPort _phorgeDirectory;
+  final String _allowedDomain;
   final _uuid = const Uuid();
 
   SyncPhorgeUsers(
     this._repo,
-    this._phorgeUserSource,
+    this._phorgeDirectory,
     this._configRepo, {
-    String? allowedDomainOverride,
-  })  : _config = Config(),
-        _allowedDomainOverride = allowedDomainOverride;
+    required String allowedDomain,
+  }) : _allowedDomain = allowedDomain;
 
-  /// Executes the synchronization process.
-  /// 
-  /// 1. Checks if the Phorge provider is active via [_configRepo].
-  /// 2. Fetches the complete employee list from Phorge via [PhorgeUserSource].
-  /// 3. Compares against existing DAB users by email.
-  /// 4. For new employees:
-  ///    - Generates a standard corporate email (username@domain).
-  ///    - Hashes a temporary password for initial login.
-  ///    - Links the Phorge PHID for immediate activity tracking.
-  ///    - Persists the new [User] record.
-  /// 
   /// Returns the count of newly synced users.
   Future<Either<Failure, int>> execute() async {
     try {
-      // Kill-switch (DAB-40): Check if Phorge provider is active.
       final configsResult = await _configRepo.getConfigs();
       final configs = configsResult.getOrElse((_) => <ProviderConfig>[]);
       ProviderConfig? phorgeConfig;
@@ -65,16 +46,18 @@ class SyncPhorgeUsers {
       }
 
       if (!phorgeConfig.isActive) {
-        return const Right(0); // Deactivated, skip sync.
-      }
-
-      final allowedDomain =
-          _allowedDomainOverride ?? _config.allowedDomain;
-      if (allowedDomain.isEmpty) {
         return const Right(0);
       }
 
-      final phorgeUsers = await _phorgeUserSource.fetchAllUsers();
+      if (_allowedDomain.isEmpty) {
+        return const Right(0);
+      }
+
+      final directoryResult = await _phorgeDirectory.fetchDirectoryUsers();
+      if (directoryResult.isLeft()) {
+        return Left(directoryResult.getLeft().toNullable()!);
+      }
+      final phorgeUsers = directoryResult.getRight().toNullable()!;
       int syncedCount = 0;
 
       final existingUsersResult = await _repo.getUsers();
@@ -89,9 +72,8 @@ class SyncPhorgeUsers {
       for (final pUser in phorgeUsers) {
         final phorgeUsername = pUser.userName;
         final generatedEmail =
-            '${phorgeUsername.toLowerCase()}@$allowedDomain';
+            '${phorgeUsername.toLowerCase()}@$_allowedDomain';
 
-        // Idempotency Check: Only create if the account doesn't exist.
         if (!existingUsersMap.containsKey(generatedEmail)) {
           final passwordHash = BCrypt.hashpw(phorgeUsername, BCrypt.gensalt());
 

@@ -14,7 +14,8 @@ abstract class IUserRepository {
   Future<Either<DatabaseFailure, List<User>>> getUsers();
 
   /// Fetches a single user by their unique UUID.
-  Future<Either<DatabaseFailure, User>> getUser(String id);
+  /// [NotFoundFailure] when no row exists; [DatabaseFailure] on query errors.
+  Future<Either<Failure, User>> getUser(String id);
 
   /// Attempts to find a user by their registered email.
   Future<Either<DatabaseFailure, User?>> findByEmail(String email);

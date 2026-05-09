@@ -36,13 +36,13 @@ dab/
 dab_api/lib/src/
 ├── domain/
 │   ├── entities/        ← Core model + provider_payloads/ (mapper input shapes)
-│   ├── ports/           ← e.g. IActivitySource<T> — implemented by infrastructure sources
+│   ├── ports/           ← IActivitySource<T>, PhorgeUserDirectoryPort, … (infra implements)
 │   ├── repositories/    ← Abstract interfaces prefixed I*
 │   ├── mappers/         ← IActivityMapper — transforms provider payloads to Activity
 │   └── services/        ← Domain-level service contracts
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
-│   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, PresenceService, IdentityDiscoveryService
+│   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, register_activity_connectors, PresenceService, …
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
 │   ├── protocols/       ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)

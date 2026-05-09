@@ -7,7 +7,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Orchestrator for multi-source activity synchronization.
-/// CONTRACT: Aggregates activities from all registered [ConnectorPair]s.
+/// CONTRACT: Aggregates activities from all registered [TypedConnectorPair]s.
 /// CONSTRAINTS: Must parallelize requests and handle individual source failures gracefully.
 ///
 /// This service is the high-level entry point for fetching data from multiple
@@ -35,7 +35,7 @@ class UnifiedActivityFetcher {
   ///
   /// Flow:
   /// 1. Filters [users] for source-specific identifiers.
-  /// 2. Iterates over all [ConnectorPair]s in the [_registry].
+  /// 2. Iterates over all pairs in the [_registry].
   /// 3. Triggers [source.fetchRawData] in parallel.
   /// 4. Maps raw results to Domain [Activity] entities via [mapper.mapToActivities].
   /// 5. Flattens and sorts the final results by [createdAt] descending.
@@ -49,8 +49,16 @@ class UnifiedActivityFetcher {
 
     // Fetch all provider configurations to check for active status.
     final configsResult = await _configRepo.getConfigs();
+    if (configsResult.isLeft()) {
+      final failure = configsResult.getLeft().toNullable()!;
+      _log(
+        'UnifiedActivityFetcher: provider configs unavailable; skipping all connectors',
+        level: 'WARNING',
+        extra: {'failure': failure.message},
+      );
+    }
     final activeProviderIds = configsResult.fold(
-      (l) => <String>{}, // fallback to empty if repo fails
+      (_) => <String>{},
       (configs) => configs.where((c) => c.isActive).map((c) => c.id).toSet(),
     );
 

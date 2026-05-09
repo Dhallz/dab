@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:relic/relic.dart';
 import '../../application/containers/user_usecases.dart';
 import '../../application/services/identity_discovery_service.dart';
+import '../../domain/core/failure.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]
@@ -42,12 +43,22 @@ class UserController {
 
     final result = await _user.getUserById.execute(id);
     return result.fold(
-      (failure) => Response.notFound(
-        body: Body.fromString(
-          jsonEncode({'error': failure.message}),
-          mimeType: MimeType.json,
-        ),
-      ),
+      (failure) {
+        if (failure is NotFoundFailure) {
+          return Response.notFound(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
       (user) => Response.ok(
         body: Body.fromString(
           jsonEncode({
@@ -66,9 +77,18 @@ class UserController {
   Future<Response> syncUsers(Request request) async {
     final result = await _user.syncPhorgeUsers.execute();
     if (result.isLeft()) {
+      final failure = result.getLeft().toNullable()!;
+      if (failure is NotFoundFailure) {
+        return Response.notFound(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
       return Response.internalServerError(
         body: Body.fromString(
-          jsonEncode({'error': result.getLeft().toNullable()!.message}),
+          jsonEncode({'error': failure.message}),
           mimeType: MimeType.json,
         ),
       );
