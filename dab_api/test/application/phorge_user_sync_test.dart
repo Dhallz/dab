@@ -3,7 +3,7 @@ import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
+import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:mocktail/mocktail.dart';

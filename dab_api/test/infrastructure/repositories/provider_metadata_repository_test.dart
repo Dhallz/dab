@@ -1,5 +1,5 @@
 import 'package:dab_api/src/domain/core/failure.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_project_dto.dart';
+import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_project_dto.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:mocktail/mocktail.dart';

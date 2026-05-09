@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_project_dto.dart';
-import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_task_dto.dart';
+import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_project_dto.dart';
+import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]

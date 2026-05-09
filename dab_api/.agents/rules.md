@@ -24,7 +24,6 @@ dab_api/lib/src/
 │   └── containers/
 ├── infrastructure/    ← DB, HTTP, protocols, DTOs, security
 │   ├── protocols/     ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
-│   ├── connectors/    ← Legacy/provider-specific artifacts (not IActivitySource)
 │   ├── database/      ← Drift schemas and DAOs
 │   ├── repositories/  ← Implements domain IRepository interfaces
 │   ├── sources/       ← IActivitySource raw data fetchers (one per provider/data type)

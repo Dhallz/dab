@@ -72,8 +72,6 @@ The innermost layer. **Zero imports from Infrastructure or Application.**
 
 - **`protocols/`:** Reusable outbound HTTP wire adapters (`ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol`). Sources decide *what* to pull for DAB; protocols own *how* requests are encoded (Conduit form bodies, JSON REST, GraphQL envelope, Slack `ok`). Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions.
 
-- **`connectors/`:** Provider-specific artifacts still colocated here (e.g. some Phorge DTOs). Generic HTTP clients live under **`protocols/`**, not here.
-
 - **`repositories/`:** Concrete SQL implementations using Drift + PostgreSQL. Implement Table-Per-Type polymorphism via `leftOuterJoin`.
 
 - **`database/`:** Drift schema definitions, DAOs, and `MigrationStrategy`. Never hand-edit generated `*.g.dart` files.

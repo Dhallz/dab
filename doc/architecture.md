@@ -15,7 +15,7 @@ Domain  ──►  Application  ──►  Infrastructure  ──►  Presentati
 |---|---|---|
 | **Domain** | Pure business entities, interfaces, mappers | **Zero** external or cross-layer imports |
 | **Application** | Use cases, service orchestration | May import Domain; never imports Infrastructure directly |
-| **Infrastructure** | DB, HTTP, caches, connectors | Implements Domain contracts; never leaks upward |
+| **Infrastructure** | DB, HTTP, caches, protocols | Implements Domain contracts; never leaks upward |
 | **Presentation** | API controllers / Flutter UI | Delegates entirely to Application; holds no business logic |
 
 Violating these import rules is an architectural failure — refactor the abstraction instead.
@@ -44,11 +44,11 @@ dab_api/lib/src/
 │   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, PresenceService, IdentityDiscoveryService
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
-│   ├── connectors/      ← Provider HTTP clients / DTO adapters (e.g., Phorge connector)
+│   ├── protocols/       ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
 │   ├── sources/         ← IActivitySource implementations and raw fetchers
 │   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
 │   ├── database/        ← Drift schema, DAOs, migrations
-│   ├── dtos/            ← Provider-specific Data Transfer Objects
+│   ├── dtos/            ← Provider-specific Data Transfer Objects (including Phorge Conduit DTOs)
 │   ├── http/            ← HTTP client helpers
 │   ├── security/        ← JWT, bcrypt
 │   ├── config/          ← Config, env loading

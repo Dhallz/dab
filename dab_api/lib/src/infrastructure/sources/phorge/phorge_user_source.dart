@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/connectors/phorge/dtos/phorge_user_dto.dart';
+import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
 import 'package:fpdart/fpdart.dart';
