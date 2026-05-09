@@ -121,7 +121,7 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 
 | View | Role | State Pattern |
 |---|---|---|
-| **Splash** | App bootstrap + redirect | Router-driven auth gate handoff |
+| **Splash** | App bootstrap + redirect | Always **DAB-branded** (`AppTheme.dab`): mesh background, brand icon + marks + spinner; **`package_info_plus`** shows **Version {semver}+{build}** at bottom after async load. Routing waits **≥ 1s** on-screen then `context.go` once auth resolved (`splash_route_resolution.dart`). **GoRouter** loads splash at **`/`** with **`NoTransitionPage`** (no entry animation). **Auth** and the **home `StatefulShellRoute`** use a shared **fade** (`CustomTransitionPage` in `fade_transition_page.dart`) when replacing splash. Global **`redirect`** treats **`/`** and **`/auth`** as public so cold start is not forced straight to auth before splash runs; protected **`/home/*`** etc. still redirect guests to **`/auth`**. |
 | **Login** | Auth gate | Form via `AuthFormNotifier`; session in `authNotifierProvider` |
 | **Dashboard** | Info capture + upcoming alerts | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream. Renders an **Upcoming Soon** section, a periodic in-app **banner** evaluated from `UpcomingEvent`s, and a **Live Now** feed with per-item Archive/Unarchive triage and a Show/Hide archived toggle. |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |

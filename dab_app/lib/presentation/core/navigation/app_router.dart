@@ -1,10 +1,12 @@
 import 'package:dab_app/presentation/views/home/home_view.dart';
-import 'package:flutter/widgets.dart';
+import 'package:dab_app/presentation/views/splash/splash_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_notifier.dart';
 import 'app_route.dart';
+import 'fade_transition_page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -18,13 +20,16 @@ class AppRouter {
         context,
       ).read(authNotifierProvider);
       final isLoggedIn = authState.isAuthenticated;
-      final isAuthRoute = state.matchedLocation == AppRoute.auth.path;
+      final location = state.matchedLocation;
+      final isPublicRoute =
+          location == AppRoute.splash.path || location == AppRoute.auth.path;
 
-      if (!isLoggedIn && !isAuthRoute) {
+      // Splash stays on `/` for cold start; splash_view routes to auth/home after hold.
+      if (!isLoggedIn && !isPublicRoute) {
         return AppRoute.auth.path;
       }
 
-      if (isLoggedIn && isAuthRoute) {
+      if (isLoggedIn && location == AppRoute.auth.path) {
         return AppRoute.homeDashboard.path;
       }
 
@@ -41,17 +46,24 @@ class AppRouter {
       GoRoute(
         path: AppRoute.splash.path,
         name: AppRoute.splash.name,
-        builder: AppRoute.splash.view,
+        pageBuilder: (context, state) => NoTransitionPage<void>(
+          key: state.pageKey,
+          child: const SplashView(),
+        ),
       ),
       GoRoute(
         path: AppRoute.auth.path,
         name: AppRoute.auth.name,
-        builder: AppRoute.auth.view,
+        pageBuilder: (context, state) => fadeTransitionPage(
+          key: state.pageKey,
+          child: AppRoute.auth.view(context, state),
+        ),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return HomeView(navigationShell: navigationShell);
-        },
+        pageBuilder: (context, state, navigationShell) => fadeTransitionPage(
+          key: state.pageKey,
+          child: HomeView(navigationShell: navigationShell),
+        ),
         branches: [
           StatefulShellBranch(
             routes: [

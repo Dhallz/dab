@@ -86,6 +86,7 @@
 | Formatting | `timeago` + `intl` |
 | Charts / visual analytics | `fl_chart` |
 | Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
+| App metadata (version / build) | `package_info_plus` |
 | Testing | `mocktail` (`ProviderContainer` / overrides for notifiers) |
 
 ---
