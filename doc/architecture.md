@@ -48,7 +48,7 @@ dab_api/lib/src/
 │   ├── sources/         ← IActivitySource<T> implementations (domain port)
 │   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
 │   ├── database/        ← Drift schema, DAOs, migrations
-│   ├── dtos/            ← Residual wire DTOs (e.g. Phorge Conduit parse shapes); ingestion contract shapes live under domain/entities/provider_payloads/
+│   ├── dtos/            ← Optional infra-local serde helpers; provider ingestion DTOs live under domain/dtos/
 │   ├── http/            ← HTTP client helpers
 │   ├── security/        ← JWT, bcrypt
 │   ├── config/          ← Config, env loading

@@ -1,10 +1,10 @@
+import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction_data.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_task_bundle.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_task_data.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/phorge/phorge_transaction_data.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: low-level I/O for Phorge (Phabricator) Tasks and Transactions.
@@ -17,9 +17,8 @@ import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 /// 3. Bundling (pairing transactions with their parent tasks).
 class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   final ConduitProtocol _client;
-  final PhorgeSprintService _sprintService;
 
-  PhorgeTaskSource(this._client, this._sprintService);
+  PhorgeTaskSource(this._client);
 
   @override
   /// [ARCH: INFRASTRUCTURE_ENTRY]
@@ -31,7 +30,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     DateTime end,
     bool authoredOnly,
   ) async {
-    final sprintTag = _sprintService.getCurrentSprintTag(start);
+    final sprintTag = start.phorgeSprintTag;
 
     if (authoredOnly) {
       return _fetchAuthoredActivities(users, start, end, sprintTag);
@@ -235,27 +234,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   }
 
   PhorgeTaskData _mapToTaskData(Map<String, dynamic> json) {
-    final fields = json['fields'] as Map<String, dynamic>? ?? {};
-    final attachments = json['attachments'] as Map<String, dynamic>? ?? {};
-    final projectsAttachment =
-        attachments['projects'] as Map<String, dynamic>? ?? {};
-    final projectDict =
-        projectsAttachment['projectPHIDs'] as List<dynamic>? ?? [];
-
-    return PhorgeTaskData(
-      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
-      phid: json['phid']?.toString() ?? '',
-      name: fields['name'] as String? ?? 'Unknown',
-      uri: fields['uri'] as String? ?? '',
-      ownerPHID: fields['ownerPHID'] as String? ?? 'system',
-      projectPHIDs: projectDict.map((e) => e.toString()).toList(),
-      dateModified: fields['dateModified'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              (int.tryParse(fields['dateModified'].toString()) ?? 0) * 1000,
-              isUtc: true,
-            )
-          : null,
-    );
+    return PhorgeTaskData.fromConduit(json);
   }
 
   PhorgeTransactionData _mapToTransactionData(Map<String, dynamic> json) {

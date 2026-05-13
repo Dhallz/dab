@@ -1,6 +1,6 @@
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_project_dto.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_task_dto.dart';
+import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task_data.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
@@ -9,13 +9,12 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// CONSTRAINTS: Must be READ-ONLY. Logic is restricted to API coordination and DTO mapping.
 class PhorgeProjectSource {
   final ConduitProtocol _client;
-  final PhorgeSprintService _sprintService;
 
-  PhorgeProjectSource(this._client, this._sprintService);
+  PhorgeProjectSource(this._client);
 
   /// Fetches all active projects/tags for UI filtering within the current Sprint.
   Future<List<PhorgeProjectDto>> fetchActiveSprintProjects(String userPhid) async {
-    final sprintTag = _sprintService.getCurrentSprintTag();
+    final sprintTag = DateTime.now().phorgeSprintTag;
     final sprintPhid = await fetchProjectPhidByTag(sprintTag);
 
     // 1. Fetch all open tasks in the current sprint assigned to the user
@@ -31,7 +30,7 @@ class PhorgeProjectSource {
     if (rawData == null || rawData.isEmpty) return [];
 
     final tasks = rawData
-        .map((e) => PhorgeTaskDto.fromConduit(e as Map<String, dynamic>))
+        .map((e) => PhorgeTaskData.fromConduit(e as Map<String, dynamic>))
         .toList();
 
     // 2. Extract unique Project PHIDs attached to these sprint tasks

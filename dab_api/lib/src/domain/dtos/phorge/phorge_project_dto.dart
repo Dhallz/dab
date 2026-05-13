@@ -2,6 +2,9 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_project_dto.mapper.dart';
 
+/// [ARCH: DOMAIN_DTO]
+/// ROLE: Parsed `project.search` row from Phorge Conduit.
+/// CONTRACT: [fromConduit] maps wire JSON only; no transport types.
 @MappableClass()
 class PhorgeProjectDto with PhorgeProjectDtoMappable {
   final int id;

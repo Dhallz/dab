@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
 import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_user_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:fpdart/fpdart.dart';
 
