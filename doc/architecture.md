@@ -13,7 +13,7 @@ Domain  ──►  Application  ──►  Infrastructure  ──►  Presentati
 
 | Layer | Role | Import Constraint |
 |---|---|---|
-| **Domain** | Pure business entities, interfaces, mappers | **Zero** external or cross-layer imports |
+| **Domain** | Pure business entities, interfaces, mapping extensions | **Zero** external or cross-layer imports |
 | **Application** | Use cases, service orchestration | May import Domain; avoids importing Infrastructure (composition root / use-case specifics may still reference infrastructure types sparingly) |
 | **Infrastructure** | DB, HTTP, caches, protocols | Implements Domain contracts; never leaks upward |
 | **Presentation** | API controllers / Flutter UI | Delegates entirely to Application; holds no business logic |
@@ -35,11 +35,10 @@ dab/
 ```
 dab_api/lib/src/
 ├── domain/
-│   ├── entities/        ← Core model + provider_payloads/ (mapper input shapes)
-│   ├── ports/           ← IActivitySource<T>, PhorgeUserDirectoryPort, … (infra implements)
-│   ├── repositories/    ← Abstract interfaces prefixed I*
-│   ├── mappers/         ← IActivityMapper — transforms provider payloads to Activity
-│   └── services/        ← Domain-level service contracts
+│   ├── entities/        ← Core model + provider_payloads/ (DTO shapes + extension OnDto → `toActivities`)
+│   ├── gataways/        ← Provider polling gateways (`AbsIGithubGateway`, `AbsISlackGateway`, `AbsIPhorgeGateway`)
+│   ├── ports/           ← Cross-cutting I/O seams: `IActivitySource<T>`, `IDiscoverySource`, … (infra implements)
+│   └── repositories/    ← Abstract Postgres persistence interfaces (`AbsI*Repository`)
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
 │   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, register_activity_connectors, PresenceService, …
@@ -49,7 +48,7 @@ dab_api/lib/src/
 │   ├── sources/         ← IActivitySource<T> implementations (domain port)
 │   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
 │   ├── database/        ← Drift schema, DAOs, migrations
-│   ├── dtos/            ← Residual wire DTOs (e.g. Phorge Conduit parse shapes); mapper inputs live in domain/entities/provider_payloads/
+│   ├── dtos/            ← Residual wire DTOs (e.g. Phorge Conduit parse shapes); ingestion contract shapes live under domain/entities/provider_payloads/
 │   ├── http/            ← HTTP client helpers
 │   ├── security/        ← JWT, bcrypt
 │   ├── config/          ← Config, env loading
@@ -126,8 +125,8 @@ External Provider (Phorge, GitHub, Slack, …)
   ── fetches raw DTOs via HTTP ──
         │
         ▼
- IActivityMapper (Domain)
-  ── maps DTOs to Activity entity ──
+ DTO extensions (Domain, on provider_payloads)
+  ── toActivities(...) maps rows to Activity entity ──
         │
         ▼
  ConnectorRegistry (Application)
@@ -158,17 +157,17 @@ External Provider (Phorge, GitHub, Slack, …)
 
 ## 5. Key Shared Patterns
 
-### Source / Mapper Pattern
+### Source / payload extension pattern
 
 ```
-IActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  IActivityMapper (Domain)
-                                                                       │
-                                                              maps to Activity entity
+IActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
+                                                                              │
+                                                                     maps to Activity entity
 ```
 
 - `IActivitySource`: Handles raw I/O, auth, rate-limiting — no business logic.
-- `IActivityMapper`: Pure transformation business rules — no I/O.
-- `ConnectorRegistry`: Pairs one Source with one Mapper at boot via `service_locator.dart`.
+- `extension OnXDto`: Pure transformation (`toActivities`) — no I/O.
+- `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering.
 
 ### Vegas Sync Pattern
 

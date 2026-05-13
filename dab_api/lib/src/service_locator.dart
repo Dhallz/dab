@@ -47,15 +47,7 @@ import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-import 'package:dab_api/src/domain/mappers/discord/discord_message_mapper.dart';
-import 'package:dab_api/src/domain/mappers/github/github_commit_mapper.dart';
-import 'package:dab_api/src/domain/mappers/jira/jira_issue_mapper.dart';
-import 'package:dab_api/src/domain/mappers/linear/linear_issue_mapper.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
-import 'package:dab_api/src/domain/mappers/slack/slack_message_mapper.dart';
-import 'package:dab_api/src/domain/mappers/teams/teams_message_mapper.dart';
-import 'package:dab_api/src/domain/ports/phorge_user_directory_port.dart';
+import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 // domain
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
@@ -64,7 +56,6 @@ import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository
 import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 // Activity Architecture
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 // infrastructure
 import 'package:dab_api/src/infrastructure/config/config.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
@@ -94,6 +85,7 @@ import 'package:dab_api/src/infrastructure/sources/discord/discord_message_sourc
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_gateway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
@@ -146,40 +138,31 @@ Future<void> serviceLocator() async {
   // CONTRACT: Registers all ConnectorPairs (Source + Mapper) into the Registry.
   // -----------------------------------------------------
 
-  // Domain Services & Mappers
-  final phorgeSprintService = PhorgeSprintService();
-  sl.registerSingleton<PhorgeSprintService>(phorgeSprintService);
   final userRepository = UserRepository(db);
   final providerConfigRepository = ProviderConfigRepository(db);
 
-  final phorgeTaskMapper = PhorgeTaskMapper();
-  final phorgeRevisionMapper = PhorgeRevisionMapper();
-
   // Infrastructure Sources (Raw I/O)
-  final phorgeTaskSource = PhorgeTaskSource(conduitProtocol, phorgeSprintService);
+  final phorgeTaskSource = PhorgeTaskSource(conduitProtocol);
   final phorgeRevisionSource = PhorgeRevisionSource(conduitProtocol);
   final phorgeUserSource = PhorgeUserSource(conduitProtocol);
-  final phorgeProjectSource = PhorgeProjectSource(
-    conduitProtocol,
-    phorgeSprintService,
+  final phorgeProjectSource = PhorgeProjectSource(conduitProtocol);
+  final phorgeGateway = PhorgeGateway(
+    userSource: phorgeUserSource,
+    taskSource: phorgeTaskSource,
+    revisionSource: phorgeRevisionSource,
+    projectSource: phorgeProjectSource,
   );
 
   // New Scaffolds (Slack, Teams, Jira, Linear, Discord)
-  final slackMapper = SlackMessageMapper();
   final slackSource = SlackMessageSource(
     providerConfigRepository,
     userRepository,
     slackWebProtocol,
   );
-  final teamsMapper = TeamsMessageMapper();
   final teamsSource = TeamsMessageSource();
-  final jiraMapper = JiraIssueMapper();
   final jiraSource = JiraIssueSource();
-  final linearMapper = LinearIssueMapper();
   final linearSource = LinearIssueSource(graphqlProtocol);
-  final discordMapper = DiscordMessageMapper();
   final discordSource = DiscordMessageSource();
-  final githubCommitMapper = GitHubCommitMapper();
   final githubSource = GitHubCommitSource(
     providerConfigRepository,
     userRepository,
@@ -187,8 +170,7 @@ Future<void> serviceLocator() async {
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
-  sl.registerSingleton<PhorgeUserDirectoryPort>(phorgeUserSource);
-  sl.registerSingleton<PhorgeProjectSource>(phorgeProjectSource);
+  sl.registerSingleton<AbsIPhorgeGateway>(phorgeGateway);
   sl.registerSingleton<SlackMessageSource>(slackSource);
   sl.registerSingleton<TeamsMessageSource>(teamsSource);
   sl.registerSingleton<JiraIssueSource>(jiraSource);
@@ -200,25 +182,16 @@ Future<void> serviceLocator() async {
   registerActivityConnectors(
     registry: registry,
     phorgeTaskSource: phorgeTaskSource,
-    phorgeTaskMapper: phorgeTaskMapper,
     phorgeRevisionSource: phorgeRevisionSource,
-    phorgeRevisionMapper: phorgeRevisionMapper,
     slackSource: slackSource,
-    slackMapper: slackMapper,
     teamsSource: teamsSource,
-    teamsMapper: teamsMapper,
     jiraSource: jiraSource,
-    jiraMapper: jiraMapper,
     linearSource: linearSource,
-    linearMapper: linearMapper,
     discordSource: discordSource,
-    discordMapper: discordMapper,
     githubSource: githubSource,
-    githubMapper: githubCommitMapper,
   );
 
   sl.registerSingleton<ConnectorRegistry>(registry);
-  sl.registerSingleton<GitHubCommitMapper>(githubCommitMapper);
 
   // Repositories
   sl.registerSingleton<AbsIAuthRepository>(AuthRepository(db));
@@ -228,7 +201,7 @@ Future<void> serviceLocator() async {
     PostgresHealthRepository(sl<PostgresClient>()),
   );
   sl.registerSingleton<AbsIProviderMetadataRepository>(
-    ProviderMetadataRepository(projectSource: sl<PhorgeProjectSource>()),
+    ProviderMetadataRepository(phorgeGateway: phorgeGateway),
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(providerConfigRepository);
 
@@ -335,7 +308,6 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
-      sl<GitHubCommitMapper>(),
     ),
   );
   sl.registerSingleton<IngestSlackEvent>(
@@ -369,7 +341,7 @@ Future<void> serviceLocator() async {
   sl.registerLazySingleton<SyncPhorgeUsers>(
     () => SyncPhorgeUsers(
       sl<IUserRepository>(),
-      sl<PhorgeUserDirectoryPort>(),
+      sl<AbsIPhorgeGateway>(),
       sl<AbsIProviderConfigRepository>(),
       allowedDomain: sl<Config>().allowedDomain,
     ),

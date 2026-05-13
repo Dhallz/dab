@@ -2,11 +2,11 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
-import '../../../domain/ports/phorge_user_directory_port.dart';
+import '../../../domain/gataways/abs_i_phorge_gataway.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 
@@ -18,13 +18,13 @@ import '../../../domain/repositories/abs_i_user_repository.dart';
 class SyncPhorgeUsers {
   final IUserRepository _repo;
   final AbsIProviderConfigRepository _configRepo;
-  final PhorgeUserDirectoryPort _phorgeDirectory;
+  final AbsIPhorgeGateway _phorgeGateway;
   final String _allowedDomain;
   final _uuid = const Uuid();
 
   SyncPhorgeUsers(
     this._repo,
-    this._phorgeDirectory,
+    this._phorgeGateway,
     this._configRepo, {
     required String allowedDomain,
   }) : _allowedDomain = allowedDomain;
@@ -42,7 +42,9 @@ class SyncPhorgeUsers {
         }
       }
       if (phorgeConfig == null) {
-        return const Left(NotFoundFailure('Phorge provider configuration not found'));
+        return const Left(
+          NotFoundFailure('Phorge provider configuration not found'),
+        );
       }
 
       if (!phorgeConfig.isActive) {
@@ -53,7 +55,7 @@ class SyncPhorgeUsers {
         return const Right(0);
       }
 
-      final directoryResult = await _phorgeDirectory.fetchDirectoryUsers();
+      final directoryResult = await _phorgeGateway.fetchDirectoryUsers();
       if (directoryResult.isLeft()) {
         return Left(directoryResult.getLeft().toNullable()!);
       }
@@ -61,13 +63,12 @@ class SyncPhorgeUsers {
       int syncedCount = 0;
 
       final existingUsersResult = await _repo.getUsers();
-      final existingUsersMap = existingUsersResult.getOrElse((_) => []).fold<Map<String, User>>(
-        <String, User>{},
-        (map, user) {
-          map[user.email] = user;
-          return map;
-        },
-      );
+      final existingUsersMap = existingUsersResult
+          .getOrElse((_) => [])
+          .fold<Map<String, User>>(<String, User>{}, (map, user) {
+            map[user.email] = user;
+            return map;
+          });
 
       for (final pUser in phorgeUsers) {
         final phorgeUsername = pUser.userName;
@@ -78,14 +79,14 @@ class SyncPhorgeUsers {
           final passwordHash = BCrypt.hashpw(phorgeUsername, BCrypt.gensalt());
 
           final newUser = User(
-             id: _uuid.v4(),
-             name: pUser.realName ?? phorgeUsername,
-             email: generatedEmail,
-             passwordHash: passwordHash,
-             role: UserRole.standard,
-             phorgePhid: pUser.phid,
-             phorgeUsername: phorgeUsername,
-             createdAt: DateTime.now(),
+            id: _uuid.v4(),
+            name: pUser.realName ?? phorgeUsername,
+            email: generatedEmail,
+            passwordHash: passwordHash,
+            role: UserRole.standard,
+            phorgePhid: pUser.phid,
+            phorgeUsername: phorgeUsername,
+            createdAt: DateTime.now(),
           );
 
           await _repo.saveUser(newUser);

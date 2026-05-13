@@ -1,33 +1,34 @@
-import 'package:dab_api/src/domain/core/failure.dart';
-import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_project_dto.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/entities/phorge/phorge_project_summary.dart';
+import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class MockPhorgeProjectSource extends Mock implements PhorgeProjectSource {}
+class MockAbsIPhorgeGateway extends Mock implements AbsIPhorgeGateway {}
 
 void main() {
-  late MockPhorgeProjectSource mockSource;
+  late MockAbsIPhorgeGateway mockGateway;
   late ProviderMetadataRepository repository;
 
   setUp(() {
-    mockSource = MockPhorgeProjectSource();
-    repository = ProviderMetadataRepository(projectSource: mockSource);
+    mockGateway = MockAbsIPhorgeGateway();
+    repository = ProviderMetadataRepository(phorgeGateway: mockGateway);
   });
 
   group('ProviderMetadataRepository', () {
     const tUserId = 'user123';
 
     final tPhorgeProjects = [
-      const PhorgeProjectDto(
+      const PhorgeProjectSummary(
         id: 1,
         phid: 'PHID-PROJ-111',
         name: 'Backend',
         color: 'red',
         icon: 'tag',
       ),
-      const PhorgeProjectDto(
+      const PhorgeProjectSummary(
         id: 2,
         phid: 'PHID-PROJ-222',
         name: 'Bug',
@@ -38,15 +39,12 @@ void main() {
     test(
       'should return list of ProviderMetadata when connector call is successful',
       () async {
-        // Arrange
         when(
-          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
-        ).thenAnswer((_) async => tPhorgeProjects);
+          () => mockGateway.fetchActiveSprintProjects(any()),
+        ).thenAnswer((_) async => Right(tPhorgeProjects));
 
-        // Act
         final result = await repository.getMetadata(tUserId);
 
-        // Assert
         expect(result.isRight(), isTrue);
 
         final metadataList = result.getOrElse(
@@ -72,24 +70,26 @@ void main() {
           containsAll(['slack-global', 'discord-global']),
         );
 
-        verify(
-          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
-        ).called(1);
+        verify(() => mockGateway.fetchActiveSprintProjects('PHID-USER-1234'))
+            .called(1);
       },
     );
 
     test(
-      'should return DatabaseFailure when connector throws an exception',
+      'should return Failure when gateway returns Left',
       () async {
-        // Arrange
         when(
-          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
-        ).thenThrow(Exception('Conduit Error'));
+          () => mockGateway.fetchActiveSprintProjects(any()),
+        ).thenAnswer(
+          (_) async => Left(
+            DatabaseFailure(
+              'Phorge sprint project fetch failed: Exception: Conduit Error',
+            ),
+          ),
+        );
 
-        // Act
         final result = await repository.getMetadata(tUserId);
 
-        // Assert
         expect(result.isLeft(), isTrue);
 
         final failure = result.match(
@@ -99,9 +99,8 @@ void main() {
         expect(failure, isA<DatabaseFailure>());
         expect(failure.message, contains('Conduit Error'));
 
-        verify(
-          () => mockSource.fetchActiveSprintProjects('PHID-USER-1234'),
-        ).called(1);
+        verify(() => mockGateway.fetchActiveSprintProjects('PHID-USER-1234'))
+            .called(1);
       },
     );
   });

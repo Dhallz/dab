@@ -1,15 +1,17 @@
+import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:fpdart/fpdart.dart';
-import '../../../domain/core/failure.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/jira/jira_issue_dto.dart';
+
+import '../../../domain/core/failures/failure.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Raw I/O Handler for Jira Issue retrieval.
 /// CONTRACT: Fetches technical [JiraIssueDto] from Jira Cloud REST API.
 /// CONSTRAINTS: Must be READ-ONLY. Placeholder implementation.
-class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource {
+class JiraIssueSource
+    implements IActivitySource<JiraIssueDto>, IDiscoverySource {
   /// Placeholder for the Jira Cloud Client.
   JiraIssueSource();
 
@@ -25,7 +27,10 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
   }
 
   @override
-  Future<Either<Failure, String?>> lookupExternalId(String name, String email) async {
+  Future<Either<Failure, String?>> lookupExternalId(
+    String name,
+    String email,
+  ) async {
     // TODO: Implement Jira user lookup by email.
     return const Right(null);
   }

@@ -1,15 +1,15 @@
-import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../domain/core/failure.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/slack/slack_message_dto.dart';
+import '../../../domain/core/failures/failure.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Raw I/O Handler for Slack Message retrieval.
@@ -21,11 +21,7 @@ class SlackMessageSource
   final IUserRepository _userRepository;
   final SlackWebProtocol _slack;
 
-  SlackMessageSource(
-    this._configRepository,
-    this._userRepository,
-    this._slack,
-  );
+  SlackMessageSource(this._configRepository, this._userRepository, this._slack);
 
   @override
   Future<List<SlackMessageDto>> fetchRawData(
@@ -107,9 +103,8 @@ class SlackMessageSource
       final referencedSlackIds = <String>{
         for (final message in rawMessages)
           (message['user'] ?? '').toString().trim(),
-        for (final message in rawMessages) ..._extractMentionIds(
-          (message['text'] ?? '').toString(),
-        ),
+        for (final message in rawMessages)
+          ..._extractMentionIds((message['text'] ?? '').toString()),
       }..removeWhere((id) => id.isEmpty);
       final resolvedUsernamesBySlackId = await _resolveSlackUsernamesById(
         apiBaseUrl: apiBaseUrl,
@@ -312,9 +307,10 @@ class SlackMessageSource
       return null;
     }
 
-    final match = RegExp(r'\bT[0-9A-Z]+\b', caseSensitive: false).firstMatch(
-      value,
-    );
+    final match = RegExp(
+      r'\bT[0-9A-Z]+\b',
+      caseSensitive: false,
+    ).firstMatch(value);
     if (match == null) {
       return null;
     }
@@ -420,9 +416,9 @@ class SlackMessageSource
       return uri.toString();
     }
 
-    return uri.replace(
-      queryParameters: {'thread_ts': rootThreadTs, 'cid': channelId},
-    ).toString();
+    return uri
+        .replace(queryParameters: {'thread_ts': rootThreadTs, 'cid': channelId})
+        .toString();
   }
 
   Set<String> _extractMentionIds(String text) {
@@ -430,7 +426,10 @@ class SlackMessageSource
     return {for (final match in matches) match.group(1) ?? ''};
   }
 
-  String _normalizeMessageText(String text, Map<String, String> usernameBySlackId) {
+  String _normalizeMessageText(
+    String text,
+    Map<String, String> usernameBySlackId,
+  ) {
     if (text.isEmpty) {
       return text;
     }
@@ -471,9 +470,9 @@ class SlackMessageSource
     required String slackId,
   }) async {
     try {
-      final uri = Uri.parse('$apiBaseUrl/users.info').replace(
-        queryParameters: {'user': slackId},
-      );
+      final uri = Uri.parse(
+        '$apiBaseUrl/users.info',
+      ).replace(queryParameters: {'user': slackId});
       final decoded = await _slack.getJson(
         uri,
         bearerToken: token,
@@ -503,9 +502,9 @@ class SlackMessageSource
     required String channelId,
   }) async {
     try {
-      final uri = Uri.parse('$apiBaseUrl/conversations.info').replace(
-        queryParameters: {'channel': channelId},
-      );
+      final uri = Uri.parse(
+        '$apiBaseUrl/conversations.info',
+      ).replace(queryParameters: {'channel': channelId});
       final decoded = await _slack.getJson(
         uri,
         bearerToken: token,

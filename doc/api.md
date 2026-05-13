@@ -19,7 +19,7 @@ graph TD
         A_Serv[LogActivity + Fetch/Search UseCases]
     end
     subgraph "Domain Layer"
-        D_Map[IActivityMapper]
+        D_Ext[Payload → Activity (OnXDto.toActivities)]
         D_Ent[Entities]
         D_Repo[Repository Interfaces]
     end
@@ -31,9 +31,9 @@ graph TD
     P_Cont --> A_Serv
     A_Serv --> A_Sync
     A_Sync --> A_Reg
-    A_Reg -->|resolves| D_Map
+    A_Reg -->|resolves mapping| D_Ext
     A_Reg -->|resolves| I_Prov
-    D_Map -->|transforms| D_Ent
+    D_Ext -->|transforms| D_Ent
     A_Serv --> D_Repo
     I_Repo -->|implements| D_Repo
     I_Repo --> I_DB
@@ -58,11 +58,12 @@ The innermost layer. **No imports from Infrastructure or Application.**
   - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
   - `ProviderMetadata` — registered connector metadata
 
-- **`entities/provider_payloads/`:** Provider-native shapes that are **inputs to `IActivityMapper`** (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundle`). Sources build or return these; mappers consume them — all without importing Infrastructure.
+- **`entities/provider_payloads/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundle`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
-- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>`, `PhorgeUserDirectoryPort` for sync provisioning).
+- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups).
+- **`gataways/`:** Per-provider outbound polling contracts (`AbsIPhorgeGateway` includes directory, sprint/tag projects, tasks, revisions; GitHub and Slack gateways mirror polled payloads).
 
-- **Mappers (`IActivityMapper`):** Business rules for transforming provider payloads into a `DAB Activity`.
+- **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
 
 - **Repository Interfaces:** Abstract contracts prefixed with `I` (e.g., `IActivityRepository`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
@@ -72,7 +73,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `provider_payloads` types — never full domain `Activity` entities (mapping stays in Domain).
+- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `provider_payloads` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions).
 
 - **`protocols/`:** Reusable outbound HTTP wire adapters (`ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol`). Sources decide *what* to pull for DAB; protocols own *how* requests are encoded (Conduit form bodies, JSON REST, GraphQL envelope, Slack `ok`). Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions.
 

@@ -2,7 +2,7 @@ import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/ports/phorge_user_directory_port.dart';
+import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 
 class MockUserRepository extends Mock implements IUserRepository {}
 
-class MockPhorgeDirectory extends Mock implements PhorgeUserDirectoryPort {}
+class MockAbsIPhorgeGateway extends Mock implements AbsIPhorgeGateway {}
 
 class MockProviderConfigRepository extends Mock
     implements AbsIProviderConfigRepository {}
@@ -19,16 +19,16 @@ class MockProviderConfigRepository extends Mock
 void main() {
   late SyncPhorgeUsers syncUseCase;
   late MockUserRepository mockRepo;
-  late MockPhorgeDirectory mockDirectory;
+  late MockAbsIPhorgeGateway mockGateway;
   late MockProviderConfigRepository mockConfigRepo;
 
   setUp(() {
     mockRepo = MockUserRepository();
-    mockDirectory = MockPhorgeDirectory();
+    mockGateway = MockAbsIPhorgeGateway();
     mockConfigRepo = MockProviderConfigRepository();
     syncUseCase = SyncPhorgeUsers(
       mockRepo,
-      mockDirectory,
+      mockGateway,
       mockConfigRepo,
       allowedDomain: 'necs.com',
     );
@@ -63,7 +63,7 @@ void main() {
         ]),
       );
 
-      when(() => mockDirectory.fetchDirectoryUsers()).thenAnswer(
+      when(() => mockGateway.fetchDirectoryUsers()).thenAnswer(
         (_) async => Right(pUsers),
       );
 

@@ -1,7 +1,6 @@
-import 'package:dab_api/src/domain/core/failure.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
-import 'package:dab_api/src/domain/ports/phorge_user_directory_port.dart';
-import 'package:dab_api/src/domain/services/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:dab_api/src/infrastructure/dtos/phorge/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:fpdart/fpdart.dart';
@@ -10,7 +9,7 @@ import 'package:fpdart/fpdart.dart';
 /// ROLE: Infrastructure Source for Phorge User identities and profile data.
 /// CONTRACT: Fetches raw User PHIDs and DTOs from the Phorge Conduit API.
 /// CONSTRAINTS: Must be READ-ONLY. Implements heuristic identity resolution.
-class PhorgeUserSource implements IDiscoverySource, PhorgeUserDirectoryPort {
+class PhorgeUserSource implements IDiscoverySource {
   final ConduitProtocol _client;
 
   PhorgeUserSource(this._client);
@@ -43,7 +42,10 @@ class PhorgeUserSource implements IDiscoverySource, PhorgeUserDirectoryPort {
   }
 
   @override
-  Future<Either<Failure, String?>> lookupExternalId(String name, String email) async {
+  Future<Either<Failure, String?>> lookupExternalId(
+    String name,
+    String email,
+  ) async {
     try {
       final phid = await lookupUserPhid(name, email);
       return Right(phid);
@@ -55,18 +57,18 @@ class PhorgeUserSource implements IDiscoverySource, PhorgeUserDirectoryPort {
   /// Fetches all active users from Phorge.
   Future<List<PhorgeUserDto>> fetchAllUsers() async {
     final result = await _client.call('user.search', {
-      'constraints': {
-        'isDisabled': false,
-      },
+      'constraints': {'isDisabled': false},
     });
 
     final data = result['data'] as List<dynamic>?;
     if (data == null) return [];
 
-    return data.map((e) => PhorgeUserDto.fromConduit(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => PhorgeUserDto.fromConduit(e as Map<String, dynamic>))
+        .toList();
   }
 
-  @override
+  /// Full directory enumeration for provisioning ([AbsIPhorgeGateway] delegates here).
   Future<Either<Failure, List<PhorgeDirectoryUser>>> fetchDirectoryUsers() async {
     try {
       final dtos = await fetchAllUsers();
