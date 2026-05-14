@@ -74,5 +74,39 @@ void main() {
         isFalse,
       );
     });
+
+    test('providerFilterKey maps Microsoft Teams to teams config id', () {
+      expect(
+        ActivitySearchQueryMapper.providerFilterKey(
+          const GenericProvider(name: 'Microsoft Teams'),
+        ),
+        'teams',
+      );
+
+      final activity = Activity(
+        id: 'a-teams',
+        userId: 'u1',
+        provider: const GenericProvider(name: 'Microsoft Teams'),
+        title: 'msg',
+        content: 'hello',
+        authorName: 'Bob',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 1, 5, 12),
+      );
+
+      expect(
+        ActivitySearchQueryMapper.matchesActivity(
+          activity,
+          const ActivitySearchQuery(
+            users: ['u1'],
+            providers: {'teams'},
+            categories: {ActivityCategory.generic},
+          ),
+        ),
+        isTrue,
+      );
+
+      expect(activity.toExplorerRecord().providerKey, 'teams');
+    });
   });
 }

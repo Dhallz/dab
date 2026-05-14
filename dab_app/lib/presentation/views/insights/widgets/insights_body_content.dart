@@ -30,7 +30,8 @@ class InsightsBodyContent extends ConsumerWidget {
       ),
     );
     final state = ref.read(insightsNotifierProvider);
-    if (state.status == ViewStatus.loading) {
+    if (state.status == ViewStatus.initial ||
+        state.status == ViewStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.status == ViewStatus.failure) {

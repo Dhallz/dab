@@ -3,6 +3,28 @@ import '../../domain/entities/activity/activity_search_query.dart';
 import '../core/local/records/explorer_activity_record.dart';
 
 class ActivitySearchQueryMapper {
+  /// Lowercase identifier aligned with [ProviderConfig.id] for filter/cache keys.
+  ///
+  /// Uses sealed provider types where the display [ActivityProvider.name] differs
+  /// from the canonical id (e.g. Microsoft Teams ↔ `teams`).
+  static String providerFilterKey(ActivityProvider provider) {
+    return switch (provider) {
+      PhorgeTaskProvider() || PhorgeRevisionProvider() => 'phorge',
+      GitHubCommitProvider() => 'github',
+      SlackMessageProvider() => 'slack',
+      GenericProvider(name: final n) => _genericProviderFilterKey(n),
+    };
+  }
+
+  static String _genericProviderFilterKey(String displayOrId) {
+    final lower = displayOrId.toLowerCase().trim();
+    return switch (lower) {
+      'microsoft teams' => 'teams',
+      'ms teams' => 'teams',
+      _ => lower,
+    };
+  }
+
   static Map<String, dynamic> toRemoteQueryParameters(
     ActivitySearchQuery query,
   ) {
@@ -39,7 +61,8 @@ class ActivitySearchQueryMapper {
     final text = query.normalizedText;
 
     if (users.isNotEmpty && !users.contains(record.userId)) return false;
-    if (providers.isNotEmpty && !providers.contains(record.providerKey)) {
+    if (providers.isNotEmpty &&
+        !providers.contains(record.providerKey.toLowerCase())) {
       return false;
     }
     if (categories.isNotEmpty &&
@@ -61,7 +84,7 @@ class ActivitySearchQueryMapper {
 
     if (users.isNotEmpty && !users.contains(activity.userId)) return false;
     if (providers.isNotEmpty &&
-        !providers.contains(activity.provider.name.toLowerCase())) {
+        !providers.contains(providerFilterKey(activity.provider))) {
       return false;
     }
     if (categories.isNotEmpty &&

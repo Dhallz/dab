@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:objectbox/objectbox.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
+import '../../../datasources/activity_search_query_mapper.dart';
 
 @Entity()
 class ExplorerActivityRecord {
@@ -58,6 +59,7 @@ extension OnExplorerActivityRecord on ExplorerActivityRecord {
 extension OnActivityForExplorerRecord on Activity {
   ExplorerActivityRecord toExplorerRecord() {
     final lowerProvider = provider.name.toLowerCase();
+    final filterKey = ActivitySearchQueryMapper.providerFilterKey(provider);
     final day = createdAt.toLocal();
     final dayKey = _buildDayKey(day);
     final searchable = [
@@ -73,7 +75,7 @@ extension OnActivityForExplorerRecord on Activity {
       dayKey: dayKey,
       createdAtEpochMs: createdAt.toUtc().millisecondsSinceEpoch,
       userId: userId,
-      providerKey: lowerProvider,
+      providerKey: filterKey,
       providerDisplayNameLower: lowerProvider,
       categoryKey: provider.category.name,
       activityKindKey: provider.runtimeType.toString().toLowerCase(),

@@ -43,6 +43,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
   }
 
   Future<void> started(String? connectedUserId) async {
+    state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
     final usersResult = await _userUseCases.getUsers.execute();
     final providerResult = await _metadataUseCases.getProviderConfigs.execute();
 
