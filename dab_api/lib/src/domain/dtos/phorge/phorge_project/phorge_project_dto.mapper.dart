@@ -29,12 +29,17 @@ class PhorgeProjectDtoMapper extends ClassMapperBase<PhorgeProjectDto> {
   static PhorgeProjectWireFields _$fields(PhorgeProjectDto v) => v.fields;
   static const Field<PhorgeProjectDto, PhorgeProjectWireFields> _f$fields =
       Field('fields', _$fields);
+  static Map<String, dynamic>? _$attachments(PhorgeProjectDto v) =>
+      v.attachments;
+  static const Field<PhorgeProjectDto, Map<String, dynamic>> _f$attachments =
+      Field('attachments', _$attachments, opt: true);
 
   @override
   final MappableFields<PhorgeProjectDto> fields = const {
     #id: _f$id,
     #phid: _f$phid,
     #fields: _f$fields,
+    #attachments: _f$attachments,
   };
 
   static PhorgeProjectDto _instantiate(DecodingData data) {
@@ -42,6 +47,7 @@ class PhorgeProjectDtoMapper extends ClassMapperBase<PhorgeProjectDto> {
       id: data.dec(_f$id),
       phid: data.dec(_f$phid),
       fields: data.dec(_f$fields),
+      attachments: data.dec(_f$attachments),
     );
   }
 
@@ -113,7 +119,14 @@ abstract class PhorgeProjectDtoCopyWith<$R, $In extends PhorgeProjectDto, $Out>
     PhorgeProjectWireFields
   >
   get fields;
-  $R call({int? id, String? phid, PhorgeProjectWireFields? fields});
+  MapCopyWith<$R, String, dynamic, ObjectCopyWith<$R, dynamic, dynamic>>?
+  get attachments;
+  $R call({
+    int? id,
+    String? phid,
+    PhorgeProjectWireFields? fields,
+    Map<String, dynamic>? attachments,
+  });
   PhorgeProjectDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -135,11 +148,26 @@ class _PhorgeProjectDtoCopyWithImpl<$R, $Out>
   >
   get fields => $value.fields.copyWith.$chain((v) => call(fields: v));
   @override
-  $R call({int? id, String? phid, PhorgeProjectWireFields? fields}) => $apply(
+  MapCopyWith<$R, String, dynamic, ObjectCopyWith<$R, dynamic, dynamic>>?
+  get attachments => $value.attachments != null
+      ? MapCopyWith(
+          $value.attachments!,
+          (v, t) => ObjectCopyWith(v, $identity, t),
+          (v) => call(attachments: v),
+        )
+      : null;
+  @override
+  $R call({
+    int? id,
+    String? phid,
+    PhorgeProjectWireFields? fields,
+    Object? attachments = $none,
+  }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
       if (phid != null) #phid: phid,
       if (fields != null) #fields: fields,
+      if (attachments != $none) #attachments: attachments,
     }),
   );
   @override
@@ -147,6 +175,7 @@ class _PhorgeProjectDtoCopyWithImpl<$R, $Out>
     id: data.get(#id, or: $value.id),
     phid: data.get(#phid, or: $value.phid),
     fields: data.get(#fields, or: $value.fields),
+    attachments: data.get(#attachments, or: $value.attachments),
   );
 
   @override
