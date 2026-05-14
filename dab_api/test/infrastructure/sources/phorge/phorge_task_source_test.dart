@@ -1,4 +1,3 @@
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:mocktail/mocktail.dart';
@@ -8,17 +7,13 @@ import '../../../test_factories.dart';
 
 class _MockConduitProtocol extends Mock implements ConduitProtocol {}
 
-class _MockSprintService extends Mock implements PhorgeSprintService {}
-
 void main() {
   late _MockConduitProtocol client;
-  late _MockSprintService sprintService;
   late PhorgeTaskSource source;
 
   setUp(() {
     client = _MockConduitProtocol();
-    sprintService = _MockSprintService();
-    source = PhorgeTaskSource(client, sprintService);
+    source = PhorgeTaskSource(client);
   });
 
   test('paginates authored transaction search for older date ranges', () async {
@@ -28,10 +23,6 @@ void main() {
     ).copyWith(phorgePhid: 'PHID-USER-ALICE');
     final start = DateTime.utc(2026, 2, 1);
     final end = DateTime.utc(2026, 2, 28, 23, 59, 59);
-
-    when(
-      () => sprintService.getCurrentSprintTag(any()),
-    ).thenReturn('DS2026-05');
 
     when(() => client.call('transaction.search', any())).thenAnswer((
       invocation,
@@ -135,7 +126,7 @@ Map<String, dynamic> _taskRow(String phid, int id) {
     'id': id,
     'phid': phid,
     'fields': {
-      'name': 'Task $id',
+      'title': 'Task $id',
       'uri': 'https://phorge.example.com/T$id',
       'ownerPHID': 'PHID-USER-ALICE',
       'dateModified': DateTime.utc(2026, 2, 10).millisecondsSinceEpoch ~/ 1000,

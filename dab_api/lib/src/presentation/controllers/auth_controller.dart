@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:relic/relic.dart';
 
 import '../../application/containers/auth_usecases.dart';
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]

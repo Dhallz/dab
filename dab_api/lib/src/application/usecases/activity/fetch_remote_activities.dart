@@ -1,7 +1,7 @@
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 
@@ -10,7 +10,7 @@ import '../../../domain/entities/user/user.dart';
 /// CONTRACT: Returns a sorted, deduplicated list of Activities or a Failure.
 /// CONSTRAINTS: Must use [UnifiedActivityFetcher] for technical fan-out.
 ///
-/// This UseCase is the primary entry point for the Dashboard and Search 
+/// This UseCase is the primary entry point for the Dashboard and Search
 /// controllers to retrieve fresh data from external sources.
 class FetchRemoteActivities {
   final UnifiedActivityFetcher _fetcher;
@@ -41,7 +41,7 @@ class FetchRemoteActivities {
       for (var activity in aggregatedActivities) {
         uniqueActivitiesMap[activity.id] = activity;
       }
-      
+
       final sortedActivities = uniqueActivitiesMap.values.toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 

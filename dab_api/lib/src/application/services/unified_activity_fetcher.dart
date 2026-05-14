@@ -37,7 +37,7 @@ class UnifiedActivityFetcher {
   /// 1. Filters [users] for source-specific identifiers.
   /// 2. Iterates over all pairs in the [_registry].
   /// 3. Triggers [source.fetchRawData] in parallel.
-  /// 4. Maps raw results to Domain [Activity] entities via [mapper.mapToActivities].
+  /// 4. Maps raw rows to Domain [Activity] entities via each pair's [TypedConnectorPair.mapItemToActivities].
   /// 5. Flattens and sorts the final results by [createdAt] descending.
   Future<List<Activity>> fetchAll({
     required List<User> users,
@@ -66,14 +66,14 @@ class UnifiedActivityFetcher {
     final aggregationTasks = _registry.allPairs
         .where((pair) {
           // Filter out connectors for providers that are deactivated in DAB settings.
-          return activeProviderIds.contains(pair.mapper.providerName);
+          return activeProviderIds.contains(pair.providerId);
         })
         .map((pair) async {
           try {
             final identitiesResult = await _userRepo
                 .getIdentitiesForUsersAndProvider(
                   users.map((u) => u.id),
-                  pair.mapper.providerName,
+                  pair.providerId,
                 );
             final identities = identitiesResult.getOrElse((_) => []);
             final linkedIdentitiesByUserId = {
@@ -86,7 +86,7 @@ class UnifiedActivityFetcher {
                 .where((u) => linkedIdentitiesByUserId.containsKey(u.id))
                 .map((u) {
                   final identity = linkedIdentitiesByUserId[u.id]!;
-                  if (pair.mapper.providerName == 'phorge') {
+                  if (pair.providerId == 'phorge') {
                     return u.copyWith(
                       phorgePhid: identity.externalId,
                       phorgeUsername: identity.externalUsername,
@@ -109,7 +109,7 @@ class UnifiedActivityFetcher {
             // Transform the raw DTOs into high-level Domain Activities.
             return rawDataList
                 .expand(
-                  (item) => pair.mapper.mapToActivities(item, usersForConnector),
+                  (item) => pair.mapItemToActivities(item, usersForConnector),
                 )
                 .toList();
           } catch (e) {
@@ -118,7 +118,7 @@ class UnifiedActivityFetcher {
               'UnifiedActivityFetcher: connector fetch failed',
               level: 'WARNING',
               extra: {
-                'provider': pair.mapper.providerName,
+                'provider': pair.providerId,
                 'error': e.toString(),
               },
             );

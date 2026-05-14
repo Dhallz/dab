@@ -14,7 +14,7 @@ class PhorgeUserDtoMapper extends ClassMapperBase<PhorgeUserDto> {
   static PhorgeUserDtoMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = PhorgeUserDtoMapper._());
-      PhorgeUserWireFieldsMapper.ensureInitialized();
+      PhorgeUserWireFieldsDtoMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -24,8 +24,8 @@ class PhorgeUserDtoMapper extends ClassMapperBase<PhorgeUserDto> {
 
   static String _$phid(PhorgeUserDto v) => v.phid;
   static const Field<PhorgeUserDto, String> _f$phid = Field('phid', _$phid);
-  static PhorgeUserWireFields _$fields(PhorgeUserDto v) => v.fields;
-  static const Field<PhorgeUserDto, PhorgeUserWireFields> _f$fields = Field(
+  static PhorgeUserWireFieldsDto _$fields(PhorgeUserDto v) => v.fields;
+  static const Field<PhorgeUserDto, PhorgeUserWireFieldsDto> _f$fields = Field(
     'fields',
     _$fields,
   );
@@ -102,9 +102,13 @@ extension PhorgeUserDtoValueCopy<$R, $Out>
 
 abstract class PhorgeUserDtoCopyWith<$R, $In extends PhorgeUserDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, PhorgeUserWireFields>
+  PhorgeUserWireFieldsDtoCopyWith<
+    $R,
+    PhorgeUserWireFieldsDto,
+    PhorgeUserWireFieldsDto
+  >
   get fields;
-  $R call({String? phid, PhorgeUserWireFields? fields});
+  $R call({String? phid, PhorgeUserWireFieldsDto? fields});
   PhorgeUserDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -117,10 +121,14 @@ class _PhorgeUserDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<PhorgeUserDto> $mapper =
       PhorgeUserDtoMapper.ensureInitialized();
   @override
-  PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, PhorgeUserWireFields>
+  PhorgeUserWireFieldsDtoCopyWith<
+    $R,
+    PhorgeUserWireFieldsDto,
+    PhorgeUserWireFieldsDto
+  >
   get fields => $value.fields.copyWith.$chain((v) => call(fields: v));
   @override
-  $R call({String? phid, PhorgeUserWireFields? fields}) => $apply(
+  $R call({String? phid, PhorgeUserWireFieldsDto? fields}) => $apply(
     FieldCopyWithData({
       if (phid != null) #phid: phid,
       if (fields != null) #fields: fields,

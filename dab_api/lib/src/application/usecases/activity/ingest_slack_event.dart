@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_provider.dart';
 import '../../../domain/entities/user/user.dart';

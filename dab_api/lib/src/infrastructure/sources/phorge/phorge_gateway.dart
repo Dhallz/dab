@@ -1,9 +1,8 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_data.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle.dart';
-import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
-import 'package:dab_api/src/domain/entities/phorge/phorge_project_summary.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
@@ -14,7 +13,8 @@ import 'package:fpdart/fpdart.dart';
 
 /// [ARCH: INFRASTRUCTURE_GATEWAY]
 /// ROLE: Consolidated Phorge Conduit read surface for domain [AbsIPhorgeGateway].
-/// CONTRACT: Delegates to existing sources without remote writes.
+/// CONTRACT: Delegates to sources; returns decoded Conduit row DTOs without secondary projections.
+/// CONSTRAINTS: No remote writes.
 class PhorgeGateway implements AbsIPhorgeGateway {
   final PhorgeUserSource _userSource;
   final PhorgeTaskSource _taskSource;
@@ -32,29 +32,17 @@ class PhorgeGateway implements AbsIPhorgeGateway {
        _projectSource = projectSource;
 
   @override
-  Future<Either<Failure, List<PhorgeDirectoryUser>>> fetchDirectoryUsers() {
+  Future<Either<Failure, List<PhorgeUserDto>>> fetchDirectoryUsers() {
     return _userSource.fetchDirectoryUsers();
   }
 
   @override
-  Future<Either<Failure, List<PhorgeProjectSummary>>> fetchActiveSprintProjects(
+  Future<Either<Failure, List<PhorgeProjectDto>>> fetchActiveSprintProjects(
     String userPhid,
   ) async {
     try {
       final dtos = await _projectSource.fetchActiveSprintProjects(userPhid);
-      return Right(
-        dtos
-            .map(
-              (p) => PhorgeProjectSummary(
-                id: p.id,
-                phid: p.phid,
-                name: p.name,
-                color: p.color,
-                icon: p.icon,
-              ),
-            )
-            .toList(),
-      );
+      return Right(dtos);
     } catch (e) {
       return Left(DatabaseFailure('Phorge sprint project fetch failed: $e'));
     }
@@ -71,7 +59,7 @@ class PhorgeGateway implements AbsIPhorgeGateway {
   }
 
   @override
-  Future<Either<Failure, List<PhorgeTaskBundle>>> fetchTaskBundles({
+  Future<Either<Failure, List<PhorgeTaskBundleDto>>> fetchTaskBundles({
     required List<User> users,
     required DateTime start,
     required DateTime end,
@@ -91,7 +79,7 @@ class PhorgeGateway implements AbsIPhorgeGateway {
   }
 
   @override
-  Future<Either<Failure, List<PhorgeRevisionData>>> fetchRevisionDtos({
+  Future<Either<Failure, List<PhorgeRevisionDto>>> fetchRevisionDtos({
     required List<User> users,
     required DateTime start,
     required DateTime end,

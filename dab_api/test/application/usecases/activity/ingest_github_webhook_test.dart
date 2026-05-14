@@ -6,7 +6,6 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
-import 'package:dab_api/src/domain/mappers/github/github_commit_mapper.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
@@ -63,7 +62,6 @@ void main() {
       providerConfigRepository,
       redisService,
       presenceService,
-      GitHubCommitMapper(),
     );
 
     when(() => presenceService.broadcast(any(), any())).thenReturn(null);

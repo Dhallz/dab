@@ -1,17 +1,28 @@
-import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 
 /// [ARCH: APPLICATION]
-/// ROLE: Pairs an [IActivitySource] with its [IActivityMapper] for one payload type [T].
-/// CONTRACT: Source output type must match mapper input type (enforced at [register]).
+/// ROLE: Converts one raw connector payload row into normalized [Activity]s.
+typedef ActivityMapping<T> =
+    List<Activity> Function(T item, List<User> usersForConnector);
+
+/// [ARCH: APPLICATION]
+/// ROLE: Pairs an [IActivitySource] with a Postgres-safe [providerId] and mapping closure.
+/// CONTRACT: [mapItemToActivities] must be pure Domain logic ([T] is the source row type).
 
 class TypedConnectorPair<T> {
   final IActivitySource<T> source;
-  final IActivityMapper<T> mapper;
+
+  /// Wire id aligning with [`ProviderConfig.id`] (`github`, `jira`, `phorge`, …).
+  final String providerId;
+
+  final ActivityMapping<T> mapItemToActivities;
 
   TypedConnectorPair({
     required this.source,
-    required this.mapper,
+    required this.providerId,
+    required this.mapItemToActivities,
   });
 }
 
@@ -22,8 +33,8 @@ class TypedConnectorPair<T> {
 class ConnectorRegistry {
   final List<TypedConnectorPair<dynamic>> _pairs = [];
 
-  void register<T>(IActivitySource<T> source, IActivityMapper<T> mapper) {
-    _pairs.add(TypedConnectorPair<T>(source: source, mapper: mapper));
+  void register<T>(TypedConnectorPair<T> pair) {
+    _pairs.add(pair);
   }
 
   List<TypedConnectorPair<dynamic>> get allPairs => List.unmodifiable(_pairs);

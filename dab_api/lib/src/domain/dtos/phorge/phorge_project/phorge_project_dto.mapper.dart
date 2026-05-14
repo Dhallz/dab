@@ -14,7 +14,7 @@ class PhorgeProjectDtoMapper extends ClassMapperBase<PhorgeProjectDto> {
   static PhorgeProjectDtoMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = PhorgeProjectDtoMapper._());
-      PhorgeProjectWireFieldsMapper.ensureInitialized();
+      PhorgeProjectWireFieldsDtoMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -26,8 +26,8 @@ class PhorgeProjectDtoMapper extends ClassMapperBase<PhorgeProjectDto> {
   static const Field<PhorgeProjectDto, int> _f$id = Field('id', _$id);
   static String _$phid(PhorgeProjectDto v) => v.phid;
   static const Field<PhorgeProjectDto, String> _f$phid = Field('phid', _$phid);
-  static PhorgeProjectWireFields _$fields(PhorgeProjectDto v) => v.fields;
-  static const Field<PhorgeProjectDto, PhorgeProjectWireFields> _f$fields =
+  static PhorgeProjectWireFieldsDto _$fields(PhorgeProjectDto v) => v.fields;
+  static const Field<PhorgeProjectDto, PhorgeProjectWireFieldsDto> _f$fields =
       Field('fields', _$fields);
   static Map<String, dynamic>? _$attachments(PhorgeProjectDto v) =>
       v.attachments;
@@ -113,10 +113,10 @@ extension PhorgeProjectDtoValueCopy<$R, $Out>
 
 abstract class PhorgeProjectDtoCopyWith<$R, $In extends PhorgeProjectDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  PhorgeProjectWireFieldsCopyWith<
+  PhorgeProjectWireFieldsDtoCopyWith<
     $R,
-    PhorgeProjectWireFields,
-    PhorgeProjectWireFields
+    PhorgeProjectWireFieldsDto,
+    PhorgeProjectWireFieldsDto
   >
   get fields;
   MapCopyWith<$R, String, dynamic, ObjectCopyWith<$R, dynamic, dynamic>>?
@@ -124,7 +124,7 @@ abstract class PhorgeProjectDtoCopyWith<$R, $In extends PhorgeProjectDto, $Out>
   $R call({
     int? id,
     String? phid,
-    PhorgeProjectWireFields? fields,
+    PhorgeProjectWireFieldsDto? fields,
     Map<String, dynamic>? attachments,
   });
   PhorgeProjectDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
@@ -141,10 +141,10 @@ class _PhorgeProjectDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<PhorgeProjectDto> $mapper =
       PhorgeProjectDtoMapper.ensureInitialized();
   @override
-  PhorgeProjectWireFieldsCopyWith<
+  PhorgeProjectWireFieldsDtoCopyWith<
     $R,
-    PhorgeProjectWireFields,
-    PhorgeProjectWireFields
+    PhorgeProjectWireFieldsDto,
+    PhorgeProjectWireFieldsDto
   >
   get fields => $value.fields.copyWith.$chain((v) => call(fields: v));
   @override
@@ -160,7 +160,7 @@ class _PhorgeProjectDtoCopyWithImpl<$R, $Out>
   $R call({
     int? id,
     String? phid,
-    PhorgeProjectWireFields? fields,
+    PhorgeProjectWireFieldsDto? fields,
     Object? attachments = $none,
   }) => $apply(
     FieldCopyWithData({

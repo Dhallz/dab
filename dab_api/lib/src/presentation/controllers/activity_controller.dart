@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:relic/relic.dart';
+
 import '../../application/containers/activity_usecases.dart';
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/activity/activity.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../../infrastructure/websockets/presence_service.dart';
 import '../../domain/entities/activity/activity_provider.dart';
+import '../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../infrastructure/core/http/github_webhook_payload.dart';
+import '../../infrastructure/core/security/github_webhook_verifier.dart';
+import '../../infrastructure/core/security/slack_request_verifier.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
-import '../../infrastructure/http/github_webhook_payload.dart';
-import '../../infrastructure/security/github_webhook_verifier.dart';
-import '../../infrastructure/security/slack_request_verifier.dart';
+import '../../infrastructure/websockets/presence_service.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
@@ -57,13 +59,11 @@ class ActivityController {
 
     final limitParam = request.url.queryParameters['limit'];
     final scopeParam = request.url.queryParameters['scope']?.toLowerCase();
-    final includeArchivedParam = request
-        .url
-        .queryParameters['includeArchived']
+    final includeArchivedParam = request.url.queryParameters['includeArchived']
         ?.toLowerCase();
     final global = scopeParam == 'global';
-    final includeArchived = includeArchivedParam == 'true' ||
-        includeArchivedParam == '1';
+    final includeArchived =
+        includeArchivedParam == 'true' || includeArchivedParam == '1';
 
     final parsedLimit = int.tryParse(limitParam ?? '');
     if (limitParam != null && parsedLimit == null) {
@@ -333,11 +333,7 @@ class ActivityController {
 
     unawaited(
       _activity.ingestGitHubWebhook
-          .execute(
-            payload: decoded,
-            deliveryId: delivery,
-            event: eventType,
-          )
+          .execute(payload: decoded, deliveryId: delivery, event: eventType)
           .then((result) {
             result.fold((failure) {
               print('GitHub live ingestion failed: ${failure.message}');

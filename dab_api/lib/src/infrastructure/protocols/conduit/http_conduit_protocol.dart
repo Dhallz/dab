@@ -7,7 +7,7 @@ import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
-import '../../config/config.dart';
+import '../../core/config/config.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: HTTP implementation of [ConduitProtocol] for Phorge / Conduit APIs.
@@ -19,7 +19,10 @@ class HttpConduitProtocol implements ConduitProtocol {
   final http.Client _client;
 
   HttpConduitProtocol({http.Client? client, String? baseUrl, String? apiToken})
-    : _baseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(RegExp(r'/+$'), ''),
+    : _baseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(
+        RegExp(r'/+$'),
+        '',
+      ),
       _apiToken = (apiToken ?? Config().phorgeApiToken).trim(),
       _client = client ?? _createInsecureClient();
 

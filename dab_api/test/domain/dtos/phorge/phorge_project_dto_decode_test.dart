@@ -62,7 +62,7 @@ void main() {
       'id': 1,
       'phid': 'PHID-PROJ-empty',
       'fields': <String, dynamic>{
-        // name absent on wire ⇒ null [PhorgeProjectWireFields.name]
+        // name absent on wire ⇒ null [PhorgeProjectWireFieldsDto.name]
       },
     };
 

@@ -1,4 +1,5 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields.dart';
+import 'package:dab_api/src/domain/core/extensions/string_extensions.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields_dto.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_project_dto.mapper.dart';
@@ -13,7 +14,7 @@ class PhorgeProjectDto with PhorgeProjectDtoMappable {
 
   final String phid;
 
-  final PhorgeProjectWireFields fields;
+  final PhorgeProjectWireFieldsDto fields;
 
   /// Present when the caller passes `attachments: { …: true }` on `project.search`.
   final Map<String, dynamic>? attachments;
@@ -29,23 +30,14 @@ class PhorgeProjectDto with PhorgeProjectDtoMappable {
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: Convenience accessors for gateways and summaries (scalar strings / non-null display name).
 extension OnPhorgeProjectDto on PhorgeProjectDto {
-  /// Label for [`PhorgeProjectSummary`] when Conduit omits [`fields.name`].
+  /// Label for UI aggregates when Conduit omits [`fields.name`].
   String get name {
     final n = fields.name?.trim();
     if (n != null && n.isNotEmpty) return n;
     return 'Unknown';
   }
 
-  String? get color => _phorgeProjectWireOptionalString(fields.color);
+  String? get color => fields.color.phorgeWireOptionalString;
 
-  String? get icon => _phorgeProjectWireOptionalString(fields.icon);
-}
-
-String? _phorgeProjectWireOptionalString(Object? value) {
-  if (value == null) return null;
-  if (value is String) return value;
-  if (value is Map && value.containsKey('key')) {
-    return value['key']?.toString();
-  }
-  return value.toString();
+  String? get icon => fields.icon.phorgeWireOptionalString;
 }

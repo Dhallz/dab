@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 

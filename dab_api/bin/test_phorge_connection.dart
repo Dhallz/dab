@@ -4,9 +4,8 @@ import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_data.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/on_phorge_task_bundle.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/entities/group/group.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
@@ -56,15 +55,15 @@ void main() async {
 
   // Application Registry
   final registry = ConnectorRegistry();
-  registry.register<PhorgeTaskBundle>(
-    TypedConnectorPair<PhorgeTaskBundle>(
+  registry.register<PhorgeTaskBundleDto>(
+    TypedConnectorPair<PhorgeTaskBundleDto>(
       source: taskSource,
       providerId: 'phorge',
       mapItemToActivities: (bundle, users) => bundle.toActivities(users),
     ),
   );
-  registry.register<PhorgeRevisionData>(
-    TypedConnectorPair<PhorgeRevisionData>(
+  registry.register<PhorgeRevisionDto>(
+    TypedConnectorPair<PhorgeRevisionDto>(
       source: revisionSource,
       providerId: 'phorge',
       mapItemToActivities: (data, users) => data.toActivities(users),

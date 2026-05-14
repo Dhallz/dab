@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_provider.dart';
 import '../../domain/repositories/abs_i_activity_repository.dart';

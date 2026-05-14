@@ -3,9 +3,8 @@ import 'package:dab_api/src/domain/dtos/discord/discord_message_dto.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
 import 'package:dab_api/src/domain/dtos/linear/linear_issue_dto.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_data.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/on_phorge_task_bundle.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
 import 'package:dab_api/src/domain/dtos/teams/teams_message_dto.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
@@ -32,15 +31,15 @@ void registerActivityConnectors({
   required DiscordMessageSource discordSource,
   required GitHubCommitSource githubSource,
 }) {
-  registry.register<PhorgeTaskBundle>(
-    TypedConnectorPair<PhorgeTaskBundle>(
+  registry.register<PhorgeTaskBundleDto>(
+    TypedConnectorPair<PhorgeTaskBundleDto>(
       source: phorgeTaskSource,
       providerId: 'phorge',
       mapItemToActivities: (bundle, users) => bundle.toActivities(users),
     ),
   );
-  registry.register<PhorgeRevisionData>(
-    TypedConnectorPair<PhorgeRevisionData>(
+  registry.register<PhorgeRevisionDto>(
+    TypedConnectorPair<PhorgeRevisionDto>(
       source: phorgeRevisionSource,
       providerId: 'phorge',
       mapItemToActivities: (data, users) => data.toActivities(users),

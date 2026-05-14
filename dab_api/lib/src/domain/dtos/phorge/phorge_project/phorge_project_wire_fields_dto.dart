@@ -1,12 +1,12 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
-part 'phorge_project_wire_fields.mapper.dart';
+part 'phorge_project_wire_fields_dto.mapper.dart';
 
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: `fields` object from Conduit `project.search`.
 /// CONTRACT: Mirrors [ApplicationSearch object fields documented for Projects](https://we.phorge.it/conduit/method/project.search/) (`Object Fields`). Omit or null on the wire ⇒ null here (no synthetic defaults).
 @MappableClass()
-class PhorgeProjectWireFields with PhorgeProjectWireFieldsMappable {
+class PhorgeProjectWireFieldsDto with PhorgeProjectWireFieldsDtoMappable {
   final String? name;
 
   /// Primary hashtag slug.
@@ -41,7 +41,7 @@ class PhorgeProjectWireFields with PhorgeProjectWireFieldsMappable {
   /// Short description (`wild` in Conduit; often string markup).
   final Object? description;
 
-  const PhorgeProjectWireFields({
+  const PhorgeProjectWireFieldsDto({
     this.name,
     this.slug,
     this.subtype,

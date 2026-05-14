@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:dab_api/src/infrastructure/security/slack_request_verifier.dart';
+import 'package:dab_api/src/infrastructure/core/security/slack_request_verifier.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,13 +1,13 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_status_fields.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_status_fields_dto.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
-part 'phorge_revision_fields.mapper.dart';
+part 'phorge_revision_fields_dto.mapper.dart';
 
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: Nested `fields` object from `differential.revision.search` rows.
 /// CONTRACT: Shapes match Conduit (`authorPHID`, `title`, `uri`, `dateModified` in seconds, `status`).
 @MappableClass()
-class PhorgeRevisionFields with PhorgeRevisionFieldsMappable {
+class PhorgeRevisionFieldsDto with PhorgeRevisionFieldsDtoMappable {
   final String authorPHID;
   final String title;
   final String uri;
@@ -15,9 +15,9 @@ class PhorgeRevisionFields with PhorgeRevisionFieldsMappable {
   /// Epoch seconds (Conduit `fields.dateModified`; wire int).
   final int dateModified;
 
-  final PhorgeRevisionStatusFields status;
+  final PhorgeRevisionStatusFieldsDto status;
 
-  const PhorgeRevisionFields({
+  const PhorgeRevisionFieldsDto({
     required this.authorPHID,
     required this.title,
     required this.uri,

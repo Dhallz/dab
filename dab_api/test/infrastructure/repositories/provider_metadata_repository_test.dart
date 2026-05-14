@@ -1,5 +1,6 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/entities/phorge/phorge_project_summary.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -20,19 +21,23 @@ void main() {
   group('ProviderMetadataRepository', () {
     const tUserId = 'user123';
 
-    final tPhorgeProjects = [
-      const PhorgeProjectSummary(
+    late final tPhorgeProjects = [
+      PhorgeProjectDto(
         id: 1,
         phid: 'PHID-PROJ-111',
-        name: 'Backend',
-        color: 'red',
-        icon: 'tag',
+        fields: const PhorgeProjectWireFieldsDto(
+          name: 'Backend',
+          color: 'red',
+          icon: 'tag',
+        ),
       ),
-      const PhorgeProjectSummary(
+      PhorgeProjectDto(
         id: 2,
         phid: 'PHID-PROJ-222',
-        name: 'Bug',
-        color: 'orange',
+        fields: const PhorgeProjectWireFieldsDto(
+          name: 'Bug',
+          color: 'orange',
+        ),
       ),
     ];
 

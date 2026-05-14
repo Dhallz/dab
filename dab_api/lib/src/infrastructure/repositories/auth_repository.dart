@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/session.dart';
 import '../../domain/entities/user/user.dart';
 import '../../domain/entities/user/user_role.dart';

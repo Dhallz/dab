@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failure.dart';
+import '../core/failures/failure.dart';
 import '../entities/provider/provider_config.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]

@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:uuid/uuid.dart';
 
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/group/group.dart';
 import '../../domain/entities/group/group_type.dart';
 import '../../domain/entities/user/user.dart';

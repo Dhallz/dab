@@ -2,14 +2,14 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/config/config.dart';
+import '../../../infrastructure/core/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 
 /// [ARCH: APPLICATION_USECASE]

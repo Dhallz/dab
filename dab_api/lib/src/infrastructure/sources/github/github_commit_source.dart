@@ -1,12 +1,12 @@
+import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
+import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/github/github_commit_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_repo_config.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Fetches read-only commit activity from GitHub REST API.
@@ -40,8 +40,9 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
     }
 
     final settings = config.settings;
-    final token =
-        (settings['api.token'] ?? settings['token'] ?? '').toString().trim();
+    final token = (settings['api.token'] ?? settings['token'] ?? '')
+        .toString()
+        .trim();
     if (token.isEmpty) {
       return [];
     }
@@ -49,10 +50,11 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
     final configuredApiBaseUrl = (settings['apiBaseUrl'] ?? '')
         .toString()
         .trim();
-    final apiBaseUrl = (configuredApiBaseUrl.isEmpty
-            ? 'https://api.github.com'
-            : configuredApiBaseUrl)
-        .replaceAll(RegExp(r'/+$'), '');
+    final apiBaseUrl =
+        (configuredApiBaseUrl.isEmpty
+                ? 'https://api.github.com'
+                : configuredApiBaseUrl)
+            .replaceAll(RegExp(r'/+$'), '');
 
     final repos = extractConfiguredGithubRepos(settings);
     if (repos.isEmpty) {

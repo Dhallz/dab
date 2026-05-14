@@ -1,5 +1,5 @@
 import 'package:dab_api/src/application/usecases/activity/archive_live_activity.dart';
-import 'package:dab_api/src/domain/core/failure.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:mocktail/mocktail.dart';

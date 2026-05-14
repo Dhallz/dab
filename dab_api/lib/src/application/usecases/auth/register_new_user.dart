@@ -1,9 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
-import '../../../domain/core/failure.dart';
+
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/security/jwt_provider.dart';
+import '../../../infrastructure/core/security/jwt_provider.dart';
 import 'register_user.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -19,13 +20,17 @@ class RegisterNewUser {
   RegisterNewUser(this._repo, this._registerUser, this._jwtProvider);
 
   /// Registers a user and returns a logged-in state.
-  /// 
+  ///
   /// 1. Calls [RegisterUser] to create the identity record.
   /// 2. Generates initial Access/Refresh tokens.
   /// 3. Persists the first session.
-  Future<Either<AuthFailure, Map<String, String>>> execute(String name, String email, String password) async {
+  Future<Either<AuthFailure, Map<String, String>>> execute(
+    String name,
+    String email,
+    String password,
+  ) async {
     final registerResult = await _registerUser.execute(name, email, password);
-    
+
     if (registerResult.isLeft()) {
       return Left(registerResult.getLeft().toNullable()!);
     }

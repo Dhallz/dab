@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failures/failure.dart';
+import '../../domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
 import '../../domain/entities/provider/provider_metadata.dart';
 import '../../domain/gataways/abs_i_phorge_gataway.dart';
 import '../../domain/repositories/abs_i_provider_metadata_repository.dart';
@@ -18,8 +19,8 @@ class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
   /// Retrieves metadata relevant to the specified user across all providers.
   ///
   /// Flow:
-  /// 1. Uses [AbsIPhorgeGateway.fetchActiveSprintProjects] for sprint tags.
-  /// 2. Maps summaries to unified [ProviderMetadata] entities.
+  /// 1. Uses [AbsIPhorgeGateway.fetchActiveSprintProjects] for sprint tags ([PhorgeProjectDto] rows).
+  /// 2. Maps project DTOs to unified [ProviderMetadata] entities.
   @override
   Future<Either<Failure, List<ProviderMetadata>>> getMetadata(
     String userId,

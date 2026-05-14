@@ -1,9 +1,11 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:relic/relic.dart';
+
 import '../../application/containers/user_usecases.dart';
 import '../../application/services/identity_discovery_service.dart';
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTROLLER]

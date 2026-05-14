@@ -1,4 +1,4 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_wire_fields.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_wire_fields_dto.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_user_dto.mapper.dart';
@@ -6,11 +6,11 @@ part 'phorge_user_dto.mapper.dart';
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: Parsed `user.search` row from Phorge Conduit.
 /// CONTRACT: Decode with [PhorgeUserDtoMapper.fromMap] after JSON decode only.
-/// CONSTRAINTS: Mapped to [PhorgeDirectoryUser] when provisioning/syncing identities.
+/// CONSTRAINTS: Consumed directly by gateways and provisioning ([SyncPhorgeUsers]); no secondary entity projection.
 @MappableClass()
 class PhorgeUserDto with PhorgeUserDtoMappable {
   final String phid;
-  final PhorgeUserWireFields fields;
+  final PhorgeUserWireFieldsDto fields;
 
   const PhorgeUserDto({required this.phid, required this.fields});
 

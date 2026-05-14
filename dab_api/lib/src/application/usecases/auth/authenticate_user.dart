@@ -1,11 +1,11 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/config/config.dart';
-import '../../../infrastructure/security/jwt_provider.dart';
+import '../../../infrastructure/core/config/config.dart';
+import '../../../infrastructure/core/security/jwt_provider.dart';
 import 'login_user.dart';
 
 class AuthenticateUser {
@@ -16,9 +16,12 @@ class AuthenticateUser {
 
   AuthenticateUser(this._repo, this._loginUser, this._jwtProvider);
 
-  Future<Either<AuthFailure, Map<String, String>>> execute(String email, String password) async {
+  Future<Either<AuthFailure, Map<String, String>>> execute(
+    String email,
+    String password,
+  ) async {
     final loginResult = await _loginUser.execute(email, password);
-    
+
     if (loginResult.isLeft()) {
       return Left(loginResult.getLeft().toNullable()!);
     }

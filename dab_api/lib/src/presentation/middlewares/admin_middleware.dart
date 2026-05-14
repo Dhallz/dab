@@ -3,7 +3,7 @@ import 'package:relic/relic.dart';
 
 import '../../domain/entities/user/user_role.dart';
 import '../../domain/repositories/abs_i_auth_repository.dart';
-import '../../infrastructure/config/config.dart';
+import '../../infrastructure/core/config/config.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_MIDDLEWARE]

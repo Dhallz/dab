@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:dab_api/src/infrastructure/config/config.dart';
+
+import 'package:dab_api/src/infrastructure/core/config/config.dart';
 
 void main() {
   final config = Config();

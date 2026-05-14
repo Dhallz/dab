@@ -1,7 +1,6 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
 import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_user_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -69,20 +68,10 @@ class PhorgeUserSource implements IDiscoverySource {
   }
 
   /// Full directory enumeration for provisioning ([AbsIPhorgeGateway] delegates here).
-  Future<Either<Failure, List<PhorgeDirectoryUser>>> fetchDirectoryUsers() async {
+  Future<Either<Failure, List<PhorgeUserDto>>> fetchDirectoryUsers() async {
     try {
       final dtos = await fetchAllUsers();
-      return Right(
-        dtos
-            .map(
-              (d) => PhorgeDirectoryUser(
-                phid: d.phid,
-                userName: d.userName,
-                realName: d.realName,
-              ),
-            )
-            .toList(),
-      );
+      return Right(dtos);
     } catch (e) {
       return Left(DatabaseFailure('Phorge directory fetch failed: $e'));
     }

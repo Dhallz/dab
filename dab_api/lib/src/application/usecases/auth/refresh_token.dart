@@ -1,9 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
-import '../../../domain/core/failure.dart';
+
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/security/jwt_provider.dart';
+import '../../../infrastructure/core/security/jwt_provider.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Refreshes a short-lived Access Token using a long-lived Refresh Token.
@@ -17,13 +18,15 @@ class RefreshToken {
   RefreshToken(this._repo, this._jwtProvider);
 
   /// Executes the token refresh logic.
-  /// 
+  ///
   /// 1. Verifies the [refreshToken] exists in the database.
   /// 2. Checks for expiration.
   /// 3. Deletes the old session.
   /// 4. Generates a new Access Token and a new Refresh Token.
   /// 5. Persists the new session.
-  Future<Either<AuthFailure, Map<String, String>>> execute(String refreshToken) async {
+  Future<Either<AuthFailure, Map<String, String>>> execute(
+    String refreshToken,
+  ) async {
     final sessionResult = await _repo.findSessionByToken(refreshToken);
 
     if (sessionResult.isLeft()) {
@@ -55,7 +58,7 @@ class RefreshToken {
 
     // Token Rotation: Always invalidate the old token after single use.
     await _repo.deleteSession(refreshToken);
-    
+
     final newAccessToken = _jwtProvider.generateToken({
       'sub': user.id,
       'email': user.email,
@@ -73,7 +76,9 @@ class RefreshToken {
     final createResult = await _repo.createSession(newSession);
     if (createResult.isLeft()) {
       final failure = createResult.getLeft().toNullable()!;
-      return Left(AuthFailure('Failed to create new session: ${failure.message}'));
+      return Left(
+        AuthFailure('Failed to create new session: ${failure.message}'),
+      );
     }
 
     return Right({

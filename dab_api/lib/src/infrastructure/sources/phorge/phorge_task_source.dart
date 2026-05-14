@@ -1,21 +1,21 @@
 import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task_bundle.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task_data.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: low-level I/O for Phorge (Phabricator) Tasks and Transactions.
-/// CONTRACT: Implements [IActivitySource] for [PhorgeTaskBundle].
+/// CONTRACT: Implements [IActivitySource] for [PhorgeTaskBundleDto].
 /// CONSTRAINTS: Must be READ-ONLY. Logic is restricted to API coordination and DTO mapping.
 ///
 /// This source handles the complex multi-step fetching logic required by Phorge:
 /// 1. Transaction discovery (either by author or by project).
 /// 2. Task hydration (fetching full task details for discovered transactions).
 /// 3. Bundling (pairing transactions with their parent tasks).
-class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
+class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
   final ConduitProtocol _client;
 
   PhorgeTaskSource(this._client);
@@ -24,7 +24,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   /// [ARCH: INFRASTRUCTURE_ENTRY]
   /// ROLE: High-level entry point for fetching Phorge Task data.
   /// CONTRACT: Decides between Authored (Personal) or Global (Sprint) fetching strategies.
-  Future<List<PhorgeTaskBundle>> fetchRawData(
+  Future<List<PhorgeTaskBundleDto>> fetchRawData(
     List<User> users,
     DateTime start,
     DateTime end,
@@ -42,7 +42,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   /// [ARCH: INFRASTRUCTURE_INTERNAL]
   /// ROLE: Fetches activities explicitly authored by the provided [users].
   /// CONTRACT: Performs a single `transaction.search` sweep by `authorPHIDs`.
-  Future<List<PhorgeTaskBundle>> _fetchAuthoredActivities(
+  Future<List<PhorgeTaskBundleDto>> _fetchAuthoredActivities(
     List<User> users,
     DateTime start,
     DateTime end,
@@ -76,7 +76,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   /// [ARCH: INFRASTRUCTURE_INTERNAL]
   /// ROLE: Discovers and fetches all activities within a specific Sprint project.
   /// CONTRACT: Performs Task Discovery via `maniphest.search` projects, then fetches transactions.
-  Future<List<PhorgeTaskBundle>> _fetchGlobalSprintActivities(
+  Future<List<PhorgeTaskBundleDto>> _fetchGlobalSprintActivities(
     DateTime start,
     DateTime end,
     String sprintTag,
@@ -181,7 +181,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
   /// [ARCH: INFRASTRUCTURE_INTERNAL]
   /// ROLE: Orchestrates the transformation of raw Transactions into hydrated Bundles.
   /// CONTRACT: Filters transactions by date, hydrates parent Tasks, and groups them.
-  Future<List<PhorgeTaskBundle>> _processTransactionsIntoBundles(
+  Future<List<PhorgeTaskBundleDto>> _processTransactionsIntoBundles(
     Map<String, dynamic> txResult,
     DateTime start,
     DateTime end,
@@ -213,13 +213,13 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
 
     final tasksMap = {
       for (var t in rawTaskData)
-        t['phid'].toString(): PhorgeTaskDataMapper.fromMap(
+        t['phid'].toString(): PhorgeTaskDtoMapper.fromMap(
           t as Map<String, dynamic>,
         ),
     };
 
     // 3. Group transactions by task and create bundles
-    final bundlesMap = <String, List<PhorgeTransactionData>>{};
+    final bundlesMap = <String, List<PhorgeTransactionDto>>{};
     for (final tx in allTransactions) {
       bundlesMap.putIfAbsent(tx.objectPHID, () => []).add(tx);
     }
@@ -227,7 +227,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     return bundlesMap.entries.where((e) => tasksMap.containsKey(e.key)).map((
       entry,
     ) {
-      return PhorgeTaskBundle(
+      return PhorgeTaskBundleDto(
         task: tasksMap[entry.key]!,
         transactions: entry.value,
         sprintTag: sprintTag,
@@ -235,8 +235,8 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
     }).toList();
   }
 
-  PhorgeTransactionData _mapToTransactionData(Map<String, dynamic> json) {
-    return PhorgeTransactionData(
+  PhorgeTransactionDto _mapToTransactionData(Map<String, dynamic> json) {
+    return PhorgeTransactionDto(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       phid: json['phid']?.toString() ?? '',
       objectPHID: json['objectPHID']?.toString() ?? '',

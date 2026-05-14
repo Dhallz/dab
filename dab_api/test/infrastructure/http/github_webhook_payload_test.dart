@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/http/github_webhook_payload.dart';
+import 'package:dab_api/src/infrastructure/core/http/github_webhook_payload.dart';
 import 'package:test/test.dart';
 
 void main() {

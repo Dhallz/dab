@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_project_dto.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
@@ -13,7 +13,9 @@ class PhorgeProjectSource {
   PhorgeProjectSource(this._client);
 
   /// Fetches all active projects/tags for UI filtering within the current Sprint.
-  Future<List<PhorgeProjectDto>> fetchActiveSprintProjects(String userPhid) async {
+  Future<List<PhorgeProjectDto>> fetchActiveSprintProjects(
+    String userPhid,
+  ) async {
     final sprintTag = DateTime.now().phorgeSprintTag;
     final sprintPhid = await fetchProjectPhidByTag(sprintTag);
 
@@ -30,7 +32,7 @@ class PhorgeProjectSource {
     if (rawData == null || rawData.isEmpty) return [];
 
     final tasks = rawData
-        .map((e) => PhorgeTaskDataMapper.fromMap(e as Map<String, dynamic>))
+        .map((e) => PhorgeTaskDtoMapper.fromMap(e as Map<String, dynamic>))
         .toList();
 
     // 2. Extract unique Project PHIDs attached to these sprint tasks
@@ -38,7 +40,9 @@ class PhorgeProjectSource {
     for (final task in tasks) {
       tagPhids.addAll(task.projectPHIDs);
     }
-    tagPhids.remove(sprintPhid); // Exclude the Sprint tag itself from UI filters
+    tagPhids.remove(
+      sprintPhid,
+    ); // Exclude the Sprint tag itself from UI filters
 
     if (tagPhids.isEmpty) return [];
 

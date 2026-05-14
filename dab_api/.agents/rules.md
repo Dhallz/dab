@@ -17,7 +17,7 @@ description: Package-specific rules for DAB API
 
 ```
 dab_api/lib/src/
-├── domain/            ← Entities (incl. entities/provider_payloads/), ports/, I* repos, mappers — ZERO infra imports
+├── domain/            ← Entities incl. entities/provider_payloads/ (DTO `extension On*` → `toActivities`), ports/, AbsI* repos — ZERO infra imports
 ├── application/       ← Use cases, services, ConnectorRegistry
 │   ├── services/
 │   ├── usecases/
@@ -39,14 +39,14 @@ dab_api/lib/src/
 
 ## ⚙️ Key Architectural Patterns
 
-### Source / Mapper Pattern
+### Source / DTO-extension pattern
 New provider integrations must follow this pattern precisely:
 
-1. **`IActivitySource`** (Infrastructure) — fetches raw DTOs from a provider API.
-2. **`IActivityMapper`** (Domain) — converts the DTO to a `DAB Activity` using pure business logic.
-3. **`ConnectorRegistry`** — pairs one Source with one Mapper at app boot via `service_locator.dart`.
+1. **`IActivitySource`** (Infrastructure) — fetches raw DTO payloads from a provider API.
+2. **`extension OnXDto`** (Domain on `provider_payloads`) — implements **`toActivities(List<User>)`** with pure business logic (no I/O).
+3. **`TypedConnectorPair<T>` + `providerId`** — registered via **`ConnectorRegistry.register`** inside **`register_activity_connectors`** (called from **`service_locator.dart`**) — binds Source, row type, wiring id (`github`, …), and mapping closure.
 
-Never merge source and mapper logic into a single class.
+Never merge HTTP fetch logic into the DTO extensions.
 
 ### Vegas Sync Protocol
 - Every write increments the Redis `syncToken`.

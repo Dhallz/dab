@@ -11,9 +11,8 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 ### 1. Domain Layer (`lib/src/domain`)
 - **Role**: Defines the absolute business logic and data contracts of the system.
 - **Components**:
-    - **Entities**: Pure data models (Activity, User, ProviderMetadata). No infrastructure dependencies.
-    - **Mappers**: Defined in the domain to represent the **Business Rules** for data interpretation.
-    - **Interfaces**: Abstract contracts (prefixed with `I`) that define what the system needs without specifying how to fetch it.
+    - **Entities & provider payloads**: Pure data models (Activity, User, ProviderMetadata). `entities/provider_payloads/` carry remote row shapes plus co-located **`extension OnDto`** mappings — **business interpretation only**, no infrastructure dependencies.
+    - **Interfaces**: Abstract contracts (`AbsI*`) that define what the system needs without specifying how to fetch it.
 - **STRICT CONSTRAINT**: **ZERO IMPORTS** from Infrastructure or Application layers. This layer is isolated and pure.
 
 ### 2. Application Layer (`lib/src/application`)
@@ -40,11 +39,11 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 
 ## 🏗️ Core Architectural Patterns
 
-### 🧩 The Source/Mapper Pattern (Modern Extension)
+### 🧩 The Source / payload-extension pattern
 We separate the "Doing" (I/O) from the "Thinking" (Mapping) to ensure the system is **Open-Closed** for new data types.
 1.  **IActivitySource** (Infrastructure): Fetches raw data from an API and returns it as a specialized DTO.
-2.  **IActivityMapper** (Domain): Transforms that DTO into a DAB `Activity` using business logic.
-3.  **ConnectorRegistry**: Pairs one Source with one Mapper into a unified "Connector Pair."
+2.  **`extension OnXDto`** (Domain): Implements **`toActivities(List<User>)`** — transforms that payload into zero or more **`Activity`** values.
+3.  **TypedConnectorPair** (+ **`providerId`**) / **ConnectorRegistry**: Registered in **`register_activity_connectors`** — binds Source + mapping + metadata id filtering.
 
 ### 🔄 The Vegas Pattern (Sync Protocol)
 DAB avoids unnecessary database reads by using a Redis-backed versioning system:

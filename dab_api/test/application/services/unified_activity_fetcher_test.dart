@@ -6,7 +6,6 @@ import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/mappers/i_activity_mapper.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
@@ -36,28 +35,27 @@ class _FakeSource implements IActivitySource<String> {
   }
 }
 
-class _FakeMapper implements IActivityMapper<String> {
-  @override
-  String get providerName => 'github';
-
-  @override
-  List<Activity> mapToActivities(String data, List<User> users) {
-    final user = users.first;
-    return [
-      Activity(
-        id: 'a-1',
-        userId: user.id,
-        provider: const GenericProvider(name: 'GitHub', category: 'commit'),
-        title: 'mapped',
-        content: data,
-        authorName: user.name,
-        createdAt: DateTime.utc(2026, 1, 1),
-      ),
-    ];
-  }
+List<Activity> _fakeGithubMapRow(Object? data, List<User> users) {
+  expect(data, 'raw');
+  final user = users.first;
+  return [
+    Activity(
+      id: 'a-1',
+      userId: user.id,
+      provider: const GenericProvider(name: 'GitHub', category: 'commit'),
+      title: 'mapped',
+      content: data! as String,
+      authorName: user.name,
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  ];
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(<String>[]);
+  });
+
   late _MockProviderConfigRepo configRepo;
   late _MockUserRepo userRepo;
   late ConnectorRegistry registry;
@@ -68,7 +66,14 @@ void main() {
     configRepo = _MockProviderConfigRepo();
     userRepo = _MockUserRepo();
     source = _FakeSource();
-    registry = ConnectorRegistry()..register<String>(source, _FakeMapper());
+    registry = ConnectorRegistry()
+      ..register<String>(
+        TypedConnectorPair<String>(
+          source: source,
+          providerId: 'github',
+          mapItemToActivities: _fakeGithubMapRow,
+        ),
+      );
     sut = UnifiedActivityFetcher(
       registry,
       configRepo,

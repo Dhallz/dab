@@ -1,8 +1,9 @@
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failure.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../database/app_database.dart';

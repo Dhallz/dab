@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:dab_api/src/infrastructure/security/github_webhook_verifier.dart';
+import 'package:dab_api/src/infrastructure/core/security/github_webhook_verifier.dart';
 import 'package:test/test.dart';
 
 void main() {

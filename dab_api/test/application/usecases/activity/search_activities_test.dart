@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
-import 'package:dab_api/src/domain/core/failure.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -10,7 +10,8 @@ import '../../../test_factories.dart';
 
 class _MockAuthRepository extends Mock implements AbsIAuthRepository {}
 
-class _MockFetchRemoteActivities extends Mock implements FetchRemoteActivities {}
+class _MockFetchRemoteActivities extends Mock
+    implements FetchRemoteActivities {}
 
 void main() {
   late _MockAuthRepository authRepo;
@@ -24,27 +25,31 @@ void main() {
     registerFallbackValue(TestData.user(id: 'fallback'));
   });
 
-  test('returns empty without calling FetchRemoteActivities when no users resolve',
-      () async {
-    when(() => authRepo.findById(any())).thenAnswer((_) async => const Right(null));
+  test(
+    'returns empty without calling FetchRemoteActivities when no users resolve',
+    () async {
+      when(
+        () => authRepo.findById(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-    final result = await useCase.execute(
-      targetUserIds: const ['gone'],
-      startDate: DateTime.utc(2026, 1, 1),
-      endDate: DateTime.utc(2026, 1, 2),
-      authoredOnly: false,
-    );
+      final result = await useCase.execute(
+        targetUserIds: const ['gone'],
+        startDate: DateTime.utc(2026, 1, 1),
+        endDate: DateTime.utc(2026, 1, 2),
+        authoredOnly: false,
+      );
 
-    expect(result, isEmpty);
-    verifyNever(
-      () => fetchRemote.execute(
-        targetUsers: any(named: 'targetUsers'),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        authoredOnly: any(named: 'authoredOnly'),
-      ),
-    );
-  });
+      expect(result, isEmpty);
+      verifyNever(
+        () => fetchRemote.execute(
+          targetUsers: any(named: 'targetUsers'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          authoredOnly: any(named: 'authoredOnly'),
+        ),
+      );
+    },
+  );
 
   test('delegates to FetchRemoteActivities with resolved users', () async {
     final user = TestData.user(id: 'u-1');

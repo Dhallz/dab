@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart' hide Group;
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 

@@ -7,25 +7,24 @@ The Domain layer is the heart of the system. It contains the business rules and 
 ## 🏗️ Core Responsibilities
 
 1. **Entities**: Define the core data models (`Activity`, `User`, `ProviderMetadata`).
-2. **Mappers (`IActivityMapper`)**: Define the **Business Logic** for data interpretation. Even though they handle specialized data types from Infrastructure, they live here to ensure that "What a Sprint is" or "What a Status means" is defined in the Domain.
-3. **Failures**: Define systematic failure cases (e.g., `ServerFailure`, `AuthFailure`).
+2. **Provider payloads + extensions**: **`entities/provider_payloads/`** hold provider-native shapes. Co-located **`extension OnXDto on XDto`** entries implement **`toActivities(List<User>)`** — the “meaning” rules (pure logic) linking remote rows to **`Activity`**.
+3. **Failures**: Define systematic failure cases (e.g., `DatabaseFailure`, `AuthFailure`).
 
 ---
 
 ## 🛡️ Architectural Guardrails (STRICT)
 
 - **🚫 NO INFRASTRUCTURE IMPORTS**: This layer must **NEVER** import from `infrastructure/` or `application/`. It must only import from within `domain/` or external pure-logic packages (e.g., `dart_mappable`, `uuid`).
-- **🚫 NO SIDE EFFECTS**: Entities and Mappers must be pure and predictable. No API calls or database queries are allowed here.
-- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `IActivityProvider`, `IAuthRepository`).
+- **🚫 NO SIDE EFFECTS**: Entities and mapping extensions must be pure and predictable. No API calls or database queries are allowed here.
+- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `IActivitySource`, `IAuthRepository`).
 
 ---
 
-## 🧩 The Mapper Strategy
+## 🧩 Provider payload → Activity
 
-Mappers are the bridge between raw protocol data and domain entities. 
-Example: `PhorgeTaskMapper` knows that a Phorge transaction of type `status` with value `resolved` means the task is **DONE**. That "Logic of Meaning" is a business rule, so it belongs here.
+Extensions on each DTO (e.g. `OnPhorgeTaskBundleDto`) encode how a Slack message or Phorge transaction reads in the unified feed — business interpretation stays in Domain; infrastructure only fetches/builds DTOs.
 
 ---
 
 > [!CAUTION]
-> If you are adding a new platform (e.g. GitHub), you **MUST** create an `IActivityProvider` interface and a corresponding `IActivityMapper` here first.
+> If you are adding a new platform (e.g. GitHub), add **`IActivitySource<T>`** Infrastructure + DTO(s) here, **`toActivities`** on the DTO, then register **`TypedConnectorPair<T>`** in **`register_activity_connectors`**.

@@ -1,5 +1,5 @@
 import 'package:dab_api/src/application/usecases/activity/unarchive_live_activity.dart';
-import 'package:dab_api/src/domain/core/failure.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,9 +31,7 @@ void main() {
         archived: false,
       ),
     ).thenAnswer((_) async => activity);
-    when(
-      () => presence.broadcastToUser(any(), any(), any()),
-    ).thenReturn(null);
+    when(() => presence.broadcastToUser(any(), any(), any())).thenReturn(null);
 
     final result = await useCase.execute(userId: 'u-1', activityId: 'a-2');
 

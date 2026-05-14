@@ -58,10 +58,10 @@ The innermost layer. **No imports from Infrastructure or Application.**
   - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
   - `ProviderMetadata` — registered connector metadata
 
-- **`entities/provider_payloads/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundle`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
+- **`entities/provider_payloads/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
 - **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups).
-- **`gataways/`:** Per-provider outbound polling contracts (`AbsIPhorgeGateway` includes directory, sprint/tag projects, tasks, revisions; GitHub and Slack gateways mirror polled payloads).
+- **`gataways/`:** Per-provider outbound polling contracts. **`AbsIPhorgeGateway`** returns Conduit-decoded rows (`PhorgeUserDto` for active directory users, `PhorgeProjectDto` for sprint-scoped tags, bundled task + transactions, revisions); implementations orchestrate paging and multi-call flows but expose API-shaped types only—not secondary projections. GitHub and Slack gateways mirror their polled payloads the same way.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
 

@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart' hide Group;
 
-import '../core/failure.dart';
+import '../core/failures/failure.dart';
 import '../entities/group/group.dart';
 import '../entities/user/user.dart';
 import '../entities/user/user_identity.dart';

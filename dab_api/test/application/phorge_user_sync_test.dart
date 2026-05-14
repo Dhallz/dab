@@ -1,5 +1,6 @@
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
-import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
@@ -40,15 +41,19 @@ void main() {
   group('SyncPhorgeUsers', () {
     test('should create missing users and skip existing ones', () async {
       final pUsers = [
-        const PhorgeDirectoryUser(
+        const PhorgeUserDto(
           phid: 'PHID-USER-1',
-          userName: 'user1',
-          realName: 'User One',
+          fields: PhorgeUserWireFieldsDto(
+            username: 'user1',
+            realName: 'User One',
+          ),
         ),
-        const PhorgeDirectoryUser(
+        const PhorgeUserDto(
           phid: 'PHID-USER-2',
-          userName: 'user2',
-          realName: 'User Two',
+          fields: PhorgeUserWireFieldsDto(
+            username: 'user2',
+            realName: 'User Two',
+          ),
         ),
       ];
 

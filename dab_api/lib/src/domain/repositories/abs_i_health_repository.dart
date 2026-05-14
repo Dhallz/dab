@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import '../core/failure.dart';
+
+import '../core/failures/failure.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for System Health Monitoring.

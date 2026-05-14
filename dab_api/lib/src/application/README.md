@@ -23,7 +23,11 @@ The Application layer is the **Glue Layer**. It coordinates Domain business rule
 
 ## 🧩 The Coordination Strategy
 
-When a client requests activities, the `UnifiedActivityFetcher` coordinates with the `ConnectorRegistry` to trigger all registered Sources (Infrastructure) in parallel and transforms their results via Mappers (Domain).
+When a client requests activities, the `UnifiedActivityFetcher` coordinates with the `ConnectorRegistry` to trigger all registered Sources (Infrastructure) in parallel and maps each fetched row via its DTO **`toActivities`** extension (Domain).
+
+---
+
+> Connector pairs bundle **`TypedConnectorPair<T>`**: `IActivitySource<T>`, **`providerId`**, and **`mapItemToActivities`** (delegating to the DTO extension at registration).
 
 ---
 

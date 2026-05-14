@@ -1,50 +1,54 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_attachments.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_default_string_hook.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_int_hook.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_attachments_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
-part 'phorge_task_data.mapper.dart';
+part 'phorge_task_dto.mapper.dart';
 
 /// [ARCH: DOMAIN_DTO]
-/// ROLE: One `maniphest.search` datum — matches Conduit top-level (`id`, `phid`, `fields`, `attachments`).
-/// CONTRACT: Decode with [PhorgeTaskDataMapper.fromMap] after JSON decode only.
-/// CONSTRAINTS: Mappable for persistence/extension mapping; participates in [PhorgeTaskBundle].
+/// ROLE: One `maniphest.search` datum — matches Conduit top-level (`id`, `phid`, `fields`, optional `attachments`).
+/// CONTRACT: Decode with [PhorgeTaskDtoMapper.fromMap]; nulls preserve absent wire keys. Convenience getters on [OnPhorgeTaskDto].
+/// CONSTRAINTS: Mappable-generated decode only; participates in [PhorgeTaskBundleDto].
 @MappableClass()
-class PhorgeTaskData with PhorgeTaskDataMappable {
-  /// The numeric task ID (e.g., 123 for T123).
-  @MappableField(hook: PhorgeTaskWireIntHook())
-  final int id;
+class PhorgeTaskDto with PhorgeTaskDtoMappable {
+  final int? id;
 
-  /// The Phorge PHID (global UID) for this task.
-  @MappableField(hook: PhorgeTaskWireDefaultStringHook(''))
-  final String phid;
+  final String? phid;
 
-  final PhorgeTaskWireFields fields;
+  final PhorgeTaskWireFieldsDto fields;
 
-  final PhorgeTaskWireAttachments? attachments;
+  final PhorgeTaskWireAttachmentsDto? attachments;
 
-  const PhorgeTaskData({
-    required this.id,
-    required this.phid,
+  const PhorgeTaskDto({
+    this.id,
+    this.phid,
     required this.fields,
     this.attachments,
   });
+}
 
-  /// The summary title of the task.
-  String get name => fields.name;
+/// [ARCH: DOMAIN_DTO]
+/// ROLE: Resolved scalars / lists for infra and [`Activity`] mapping (summaries ignore null wire gaps).
+extension OnPhorgeTaskDto on PhorgeTaskDto {
+  int get conduitTaskId => id ?? 0;
 
-  /// The direct URI to the task in Phorge.
-  String get uri => fields.uri;
+  /// Non-null PHID token for [`PhorgeTaskProvider`] when upstream omits `phid`.
+  String get conduitPhid => phid ?? '';
 
-  /// The PHID of the user who currently owns this task.
-  String get ownerPHID => fields.ownerPHID;
+  String get name {
+    final n = fields.title?.trim();
+    if (n != null && n.isNotEmpty) return n;
+    return 'Unknown';
+  }
 
-  /// Project/tag PHIDs from `attachments.projects.projectPHIDs` when requested.
-  List<String> get projectPHIDs =>
-      attachments?.projects?.projectPHIDs ?? const [];
+  String get uri => fields.uri ?? '';
 
-  /// Last modified instant when wire supplied `fields.dateModified` epoch seconds.
+  String get ownerPHID => fields.ownerPHID ?? 'system';
+
+  List<String> get projectPHIDs {
+    final p = attachments?.projects?.projectPHIDs;
+    return p ?? const [];
+  }
+
   DateTime? get dateModified => fields.dateModified != null
       ? DateTime.fromMillisecondsSinceEpoch(
           fields.dateModified! * 1000,

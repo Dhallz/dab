@@ -1,7 +1,7 @@
 import 'package:relic/relic.dart';
 
 import '../../domain/entities/user/user_role.dart';
-import '../../infrastructure/security/jwt_provider.dart';
+import '../../infrastructure/core/security/jwt_provider.dart';
 import '../../service_locator.dart';
 
 /// [ARCH: PRESENTATION_CONTEXT]

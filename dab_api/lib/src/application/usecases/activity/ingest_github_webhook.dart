@@ -1,20 +1,19 @@
+import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../domain/core/failure.dart';
+import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/mappers/github/github_commit_mapper.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
-import 'package:dab_api/src/domain/entities/provider_payloads/github/github_commit_dto.dart';
 import '../../../infrastructure/sources/github/github_repo_config.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests GitHub `push` webhooks into the DAB live pipeline.
-/// CONTRACT: Persisted activities match polling ([GitHubCommitMapper]) attribution.
+/// CONTRACT: Persisted rows match polling ([GitHubCommitDto.toActivities]) shaping.
 /// CONSTRAINTS: Read-only toward GitHub; dedupe by `X-GitHub-Delivery` and stable activity id.
 class IngestGitHubWebhook {
   final IUserRepository _userRepository;
@@ -22,7 +21,6 @@ class IngestGitHubWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final RedisService _redisService;
   final PresenceService _presenceService;
-  final GitHubCommitMapper _githubCommitMapper;
 
   IngestGitHubWebhook(
     this._userRepository,
@@ -30,7 +28,6 @@ class IngestGitHubWebhook {
     this._providerConfigRepository,
     this._redisService,
     this._presenceService,
-    this._githubCommitMapper,
   );
 
   Future<Either<Failure, GitHubWebhookIngestionResult>> execute({
@@ -49,9 +46,9 @@ class IngestGitHubWebhook {
       trimmedDelivery,
     );
     if (!reserved) {
-      return const Right(GitHubWebhookIngestionResult.ignored(
-        'duplicate_delivery_id',
-      ),);
+      return const Right(
+        GitHubWebhookIngestionResult.ignored('duplicate_delivery_id'),
+      );
     }
 
     final trimmedEvent = event.trim().toLowerCase();
@@ -61,9 +58,7 @@ class IngestGitHubWebhook {
 
     if (trimmedEvent != 'push') {
       return Right(
-        GitHubWebhookIngestionResult.ignored(
-          'unsupported_event:$trimmedEvent',
-        ),
+        GitHubWebhookIngestionResult.ignored('unsupported_event:$trimmedEvent'),
       );
     }
 
@@ -81,12 +76,11 @@ class IngestGitHubWebhook {
       );
     }
 
-    final fullNameRaw =
-        payload['repository'] is Map<String, dynamic>
-            ? (payload['repository'] as Map<String, dynamic>)['full_name']
-                ?.toString()
-                .trim()
-            : null;
+    final fullNameRaw = payload['repository'] is Map<String, dynamic>
+        ? (payload['repository'] as Map<String, dynamic>)['full_name']
+              ?.toString()
+              .trim()
+        : null;
     if (fullNameRaw == null || fullNameRaw.isEmpty) {
       return const Right(
         GitHubWebhookIngestionResult.ignored('missing_repository'),
@@ -106,15 +100,13 @@ class IngestGitHubWebhook {
     final ref = payload['ref']?.toString().trim() ?? '';
     const headsPrefix = 'refs/heads/';
     if (!ref.startsWith(headsPrefix)) {
-      return const Right(GitHubWebhookIngestionResult.ignored(
-        'non_branch_ref',
-      ),);
+      return const Right(
+        GitHubWebhookIngestionResult.ignored('non_branch_ref'),
+      );
     }
     final branch = ref.substring(headsPrefix.length);
     if (branch.isEmpty) {
-      return const Right(
-        GitHubWebhookIngestionResult.ignored('empty_branch'),
-      );
+      return const Right(GitHubWebhookIngestionResult.ignored('empty_branch'));
     }
 
     final usersResult = await _userRepository.getUsers();
@@ -139,8 +131,7 @@ class IngestGitHubWebhook {
           .where((identity) => allowedUserIds.contains(identity.userId))
           .where((identity) => identity.status == UserIdentityStatus.linked)
           .where(
-            (identity) =>
-                identity.providerId.trim().toLowerCase() == 'github',
+            (identity) => identity.providerId.trim().toLowerCase() == 'github',
           )
           .toList();
     }
@@ -153,9 +144,7 @@ class IngestGitHubWebhook {
     }
     if (userIdByLogin.isEmpty) {
       return const Right(
-        GitHubWebhookIngestionResult.ignored(
-          'no_linked_github_identities',
-        ),
+        GitHubWebhookIngestionResult.ignored('no_linked_github_identities'),
       );
     }
 
@@ -178,14 +167,12 @@ class IngestGitHubWebhook {
       final sha = (raw['id'] ?? '').toString().trim();
       if (sha.isEmpty) continue;
 
-      final authorMap =
-          raw['author'] is Map<String, dynamic>
-              ? raw['author'] as Map<String, dynamic>
-              : null;
-      final committerMap =
-          raw['committer'] is Map<String, dynamic>
-              ? raw['committer'] as Map<String, dynamic>
-              : null;
+      final authorMap = raw['author'] is Map<String, dynamic>
+          ? raw['author'] as Map<String, dynamic>
+          : null;
+      final committerMap = raw['committer'] is Map<String, dynamic>
+          ? raw['committer'] as Map<String, dynamic>
+          : null;
 
       final loginCandidate =
           (authorMap?['username'] ??
@@ -208,16 +195,15 @@ class IngestGitHubWebhook {
           (raw['message'] ??
                   (raw['commit'] is Map<String, dynamic>
                       ? (raw['commit'] as Map<String, dynamic>)['message']
-                          ?.toString()
+                            ?.toString()
                       : null) ??
                   '')
               .toString()
               .trim();
       final urlCandidate = (raw['url'] ?? '').toString().trim();
-      final url =
-          urlCandidate.isEmpty
-              ? 'https://github.com/$fullNameRaw/commit/$sha'
-              : urlCandidate;
+      final url = urlCandidate.isEmpty
+          ? 'https://github.com/$fullNameRaw/commit/$sha'
+          : urlCandidate;
 
       final tsStr = raw['timestamp']?.toString().trim() ?? '';
       late final DateTime committedAtUtc;
@@ -229,10 +215,9 @@ class IngestGitHubWebhook {
           continue;
         }
       } else {
-        final nestedCommit =
-            raw['commit'] is Map<String, dynamic>
-                ? raw['commit'] as Map<String, dynamic>
-                : null;
+        final nestedCommit = raw['commit'] is Map<String, dynamic>
+            ? raw['commit'] as Map<String, dynamic>
+            : null;
         if (nestedCommit == null) {
           continue;
         }
@@ -249,10 +234,10 @@ class IngestGitHubWebhook {
         }
         final parsedNested =
             dateStr != null &&
-                    dateStr.isNotEmpty &&
-                    DateTime.tryParse(dateStr) != null
-                ? DateTime.tryParse(dateStr)?.toUtc()
-                : null;
+                dateStr.isNotEmpty &&
+                DateTime.tryParse(dateStr) != null
+            ? DateTime.tryParse(dateStr)?.toUtc()
+            : null;
         if (parsedNested == null) continue;
         committedAtUtc = parsedNested;
       }
@@ -261,20 +246,20 @@ class IngestGitHubWebhook {
         repo: fullNameRaw,
         branch: branch,
         sha: sha,
-        message:
-            commitMessage.isEmpty ? '(empty commit message)' : commitMessage,
+        message: commitMessage.isEmpty
+            ? '(empty commit message)'
+            : commitMessage,
         url: url,
         authorLogin: loginCandidate,
         authorName:
-            authorMap?['name']?.toString() ??
-                committerMap?['name']?.toString(),
+            authorMap?['name']?.toString() ?? committerMap?['name']?.toString(),
         authorEmail: authorMap?['email']?.toString(),
         authorAvatarUrl: null,
         committedAt: committedAtUtc,
         userId: userIdForLogin,
       );
 
-      final activities = _githubCommitMapper.mapToActivities(dto, users);
+      final activities = dto.toActivities(users);
       if (activities.isEmpty) continue;
       final activity = activities.first;
 
