@@ -47,7 +47,7 @@ class PhorgeRevisionSource implements IActivitySource<PhorgeRevisionData> {
     if (rawData == null) return [];
 
     return rawData
-        .map((e) => PhorgeRevisionData.fromConduit(e as Map<String, dynamic>))
+        .map((e) => PhorgeRevisionDataMapper.fromMap(e as Map<String, dynamic>))
         .toList();
   }
 }

@@ -42,7 +42,7 @@ class PhorgeRevisionStatusFields with PhorgeRevisionStatusFieldsMappable {
 
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: One `differential.revision.search` datum — top-level matches Conduit (`id`, `phid`, `fields`).
-/// CONTRACT: Prefer [fromConduit]; shape matches decoded Conduit rows (unknown keys skipped by mapper).
+/// CONTRACT: Decode with [PhorgeRevisionDataMapper.fromMap] after JSON decode; shape matches Conduit rows.
 /// CONSTRAINTS: Mappable-generated decode only — no Infrastructure-side field lifting.
 @MappableClass()
 class PhorgeRevisionData with PhorgeRevisionDataMappable {
@@ -58,12 +58,6 @@ class PhorgeRevisionData with PhorgeRevisionDataMappable {
     required this.phid,
     required this.fields,
   });
-
-  /// Decodes one `revision.search` element after [`jsonDecode`].
-  factory PhorgeRevisionData.fromConduit(Map<String, dynamic> raw) =>
-      PhorgeRevisionDataMapper.ensureInitialized().decodeMap<PhorgeRevisionData>(
-        raw,
-      );
 }
 
 /// [ARCH: DOMAIN]
