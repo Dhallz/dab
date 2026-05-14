@@ -496,7 +496,7 @@ Future<void> _seedProviders() async {
           'slack',
           'Slack',
           'https://slack.com',
-          'https://a.slack-edge.com/80588/img/favicon-32.png',
+          'https://slack.com/favicon.ico',
         ),
         (
           'discord',

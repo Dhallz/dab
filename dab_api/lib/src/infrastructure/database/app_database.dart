@@ -32,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -154,6 +154,16 @@ WHERE ui.user_id = users.id
       if (from < 11) {
         await m.createTable(activitySlackMessageTable);
       }
+      if (from < 12) {
+        // slack-edge CDN returns 403 for mobile/Flutter clients loading provider icons.
+        await m.database.customStatement(r'''
+UPDATE provider_configs
+SET icon_url = 'https://slack.com/favicon.ico',
+    updated_at = NOW()
+WHERE id = 'slack'
+  AND icon_url LIKE '%slack-edge.com%';
+''');
+      }
     },
     beforeOpen: (details) async {
       final configCount = await select(providerConfigsTable).get();
@@ -202,7 +212,7 @@ WHERE ui.user_id = users.id
               baseUrl: 'https://slack.com',
               isActive: const Value(1),
               iconUrl: const Value(
-                'https://a.slack-edge.com/80588/img/favicon-32.png',
+                'https://slack.com/favicon.ico',
               ),
               settings: const Value('{}'),
             ),
