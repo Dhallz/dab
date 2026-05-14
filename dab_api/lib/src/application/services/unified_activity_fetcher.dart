@@ -7,7 +7,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Orchestrator for multi-source activity synchronization.
-/// CONTRACT: Aggregates activities from all registered [TypedConnectorPair]s.
+/// CONTRACT: Aggregates activities from all registered connectors via [RegisteredConnectorPair].
 /// CONSTRAINTS: Must parallelize requests and handle individual source failures gracefully.
 ///
 /// This service is the high-level entry point for fetching data from multiple
@@ -37,7 +37,7 @@ class UnifiedActivityFetcher {
   /// 1. Filters [users] for source-specific identifiers.
   /// 2. Iterates over all pairs in the [_registry].
   /// 3. Triggers [source.fetchRawData] in parallel.
-  /// 4. Maps raw rows to Domain [Activity] entities via each pair's [TypedConnectorPair.mapItemToActivities].
+  /// 4. Maps raw rows to Domain [Activity] entities via each [RegisteredConnectorPair.mapItemToActivities].
   /// 5. Flattens and sorts the final results by [createdAt] descending.
   Future<List<Activity>> fetchAll({
     required List<User> users,
@@ -99,17 +99,17 @@ class UnifiedActivityFetcher {
               return <Activity>[];
             }
 
-            final rawDataList = await pair.source.fetchRawData(
+            final rawDataList = await pair.fetchRawData(
               usersForConnector,
               start,
               end,
               authoredOnly,
             );
 
-            // Transform the raw DTOs into high-level Domain Activities.
             return rawDataList
                 .expand(
-                  (item) => pair.mapItemToActivities(item, usersForConnector),
+                  (item) =>
+                      pair.mapItemToActivities(item, usersForConnector),
                 )
                 .toList();
           } catch (e) {

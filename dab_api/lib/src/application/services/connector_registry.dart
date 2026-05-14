@@ -26,16 +26,60 @@ class TypedConnectorPair<T> {
   });
 }
 
+/// Type-erased connector row used when [UnifiedActivityFetcher] iterates all
+/// providers. [ConnectorRegistry.register] wraps each [TypedConnectorPair] so
+/// we never widen a [TypedConnectorPair] to a generic [dynamic] row type: a concrete mapper
+/// `(GitHubCommitDto, …) → …` is not a subtype of `(dynamic, …) → …` on the
+/// first parameter (contravariance), which caused runtime subtype errors for
+/// every connector.
+///
+/// [fetchRawData] returns materialized rows; [mapItemToActivities] casts each
+/// row back to the registration type [T].
+class RegisteredConnectorPair {
+  RegisteredConnectorPair({
+    required this.providerId,
+    required this.fetchRawData,
+    required this.mapItemToActivities,
+  });
+
+  final String providerId;
+
+  final Future<List<Object?>> Function(
+    List<User> users,
+    DateTime start,
+    DateTime end,
+    bool authoredOnly,
+  ) fetchRawData;
+
+  final List<Activity> Function(Object? item, List<User> users)
+      mapItemToActivities;
+}
+
 /// [ARCH: APPLICATION]
 /// ROLE: Central registry for all activity connectors used by [UnifiedActivityFetcher].
 /// CONSTRAINTS: Register pairs only via [registerActivityConnectors] during bootstrap.
 
 class ConnectorRegistry {
-  final List<TypedConnectorPair<dynamic>> _pairs = [];
+  final List<RegisteredConnectorPair> _pairs = [];
 
   void register<T>(TypedConnectorPair<T> pair) {
-    _pairs.add(pair);
+    _pairs.add(
+      RegisteredConnectorPair(
+        providerId: pair.providerId,
+        fetchRawData: (users, start, end, authoredOnly) async {
+          final rows = await pair.source.fetchRawData(
+            users,
+            start,
+            end,
+            authoredOnly,
+          );
+          return List<Object?>.from(rows);
+        },
+        mapItemToActivities: (Object? item, List<User> users) =>
+            pair.mapItemToActivities(item as T, users),
+      ),
+    );
   }
 
-  List<TypedConnectorPair<dynamic>> get allPairs => List.unmodifiable(_pairs);
+  List<RegisteredConnectorPair> get allPairs => List.unmodifiable(_pairs);
 }

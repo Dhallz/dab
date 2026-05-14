@@ -167,7 +167,7 @@ IActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  extensi
 
 - `IActivitySource`: Handles raw I/O, auth, rate-limiting — no business logic.
 - `extension OnXDto`: Pure transformation (`toActivities`) — no I/O.
-- `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering.
+- `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering. `ConnectorRegistry` stores the type-erased `RegisteredConnectorPair` so fetch iteration does not widen mappers to `dynamic` (avoids Dart contravariance runtime errors).
 
 ### Vegas Sync Pattern
 
