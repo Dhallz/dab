@@ -2,19 +2,20 @@ import 'dart:io';
 
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
-import 'package:dab_api/src/domain/core/failure.dart';
+import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/on_phorge_revision_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/on_phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle.dart';
 import 'package:dab_api/src/domain/entities/group/group.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_revision_mapper.dart';
-import 'package:dab_api/src/domain/mappers/phorge/phorge_task_mapper.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/services/phorge_sprint_service.dart';
-import 'package:dab_api/src/infrastructure/config/config.dart';
+import 'package:dab_api/src/infrastructure/core/config/config.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/http_conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
@@ -38,7 +39,6 @@ void main() async {
   print('\n🔗 Connecting to Phorge at ${config.phorgeUrl}...\n');
 
   final client = HttpConduitProtocol();
-  final sprintService = PhorgeSprintService();
   final mockUserRepo = _MockUserRepo();
 
   // -----------------------------------------------------
@@ -47,17 +47,29 @@ void main() async {
   // CONTRACT: Validates the Source -> Registry -> Fetcher pipeline.
   // -----------------------------------------------------
 
-  print('🧪 Initializing Activity System (Source/Mapper Pair)...');
+  print('🧪 Initializing Activity System (Source + typed pair)...');
 
   // Infrastructure Sources (Raw I/O)
-  final projectSource = PhorgeProjectSource(client, sprintService);
-  final taskSource = PhorgeTaskSource(client, sprintService);
+  final projectSource = PhorgeProjectSource(client);
+  final taskSource = PhorgeTaskSource(client);
   final revisionSource = PhorgeRevisionSource(client);
 
   // Application Registry
   final registry = ConnectorRegistry();
-  registry.register(taskSource, PhorgeTaskMapper());
-  registry.register(revisionSource, PhorgeRevisionMapper());
+  registry.register<PhorgeTaskBundle>(
+    TypedConnectorPair<PhorgeTaskBundle>(
+      source: taskSource,
+      providerId: 'phorge',
+      mapItemToActivities: (bundle, users) => bundle.toActivities(users),
+    ),
+  );
+  registry.register<PhorgeRevisionData>(
+    TypedConnectorPair<PhorgeRevisionData>(
+      source: revisionSource,
+      providerId: 'phorge',
+      mapItemToActivities: (data, users) => data.toActivities(users),
+    ),
+  );
 
   // Mock config repository to allow "Phorge" activities
   final mockConfigRepo = _MockProviderConfigRepo();
@@ -198,8 +210,8 @@ class _MockUserRepo implements IUserRepository {
   );
 
   @override
-  Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities() async =>
-      Right(identities);
+  Future<Either<DatabaseFailure, List<UserIdentity>>>
+  getAllIdentities() async => Right(identities);
 
   @override
   Future<Either<DatabaseFailure, List<UserIdentity>>> getIdentities(
