@@ -1,14 +1,22 @@
 ---
-description: Git commits — one per task, issue-key subject, no AI/tool attribution
+description: Git commits — user-initiated only, one per request; issue-key subjects, no AI/tool attribution
 alwaysApply: true
 ---
 
 # Git commit rule
 
-## One commit per task
+## Commits only when the user asks
 
-- After each **discrete, completed task** (or clearly reviewable slice), **create a commit** with that work. Do not accumulate unrelated changes into a single end-of-session commit.
-- A task is done when its code is in shape per project rules (analyzer clean, tests updated/run as required, docs or Bruno updated when applicable).
+- **Do not run `git commit`** unless the user **explicitly** asks you to commit in the current conversation (for example “commit this”, “make a commit”, “please commit”).
+- Do **not** infer permission from “task done”, analyzer clean, tests passing, docs updated, or end of session.
+- If work is finished and nothing is staged, **leave changes uncommitted** and tell the user they can ask for a commit when they want history updated.
+
+## One commit per explicit request
+
+- A single request to commit means **exactly one** `git commit` for the scope implied (typically the current focused change set). Do **not** split it into multiple commits unless the user **explicitly** asks for separate commits in the same message.
+- After that commit, **wait for a new request** before running `git commit` again—even if more edits follow in the chat.
+
+Prefer **one cohesive commit** when they do ask: staged files should belong to what they intend to record; avoid bundling unrelated work into that commit unless they ask otherwise.
 
 ## Tie commits to the active issue
 

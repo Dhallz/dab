@@ -26,7 +26,7 @@ Detailed prescriptive patterns that must be followed when writing specific types
 Specific guidelines for keeping supporting artifacts in sync with codebase changes.
 - **[Documentation Maintenance](file:///Users/dhallz/git/dab/.agents/rules/doc-maintenance.md)**: Rules for updating `doc/*.md` files.
 - **[Bruno Collection Maintenance](file:///Users/dhallz/git/dab/.agents/rules/bruno-maintenance.md)**: Rules for updating the API collection in `bruno/`.
-- **[Git commits](file:///Users/dhallz/git/dab/.agents/rules/commit.md)**: One commit per completed task, issue-key subjects (e.g. DAB-40), no AI/tool attribution in commit messages.
+- **[Git commits](file:///Users/dhallz/git/dab/.agents/rules/commit.md)**: Commit only when the user explicitly asks; one commit per request; issue-key subjects when applicable (e.g. DAB-40); no AI/tool attribution in commit messages.
 
 ### 4. Package-Specific Rules
 Each major package contains its own refined rules in its local `.agents/` folder.
