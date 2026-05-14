@@ -1,9 +1,9 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_activity_uuid.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_fields.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:uuid/uuid.dart';
 
 part 'phorge_revision_data.mapper.dart';
 
@@ -28,8 +28,14 @@ class PhorgeRevisionData with PhorgeRevisionDataMappable {
 }
 
 /// [ARCH: DOMAIN]
-/// ROLE: Revision DTO → code-review [`Activity`].
+/// ROLE: Revision DTO helpers and mapping to unified-feed [`Activity`] rows.
 extension OnPhorgeRevisionData on PhorgeRevisionData {
+  static final _revisionActivityUuidGenerator = const Uuid();
+
+  /// Stable v5 ID for synthetic [`Activity`] rows built from revision DTOs.
+  String phorgeRevisionActivityUuid(String source) => _revisionActivityUuidGenerator
+      .v5(Namespace.url.value, source);
+
   List<Activity> toActivities(List<User> users) {
     final f = fields;
     final author = users.firstWhere(
