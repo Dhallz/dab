@@ -1,14 +1,13 @@
-import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields_conduit_hook.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
 part 'phorge_project_wire_fields.mapper.dart';
 
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: `fields` object from Conduit `project.search`.
-/// CONTRACT: Mirrors [ApplicationSearch object fields documented for Projects](https://we.phorge.it/conduit/method/project.search/) (`Object Fields`).
-@MappableClass(hook: PhorgeProjectWireFieldsConduitHook())
+/// CONTRACT: Mirrors [ApplicationSearch object fields documented for Projects](https://we.phorge.it/conduit/method/project.search/) (`Object Fields`). Omit or null on the wire ⇒ null here (no synthetic defaults).
+@MappableClass()
 class PhorgeProjectWireFields with PhorgeProjectWireFieldsMappable {
-  final String name;
+  final String? name;
 
   /// Primary hashtag slug.
   final String? slug;
@@ -21,7 +20,7 @@ class PhorgeProjectWireFields with PhorgeProjectWireFieldsMappable {
   /// Brief parent-project description for milestones / subprojects.
   final Map<String, dynamic>? parent;
 
-  final int depth;
+  final int? depth;
 
   /// Conduit may return `{ "key": "…", … }` or legacy string forms.
   final Object? icon;
@@ -43,12 +42,12 @@ class PhorgeProjectWireFields with PhorgeProjectWireFieldsMappable {
   final Object? description;
 
   const PhorgeProjectWireFields({
-    required this.name,
+    this.name,
     this.slug,
     this.subtype,
     this.milestone,
     this.parent,
-    required this.depth,
+    this.depth,
     this.icon,
     this.color,
     this.spacePHID,

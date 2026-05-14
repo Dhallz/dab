@@ -57,19 +57,20 @@ void main() {
     );
   });
 
-  test('PhorgeProjectDtoMapper applies defaults when fields are sparse', () {
+  test('PhorgeProjectDtoMapper decodes sparse fields without placeholders', () {
     final raw = <String, dynamic>{
       'id': 1,
       'phid': 'PHID-PROJ-empty',
       'fields': <String, dynamic>{
-        // name intentionally absent → Unknown
+        // name absent on wire ⇒ null [PhorgeProjectWireFields.name]
       },
     };
 
     final dto = PhorgeProjectDtoMapper.fromMap(raw);
 
-    expect(dto.fields.name, 'Unknown');
-    expect(dto.fields.depth, 0);
+    expect(dto.fields.name, isNull);
+    expect(dto.fields.depth, isNull);
+    expect(dto.name, 'Unknown');
     expect(dto.attachments, isNull);
   });
 }

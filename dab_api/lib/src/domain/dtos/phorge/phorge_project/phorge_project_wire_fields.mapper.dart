@@ -24,10 +24,11 @@ class PhorgeProjectWireFieldsMapper
   @override
   final String id = 'PhorgeProjectWireFields';
 
-  static String _$name(PhorgeProjectWireFields v) => v.name;
+  static String? _$name(PhorgeProjectWireFields v) => v.name;
   static const Field<PhorgeProjectWireFields, String> _f$name = Field(
     'name',
     _$name,
+    opt: true,
   );
   static String? _$slug(PhorgeProjectWireFields v) => v.slug;
   static const Field<PhorgeProjectWireFields, String> _f$slug = Field(
@@ -50,10 +51,11 @@ class PhorgeProjectWireFieldsMapper
   static Map<String, dynamic>? _$parent(PhorgeProjectWireFields v) => v.parent;
   static const Field<PhorgeProjectWireFields, Map<String, dynamic>> _f$parent =
       Field('parent', _$parent, opt: true);
-  static int _$depth(PhorgeProjectWireFields v) => v.depth;
+  static int? _$depth(PhorgeProjectWireFields v) => v.depth;
   static const Field<PhorgeProjectWireFields, int> _f$depth = Field(
     'depth',
     _$depth,
+    opt: true,
   );
   static Object? _$icon(PhorgeProjectWireFields v) => v.icon;
   static const Field<PhorgeProjectWireFields, Object> _f$icon = Field(
@@ -112,8 +114,6 @@ class PhorgeProjectWireFieldsMapper
     #description: _f$description,
   };
 
-  @override
-  final MappingHook hook = const PhorgeProjectWireFieldsConduitHook();
   static PhorgeProjectWireFields _instantiate(DecodingData data) {
     return PhorgeProjectWireFields(
       name: data.dec(_f$name),
@@ -255,12 +255,12 @@ class _PhorgeProjectWireFieldsCopyWithImpl<$R, $Out>
       : null;
   @override
   $R call({
-    String? name,
+    Object? name = $none,
     Object? slug = $none,
     Object? subtype = $none,
     Object? milestone = $none,
     Object? parent = $none,
-    int? depth,
+    Object? depth = $none,
     Object? icon = $none,
     Object? color = $none,
     Object? spacePHID = $none,
@@ -270,12 +270,12 @@ class _PhorgeProjectWireFieldsCopyWithImpl<$R, $Out>
     Object? description = $none,
   }) => $apply(
     FieldCopyWithData({
-      if (name != null) #name: name,
+      if (name != $none) #name: name,
       if (slug != $none) #slug: slug,
       if (subtype != $none) #subtype: subtype,
       if (milestone != $none) #milestone: milestone,
       if (parent != $none) #parent: parent,
-      if (depth != null) #depth: depth,
+      if (depth != $none) #depth: depth,
       if (icon != $none) #icon: icon,
       if (color != $none) #color: color,
       if (spacePHID != $none) #spacePHID: spacePHID,
