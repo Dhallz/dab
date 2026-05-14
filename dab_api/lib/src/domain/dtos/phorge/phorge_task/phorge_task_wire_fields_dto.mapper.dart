@@ -30,6 +30,12 @@ class PhorgeTaskWireFieldsDtoMapper
     _$title,
     opt: true,
   );
+  static String? _$name(PhorgeTaskWireFieldsDto v) => v.name;
+  static const Field<PhorgeTaskWireFieldsDto, String> _f$name = Field(
+    'name',
+    _$name,
+    opt: true,
+  );
   static String? _$uri(PhorgeTaskWireFieldsDto v) => v.uri;
   static const Field<PhorgeTaskWireFieldsDto, String> _f$uri = Field(
     'uri',
@@ -52,6 +58,7 @@ class PhorgeTaskWireFieldsDtoMapper
   @override
   final MappableFields<PhorgeTaskWireFieldsDto> fields = const {
     #title: _f$title,
+    #name: _f$name,
     #uri: _f$uri,
     #ownerPHID: _f$ownerPHID,
     #dateModified: _f$dateModified,
@@ -60,6 +67,7 @@ class PhorgeTaskWireFieldsDtoMapper
   static PhorgeTaskWireFieldsDto _instantiate(DecodingData data) {
     return PhorgeTaskWireFieldsDto(
       title: data.dec(_f$title),
+      name: data.dec(_f$name),
       uri: data.dec(_f$uri),
       ownerPHID: data.dec(_f$ownerPHID),
       dateModified: data.dec(_f$dateModified),
@@ -136,7 +144,13 @@ abstract class PhorgeTaskWireFieldsDtoCopyWith<
   $Out
 >
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? title, String? uri, String? ownerPHID, int? dateModified});
+  $R call({
+    String? title,
+    String? name,
+    String? uri,
+    String? ownerPHID,
+    int? dateModified,
+  });
   PhorgeTaskWireFieldsDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -154,12 +168,14 @@ class _PhorgeTaskWireFieldsDtoCopyWithImpl<$R, $Out>
   @override
   $R call({
     Object? title = $none,
+    Object? name = $none,
     Object? uri = $none,
     Object? ownerPHID = $none,
     Object? dateModified = $none,
   }) => $apply(
     FieldCopyWithData({
       if (title != $none) #title: title,
+      if (name != $none) #name: name,
       if (uri != $none) #uri: uri,
       if (ownerPHID != $none) #ownerPHID: ownerPHID,
       if (dateModified != $none) #dateModified: dateModified,
@@ -168,6 +184,7 @@ class _PhorgeTaskWireFieldsDtoCopyWithImpl<$R, $Out>
   @override
   PhorgeTaskWireFieldsDto $make(CopyWithData data) => PhorgeTaskWireFieldsDto(
     title: data.get(#title, or: $value.title),
+    name: data.get(#name, or: $value.name),
     uri: data.get(#uri, or: $value.uri),
     ownerPHID: data.get(#ownerPHID, or: $value.ownerPHID),
     dateModified: data.get(#dateModified, or: $value.dateModified),

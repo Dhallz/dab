@@ -160,7 +160,11 @@ Future<void> serviceLocator() async {
     slackWebProtocol,
   );
   final teamsSource = TeamsMessageSource();
-  final jiraSource = JiraIssueSource();
+  final jiraSource = JiraIssueSource(
+    providerConfigRepository,
+    userRepository,
+    jsonRestProtocol,
+  );
   final linearSource = LinearIssueSource(graphqlProtocol);
   final discordSource = DiscordMessageSource();
   final githubSource = GitHubCommitSource(

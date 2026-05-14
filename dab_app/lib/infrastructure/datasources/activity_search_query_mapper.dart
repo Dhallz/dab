@@ -11,6 +11,7 @@ class ActivitySearchQueryMapper {
     return switch (provider) {
       PhorgeTaskProvider() || PhorgeRevisionProvider() => 'phorge',
       GitHubCommitProvider() => 'github',
+      JiraIssueProvider() => 'jira',
       SlackMessageProvider() => 'slack',
       GenericProvider(name: final n) => _genericProviderFilterKey(n),
     };

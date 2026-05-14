@@ -78,6 +78,24 @@ class GitHubCommitProvider extends ActivityProvider
 }
 
 /// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Jira Issues (Maniphest-style issue tracking).
+/// CONTRACT: Corresponds to the `activity_jira_issue` SQL table.
+@MappableClass()
+class JiraIssueProvider extends ActivityProvider with JiraIssueProviderMappable {
+  final String? issueKey;
+  final String? projectKey;
+  final String? statusName;
+
+  const JiraIssueProvider({this.issueKey, this.projectKey, this.statusName});
+
+  @override
+  String get name => 'Jira';
+
+  @override
+  String get category => 'task';
+}
+
+/// [ARCH: DOMAIN_MODEL]
 /// ROLE: Metadata for Slack Messages.
 /// CONTRACT: Corresponds to the `activity_slack_message` SQL table.
 @MappableClass()

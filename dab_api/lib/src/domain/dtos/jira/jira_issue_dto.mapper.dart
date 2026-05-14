@@ -21,38 +21,78 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
   @override
   final String id = 'JiraIssueDto';
 
-  static String _$key(JiraIssueDto v) => v.key;
-  static const Field<JiraIssueDto, String> _f$key = Field('key', _$key);
+  static String _$issueKey(JiraIssueDto v) => v.issueKey;
+  static const Field<JiraIssueDto, String> _f$issueKey = Field(
+    'issueKey',
+    _$issueKey,
+  );
+  static String _$projectKey(JiraIssueDto v) => v.projectKey;
+  static const Field<JiraIssueDto, String> _f$projectKey = Field(
+    'projectKey',
+    _$projectKey,
+  );
   static String _$summary(JiraIssueDto v) => v.summary;
   static const Field<JiraIssueDto, String> _f$summary = Field(
     'summary',
     _$summary,
   );
-  static String _$status(JiraIssueDto v) => v.status;
-  static const Field<JiraIssueDto, String> _f$status = Field(
-    'status',
-    _$status,
+  static String _$statusName(JiraIssueDto v) => v.statusName;
+  static const Field<JiraIssueDto, String> _f$statusName = Field(
+    'statusName',
+    _$statusName,
   );
-  static DateTime _$updated(JiraIssueDto v) => v.updated;
-  static const Field<JiraIssueDto, DateTime> _f$updated = Field(
-    'updated',
-    _$updated,
+  static String _$browseUrl(JiraIssueDto v) => v.browseUrl;
+  static const Field<JiraIssueDto, String> _f$browseUrl = Field(
+    'browseUrl',
+    _$browseUrl,
+  );
+  static DateTime _$updatedAt(JiraIssueDto v) => v.updatedAt;
+  static const Field<JiraIssueDto, DateTime> _f$updatedAt = Field(
+    'updatedAt',
+    _$updatedAt,
+  );
+  static String _$siteHost(JiraIssueDto v) => v.siteHost;
+  static const Field<JiraIssueDto, String> _f$siteHost = Field(
+    'siteHost',
+    _$siteHost,
+  );
+  static String? _$dabUserId(JiraIssueDto v) => v.dabUserId;
+  static const Field<JiraIssueDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
+  );
+  static String? _$authorDisplayName(JiraIssueDto v) => v.authorDisplayName;
+  static const Field<JiraIssueDto, String> _f$authorDisplayName = Field(
+    'authorDisplayName',
+    _$authorDisplayName,
+    opt: true,
   );
 
   @override
   final MappableFields<JiraIssueDto> fields = const {
-    #key: _f$key,
+    #issueKey: _f$issueKey,
+    #projectKey: _f$projectKey,
     #summary: _f$summary,
-    #status: _f$status,
-    #updated: _f$updated,
+    #statusName: _f$statusName,
+    #browseUrl: _f$browseUrl,
+    #updatedAt: _f$updatedAt,
+    #siteHost: _f$siteHost,
+    #dabUserId: _f$dabUserId,
+    #authorDisplayName: _f$authorDisplayName,
   };
 
   static JiraIssueDto _instantiate(DecodingData data) {
     return JiraIssueDto(
-      key: data.dec(_f$key),
+      issueKey: data.dec(_f$issueKey),
+      projectKey: data.dec(_f$projectKey),
       summary: data.dec(_f$summary),
-      status: data.dec(_f$status),
-      updated: data.dec(_f$updated),
+      statusName: data.dec(_f$statusName),
+      browseUrl: data.dec(_f$browseUrl),
+      updatedAt: data.dec(_f$updatedAt),
+      siteHost: data.dec(_f$siteHost),
+      dabUserId: data.dec(_f$dabUserId),
+      authorDisplayName: data.dec(_f$authorDisplayName),
     );
   }
 
@@ -118,7 +158,17 @@ extension JiraIssueDtoValueCopy<$R, $Out>
 
 abstract class JiraIssueDtoCopyWith<$R, $In extends JiraIssueDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? key, String? summary, String? status, DateTime? updated});
+  $R call({
+    String? issueKey,
+    String? projectKey,
+    String? summary,
+    String? statusName,
+    String? browseUrl,
+    DateTime? updatedAt,
+    String? siteHost,
+    String? dabUserId,
+    String? authorDisplayName,
+  });
   JiraIssueDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -131,21 +181,43 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<JiraIssueDto> $mapper =
       JiraIssueDtoMapper.ensureInitialized();
   @override
-  $R call({String? key, String? summary, String? status, DateTime? updated}) =>
-      $apply(
-        FieldCopyWithData({
-          if (key != null) #key: key,
-          if (summary != null) #summary: summary,
-          if (status != null) #status: status,
-          if (updated != null) #updated: updated,
-        }),
-      );
+  $R call({
+    String? issueKey,
+    String? projectKey,
+    String? summary,
+    String? statusName,
+    String? browseUrl,
+    DateTime? updatedAt,
+    String? siteHost,
+    Object? dabUserId = $none,
+    Object? authorDisplayName = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (issueKey != null) #issueKey: issueKey,
+      if (projectKey != null) #projectKey: projectKey,
+      if (summary != null) #summary: summary,
+      if (statusName != null) #statusName: statusName,
+      if (browseUrl != null) #browseUrl: browseUrl,
+      if (updatedAt != null) #updatedAt: updatedAt,
+      if (siteHost != null) #siteHost: siteHost,
+      if (dabUserId != $none) #dabUserId: dabUserId,
+      if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
+    }),
+  );
   @override
   JiraIssueDto $make(CopyWithData data) => JiraIssueDto(
-    key: data.get(#key, or: $value.key),
+    issueKey: data.get(#issueKey, or: $value.issueKey),
+    projectKey: data.get(#projectKey, or: $value.projectKey),
     summary: data.get(#summary, or: $value.summary),
-    status: data.get(#status, or: $value.status),
-    updated: data.get(#updated, or: $value.updated),
+    statusName: data.get(#statusName, or: $value.statusName),
+    browseUrl: data.get(#browseUrl, or: $value.browseUrl),
+    updatedAt: data.get(#updatedAt, or: $value.updatedAt),
+    siteHost: data.get(#siteHost, or: $value.siteHost),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
+    authorDisplayName: data.get(
+      #authorDisplayName,
+      or: $value.authorDisplayName,
+    ),
   );
 
   @override

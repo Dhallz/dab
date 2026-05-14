@@ -89,9 +89,24 @@ class ActivityRepository implements AbsIActivityRepository {
                   messageTs: Value(provider.messageTs),
                 ),
               );
+        } else if (provider is JiraIssueProvider) {
+          await _db
+              .into(_db.activityJiraIssueTable)
+              .insert(
+                ActivityJiraIssueTableCompanion.insert(
+                  activityId: activity.id,
+                  issueKey: () {
+                    final v = provider.issueKey?.trim();
+                    return (v == null || v.isEmpty) ? 'unknown' : v;
+                  }(),
+                  projectKey: () {
+                    final v = provider.projectKey?.trim();
+                    return (v == null || v.isEmpty) ? 'unknown' : v;
+                  }(),
+                  statusName: Value(provider.statusName),
+                ),
+              );
         }
-        // Add more providers here (GitHub, Slack, etc.)
-
         return const Right(null);
       } catch (e) {
         return Left(DatabaseFailure('Error creating activity: $e'));
@@ -119,6 +134,12 @@ class ActivityRepository implements AbsIActivityRepository {
         leftOuterJoin(
           _db.activitySlackMessageTable,
           _db.activitySlackMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityJiraIssueTable,
+          _db.activityJiraIssueTable.activityId.equalsExp(
             _db.activitiesTable.id,
           ),
         ),
@@ -172,6 +193,12 @@ class ActivityRepository implements AbsIActivityRepository {
             _db.activitiesTable.id,
           ),
         ),
+        leftOuterJoin(
+          _db.activityJiraIssueTable,
+          _db.activityJiraIssueTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
         // ENFORCE Deep Deactivation filtering for user-specific feeds too
         innerJoin(
           _db.providerConfigsTable,
@@ -208,6 +235,7 @@ class ActivityRepository implements AbsIActivityRepository {
     final phorgeData = row.readTableOrNull(_db.activityPhorgeTable);
     final githubData = row.readTableOrNull(_db.activityGithubCommitTable);
     final slackData = row.readTableOrNull(_db.activitySlackMessageTable);
+    final jiraData = row.readTableOrNull(_db.activityJiraIssueTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -240,6 +268,14 @@ class ActivityRepository implements AbsIActivityRepository {
       );
     } else if (pName == 'slack') {
       provider = const SlackMessageProvider();
+    } else if (pName == 'jira' && jiraData != null) {
+      provider = JiraIssueProvider(
+        issueKey: jiraData.issueKey,
+        projectKey: jiraData.projectKey,
+        statusName: jiraData.statusName,
+      );
+    } else if (pName == 'jira') {
+      provider = const JiraIssueProvider();
     } else {
       provider = GenericProvider(name: activityData.providerName);
     }

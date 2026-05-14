@@ -1875,6 +1875,343 @@ class ActivityGithubCommitTableCompanion
   }
 }
 
+class $ActivityJiraIssueTableTable extends ActivityJiraIssueTable
+    with TableInfo<$ActivityJiraIssueTableTable, ActivityJiraIssueTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityJiraIssueTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _issueKeyMeta = const VerificationMeta(
+    'issueKey',
+  );
+  @override
+  late final GeneratedColumn<String> issueKey = GeneratedColumn<String>(
+    'issue_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectKeyMeta = const VerificationMeta(
+    'projectKey',
+  );
+  @override
+  late final GeneratedColumn<String> projectKey = GeneratedColumn<String>(
+    'project_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusNameMeta = const VerificationMeta(
+    'statusName',
+  );
+  @override
+  late final GeneratedColumn<String> statusName = GeneratedColumn<String>(
+    'status_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    activityId,
+    issueKey,
+    projectKey,
+    statusName,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_jira_issue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityJiraIssueTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('issue_key')) {
+      context.handle(
+        _issueKeyMeta,
+        issueKey.isAcceptableOrUnknown(data['issue_key']!, _issueKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issueKeyMeta);
+    }
+    if (data.containsKey('project_key')) {
+      context.handle(
+        _projectKeyMeta,
+        projectKey.isAcceptableOrUnknown(data['project_key']!, _projectKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectKeyMeta);
+    }
+    if (data.containsKey('status_name')) {
+      context.handle(
+        _statusNameMeta,
+        statusName.isAcceptableOrUnknown(data['status_name']!, _statusNameMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityJiraIssueTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityJiraIssueTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      issueKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}issue_key'],
+      )!,
+      projectKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_key'],
+      )!,
+      statusName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status_name'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityJiraIssueTableTable createAlias(String alias) {
+    return $ActivityJiraIssueTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityJiraIssueTableData extends DataClass
+    implements Insertable<ActivityJiraIssueTableData> {
+  final String activityId;
+  final String issueKey;
+  final String projectKey;
+  final String? statusName;
+  const ActivityJiraIssueTableData({
+    required this.activityId,
+    required this.issueKey,
+    required this.projectKey,
+    this.statusName,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    map['issue_key'] = Variable<String>(issueKey);
+    map['project_key'] = Variable<String>(projectKey);
+    if (!nullToAbsent || statusName != null) {
+      map['status_name'] = Variable<String>(statusName);
+    }
+    return map;
+  }
+
+  ActivityJiraIssueTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityJiraIssueTableCompanion(
+      activityId: Value(activityId),
+      issueKey: Value(issueKey),
+      projectKey: Value(projectKey),
+      statusName: statusName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statusName),
+    );
+  }
+
+  factory ActivityJiraIssueTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityJiraIssueTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      issueKey: serializer.fromJson<String>(json['issueKey']),
+      projectKey: serializer.fromJson<String>(json['projectKey']),
+      statusName: serializer.fromJson<String?>(json['statusName']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'issueKey': serializer.toJson<String>(issueKey),
+      'projectKey': serializer.toJson<String>(projectKey),
+      'statusName': serializer.toJson<String?>(statusName),
+    };
+  }
+
+  ActivityJiraIssueTableData copyWith({
+    String? activityId,
+    String? issueKey,
+    String? projectKey,
+    Value<String?> statusName = const Value.absent(),
+  }) => ActivityJiraIssueTableData(
+    activityId: activityId ?? this.activityId,
+    issueKey: issueKey ?? this.issueKey,
+    projectKey: projectKey ?? this.projectKey,
+    statusName: statusName.present ? statusName.value : this.statusName,
+  );
+  ActivityJiraIssueTableData copyWithCompanion(
+    ActivityJiraIssueTableCompanion data,
+  ) {
+    return ActivityJiraIssueTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      issueKey: data.issueKey.present ? data.issueKey.value : this.issueKey,
+      projectKey: data.projectKey.present
+          ? data.projectKey.value
+          : this.projectKey,
+      statusName: data.statusName.present
+          ? data.statusName.value
+          : this.statusName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityJiraIssueTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('issueKey: $issueKey, ')
+          ..write('projectKey: $projectKey, ')
+          ..write('statusName: $statusName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(activityId, issueKey, projectKey, statusName);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityJiraIssueTableData &&
+          other.activityId == this.activityId &&
+          other.issueKey == this.issueKey &&
+          other.projectKey == this.projectKey &&
+          other.statusName == this.statusName);
+}
+
+class ActivityJiraIssueTableCompanion
+    extends UpdateCompanion<ActivityJiraIssueTableData> {
+  final Value<String> activityId;
+  final Value<String> issueKey;
+  final Value<String> projectKey;
+  final Value<String?> statusName;
+  final Value<int> rowid;
+  const ActivityJiraIssueTableCompanion({
+    this.activityId = const Value.absent(),
+    this.issueKey = const Value.absent(),
+    this.projectKey = const Value.absent(),
+    this.statusName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityJiraIssueTableCompanion.insert({
+    required String activityId,
+    required String issueKey,
+    required String projectKey,
+    this.statusName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId),
+       issueKey = Value(issueKey),
+       projectKey = Value(projectKey);
+  static Insertable<ActivityJiraIssueTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? issueKey,
+    Expression<String>? projectKey,
+    Expression<String>? statusName,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (issueKey != null) 'issue_key': issueKey,
+      if (projectKey != null) 'project_key': projectKey,
+      if (statusName != null) 'status_name': statusName,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityJiraIssueTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String>? issueKey,
+    Value<String>? projectKey,
+    Value<String?>? statusName,
+    Value<int>? rowid,
+  }) {
+    return ActivityJiraIssueTableCompanion(
+      activityId: activityId ?? this.activityId,
+      issueKey: issueKey ?? this.issueKey,
+      projectKey: projectKey ?? this.projectKey,
+      statusName: statusName ?? this.statusName,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (issueKey.present) {
+      map['issue_key'] = Variable<String>(issueKey.value);
+    }
+    if (projectKey.present) {
+      map['project_key'] = Variable<String>(projectKey.value);
+    }
+    if (statusName.present) {
+      map['status_name'] = Variable<String>(statusName.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityJiraIssueTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('issueKey: $issueKey, ')
+          ..write('projectKey: $projectKey, ')
+          ..write('statusName: $statusName, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ActivitySlackMessageTableTable extends ActivitySlackMessageTable
     with
         TableInfo<
@@ -4242,6 +4579,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ActivityPhorgeTableTable(this);
   late final $ActivityGithubCommitTableTable activityGithubCommitTable =
       $ActivityGithubCommitTableTable(this);
+  late final $ActivityJiraIssueTableTable activityJiraIssueTable =
+      $ActivityJiraIssueTableTable(this);
   late final $ActivitySlackMessageTableTable activitySlackMessageTable =
       $ActivitySlackMessageTableTable(this);
   late final $SessionsTableTable sessionsTable = $SessionsTableTable(this);
@@ -4261,6 +4600,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     activitiesTable,
     activityPhorgeTable,
     activityGithubCommitTable,
+    activityJiraIssueTable,
     activitySlackMessageTable,
     sessionsTable,
     groupsTable,
@@ -4283,6 +4623,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('activity_github_commit', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('activity_jira_issue', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -4820,6 +5167,34 @@ final class $$ActivitiesTableTableReferences
   }
 
   static MultiTypedResultKey<
+    $ActivityJiraIssueTableTable,
+    List<ActivityJiraIssueTableData>
+  >
+  _activityJiraIssueTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityJiraIssueTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityJiraIssueTable.activityId,
+        ),
+      );
+
+  $$ActivityJiraIssueTableTableProcessedTableManager
+  get activityJiraIssueTableRefs {
+    final manager = $$ActivityJiraIssueTableTableTableManager(
+      $_db,
+      $_db.activityJiraIssueTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityJiraIssueTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
     $ActivitySlackMessageTableTable,
     List<ActivitySlackMessageTableData>
   >
@@ -4950,6 +5325,32 @@ class $$ActivitiesTableTableFilterComposer
               }) => $$ActivityGithubCommitTableTableFilterComposer(
                 $db: $db,
                 $table: $db.activityGithubCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> activityJiraIssueTableRefs(
+    Expression<bool> Function($$ActivityJiraIssueTableTableFilterComposer f) f,
+  ) {
+    final $$ActivityJiraIssueTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityJiraIssueTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityJiraIssueTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityJiraIssueTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -5147,6 +5548,32 @@ class $$ActivitiesTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> activityJiraIssueTableRefs<T extends Object>(
+    Expression<T> Function($$ActivityJiraIssueTableTableAnnotationComposer a) f,
+  ) {
+    final $$ActivityJiraIssueTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityJiraIssueTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityJiraIssueTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityJiraIssueTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> activitySlackMessageTableRefs<T extends Object>(
     Expression<T> Function($$ActivitySlackMessageTableTableAnnotationComposer a)
     f,
@@ -5191,6 +5618,7 @@ class $$ActivitiesTableTableTableManager
           PrefetchHooks Function({
             bool activityPhorgeTableRefs,
             bool activityGithubCommitTableRefs,
+            bool activityJiraIssueTableRefs,
             bool activitySlackMessageTableRefs,
           })
         > {
@@ -5271,6 +5699,7 @@ class $$ActivitiesTableTableTableManager
               ({
                 activityPhorgeTableRefs = false,
                 activityGithubCommitTableRefs = false,
+                activityJiraIssueTableRefs = false,
                 activitySlackMessageTableRefs = false,
               }) {
                 return PrefetchHooks(
@@ -5279,6 +5708,7 @@ class $$ActivitiesTableTableTableManager
                     if (activityPhorgeTableRefs) db.activityPhorgeTable,
                     if (activityGithubCommitTableRefs)
                       db.activityGithubCommitTable,
+                    if (activityJiraIssueTableRefs) db.activityJiraIssueTable,
                     if (activitySlackMessageTableRefs)
                       db.activitySlackMessageTable,
                   ],
@@ -5321,6 +5751,27 @@ class $$ActivitiesTableTableTableManager
                                 table,
                                 p0,
                               ).activityGithubCommitTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (activityJiraIssueTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityJiraIssueTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityJiraIssueTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityJiraIssueTableRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.activityId == item.id,
@@ -5371,6 +5822,7 @@ typedef $$ActivitiesTableTableProcessedTableManager =
       PrefetchHooks Function({
         bool activityPhorgeTableRefs,
         bool activityGithubCommitTableRefs,
+        bool activityJiraIssueTableRefs,
         bool activitySlackMessageTableRefs,
       })
     >;
@@ -6008,6 +6460,335 @@ typedef $$ActivityGithubCommitTableTableProcessedTableManager =
         $$ActivityGithubCommitTableTableReferences,
       ),
       ActivityGithubCommitTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
+typedef $$ActivityJiraIssueTableTableCreateCompanionBuilder =
+    ActivityJiraIssueTableCompanion Function({
+      required String activityId,
+      required String issueKey,
+      required String projectKey,
+      Value<String?> statusName,
+      Value<int> rowid,
+    });
+typedef $$ActivityJiraIssueTableTableUpdateCompanionBuilder =
+    ActivityJiraIssueTableCompanion Function({
+      Value<String> activityId,
+      Value<String> issueKey,
+      Value<String> projectKey,
+      Value<String?> statusName,
+      Value<int> rowid,
+    });
+
+final class $$ActivityJiraIssueTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityJiraIssueTableTable,
+          ActivityJiraIssueTableData
+        > {
+  $$ActivityJiraIssueTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityJiraIssueTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityJiraIssueTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityJiraIssueTableTable> {
+  $$ActivityJiraIssueTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get issueKey => $composableBuilder(
+    column: $table.issueKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectKey => $composableBuilder(
+    column: $table.projectKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityJiraIssueTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityJiraIssueTableTable> {
+  $$ActivityJiraIssueTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get issueKey => $composableBuilder(
+    column: $table.issueKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectKey => $composableBuilder(
+    column: $table.projectKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityJiraIssueTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityJiraIssueTableTable> {
+  $$ActivityJiraIssueTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get issueKey =>
+      $composableBuilder(column: $table.issueKey, builder: (column) => column);
+
+  GeneratedColumn<String> get projectKey => $composableBuilder(
+    column: $table.projectKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => column,
+  );
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityJiraIssueTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityJiraIssueTableTable,
+          ActivityJiraIssueTableData,
+          $$ActivityJiraIssueTableTableFilterComposer,
+          $$ActivityJiraIssueTableTableOrderingComposer,
+          $$ActivityJiraIssueTableTableAnnotationComposer,
+          $$ActivityJiraIssueTableTableCreateCompanionBuilder,
+          $$ActivityJiraIssueTableTableUpdateCompanionBuilder,
+          (ActivityJiraIssueTableData, $$ActivityJiraIssueTableTableReferences),
+          ActivityJiraIssueTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityJiraIssueTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityJiraIssueTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityJiraIssueTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityJiraIssueTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityJiraIssueTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String> issueKey = const Value.absent(),
+                Value<String> projectKey = const Value.absent(),
+                Value<String?> statusName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityJiraIssueTableCompanion(
+                activityId: activityId,
+                issueKey: issueKey,
+                projectKey: projectKey,
+                statusName: statusName,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                required String issueKey,
+                required String projectKey,
+                Value<String?> statusName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityJiraIssueTableCompanion.insert(
+                activityId: activityId,
+                issueKey: issueKey,
+                projectKey: projectKey,
+                statusName: statusName,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityJiraIssueTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityJiraIssueTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityJiraIssueTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityJiraIssueTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityJiraIssueTableTable,
+      ActivityJiraIssueTableData,
+      $$ActivityJiraIssueTableTableFilterComposer,
+      $$ActivityJiraIssueTableTableOrderingComposer,
+      $$ActivityJiraIssueTableTableAnnotationComposer,
+      $$ActivityJiraIssueTableTableCreateCompanionBuilder,
+      $$ActivityJiraIssueTableTableUpdateCompanionBuilder,
+      (ActivityJiraIssueTableData, $$ActivityJiraIssueTableTableReferences),
+      ActivityJiraIssueTableData,
       PrefetchHooks Function({bool activityId})
     >;
 typedef $$ActivitySlackMessageTableTableCreateCompanionBuilder =
@@ -7800,6 +8581,11 @@ class $AppDatabaseManager {
       $$ActivityGithubCommitTableTableTableManager(
         _db,
         _db.activityGithubCommitTable,
+      );
+  $$ActivityJiraIssueTableTableTableManager get activityJiraIssueTable =>
+      $$ActivityJiraIssueTableTableTableManager(
+        _db,
+        _db.activityJiraIssueTable,
       );
   $$ActivitySlackMessageTableTableTableManager get activitySlackMessageTable =>
       $$ActivitySlackMessageTableTableTableManager(

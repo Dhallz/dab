@@ -1,5 +1,6 @@
 import 'package:dab_api/src/infrastructure/database/tables/activities_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_github_commit_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_jira_issue_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_slack_message_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
@@ -20,6 +21,7 @@ part 'app_database.g.dart';
     ActivitiesTable,
     ActivityPhorgeTable,
     ActivityGithubCommitTable,
+    ActivityJiraIssueTable,
     ActivitySlackMessageTable,
     SessionsTable,
     GroupsTable,
@@ -32,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -163,6 +165,9 @@ SET icon_url = 'https://slack.com/favicon.ico',
 WHERE id = 'slack'
   AND icon_url LIKE '%slack-edge.com%';
 ''');
+      }
+      if (from < 13) {
+        await m.createTable(activityJiraIssueTable);
       }
     },
     beforeOpen: (details) async {

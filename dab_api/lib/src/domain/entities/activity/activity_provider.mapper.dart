@@ -17,6 +17,7 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
       PhorgeTaskProviderMapper.ensureInitialized();
       PhorgeRevisionProviderMapper.ensureInitialized();
       GitHubCommitProviderMapper.ensureInitialized();
+      JiraIssueProviderMapper.ensureInitialized();
       SlackMessageProviderMapper.ensureInitialized();
       GenericProviderMapper.ensureInitialized();
     }
@@ -499,6 +500,166 @@ class _GitHubCommitProviderCopyWithImpl<$R, $Out>
   GitHubCommitProviderCopyWith<$R2, GitHubCommitProvider, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _GitHubCommitProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class JiraIssueProviderMapper extends ClassMapperBase<JiraIssueProvider> {
+  JiraIssueProviderMapper._();
+
+  static JiraIssueProviderMapper? _instance;
+  static JiraIssueProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = JiraIssueProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'JiraIssueProvider';
+
+  static String? _$issueKey(JiraIssueProvider v) => v.issueKey;
+  static const Field<JiraIssueProvider, String> _f$issueKey = Field(
+    'issueKey',
+    _$issueKey,
+    opt: true,
+  );
+  static String? _$projectKey(JiraIssueProvider v) => v.projectKey;
+  static const Field<JiraIssueProvider, String> _f$projectKey = Field(
+    'projectKey',
+    _$projectKey,
+    opt: true,
+  );
+  static String? _$statusName(JiraIssueProvider v) => v.statusName;
+  static const Field<JiraIssueProvider, String> _f$statusName = Field(
+    'statusName',
+    _$statusName,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<JiraIssueProvider> fields = const {
+    #issueKey: _f$issueKey,
+    #projectKey: _f$projectKey,
+    #statusName: _f$statusName,
+  };
+
+  static JiraIssueProvider _instantiate(DecodingData data) {
+    return JiraIssueProvider(
+      issueKey: data.dec(_f$issueKey),
+      projectKey: data.dec(_f$projectKey),
+      statusName: data.dec(_f$statusName),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static JiraIssueProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<JiraIssueProvider>(map);
+  }
+
+  static JiraIssueProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<JiraIssueProvider>(json);
+  }
+}
+
+mixin JiraIssueProviderMappable {
+  String toJson() {
+    return JiraIssueProviderMapper.ensureInitialized()
+        .encodeJson<JiraIssueProvider>(this as JiraIssueProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return JiraIssueProviderMapper.ensureInitialized()
+        .encodeMap<JiraIssueProvider>(this as JiraIssueProvider);
+  }
+
+  JiraIssueProviderCopyWith<
+    JiraIssueProvider,
+    JiraIssueProvider,
+    JiraIssueProvider
+  >
+  get copyWith =>
+      _JiraIssueProviderCopyWithImpl<JiraIssueProvider, JiraIssueProvider>(
+        this as JiraIssueProvider,
+        $identity,
+        $identity,
+      );
+  @override
+  String toString() {
+    return JiraIssueProviderMapper.ensureInitialized().stringifyValue(
+      this as JiraIssueProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return JiraIssueProviderMapper.ensureInitialized().equalsValue(
+      this as JiraIssueProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return JiraIssueProviderMapper.ensureInitialized().hashValue(
+      this as JiraIssueProvider,
+    );
+  }
+}
+
+extension JiraIssueProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, JiraIssueProvider, $Out> {
+  JiraIssueProviderCopyWith<$R, JiraIssueProvider, $Out>
+  get $asJiraIssueProvider => $base.as(
+    (v, t, t2) => _JiraIssueProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class JiraIssueProviderCopyWith<
+  $R,
+  $In extends JiraIssueProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? issueKey, String? projectKey, String? statusName});
+  JiraIssueProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _JiraIssueProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, JiraIssueProvider, $Out>
+    implements JiraIssueProviderCopyWith<$R, JiraIssueProvider, $Out> {
+  _JiraIssueProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<JiraIssueProvider> $mapper =
+      JiraIssueProviderMapper.ensureInitialized();
+  @override
+  $R call({
+    Object? issueKey = $none,
+    Object? projectKey = $none,
+    Object? statusName = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (issueKey != $none) #issueKey: issueKey,
+      if (projectKey != $none) #projectKey: projectKey,
+      if (statusName != $none) #statusName: statusName,
+    }),
+  );
+  @override
+  JiraIssueProvider $make(CopyWithData data) => JiraIssueProvider(
+    issueKey: data.get(#issueKey, or: $value.issueKey),
+    projectKey: data.get(#projectKey, or: $value.projectKey),
+    statusName: data.get(#statusName, or: $value.statusName),
+  );
+
+  @override
+  JiraIssueProviderCopyWith<$R2, JiraIssueProvider, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  ) => _JiraIssueProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class SlackMessageProviderMapper extends ClassMapperBase<SlackMessageProvider> {

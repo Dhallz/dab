@@ -76,6 +76,15 @@ void main() {
       );
     });
 
+    test('providerFilterKey maps Jira typed provider to config id', () {
+      expect(
+        ActivitySearchQueryMapper.providerFilterKey(
+          const JiraIssueProvider(),
+        ),
+        'jira',
+      );
+    });
+
     test('providerFilterKey maps Microsoft Teams to teams config id', () {
       expect(
         ActivitySearchQueryMapper.providerFilterKey(

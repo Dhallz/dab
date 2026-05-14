@@ -95,7 +95,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     AdminConfigField field,
     dynamic rawValue,
   ) {
-    if ((field.key == 'repos' || field.key == 'channels') && rawValue is List) {
+    if ((field.key == 'repos' ||
+            field.key == 'channels' ||
+            field.key == 'projectKeys') &&
+        rawValue is List) {
       return rawValue.map((e) => e.toString()).join('\n');
     }
 
@@ -311,7 +314,9 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                         SizedBox(height: AppSpacing.l),
                         ...fields.map((field) {
                           final isMultiValueField =
-                              field.key == 'repos' || field.key == 'channels';
+                              field.key == 'repos' ||
+                              field.key == 'channels' ||
+                              field.key == 'projectKeys';
                           return Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.m,
@@ -464,6 +469,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           key: 'instanceUrl',
           label: l10n.adminFieldJiraInstanceUrl,
         ),
+        AdminConfigField(
+          key: 'projectKeys',
+          label: 'Project Keys (comma or newline separated)',
+        ),
       ];
     }
     if (lowerId.contains('teams')) {
@@ -588,6 +597,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         }
       } else if (key == 'apiBaseUrl' && value.isEmpty) {
         settings.remove('apiBaseUrl');
+      } else if (key == 'projectKeys' && value.isEmpty) {
+        settings.remove('projectKeys');
       } else if (key == 'webhookSecret' && value.isEmpty) {
         settings.remove('webhookSecret');
         settings.remove('webhook_secret');

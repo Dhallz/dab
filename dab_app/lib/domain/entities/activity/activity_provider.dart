@@ -59,6 +59,21 @@ class GitHubCommitProvider extends ActivityProvider
 }
 
 @MappableClass()
+class JiraIssueProvider extends ActivityProvider with JiraIssueProviderMappable {
+  final String? issueKey;
+  final String? projectKey;
+  final String? statusName;
+
+  const JiraIssueProvider({this.issueKey, this.projectKey, this.statusName});
+
+  @override
+  String get name => 'Jira';
+
+  @override
+  ActivityCategory get category => ActivityCategory.task;
+}
+
+@MappableClass()
 class SlackMessageProvider extends ActivityProvider
     with SlackMessageProviderMappable {
   final String? workspaceId;

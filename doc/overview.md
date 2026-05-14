@@ -92,7 +92,7 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | GitLab | 🔜 Planned | Via generic `IActivitySource` |
 | Bitbucket | 🔜 Planned | Via generic `IActivitySource` |
 | Slack | ✅ Active (Messages v1) | Identity-scoped Slack message ingestion |
-| Jira | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
+| Jira | ✅ Active (issues v1) | REST `/rest/api/3/search/jql` polling + identity discovery (`DAB-79`) |
 | Linear | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
 | Microsoft Teams | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
 | Discord | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |

@@ -324,6 +324,8 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         return {ActivityCategory.message};
       case 'phorge':
         return {ActivityCategory.task, ActivityCategory.revision};
+      case 'jira':
+        return {ActivityCategory.task};
       default:
         return {ActivityCategory.generic};
     }

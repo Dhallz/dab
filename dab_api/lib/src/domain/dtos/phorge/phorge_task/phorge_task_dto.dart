@@ -35,8 +35,10 @@ extension OnPhorgeTaskDto on PhorgeTaskDto {
   String get conduitPhid => phid ?? '';
 
   String get name {
-    final n = fields.title?.trim();
-    if (n != null && n.isNotEmpty) return n;
+    for (final raw in [fields.title, fields.name]) {
+      final trimmed = raw?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+    }
     return 'Unknown';
   }
 

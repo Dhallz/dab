@@ -90,7 +90,7 @@ dab_app/lib/
 | Entity | Description |
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
-| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub commits, Slack messages) |
+| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub commits, Slack messages, Jira issues, …) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
 | `Group` | Team / organizational group |
@@ -191,6 +191,7 @@ activities               ← shared fields (id, userId, title, content, createdA
 activity_phorge          ← Phorge-specific metadata (taskPhid, revisionId, tags)
 activity_github_commit   ← GitHub commit metadata (repo, branch)
 activity_slack_message   ← Slack message metadata (workspace/channel/thread/message ids)
+activity_jira_issue      ← Jira issue metadata (issue key, project key, status snapshot)
 ```
 
 - Child tables reference `activities.id` with `CASCADE DELETE`.

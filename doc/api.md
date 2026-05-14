@@ -167,7 +167,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Phorge | ✅ Active | Conduit REST API |
 | GitHub | ✅ Active (Commits v1) | REST (+ push webhook) |
 | Slack | ✅ Active (Messages v1) | Slack Web API |
-| Jira | 🧪 Scaffolded | REST |
+| Jira | ✅ Active (issues v1, polling + discovery) | REST |
 | Linear | 🧪 Scaffolded | GraphQL |
 | Teams | 🧪 Scaffolded | REST |
 | Discord | 🧪 Scaffolded | REST |
@@ -189,6 +189,16 @@ slack`). Connector execution and attribution require linked Slack user IDs in
 `user_identities.external_id`; there is no email fallback during mapping. The
 admin test-connection endpoint validates Slack credentials using `auth.test`,
 and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
+
+Jira Cloud ingestion is issue-only (**read-only**): `JiraIssueSource` queries
+`/rest/api/3/search/jql` with a time-bounded JQL **`updated`** window. Activate the
+connector with **`ProviderConfig.baseUrl`** pointing at `https://<site>.atlassian.net`
+(and set **`settings.api.email`** plus **`settings.api.token`** — Atlassian API
+token). **`settings.projectKeys`** is a comma- or newline-separated list of
+project keys (e.g. `DAB,OPS`); optional **`settings.extraJql`** appends an `AND`
+fragment. **`authoredOnly`** adds `reporter` / `assignee` / `creator` filters using
+linked `user_identities` rows (`provider_id: jira`, `external_id` = Jira account id).
+Discovery uses **`GET /rest/api/3/user/search`**.
 
 Provider live-ingestion capabilities are exposed via `GET /metadata/capabilities`
 to support dashboard strategy selection (webhook/websocket first, polling
