@@ -18,6 +18,8 @@ void main() async {
 
   await sl.init();
 
+  // test
+
   runApp(
     ProviderScope(
       child: pv.MultiProvider(
