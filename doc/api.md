@@ -190,8 +190,13 @@ slack`). Connector execution and attribution require linked Slack user IDs in
 admin test-connection endpoint validates Slack credentials using `auth.test`,
 and expected settings are `botToken` plus optional `channels` and `apiBaseUrl`.
 
-Jira Cloud ingestion is issue-only (**read-only**): `JiraIssueSource` queries
-`/rest/api/3/search/jql` with a time-bounded JQL **`updated`** window. Activate the
+Jira Cloud ingestion is read-only and event-oriented: `JiraIssueSource` queries
+`/rest/api/3/search/jql` with a time-bounded JQL **`updated`** window and then
+hydrates full issue comments via `/rest/api/3/issue/{key}/comment` (comment rows
+are not hard-trimmed by a second UTC-only filter, so client-side local-date
+filtering remains authoritative). It maps
+issue snapshots plus in-window comment events into the unified activity feed so
+Explorer can stack multiple events under one Jira issue card. Activate the
 connector with **`ProviderConfig.baseUrl`** pointing at `https://<site>.atlassian.net`
 (and set **`settings.api.email`** plus **`settings.api.token`** — Atlassian API
 token). **`settings.projectKeys`** is a comma- or newline-separated list of

@@ -30,7 +30,7 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
   final JsonRestProtocol _jsonRest;
 
   static const _searchFields =
-      'key,summary,status,updated,assignee,reporter,creator,project';
+      'key,summary,status,updated,assignee,reporter,creator,project,comment';
 
   @override
   Future<List<JiraIssueDto>> fetchRawData(
@@ -112,10 +112,39 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
 
       for (final item in rawIssues) {
         if (item is! Map<String, dynamic>) continue;
-        final dto = _mapSearchIssue(host: host, json: item, accountToUser: accountToUser);
+        final dto = _mapSearchIssue(
+          host: host,
+          json: item,
+          accountToUser: accountToUser,
+          start: start,
+          end: end,
+        );
         if (dto == null) continue;
+
+        final fetchedComments = await _fetchIssueComments(
+          host: host,
+          issueKey: dto.issueKey,
+          authHeaders: authHeaders,
+          accountToUser: accountToUser,
+          start: start,
+          end: end,
+        );
+        final mergedComments = _mergeComments(dto.comments, fetchedComments);
+        final withComments = JiraIssueDto(
+          issueKey: dto.issueKey,
+          projectKey: dto.projectKey,
+          summary: dto.summary,
+          statusName: dto.statusName,
+          browseUrl: dto.browseUrl,
+          updatedAt: dto.updatedAt,
+          siteHost: dto.siteHost,
+          dabUserId: dto.dabUserId,
+          authorDisplayName: dto.authorDisplayName,
+          comments: mergedComments,
+        );
+
         if (!seenKeys.add(dto.issueKey)) continue;
-        results.add(dto);
+        results.add(withComments);
       }
 
       final total = int.tryParse(body['total']?.toString() ?? '') ?? 0;
@@ -212,6 +241,8 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     required String host,
     required Map<String, dynamic> json,
     required Map<String, String> accountToUser,
+    required DateTime start,
+    required DateTime end,
   }) {
     final key = json['key']?.toString().trim();
     if (key == null || key.isEmpty) return null;
@@ -250,6 +281,12 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
         pickJiraPersonDisplay(creator);
 
     final browseUrl = 'https://$host/browse/$key';
+    final comments = _extractComments(
+      rawComments: fields['comment'],
+      accountToUser: accountToUser,
+      start: start,
+      end: end,
+    );
 
     return JiraIssueDto(
       issueKey: key,
@@ -261,7 +298,122 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
       siteHost: host,
       dabUserId: dabUserId,
       authorDisplayName: authorDisplayName,
+      comments: comments,
     );
+  }
+
+  List<JiraIssueCommentDto> _extractComments({
+    required Object? rawComments,
+    required Map<String, String> accountToUser,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    if (rawComments is! Map<String, dynamic>) return const [];
+    final list = rawComments['comments'];
+    if (list is! List) return const [];
+
+    final items = <JiraIssueCommentDto>[];
+    for (final raw in list) {
+      if (raw is! Map<String, dynamic>) continue;
+      final id = (raw['id'] ?? '').toString().trim();
+      if (id.isEmpty) continue;
+      final createdRaw = raw['created']?.toString();
+      final createdAt = createdRaw != null
+          ? DateTime.tryParse(createdRaw)?.toUtc()
+          : null;
+      if (createdAt == null) continue;
+
+      final author = raw['author'];
+      final accountId = jiraPersonAccountId(author);
+      final dabUserId = accountId == null ? null : accountToUser[accountId];
+      final authorDisplayName = pickJiraPersonDisplay(author);
+
+      final bodyText = extractJiraCommentText(raw['body']);
+      items.add(
+        JiraIssueCommentDto(
+          id: id,
+          body: bodyText,
+          createdAt: createdAt,
+          dabUserId: dabUserId,
+          authorDisplayName: authorDisplayName,
+        ),
+      );
+    }
+
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  Future<List<JiraIssueCommentDto>> _fetchIssueComments({
+    required String host,
+    required String issueKey,
+    required Map<String, String> authHeaders,
+    required Map<String, String> accountToUser,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final results = <JiraIssueCommentDto>[];
+    var startAt = 0;
+    const maxResults = 100;
+
+    for (var page = 0; page < 10; page++) {
+      final uri = Uri.parse('https://$host/rest/api/3/issue/$issueKey/comment').replace(
+        queryParameters: {
+          'startAt': '$startAt',
+          'maxResults': '$maxResults',
+        },
+      );
+
+      Map<String, dynamic> body;
+      try {
+        body = await _jsonRest.getJsonMap(
+          uri,
+          headers: {
+            ...authHeaders,
+            'Accept': 'application/json',
+          },
+        );
+      } on ProtocolException catch (_) {
+        break;
+      } catch (_) {
+        break;
+      }
+
+      final pageItems = _extractComments(
+        rawComments: body,
+        accountToUser: accountToUser,
+        start: start,
+        end: end,
+      );
+      results.addAll(pageItems);
+
+      final total = int.tryParse(body['total']?.toString() ?? '') ?? 0;
+      final values = body['comments'];
+      final fetchedCount = values is List ? values.length : 0;
+      if (fetchedCount == 0) break;
+
+      startAt += fetchedCount;
+      if (startAt >= total) break;
+    }
+
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
+  }
+
+  List<JiraIssueCommentDto> _mergeComments(
+    List<JiraIssueCommentDto> fromSearch,
+    List<JiraIssueCommentDto> fromCommentsApi,
+  ) {
+    final byId = <String, JiraIssueCommentDto>{};
+    for (final c in fromSearch) {
+      byId[c.id] = c;
+    }
+    for (final c in fromCommentsApi) {
+      byId[c.id] = c;
+    }
+    final merged = byId.values.toList();
+    merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return merged;
   }
 
   static String? _firstMatchedUserId(
@@ -296,4 +448,56 @@ String? pickJiraPersonDisplay(Object? person) {
   final name = person['displayName']?.toString().trim();
   if (name == null || name.isEmpty) return null;
   return name;
+}
+
+String extractJiraCommentText(Object? bodyNode) {
+  final lines = <String>[];
+  _collectJiraText(bodyNode, lines);
+  final joined = lines.join('\n').trim();
+  return joined;
+}
+
+void _collectJiraText(Object? node, List<String> lines) {
+  if (node == null) return;
+
+  if (node is List) {
+    for (final item in node) {
+      _collectJiraText(item, lines);
+    }
+    return;
+  }
+
+  if (node is! Map<String, dynamic>) return;
+
+  final type = node['type']?.toString() ?? '';
+  if (type == 'text') {
+    final t = node['text']?.toString() ?? '';
+    if (t.isNotEmpty) {
+      if (lines.isEmpty) {
+        lines.add(t);
+      } else {
+        lines[lines.length - 1] = '${lines.last}$t';
+      }
+    }
+    return;
+  }
+
+  if (type == 'hardBreak') {
+    lines.add('');
+    return;
+  }
+
+  final content = node['content'];
+  if (type == 'paragraph') {
+    final before = lines.length;
+    _collectJiraText(content, lines);
+    if (lines.length == before) {
+      lines.add('');
+    } else if (lines.last.isNotEmpty) {
+      lines.add('');
+    }
+    return;
+  }
+
+  _collectJiraText(content, lines);
 }

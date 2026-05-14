@@ -116,6 +116,39 @@ void main() {
       expect((items[0] as SingleActivityItem).activity.id, '1');
     });
 
+    test('groups Jira issue events by issue key per user', () {
+      final date = DateTime.now();
+      final activities = [
+        Activity(
+          id: 'jira-1',
+          userId: 'user1',
+          provider: const JiraIssueProvider(issueKey: 'DAB-79'),
+          title: '[DAB-79] Refactor fetcher',
+          content: 'Status: In Progress',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: date.subtract(const Duration(minutes: 2)),
+        ),
+        Activity(
+          id: 'jira-2',
+          userId: 'user1',
+          provider: const JiraIssueProvider(issueKey: 'DAB-79'),
+          title: '[DAB-79] Refactor fetcher',
+          content: 'Left a comment',
+          authorName: 'Alice',
+          commentCount: 1,
+          createdAt: date,
+        ),
+      ];
+
+      final items = notifier.groupActivities(activities);
+      expect(items.length, 1);
+      expect(items.first, isA<TaskActivityItem>());
+      final grouped = items.first as TaskActivityItem;
+      expect(grouped.taskId, 'DAB-79');
+      expect(grouped.activities.length, 2);
+    });
+
     test('groups slack threaded messages by channel and thread', () {
       final date = DateTime.now();
       final activities = [

@@ -211,6 +211,13 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           taskOrder.add(key);
         }
         taskGroups[key]!.add(activity);
+      } else if (provider is JiraIssueProvider && provider.issueKey != null) {
+        final key = '${activity.userId}_${provider.issueKey}';
+        if (!taskGroups.containsKey(key)) {
+          taskGroups[key] = [];
+          taskOrder.add(key);
+        }
+        taskGroups[key]!.add(activity);
       } else if (provider is SlackMessageProvider &&
           provider.channelId != null &&
           provider.threadTs != null) {
@@ -239,12 +246,16 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       if (groupedActivities.length == 1) {
         items.add(SingleActivityItem(groupedActivities.first));
       } else {
-        final taskPhid =
-            (groupedActivities.first.provider as PhorgeTaskProvider).taskPhid!;
+        final provider = groupedActivities.first.provider;
+        final taskId = switch (provider) {
+          PhorgeTaskProvider(:final taskPhid?) => taskPhid,
+          JiraIssueProvider(:final issueKey?) => issueKey,
+          _ => groupedActivities.first.id,
+        };
         items.add(
           TaskActivityItem(
             activities: groupedActivities,
-            taskId: taskPhid,
+            taskId: taskId,
             userId: groupedActivities.first.userId,
           ),
         );

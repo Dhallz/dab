@@ -33,6 +33,9 @@ class JiraIssueDto with JiraIssueDtoMappable {
   /// Display name resolved in source (`John Doe`).
   final String? authorDisplayName;
 
+  /// Comment events attached to this issue for the queried window.
+  final List<JiraIssueCommentDto> comments;
+
   const JiraIssueDto({
     required this.issueKey,
     required this.projectKey,
@@ -43,6 +46,24 @@ class JiraIssueDto with JiraIssueDtoMappable {
     required this.siteHost,
     this.dabUserId,
     this.authorDisplayName,
+    this.comments = const [],
+  });
+}
+
+@MappableClass()
+class JiraIssueCommentDto with JiraIssueCommentDtoMappable {
+  final String id;
+  final String body;
+  final DateTime createdAt;
+  final String? dabUserId;
+  final String? authorDisplayName;
+
+  const JiraIssueCommentDto({
+    required this.id,
+    required this.body,
+    required this.createdAt,
+    this.dabUserId,
+    this.authorDisplayName,
   });
 }
 
@@ -51,44 +72,84 @@ class JiraIssueDto with JiraIssueDtoMappable {
 /// CONSTRAINTS: Pure logic; skips rows without attributable DAB users.
 extension OnJiraIssueDto on JiraIssueDto {
   List<Activity> toActivities(List<User> users) {
-    final uid = dabUserId?.trim();
-    if (uid == null || uid.isEmpty) return const [];
-
-    final user = users.where((u) => u.id == uid).firstOrNull;
-    if (user == null) return const [];
+    final userById = {for (final u in users) u.id: u};
+    final events = <Activity>[];
 
     final fingerprint = '${siteHost.trim().toLowerCase()}|$issueKey';
-    final id = _jiraIssueActivityUuid.v5(Namespace.url.value, fingerprint);
-
     final headline = summary.trim().isEmpty ? issueKey : summary.trim();
-
-    final authorLabel = authorDisplayName?.trim();
-    final authorLine = authorLabel != null && authorLabel.isNotEmpty
-        ? '${user.name} ($authorLabel)'
-        : user.name;
+    final issueTitle = '[$issueKey] $headline';
 
     final statusTrim = statusName.trim();
-    final bodyParts = <String>[];
-    if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
-    if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
-
-    return [
-      Activity(
-        id: id,
-        userId: user.id,
-        provider: JiraIssueProvider(
-          issueKey: issueKey,
-          projectKey: projectKey,
-          statusName: statusTrim.isEmpty ? null : statusTrim,
+    final issueOwnerId = dabUserId?.trim();
+    final issueOwner = issueOwnerId == null || issueOwnerId.isEmpty
+        ? null
+        : userById[issueOwnerId];
+    final fallbackUser = issueOwner ?? users.firstOrNull;
+    if (issueOwner != null) {
+      final id = _jiraIssueActivityUuid.v5(Namespace.url.value, fingerprint);
+      final bodyParts = <String>[];
+      if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
+      if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
+      events.add(
+        Activity(
+          id: id,
+          userId: issueOwner.id,
+          provider: JiraIssueProvider(
+            issueKey: issueKey,
+            projectKey: projectKey,
+            statusName: statusTrim.isEmpty ? null : statusTrim,
+          ),
+          title: issueTitle,
+          content: bodyParts.join('\n\n'),
+          url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
+          authorName: _authorLine(issueOwner, authorDisplayName),
+          authorAvatarUrl: issueOwner.avatarUrl,
+          commentCount: 0,
+          createdAt: updatedAt.toUtc(),
         ),
-        title: '[$issueKey] $headline',
-        content: bodyParts.join('\n\n'),
-        url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
-        authorName: authorLine,
-        authorAvatarUrl: user.avatarUrl,
-        commentCount: 0,
-        createdAt: updatedAt.toUtc(),
-      ),
-    ];
+      );
+    }
+
+    for (final comment in comments) {
+      final commentUserId = comment.dabUserId?.trim();
+      final mappedCommentUser = commentUserId == null || commentUserId.isEmpty
+          ? null
+          : userById[commentUserId];
+      final commentUser = mappedCommentUser ?? fallbackUser;
+      if (commentUser == null) continue;
+
+      final cid = _jiraIssueActivityUuid.v5(
+        Namespace.url.value,
+        '$fingerprint|comment|${comment.id}',
+      );
+      final commentBody = comment.body.trim();
+      events.add(
+        Activity(
+          id: cid,
+          userId: commentUser.id,
+          provider: JiraIssueProvider(
+            issueKey: issueKey,
+            projectKey: projectKey,
+            statusName: statusTrim.isEmpty ? null : statusTrim,
+          ),
+          title: issueTitle,
+          content: commentBody.isEmpty ? '(no comment body)' : commentBody,
+          url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
+          authorName: _authorLine(commentUser, comment.authorDisplayName),
+          authorAvatarUrl: commentUser.avatarUrl,
+          commentCount: 1,
+          createdAt: comment.createdAt.toUtc(),
+        ),
+      );
+    }
+
+    events.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return events;
   }
+}
+
+String _authorLine(User user, String? externalDisplayName) {
+  final label = externalDisplayName?.trim();
+  if (label == null || label.isEmpty) return user.name;
+  return '${user.name} ($label)';
 }

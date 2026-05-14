@@ -14,6 +14,7 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
   static JiraIssueDtoMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = JiraIssueDtoMapper._());
+      JiraIssueCommentDtoMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -68,6 +69,9 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
     _$authorDisplayName,
     opt: true,
   );
+  static List<JiraIssueCommentDto> _$comments(JiraIssueDto v) => v.comments;
+  static const Field<JiraIssueDto, List<JiraIssueCommentDto>> _f$comments =
+      Field('comments', _$comments, opt: true, def: const []);
 
   @override
   final MappableFields<JiraIssueDto> fields = const {
@@ -80,6 +84,7 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
     #siteHost: _f$siteHost,
     #dabUserId: _f$dabUserId,
     #authorDisplayName: _f$authorDisplayName,
+    #comments: _f$comments,
   };
 
   static JiraIssueDto _instantiate(DecodingData data) {
@@ -93,6 +98,7 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
       siteHost: data.dec(_f$siteHost),
       dabUserId: data.dec(_f$dabUserId),
       authorDisplayName: data.dec(_f$authorDisplayName),
+      comments: data.dec(_f$comments),
     );
   }
 
@@ -158,6 +164,12 @@ extension JiraIssueDtoValueCopy<$R, $Out>
 
 abstract class JiraIssueDtoCopyWith<$R, $In extends JiraIssueDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
+  ListCopyWith<
+    $R,
+    JiraIssueCommentDto,
+    JiraIssueCommentDtoCopyWith<$R, JiraIssueCommentDto, JiraIssueCommentDto>
+  >
+  get comments;
   $R call({
     String? issueKey,
     String? projectKey,
@@ -168,6 +180,7 @@ abstract class JiraIssueDtoCopyWith<$R, $In extends JiraIssueDto, $Out>
     String? siteHost,
     String? dabUserId,
     String? authorDisplayName,
+    List<JiraIssueCommentDto>? comments,
   });
   JiraIssueDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -181,6 +194,17 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<JiraIssueDto> $mapper =
       JiraIssueDtoMapper.ensureInitialized();
   @override
+  ListCopyWith<
+    $R,
+    JiraIssueCommentDto,
+    JiraIssueCommentDtoCopyWith<$R, JiraIssueCommentDto, JiraIssueCommentDto>
+  >
+  get comments => ListCopyWith(
+    $value.comments,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(comments: v),
+  );
+  @override
   $R call({
     String? issueKey,
     String? projectKey,
@@ -191,6 +215,7 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
     String? siteHost,
     Object? dabUserId = $none,
     Object? authorDisplayName = $none,
+    List<JiraIssueCommentDto>? comments,
   }) => $apply(
     FieldCopyWithData({
       if (issueKey != null) #issueKey: issueKey,
@@ -202,6 +227,7 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
       if (siteHost != null) #siteHost: siteHost,
       if (dabUserId != $none) #dabUserId: dabUserId,
       if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
+      if (comments != null) #comments: comments,
     }),
   );
   @override
@@ -218,11 +244,195 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
       #authorDisplayName,
       or: $value.authorDisplayName,
     ),
+    comments: data.get(#comments, or: $value.comments),
   );
 
   @override
   JiraIssueDtoCopyWith<$R2, JiraIssueDto, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _JiraIssueDtoCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class JiraIssueCommentDtoMapper extends ClassMapperBase<JiraIssueCommentDto> {
+  JiraIssueCommentDtoMapper._();
+
+  static JiraIssueCommentDtoMapper? _instance;
+  static JiraIssueCommentDtoMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = JiraIssueCommentDtoMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'JiraIssueCommentDto';
+
+  static String _$id(JiraIssueCommentDto v) => v.id;
+  static const Field<JiraIssueCommentDto, String> _f$id = Field('id', _$id);
+  static String _$body(JiraIssueCommentDto v) => v.body;
+  static const Field<JiraIssueCommentDto, String> _f$body = Field(
+    'body',
+    _$body,
+  );
+  static DateTime _$createdAt(JiraIssueCommentDto v) => v.createdAt;
+  static const Field<JiraIssueCommentDto, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+  );
+  static String? _$dabUserId(JiraIssueCommentDto v) => v.dabUserId;
+  static const Field<JiraIssueCommentDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
+  );
+  static String? _$authorDisplayName(JiraIssueCommentDto v) =>
+      v.authorDisplayName;
+  static const Field<JiraIssueCommentDto, String> _f$authorDisplayName = Field(
+    'authorDisplayName',
+    _$authorDisplayName,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<JiraIssueCommentDto> fields = const {
+    #id: _f$id,
+    #body: _f$body,
+    #createdAt: _f$createdAt,
+    #dabUserId: _f$dabUserId,
+    #authorDisplayName: _f$authorDisplayName,
+  };
+
+  static JiraIssueCommentDto _instantiate(DecodingData data) {
+    return JiraIssueCommentDto(
+      id: data.dec(_f$id),
+      body: data.dec(_f$body),
+      createdAt: data.dec(_f$createdAt),
+      dabUserId: data.dec(_f$dabUserId),
+      authorDisplayName: data.dec(_f$authorDisplayName),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static JiraIssueCommentDto fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<JiraIssueCommentDto>(map);
+  }
+
+  static JiraIssueCommentDto fromJson(String json) {
+    return ensureInitialized().decodeJson<JiraIssueCommentDto>(json);
+  }
+}
+
+mixin JiraIssueCommentDtoMappable {
+  String toJson() {
+    return JiraIssueCommentDtoMapper.ensureInitialized()
+        .encodeJson<JiraIssueCommentDto>(this as JiraIssueCommentDto);
+  }
+
+  Map<String, dynamic> toMap() {
+    return JiraIssueCommentDtoMapper.ensureInitialized()
+        .encodeMap<JiraIssueCommentDto>(this as JiraIssueCommentDto);
+  }
+
+  JiraIssueCommentDtoCopyWith<
+    JiraIssueCommentDto,
+    JiraIssueCommentDto,
+    JiraIssueCommentDto
+  >
+  get copyWith =>
+      _JiraIssueCommentDtoCopyWithImpl<
+        JiraIssueCommentDto,
+        JiraIssueCommentDto
+      >(this as JiraIssueCommentDto, $identity, $identity);
+  @override
+  String toString() {
+    return JiraIssueCommentDtoMapper.ensureInitialized().stringifyValue(
+      this as JiraIssueCommentDto,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return JiraIssueCommentDtoMapper.ensureInitialized().equalsValue(
+      this as JiraIssueCommentDto,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return JiraIssueCommentDtoMapper.ensureInitialized().hashValue(
+      this as JiraIssueCommentDto,
+    );
+  }
+}
+
+extension JiraIssueCommentDtoValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, JiraIssueCommentDto, $Out> {
+  JiraIssueCommentDtoCopyWith<$R, JiraIssueCommentDto, $Out>
+  get $asJiraIssueCommentDto => $base.as(
+    (v, t, t2) => _JiraIssueCommentDtoCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class JiraIssueCommentDtoCopyWith<
+  $R,
+  $In extends JiraIssueCommentDto,
+  $Out
+>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({
+    String? id,
+    String? body,
+    DateTime? createdAt,
+    String? dabUserId,
+    String? authorDisplayName,
+  });
+  JiraIssueCommentDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _JiraIssueCommentDtoCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, JiraIssueCommentDto, $Out>
+    implements JiraIssueCommentDtoCopyWith<$R, JiraIssueCommentDto, $Out> {
+  _JiraIssueCommentDtoCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<JiraIssueCommentDto> $mapper =
+      JiraIssueCommentDtoMapper.ensureInitialized();
+  @override
+  $R call({
+    String? id,
+    String? body,
+    DateTime? createdAt,
+    Object? dabUserId = $none,
+    Object? authorDisplayName = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (id != null) #id: id,
+      if (body != null) #body: body,
+      if (createdAt != null) #createdAt: createdAt,
+      if (dabUserId != $none) #dabUserId: dabUserId,
+      if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
+    }),
+  );
+  @override
+  JiraIssueCommentDto $make(CopyWithData data) => JiraIssueCommentDto(
+    id: data.get(#id, or: $value.id),
+    body: data.get(#body, or: $value.body),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
+    authorDisplayName: data.get(
+      #authorDisplayName,
+      or: $value.authorDisplayName,
+    ),
+  );
+
+  @override
+  JiraIssueCommentDtoCopyWith<$R2, JiraIssueCommentDto, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _JiraIssueCommentDtoCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

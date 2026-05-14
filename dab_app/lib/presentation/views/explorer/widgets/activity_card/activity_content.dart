@@ -23,7 +23,8 @@ class ActivityContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasHistory = activities != null && activities!.length > 1;
-    final displayContent = _resolveDisplayContent(activity);
+    final previewActivity = _resolvePreviewActivity();
+    final displayContent = _resolveDisplayContent(previewActivity);
     final plainPreview = _getPlainText(displayContent);
     final hasDisplayContent = plainPreview.isNotEmpty;
 
@@ -68,6 +69,38 @@ class ActivityContent extends StatelessWidget {
                         )
                       : const SizedBox.shrink())),
     );
+  }
+
+  Activity _resolvePreviewActivity() {
+    if (activities == null || activities!.isEmpty) return activity;
+    if (activity.provider is! JiraIssueProvider) return activity;
+
+    // For Jira task stacks, prefer surfacing the latest comment body
+    // in collapsed mode so users can see discussion without opening history.
+    for (final candidate in activities!) {
+      if (candidate.commentCount > 0 && candidate.content.trim().isNotEmpty) {
+        return candidate;
+      }
+    }
+
+    // Fallback heuristic when commentCount is not propagated:
+    // choose the first non-status snapshot event.
+    for (final candidate in activities!) {
+      final content = candidate.content.trim();
+      if (content.isEmpty) continue;
+      if (!_looksLikeJiraStatusSnapshot(content)) {
+        return candidate;
+      }
+    }
+
+    return activity;
+  }
+
+  bool _looksLikeJiraStatusSnapshot(String content) {
+    final lower = content.toLowerCase();
+    if (!lower.startsWith('status:')) return false;
+    // Jira snapshot body is usually "Status: ...\n\nhttps://.../browse/KEY"
+    return lower.contains('/browse/');
   }
 
   String _resolveDisplayContent(Activity activity) {
