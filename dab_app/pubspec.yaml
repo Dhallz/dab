@@ -125,21 +125,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: assets/branding/app_icon.png
-  remove_alpha_ios: true
-  web:
-    generate: true
-    image_path: assets/branding/app_icon.png
-    background_color: "#0F172A"
-    theme_color: "#6366F1"
-  windows:
-    generate: true
-    image_path: assets/branding/app_icon.png
-    icon_size: 256
-  macos:
-    generate: true
-    image_path: assets/branding/app_icon.png

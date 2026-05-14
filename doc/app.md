@@ -244,7 +244,7 @@ The project uses a unified design system centered around Material 3 roles, imple
 | Run tests | `flutter test` |
 | Run app | `flutter run` |
 | Regenerate code | `dart run build_runner build --delete-conflicting-outputs` |
-| Generate launcher icons | `flutter pub run flutter_launcher_icons` |
+| Generate launcher icons | `flutter pub get` then `dart run flutter_launcher_icons` |
 | Generate l10n | Automatic via `l10n.yaml` (`flutter gen-l10n`) |
 
-Launcher icon source asset: `dab_app/assets/branding/app_icon.png`.
+**Launcher icons** follow [flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons): configuration lives in `dab_app/flutter_launcher_icons.yaml` (the CLI default; see package guide). Source image: `dab_app/assets/branding/app_icon.png`. To scaffold a new config file, run `dart run flutter_launcher_icons:generate` (use `-o` to overwrite). Platform folders (`ios/`, `android/`, `macos/`, etc.) must exist before the tool can write icons—run `flutter create . --platforms=...` in `dab_app/` when setting up a fresh clone where those directories are absent.
