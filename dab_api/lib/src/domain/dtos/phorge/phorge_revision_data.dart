@@ -17,7 +17,7 @@ class PhorgeRevisionFields with PhorgeRevisionFieldsMappable {
   final String title;
   final String uri;
 
-  /// Epoch seconds (Phorge `fields.dateModified`).
+  /// Epoch seconds (Conduit `fields.dateModified`; wire int).
   final int dateModified;
 
   final PhorgeRevisionStatusFields status;
@@ -29,46 +29,21 @@ class PhorgeRevisionFields with PhorgeRevisionFieldsMappable {
     required this.dateModified,
     required this.status,
   });
-
-  factory PhorgeRevisionFields.fromConduit(Map<String, dynamic> raw) {
-    final statusRaw = raw['status'];
-    return PhorgeRevisionFields(
-      authorPHID: raw['authorPHID']?.toString() ?? '',
-      title: raw['title'] as String? ?? 'Unknown',
-      uri: raw['uri'] as String? ?? '',
-      dateModified:
-          int.tryParse(raw['dateModified']?.toString() ?? '0') ?? 0,
-      status: switch (statusRaw) {
-        final Map<String, dynamic> m =>
-          PhorgeRevisionStatusFields.fromConduit(m),
-        final String s =>
-          PhorgeRevisionStatusFields(name: s),
-        _ =>
-          const PhorgeRevisionStatusFields(name: 'Unknown'),
-      },
-    );
-  }
 }
 
 /// [ARCH: DOMAIN_DTO]
-/// ROLE: Status sub-map under `fields.status` (`name`, plus optional conduit keys ignored here).
+/// ROLE: Nested `fields.status` object (`name`; extra Conduit keys ignored on decode).
 @MappableClass()
 class PhorgeRevisionStatusFields with PhorgeRevisionStatusFieldsMappable {
   final String name;
 
   const PhorgeRevisionStatusFields({required this.name});
-
-  factory PhorgeRevisionStatusFields.fromConduit(Map<String, dynamic> raw) {
-    return PhorgeRevisionStatusFields(
-      name: raw['name'] as String? ?? 'Unknown',
-    );
-  }
 }
 
 /// [ARCH: DOMAIN_DTO]
 /// ROLE: One `differential.revision.search` datum — top-level matches Conduit (`id`, `phid`, `fields`).
-/// CONTRACT: Use [fromConduit] after JSON decode only; mapped to [`Activity`] via [OnPhorgeRevisionData.toActivities].
-/// CONSTRAINTS: Mappable for persistence; parsing stays in domain factories, not Infrastructure.
+/// CONTRACT: Prefer [fromConduit]; shape matches decoded Conduit rows (unknown keys skipped by mapper).
+/// CONSTRAINTS: Mappable-generated decode only — no Infrastructure-side field lifting.
 @MappableClass()
 class PhorgeRevisionData with PhorgeRevisionDataMappable {
   final int id;
@@ -84,14 +59,11 @@ class PhorgeRevisionData with PhorgeRevisionDataMappable {
     required this.fields,
   });
 
-  factory PhorgeRevisionData.fromConduit(Map<String, dynamic> raw) {
-    final fieldsRaw = raw['fields'] as Map<String, dynamic>? ?? {};
-    return PhorgeRevisionData(
-      id: int.tryParse(raw['id']?.toString() ?? '0') ?? 0,
-      phid: raw['phid']?.toString() ?? '',
-      fields: PhorgeRevisionFields.fromConduit(fieldsRaw),
-    );
-  }
+  /// Decodes one `revision.search` element after [`jsonDecode`].
+  factory PhorgeRevisionData.fromConduit(Map<String, dynamic> raw) =>
+      PhorgeRevisionDataMapper.ensureInitialized().decodeMap<PhorgeRevisionData>(
+        raw,
+      );
 }
 
 /// [ARCH: DOMAIN]
