@@ -1,6 +1,7 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_revision_data.dart';
-import 'package:dab_api/src/domain/dtos/phorge/phorge_task_bundle.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_data.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle.dart';
 import 'package:dab_api/src/domain/entities/phorge/phorge_directory_user.dart';
 import 'package:dab_api/src/domain/entities/phorge/phorge_project_summary.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
@@ -25,10 +26,10 @@ class PhorgeGateway implements AbsIPhorgeGateway {
     required PhorgeTaskSource taskSource,
     required PhorgeRevisionSource revisionSource,
     required PhorgeProjectSource projectSource,
-  })  : _userSource = userSource,
-        _taskSource = taskSource,
-        _revisionSource = revisionSource,
-        _projectSource = projectSource;
+  }) : _userSource = userSource,
+       _taskSource = taskSource,
+       _revisionSource = revisionSource,
+       _projectSource = projectSource;
 
   @override
   Future<Either<Failure, List<PhorgeDirectoryUser>>> fetchDirectoryUsers() {
