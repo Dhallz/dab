@@ -1,4 +1,3 @@
-import 'package:dab_app/presentation/core/navigation/app_route.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_state.dart';
@@ -39,21 +38,10 @@ class HomeViewMobile extends ConsumerWidget {
                 navigationShell: navigationShell,
                 adminTabBadgeCount: adminBadgeCount,
                 onBranchSelected: (index) {
-                  final previousIndex = navigationShell.currentIndex;
                   navigationShell.goBranch(
                     index,
                     initialLocation: index == navigationShell.currentIndex,
                   );
-                  if (previousIndex != index &&
-                      navigationShell.currentIndex == previousIndex) {
-                    final targetPath = switch (index) {
-                      0 => AppRoute.homeDashboard.path,
-                      1 => AppRoute.homeExplorer.path,
-                      2 => AppRoute.homeInsight.path,
-                      _ => AppRoute.homeAdmin.path,
-                    };
-                    context.go(targetPath);
-                  }
                   if (index == 3) {
                     ref
                         .read(appNotifierProvider.notifier)

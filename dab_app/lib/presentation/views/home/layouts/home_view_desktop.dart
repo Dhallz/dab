@@ -45,21 +45,10 @@ class HomeViewDesktop extends ConsumerWidget {
   }
 
   void _onBranchTap(BuildContext context, WidgetRef ref, int index) {
-    final previousIndex = navigationShell.currentIndex;
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
-    if (previousIndex != index &&
-        navigationShell.currentIndex == previousIndex) {
-      final targetPath = switch (index) {
-        0 => AppRoute.homeDashboard.path,
-        1 => AppRoute.homeExplorer.path,
-        2 => AppRoute.homeInsight.path,
-        _ => AppRoute.homeAdmin.path,
-      };
-      context.go(targetPath);
-    }
     if (index == 3) {
       ref
           .read(appNotifierProvider.notifier)
