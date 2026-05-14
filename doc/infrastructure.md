@@ -97,8 +97,8 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 |---|---|
 | **Global clock** | `INCR dab:version` — atomic increment on every write |
 | **Sync tokens** | Vegas-enabled data responses embed the current `syncToken` in `meta` |
-| **Client request** | Client sends `X-Sync-Token` header with its last known token |
-| **Vegas Middleware** | Compares token; returns `304 Not Modified` if client is current |
+| **Client request** | `dab_app` sends `X-Sync-Token` **only** on **`GET /activities`** (historical list); **`/activities/search`** and **`/activities/live`** do not participate in Vegas 304 short-circuit. |
+| **Vegas Middleware** | Mounted on the `/activities` prefix but **only evaluates** tokens for **`GET /activities`**; **`/activities/search`** and **`/activities/live`** always call through. Compares token; returns `304 Not Modified` if client is current. |
 
 ### 2. Materialized Feed Keys
 

@@ -71,7 +71,10 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
 
     usersResult.fold(
       (l) => null,
-      (users) => newState = newState.copyWith(users: users),
+      (users) => newState = newState.copyWith(
+        users: users,
+        selectedUserIds: {for (final u in users) u.id},
+      ),
     );
     groupsResult.fold(
       (l) => null,

@@ -124,7 +124,7 @@ Thin entry points only. No business logic.
 
 #### Middleware
 
-- **Vegas Middleware:** Compares client `X-Sync-Token` against Redis version. Returns `304 Not Modified` on fresh token.
+- **Vegas Middleware:** Applies only to **`GET /activities`** under the `/activities` mount. Compares client `X-Sync-Token` against Redis version and returns **`304 Not Modified`** when unchanged. **`GET /activities/search`** and **`GET /activities/live`** skip this gate.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
 - **WebSocket auth guard:** `/ws` is protected by JWT middleware and uses request-context identity for scoped delivery.
 - **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.

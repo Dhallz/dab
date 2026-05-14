@@ -86,5 +86,29 @@ void main() {
       expect((response as Response).statusCode, equals(200));
       verifyNever(() => mockRedis.getCurrentVersion());
     });
+
+    test(
+      'does not 304 /activities/search even when X-Sync-Token matches Redis',
+      () async {
+        when(() => mockRedis.getCurrentVersion()).thenAnswer((_) async => 1042);
+
+        final handler = VegasMiddleware.checkStaleness(
+          innerHandler,
+          redisService: mockRedis,
+        );
+        final request = TestRequest.create(
+          url: Uri.parse('http://localhost/activities/search'),
+          headers: {
+            'X-Sync-Token': ['1042'],
+          },
+        );
+
+        final result = await handler(request);
+        final response = result as Response;
+
+        expect(response.statusCode, equals(200));
+        verifyNever(() => mockRedis.getCurrentVersion());
+      },
+    );
   });
 }
