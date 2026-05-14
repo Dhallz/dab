@@ -7,6 +7,148 @@
 
 part of 'phorge_user_dto.dart';
 
+class PhorgeUserWireFieldsMapper extends ClassMapperBase<PhorgeUserWireFields> {
+  PhorgeUserWireFieldsMapper._();
+
+  static PhorgeUserWireFieldsMapper? _instance;
+  static PhorgeUserWireFieldsMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = PhorgeUserWireFieldsMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'PhorgeUserWireFields';
+
+  static String _$username(PhorgeUserWireFields v) => v.username;
+  static const Field<PhorgeUserWireFields, String> _f$username = Field(
+    'username',
+    _$username,
+  );
+  static String? _$realName(PhorgeUserWireFields v) => v.realName;
+  static const Field<PhorgeUserWireFields, String> _f$realName = Field(
+    'realName',
+    _$realName,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<PhorgeUserWireFields> fields = const {
+    #username: _f$username,
+    #realName: _f$realName,
+  };
+
+  static PhorgeUserWireFields _instantiate(DecodingData data) {
+    return PhorgeUserWireFields(
+      username: data.dec(_f$username),
+      realName: data.dec(_f$realName),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static PhorgeUserWireFields fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<PhorgeUserWireFields>(map);
+  }
+
+  static PhorgeUserWireFields fromJson(String json) {
+    return ensureInitialized().decodeJson<PhorgeUserWireFields>(json);
+  }
+}
+
+mixin PhorgeUserWireFieldsMappable {
+  String toJson() {
+    return PhorgeUserWireFieldsMapper.ensureInitialized()
+        .encodeJson<PhorgeUserWireFields>(this as PhorgeUserWireFields);
+  }
+
+  Map<String, dynamic> toMap() {
+    return PhorgeUserWireFieldsMapper.ensureInitialized()
+        .encodeMap<PhorgeUserWireFields>(this as PhorgeUserWireFields);
+  }
+
+  PhorgeUserWireFieldsCopyWith<
+    PhorgeUserWireFields,
+    PhorgeUserWireFields,
+    PhorgeUserWireFields
+  >
+  get copyWith =>
+      _PhorgeUserWireFieldsCopyWithImpl<
+        PhorgeUserWireFields,
+        PhorgeUserWireFields
+      >(this as PhorgeUserWireFields, $identity, $identity);
+  @override
+  String toString() {
+    return PhorgeUserWireFieldsMapper.ensureInitialized().stringifyValue(
+      this as PhorgeUserWireFields,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return PhorgeUserWireFieldsMapper.ensureInitialized().equalsValue(
+      this as PhorgeUserWireFields,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return PhorgeUserWireFieldsMapper.ensureInitialized().hashValue(
+      this as PhorgeUserWireFields,
+    );
+  }
+}
+
+extension PhorgeUserWireFieldsValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, PhorgeUserWireFields, $Out> {
+  PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, $Out>
+  get $asPhorgeUserWireFields => $base.as(
+    (v, t, t2) => _PhorgeUserWireFieldsCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class PhorgeUserWireFieldsCopyWith<
+  $R,
+  $In extends PhorgeUserWireFields,
+  $Out
+>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({String? username, String? realName});
+  PhorgeUserWireFieldsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _PhorgeUserWireFieldsCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, PhorgeUserWireFields, $Out>
+    implements PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, $Out> {
+  _PhorgeUserWireFieldsCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<PhorgeUserWireFields> $mapper =
+      PhorgeUserWireFieldsMapper.ensureInitialized();
+  @override
+  $R call({String? username, Object? realName = $none}) => $apply(
+    FieldCopyWithData({
+      if (username != null) #username: username,
+      if (realName != $none) #realName: realName,
+    }),
+  );
+  @override
+  PhorgeUserWireFields $make(CopyWithData data) => PhorgeUserWireFields(
+    username: data.get(#username, or: $value.username),
+    realName: data.get(#realName, or: $value.realName),
+  );
+
+  @override
+  PhorgeUserWireFieldsCopyWith<$R2, PhorgeUserWireFields, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _PhorgeUserWireFieldsCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
 class PhorgeUserDtoMapper extends ClassMapperBase<PhorgeUserDto> {
   PhorgeUserDtoMapper._();
 
@@ -14,6 +156,7 @@ class PhorgeUserDtoMapper extends ClassMapperBase<PhorgeUserDto> {
   static PhorgeUserDtoMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = PhorgeUserDtoMapper._());
+      PhorgeUserWireFieldsMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -23,31 +166,20 @@ class PhorgeUserDtoMapper extends ClassMapperBase<PhorgeUserDto> {
 
   static String _$phid(PhorgeUserDto v) => v.phid;
   static const Field<PhorgeUserDto, String> _f$phid = Field('phid', _$phid);
-  static String _$userName(PhorgeUserDto v) => v.userName;
-  static const Field<PhorgeUserDto, String> _f$userName = Field(
-    'userName',
-    _$userName,
-  );
-  static String? _$realName(PhorgeUserDto v) => v.realName;
-  static const Field<PhorgeUserDto, String> _f$realName = Field(
-    'realName',
-    _$realName,
-    opt: true,
+  static PhorgeUserWireFields _$fields(PhorgeUserDto v) => v.fields;
+  static const Field<PhorgeUserDto, PhorgeUserWireFields> _f$fields = Field(
+    'fields',
+    _$fields,
   );
 
   @override
   final MappableFields<PhorgeUserDto> fields = const {
     #phid: _f$phid,
-    #userName: _f$userName,
-    #realName: _f$realName,
+    #fields: _f$fields,
   };
 
   static PhorgeUserDto _instantiate(DecodingData data) {
-    return PhorgeUserDto(
-      phid: data.dec(_f$phid),
-      userName: data.dec(_f$userName),
-      realName: data.dec(_f$realName),
-    );
+    return PhorgeUserDto(phid: data.dec(_f$phid), fields: data.dec(_f$fields));
   }
 
   @override
@@ -112,7 +244,9 @@ extension PhorgeUserDtoValueCopy<$R, $Out>
 
 abstract class PhorgeUserDtoCopyWith<$R, $In extends PhorgeUserDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? phid, String? userName, String? realName});
+  PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, PhorgeUserWireFields>
+  get fields;
+  $R call({String? phid, PhorgeUserWireFields? fields});
   PhorgeUserDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -125,18 +259,19 @@ class _PhorgeUserDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<PhorgeUserDto> $mapper =
       PhorgeUserDtoMapper.ensureInitialized();
   @override
-  $R call({String? phid, String? userName, Object? realName = $none}) => $apply(
+  PhorgeUserWireFieldsCopyWith<$R, PhorgeUserWireFields, PhorgeUserWireFields>
+  get fields => $value.fields.copyWith.$chain((v) => call(fields: v));
+  @override
+  $R call({String? phid, PhorgeUserWireFields? fields}) => $apply(
     FieldCopyWithData({
       if (phid != null) #phid: phid,
-      if (userName != null) #userName: userName,
-      if (realName != $none) #realName: realName,
+      if (fields != null) #fields: fields,
     }),
   );
   @override
   PhorgeUserDto $make(CopyWithData data) => PhorgeUserDto(
     phid: data.get(#phid, or: $value.phid),
-    userName: data.get(#userName, or: $value.userName),
-    realName: data.get(#realName, or: $value.realName),
+    fields: data.get(#fields, or: $value.fields),
   );
 
   @override

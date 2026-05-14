@@ -64,7 +64,7 @@ class PhorgeUserSource implements IDiscoverySource {
     if (data == null) return [];
 
     return data
-        .map((e) => PhorgeUserDto.fromConduit(e as Map<String, dynamic>))
+        .map((e) => PhorgeUserDtoMapper.fromMap(e as Map<String, dynamic>))
         .toList();
   }
 

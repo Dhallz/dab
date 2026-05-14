@@ -3,27 +3,32 @@ import 'package:dart_mappable/dart_mappable.dart';
 part 'phorge_user_dto.mapper.dart';
 
 /// [ARCH: DOMAIN_DTO]
+/// ROLE: Nested `fields` object from Conduit `user.search` rows.
+/// CONTRACT: Shape matches wire JSON (`fields.username`, `fields.realName`).
+@MappableClass()
+class PhorgeUserWireFields with PhorgeUserWireFieldsMappable {
+  final String username;
+  final String? realName;
+
+  const PhorgeUserWireFields({
+    required this.username,
+    this.realName,
+  });
+}
+
+/// [ARCH: DOMAIN_DTO]
 /// ROLE: Parsed `user.search` row from Phorge Conduit.
-/// CONTRACT: [fromConduit] maps wire JSON without transport dependencies.
+/// CONTRACT: Decode with [PhorgeUserDtoMapper.fromMap] after JSON decode only.
 /// CONSTRAINTS: Mapped to [PhorgeDirectoryUser] when provisioning/syncing identities.
 @MappableClass()
 class PhorgeUserDto with PhorgeUserDtoMappable {
   final String phid;
-  final String userName;
-  final String? realName;
+  final PhorgeUserWireFields fields;
 
-  const PhorgeUserDto({
-    required this.phid,
-    required this.userName,
-    this.realName,
-  });
+  const PhorgeUserDto({required this.phid, required this.fields});
 
-  factory PhorgeUserDto.fromConduit(Map<String, dynamic> json) {
-    return PhorgeUserDto(
-      phid: json['phid'] as String,
-      userName:
-          json['fields']?['username'] as String? ?? json['userName'] as String,
-      realName: json['fields']?['realName'] as String?,
-    );
-  }
+  /// Conduit exposes `fields.username`; this alias preserves existing callers.
+  String get userName => fields.username;
+
+  String? get realName => fields.realName;
 }

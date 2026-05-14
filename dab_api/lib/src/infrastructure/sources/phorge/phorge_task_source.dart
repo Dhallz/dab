@@ -213,7 +213,9 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
 
     final tasksMap = {
       for (var t in rawTaskData)
-        t['phid'].toString(): _mapToTaskData(t as Map<String, dynamic>),
+        t['phid'].toString(): PhorgeTaskDataMapper.fromMap(
+          t as Map<String, dynamic>,
+        ),
     };
 
     // 3. Group transactions by task and create bundles
@@ -231,10 +233,6 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundle> {
         sprintTag: sprintTag,
       );
     }).toList();
-  }
-
-  PhorgeTaskData _mapToTaskData(Map<String, dynamic> json) {
-    return PhorgeTaskData.fromConduit(json);
   }
 
   PhorgeTransactionData _mapToTransactionData(Map<String, dynamic> json) {

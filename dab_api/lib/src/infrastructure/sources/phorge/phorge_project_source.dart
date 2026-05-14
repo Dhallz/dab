@@ -30,7 +30,7 @@ class PhorgeProjectSource {
     if (rawData == null || rawData.isEmpty) return [];
 
     final tasks = rawData
-        .map((e) => PhorgeTaskData.fromConduit(e as Map<String, dynamic>))
+        .map((e) => PhorgeTaskDataMapper.fromMap(e as Map<String, dynamic>))
         .toList();
 
     // 2. Extract unique Project PHIDs attached to these sprint tasks
@@ -52,7 +52,7 @@ class PhorgeProjectSource {
     if (tagsData == null) return [];
 
     return tagsData
-        .map((e) => PhorgeProjectDto.fromConduit(e as Map<String, dynamic>))
+        .map((e) => PhorgeProjectDtoMapper.fromMap(e as Map<String, dynamic>))
         .toList();
   }
 
