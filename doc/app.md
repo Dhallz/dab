@@ -125,7 +125,7 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 | **Login** | Auth gate | Form via `AuthFormNotifier`; session in `authNotifierProvider` |
 | **Dashboard** | Info capture + upcoming alerts | Initial hydration from `GET /activities/live`, then live updates via authenticated `/ws` stream. Renders an **Upcoming Soon** section, a periodic in-app **banner** evaluated from `UpcomingEvent`s, and a **Live Now** feed with per-item Archive/Unarchive triage and a Show/Hide archived toggle. |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe |
-| **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table |
+| **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table; search uses **`authoredOnly=false`** for team-aggregate provider queries (Explorer keeps **`true`**) |
 | **Settings** | User personalization | Dynamic forms for theme variant (Light, DAB, grayscale Dark), runtime language selection, and per-view Island Bar item visibility (Dashboard/Explorer/Insights) |
 | **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing; GitHub includes **Webhook Secret** for `POST /integrations/github/webhook` HMAC; Slack includes **Signing Secret** for Events API), **Identity Management** (Approval workflow), **Security** (user search), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 

@@ -33,14 +33,10 @@ class ActivitySearchQueryMapper {
     };
 
     if (query.startDate != null) {
-      queryParameters['startDate'] = query.startDate!.toIso8601String().split(
-        'T',
-      )[0];
+      queryParameters['startDate'] = _localCalendarDay(query.startDate!);
     }
     if (query.endDate != null) {
-      queryParameters['endDate'] = query.endDate!.toIso8601String().split(
-        'T',
-      )[0];
+      queryParameters['endDate'] = _localCalendarDay(query.endDate!);
     }
 
     final users = query.normalizedUsers.toList()..sort();
@@ -49,6 +45,17 @@ class ActivitySearchQueryMapper {
     }
 
     return queryParameters;
+  }
+
+  /// `YYYY-MM-DD` for the user's **local** calendar (matches Explorer/Insights
+  /// date pickers). Using [DateTime.toIso8601String] alone maps late-evening
+  /// local instants to the next UTC day and desynchronizes the API window from
+  /// client-side [matchesActivity] filtering.
+  static String _localCalendarDay(DateTime value) {
+    final local = value.toLocal();
+    final m = local.month.toString().padLeft(2, '0');
+    final d = local.day.toString().padLeft(2, '0');
+    return '${local.year}-$m-$d';
   }
 
   static bool matchesLocalRecord(

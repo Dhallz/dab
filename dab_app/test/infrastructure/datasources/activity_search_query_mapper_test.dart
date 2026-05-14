@@ -8,9 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('ActivitySearchQueryMapper', () {
     test('builds stable remote query parameters from canonical query', () {
+      // Local-calendar dates align with picker semantics across time zones.
       final query = ActivitySearchQuery(
-        startDate: DateTime.utc(2026, 1, 1),
-        endDate: DateTime.utc(2026, 1, 7),
+        startDate: DateTime(2026, 1, 1),
+        endDate: DateTime(2026, 1, 7),
         users: const ['u2', 'u1'],
         authoredOnly: true,
       );

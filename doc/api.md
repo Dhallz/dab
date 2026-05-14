@@ -130,7 +130,7 @@ Thin entry points only. No business logic.
 - **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
-- **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is parsed as UTC midnight; identical start/end expands one UTC day (`ActivityController`). **`dab_app`** sends `YYYY-MM-DD` slices from Explorer's selected local calendar day.
+- **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is parsed as UTC midnight; identical start/end expands one UTC day (`ActivityController`). **`dab_app`** sends `YYYY-MM-DD` derived from the **device local calendar** (`ActivitySearchQueryMapper.toRemoteQueryParameters`), matching Explorer date controls and Insight presets so the inferred UTC window aligns with client-side filtering. **`authoredOnly`:** **`dab_app`** Explorer keeps **`true`** for personal-scope browsing; **Insights** uses **`false`** for team analytics so connectors can apply broader retrieval (e.g. Phorge sprint/global paths).
 
 ---
 

@@ -169,6 +169,9 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
     }
     state = state.copyWith(status: ViewStatus.loading);
 
+    // Team analytics: omit authored-only narrowing so connectors can use broad
+    // windows (e.g. Phorge sprint search). authoredOnly: true needs per-user
+    // external ids and often yields an empty remote response for Insights.
     final result = await _activityUseCases.searchActivities.execute(
       ActivitySearchQuery(
         startDate: state.startDate,
@@ -177,7 +180,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         providers: state.selectedProviders,
         coverageProviders: state.availableProviders.toSet(),
         categories: state.selectedActivityCategories,
-        authoredOnly: true,
+        authoredOnly: false,
       ),
     );
 
