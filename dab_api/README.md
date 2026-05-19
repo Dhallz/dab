@@ -27,14 +27,21 @@ The high-performance backend ecosystem for DAB. Built with **Clean Architecture*
 
 2. **Boot Infrastructure**:
    ```bash
-   docker-compose up -d db redis  # Postgres & Redis only (use for manual API runs)
+   docker compose up -d db redis  # Postgres & Redis only (manual API on host)
+   # Or full stack including API in Docker (VM service on host :9181):
+   docker compose up -d
    ```
 
-3. **Ignite the Server**:
+3. **Ignite the Server** (on host, or use Docker + IDE attach — see below):
    ```bash
    dart run --enable-vm-service bin/dab_api.dart
    ```
    *Note: Relic supports hot reload when an IDE debugger is attached.*
+
+4. **Debug API in Docker**: From the repo root, run **DAB API (Docker + Attach)**
+   (`.vscode/launch.json`) — starts compose and attaches the debugger. Start
+   **DAB App (Debug)** separately when you want the client. See
+   **[Infrastructure Guide](../doc/infrastructure.md)** → *Debugging*.
 
 ---
 

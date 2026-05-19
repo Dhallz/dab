@@ -24,7 +24,7 @@ class Config {
   ///    `bin/dab_api.dart`, so `script/../` is not the package root.)
   /// 3. Same walk from [Directory.current] (covers running a binary from the repo with cwd set).
   ///
-  /// File values from dotenv [load] overlay [Platform.environment] keys (later wins).
+  /// `.env` fills defaults; [Platform.environment] wins on conflict (Docker/CI).
   void _loadEnvFiles() {
     try {
       final envPath = _dabApiDotEnvPath();
@@ -90,8 +90,12 @@ class Config {
     }
   }
 
-  /// Reads merged env (platform + `.env` file).
+  /// Process environment overrides `.env` (e.g. `REDIS_HOST=redis` in compose).
   String _getEnv(String key, String defaultValue) {
+    final fromPlatform = Platform.environment[key];
+    if (fromPlatform != null && fromPlatform.isNotEmpty) {
+      return fromPlatform;
+    }
     return _env[key] ?? defaultValue;
   }
 

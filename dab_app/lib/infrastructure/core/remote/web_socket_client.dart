@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:web_socket_channel/io.dart';
 
@@ -31,10 +32,11 @@ class WebSocketClient {
         headers['Authorization'] = 'Bearer ${token.trim()}';
       }
 
-      final channel = IOWebSocketChannel.connect(
-        Uri.parse(url),
+      final socket = await WebSocket.connect(
+        url,
         headers: headers.isEmpty ? null : headers,
       );
+      final channel = IOWebSocketChannel(socket);
       _channel = channel;
       _subscription?.cancel();
       _subscription = channel.stream.listen(
@@ -54,6 +56,11 @@ class WebSocketClient {
           _scheduleReconnect();
         },
       );
+    } on Object {
+      _cleanupSocket();
+      if (!_manualDisconnect) {
+        _scheduleReconnect();
+      }
     } finally {
       _isConnecting = false;
     }

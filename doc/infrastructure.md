@@ -156,7 +156,7 @@ cd dab_api && docker-compose -f docker-compose.prod.yml up -d
 | Service | Host Port (default) | Container Port | Env Override | Role |
 |---|---|---|---|---|
 | `api` (`relic`) | `9080` | `8080` | `API_PUBLIC_PORT` / `PORT` | REST API + WebSocket (`/ws`) |
-| `api` (Dart VM) | `9181` | `8181` | `DART_VM_PUBLIC_PORT` | Dart VM service / observatory |
+| `api` (Dart VM) | `9181` | `8181` | `DART_VM_PUBLIC_PORT` | Dart VM service (dev attach on host; auth codes disabled in compose) |
 | `swagger` | `9081` | `8080` | `SWAGGER_PUBLIC_PORT` | Swagger UI (serves `doc/openapi.yaml`) |
 | `db` (`postgres`) | `5433` | `5432` | `DB_PUBLIC_PORT` | Primary database |
 | `redis` | `6379` | `6379` | `REDIS_PUBLIC_PORT` | Cache + versional clock |
@@ -165,6 +165,23 @@ cd dab_api && docker-compose -f docker-compose.prod.yml up -d
 > `808x` range to `90xx/91xx` so DAB can coexist with other local APIs that
 > already bind `8080`. Only the host mapping changed; inside the container the
 > API still listens on `8080`. Override any of them via `dab_api/.env`.
+
+### Debugging (API in Docker, app on host)
+
+Dev `docker-compose.yml` exposes the Dart VM service on host port **9181** with
+`--disable-service-auth-codes` so the attach URI stays stable:
+`http://127.0.0.1:9181/`. The API source tree is bind-mounted into the container
+so breakpoints in `dab_api/` resolve correctly.
+
+In VS Code / Cursor (workspace `.vscode/launch.json`):
+
+| Configuration | Use |
+|---|---|
+| **DAB API (Docker + Attach)** | Starts `docker compose` (db, redis, api), waits for `/health` and the VM port, then attaches the debugger (`vmServiceUri` → port 9181). |
+| **DAB App (Debug)** | Start the Flutter client yourself when ready (separate debug session). |
+
+Compose `environment:` overrides `.env` for service hostnames (e.g. `REDIS_HOST=redis`).
+The app targets `http://localhost:9080` and `ws://localhost:9080/ws` (Docker dev defaults in `service_locator.dart`).
 
 ---
 

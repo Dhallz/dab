@@ -31,7 +31,13 @@ services:
     ports:
       - "${API_PUBLIC_PORT:-9080}:${PORT:-8080}"
       - "${DART_VM_PUBLIC_PORT:-9181}:8181"
-    command: sh -c "dart pub get && dart run --enable-vm-service=8181/0.0.0.0 bin/dab_api.dart"
+    volumes:
+      # Bind-mount so IDE breakpoints match files on disk (dev only).
+      - .:/app
+    command: >-
+      sh -c "dart pub get &&
+      dart run --enable-vm-service=8181/0.0.0.0 --disable-service-auth-codes
+      bin/dab_api.dart"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
