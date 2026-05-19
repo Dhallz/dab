@@ -8,7 +8,7 @@ import '../../core/models/view_status.dart';
 import 'auth_state.dart';
 
 /// [ARCH: PRESENTATION]
-/// ROLE: Authentication and session lifecycle (replaces [AuthCubit]).
+/// ROLE: Authentication and session lifecycle.
 /// CONTRACT: Manages [AuthState] for the signed-in user.
 /// CONSTRAINTS: Directly interacts with [AuthUseCases].
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(

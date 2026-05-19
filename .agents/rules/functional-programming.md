@@ -71,17 +71,17 @@ Future<Either<AppFailure, List<Activity>>> getActivities() {
 
 ## ⛓️ Folding Either Results in Presentaton
 
-Cubits and BLoCs fold the `Either` result and emit the appropriate state. They **never rethrow** and never use `.getOrElse` blindly.
+Riverpod notifiers fold the `Either` result and update `state`. They **never rethrow** and never use `.getOrElse` blindly.
 
 ```dart
-// ✅ Correct — fold in the cubit
+// ✅ Correct — fold in the notifier
 final result = await _loginUseCase(...);
 result.fold(
-  (failure) => emit(state.copyWith(status: AuthStatus.failure, error: failure.message)),
-  (user) => emit(state.copyWith(status: AuthStatus.success, user: user)),
+  (failure) => state = state.copyWith(status: ViewStatus.failure, errorMessage: failure.message),
+  (user) => state = state.copyWith(status: ViewStatus.success, user: user),
 );
 
-// ❌ Wrong — never use .getOrElse in a cubit without handling the Left
+// ❌ Wrong — never use .getOrElse in a notifier without handling the Left
 final user = result.getOrElse((_) => throw 'error'); // forbidden
 ```
 
@@ -103,7 +103,7 @@ Future<Either<AppFailure, List<Activity>>> call(...) async {
 ## 🚫 What Not to Do
 
 - **Never `throw`** as any form of control flow anywhere in the application.
-- **Never use `try/catch` inside a Cubit or BLoC** — that belongs in the datasource or `guardedCall`.
+- **Never use `try/catch` inside a notifier for I/O** — that belongs in the datasource or `guardedCall`.
 - **Never return `null` to indicate failure** — use `Left<AppFailure>`.
 - **Never use `.getOrElse` to swallow errors silently** without logging or informing the user.
 - **Never create `AppFailure` subtypes outside `domain/core/failures.dart`** — extend the sealed class there.

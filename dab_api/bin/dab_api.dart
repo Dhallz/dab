@@ -42,7 +42,7 @@ Future<void> main() async {
     ..post('/auth/login', AuthController().login)
     ..post('/auth/refresh', AuthController().refresh)
     ..get('/metadata/status', MetadataController().getStatus)
-    // Public: AppCubit bootstrap (same as status) — must be BEFORE /metadata + AuthMiddleware.
+    // Public: app bootstrap (same as status) — must be BEFORE /metadata + AuthMiddleware.
     ..get('/metadata/configs', MetadataController().getConfigs)
     ..use('/activities', AuthMiddleware().call)
     ..use('/activities', VegasMiddleware.checkStaleness)

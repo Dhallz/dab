@@ -17,7 +17,7 @@ This workflow scaffolds a new view in `dab_app/lib/presentation/views` by replic
 2. **Create directory structure**:
    Create the following folders:
    - `dab_app/lib/presentation/views/{{name}}`
-   - `dab_app/lib/presentation/views/{{name}}/layout`
+   - `dab_app/lib/presentation/views/{{name}}/layouts`
    - `dab_app/lib/presentation/views/{{name}}/widgets`
 
 3. **Generate Files**:
@@ -35,7 +35,7 @@ PASCAL_NAME=$(echo "$NAME" | awk -F_ '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1
 BASE_PATH="dab_app/lib/presentation/views/$NAME"
 DASH_PATH="dab_app/lib/presentation/views/dashboard"
 
-mkdir -p "$BASE_PATH/layout"
+mkdir -p "$BASE_PATH/layouts"
 mkdir -p "$BASE_PATH/widgets"
 
 # Template replacement function
@@ -45,11 +45,10 @@ template_replace() {
 
 # Generate files
 template_replace "$DASH_PATH/dashboard_view.dart" "$BASE_PATH/${NAME}_view.dart"
-template_replace "$DASH_PATH/dashboard_bloc.dart" "$BASE_PATH/${NAME}_bloc.dart"
-template_replace "$DASH_PATH/dashboard_event.dart" "$BASE_PATH/${NAME}_event.dart"
+template_replace "$DASH_PATH/dashboard_notifier.dart" "$BASE_PATH/${NAME}_notifier.dart"
 template_replace "$DASH_PATH/dashboard_state.dart" "$BASE_PATH/${NAME}_state.dart"
-template_replace "$DASH_PATH/layout/dashboard_view_desktop.dart" "$BASE_PATH/layout/${NAME}_view_desktop.dart"
-template_replace "$DASH_PATH/layout/dashboard_view_mobile.dart" "$BASE_PATH/layout/${NAME}_view_mobile.dart"
+template_replace "$DASH_PATH/layouts/dashboard_view_desktop.dart" "$BASE_PATH/layouts/${NAME}_view_desktop.dart"
+template_replace "$DASH_PATH/layouts/dashboard_view_mobile.dart" "$BASE_PATH/layouts/${NAME}_view_mobile.dart"
 
 echo "Scaffolded $PASCAL_NAME ($NAME) in $BASE_PATH"
 ```

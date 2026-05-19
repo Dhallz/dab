@@ -2,7 +2,7 @@ import 'activity.dart';
 
 /// [ARCH: DOMAIN_ENTITY]
 /// ROLE: Discriminated union of events delivered by the live activity WS
-/// channel to the Dashboard. Lets the bloc react uniformly to new incoming
+/// channel to the Dashboard. Lets the dashboard notifier react uniformly to new incoming
 /// activities and to triage-state mutations from other sessions.
 /// CONTRACT: Sealed class; extend it inside this file only.
 /// CONSTRAINTS: Not serialized — lives purely on the client stream; the

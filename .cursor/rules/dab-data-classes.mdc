@@ -131,7 +131,7 @@ To maintain organization under the "one-class-per-file" rule, related data class
 3. **One Model per File**: Each enum or data class must have its own file, satisfying the `@MappableClass` requirements.
 1. **Mandatory for Entities**: In both `dab_api` and `dab_app`, the `domain/entities/` folder must use subject-based subdirectories (e.g., `user/`, `activity/`, `group/`) whenever more than one file relates to that subject.
 2. **Subject Consistency & Prefixing**: Files within a subject folder **must** share a common prefix matching the folder name (e.g., `user.dart`, `user_role.dart`, `user_identity.dart` in `entities/user/`). If a related class disappears from this naming scheme (e.g., `sprint_context.dart`), it must remain in the root `entities/` folder even if logically related to the subject.
-3. **Exclusion (Events & States)**: This grouping rule does **not** apply to Bloc/Cubit `Events` or `States`. These should remain co-located with their respective logic components as per standard feature-folder patterns.
+3. **Exclusion (screen states)**: This grouping rule does **not** apply to view `*State` classes. Keep them co-located with their notifier in the same feature folder (see `dab-views.mdc`).
 
 
 ---

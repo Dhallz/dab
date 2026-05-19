@@ -4,11 +4,8 @@ import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' as pv;
 
 import 'domain/entities/system/app_settings.dart';
-import 'domain/repositories/abs_i_auth_repository.dart';
-import 'domain/repositories/abs_i_monitoring_repository.dart';
 import 'presentation/core/localization/app_localizations.dart';
 import 'presentation/core/navigation/app_router.dart';
 import 'services/service_locator.dart';
@@ -18,20 +15,9 @@ void main() async {
 
   await sl.init();
 
-  // test
-
   runApp(
     ProviderScope(
-      child: pv.MultiProvider(
-        providers: [
-          pv.Provider.value(value: sl.objectBoxStore),
-          pv.Provider<IAuthRepository>.value(value: sl.authRepository),
-          pv.Provider<IMonitoringRepository>.value(
-            value: sl.monitoringRepository,
-          ),
-        ],
-        child: _AuthRouterRefresh(child: DabApp(appRouter: sl.appRouter)),
-      ),
+      child: _AuthRouterRefresh(child: DabApp(appRouter: sl.appRouter)),
     ),
   );
 }

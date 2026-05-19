@@ -20,7 +20,7 @@ These apply to all packages and establish core architectural and behavioral stan
 Detailed prescriptive patterns that must be followed when writing specific types of code. These apply across both packages.
 - **[Functional Programming](file:///Users/dhallz/git/dab/.agents/rules/functional-programming.md)**: `Either`, `fpdart`, `AppFailure`, `guardedCall` — never throw as control flow.
 - **[Data Classes](file:///Users/dhallz/git/dab/.agents/rules/data-classes.md)**: Entity anatomy, `dart_mappable`, immutability, sealed classes, `build_runner`.
-- **[Views](file:///Users/dhallz/git/dab/.agents/rules/views.md)**: View hierarchy, BLoC/Cubit patterns, event/state conventions, layout breakpoints, naming.
+- **[Views](file:///Users/dhallz/git/dab/.agents/rules/views.md)**: View hierarchy, Riverpod notifier/state patterns, layout breakpoints, naming.
 
 ### 3. Maintenance Rules
 Specific guidelines for keeping supporting artifacts in sync with codebase changes.
@@ -31,7 +31,7 @@ Specific guidelines for keeping supporting artifacts in sync with codebase chang
 ### 4. Package-Specific Rules
 Each major package contains its own refined rules in its local `.agents/` folder.
 - **[DAB API Rules](file:///Users/dhallz/git/dab/dab_api/.agents/rules.md)**: Specifics for Relic, Drift, and Server-side patterns.
-- **[DAB App Rules](file:///Users/dhallz/git/dab/dab_app/.agents/rules.md)**: Specifics for BLoC/Cubit, go_router, and ObjectBox.
+- **[DAB App Rules](file:///Users/dhallz/git/dab/dab_app/.agents/rules.md)**: Specifics for Riverpod, go_router, ObjectBox, and GetIt.
 
 ---
 

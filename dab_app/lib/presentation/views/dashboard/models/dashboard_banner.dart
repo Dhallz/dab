@@ -8,7 +8,7 @@ part 'dashboard_banner.mapper.dart';
 /// ROLE: View-model describing the single banner currently surfaced by the
 /// Dashboard notification layer. Built by the `BannerEvaluator`.
 /// CONSTRAINTS: Identifies its source [UpcomingEvent] via [eventId] so the
-/// bloc can deduplicate subsequent ticks within the same threshold window.
+/// notifier can deduplicate subsequent ticks within the same threshold window.
 @MappableClass()
 class DashboardBanner with DashboardBannerMappable {
   /// Source event id. Paired with [thresholdMinutes] to build a stable

@@ -8,10 +8,10 @@ The ultra-lean, sub-second real-time dashboard for DAB. Experience **high-frame-
 
 | Layer | Responsibility | Pattern |
 | :--- | :--- | :--- |
-| **Presentation** | UI & Event Handling | Flutter + Bloc/Cubit |
-| **Application** | State Management & Logic | Business Case Cubits |
-| **Domain** | Primitive Models & Contracts | Pure Models |
-| **Infrastructure** | Local Persistence & API Clients | Drift (SQLite) + Dio |
+| **Presentation** | UI & screen state | Flutter + Riverpod (`Notifier`) |
+| **Domain** | Models, use cases & contracts | Pure Dart + `Either` |
+| **Infrastructure** | Local persistence & API clients | ObjectBox + Dio |
+| **Composition** | Wiring | `ServiceLocator` (`sl`) |
 
 > [!TIP]
 > Dive deep into the mobile world: **[App Documentation](../doc/app.md)** and **[Design Conventions](../doc/conventions.md)**.
@@ -35,14 +35,15 @@ The ultra-lean, sub-second real-time dashboard for DAB. Experience **high-frame-
    flutter run
    ```
 
+4. **Debug API in Docker** (optional): From the repo root, run **DAB API (Docker + Attach)** in `.vscode/launch.json`, then start **DAB App (Debug)** when the API is healthy.
+
 ---
 
 ## 🛠️ Performance Stack
-- **State Engine**: Bloc/Cubit (Predictable State)
-- **Fluid Persistence**: Drift/SQLite (Local-First Sync)
-- **Injection**: GetIt (Performance-first DI)
-- **Visuals**: Material 3 + Custom Glass Shader System
+- **State:** Riverpod notifiers + immutable `@MappableClass` states
+- **Persistence:** ObjectBox (local-first explorer cache)
+- **DI:** GetIt via `ServiceLocator`
+- **Visuals:** Material 3 + custom glass design tokens
 
 ---
 *Built for developers who value their pixels.*
-

@@ -9,7 +9,7 @@ description: Package-specific rules for DAB App
 > These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
 > Always read the global rules first.
 
-**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · provider · go_router · ObjectBox · Dio · dart_mappable
+**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · go_router · ObjectBox · Dio · dart_mappable · GetIt (`ServiceLocator`)
 
 ---
 
@@ -56,7 +56,7 @@ dab_app/lib/
 
 - All routes are declared in a single router configuration file (e.g., `presentation/core/router.dart`).
 - Use **named routes** — never push raw path strings from business logic or use cases.
-- Route guards (redirect logic) live in the router configuration, not in widgets or cubits.
+- Route guards (redirect logic) live in the router configuration, not in widgets or notifiers.
 - Never import a screen file directly into another screen to perform navigation.
 
 ---

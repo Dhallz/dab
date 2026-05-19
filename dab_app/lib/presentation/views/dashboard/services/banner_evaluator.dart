@@ -10,7 +10,7 @@ import '../models/dashboard_banner_severity.dart';
 /// using the highest-priority event that freshly crossed one of the
 /// configured thresholds (15m, 5m, 0m by default).
 /// CONSTRAINTS: Deterministic and stateless; callers own the dedupe set
-/// (`alreadyNotified`) so the bloc controls lifecycle.
+/// (`alreadyNotified`) so the notifier controls lifecycle.
 class BannerEvaluator {
   /// Thresholds in minutes, evaluated from smallest (most urgent) to
   /// largest. An event is considered to have crossed a threshold once

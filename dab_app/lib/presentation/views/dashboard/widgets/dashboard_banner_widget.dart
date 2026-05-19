@@ -12,7 +12,7 @@ import '../models/dashboard_banner_severity.dart';
 /// Dashboard upcoming-events banner. Shows a title + body, an optional
 /// deep-link CTA, and a dismiss button.
 /// CONSTRAINTS: Pure presentational widget; mutation is delegated back to
-/// the bloc via the supplied callbacks.
+/// the dashboard notifier via the supplied callbacks.
 class DashboardBannerWidget extends StatelessWidget {
   final DashboardBanner banner;
   final VoidCallback onDismiss;

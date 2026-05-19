@@ -21,7 +21,7 @@ Detailed patterns when writing specific kinds of code (both packages).
 
 - **Functional programming**: `dab-functional-programming.mdc` — `Either`, `fpdart`, `AppFailure`, `guardedCall`; never throw as control flow.
 - **Data classes**: `dab-data-classes.mdc` — entities, `dart_mappable`, immutability, sealed classes, `build_runner`.
-- **Views**: `dab-views.mdc` — view hierarchy, BLoC/Cubit, events/states, layouts, naming.
+- **Views**: `dab-views.mdc` — view hierarchy, Riverpod notifiers/states, layouts, naming.
 - **Extensions**: `dab-extensions.mdc` — naming and placement of Dart extensions.
 
 ### 3. Maintenance rules
@@ -36,7 +36,7 @@ Keep supporting artifacts in sync with code changes.
 ### 4. Package-specific rules
 
 - **DAB API**: `dab-api-package.mdc` (source: `dab_api/.agents/rules.md`) — Relic, Drift, server patterns.
-- **DAB App**: `dab-app-package.mdc` (source: `dab_app/.agents/rules.md`) — BLoC/Cubit, go_router, ObjectBox.
+- **DAB App**: `dab-app-package.mdc` (source: `dab_app/.agents/rules.md`) — Riverpod, go_router, ObjectBox, GetIt.
 
 ### 5. Workflows (opt-in / manual)
 

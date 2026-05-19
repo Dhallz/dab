@@ -54,7 +54,7 @@ Do **not** add presentation `*_event.dart` hierarchies; **user actions** are **n
 ## 🎯 Riverpod Notifier Rules
 
 - Declare providers next to the notifier: `final fooNotifierProvider = NotifierProvider.autoDispose<FooNotifier, FooState>(...)`.
-- Notifiers **call use cases only** (same as former BLoC rule).
+- Notifiers **call use cases only** — never datasources or repositories directly.
 - Prefer **`AutoDisposeNotifier`** for screens that should tear down with navigation.
 - Replace discrete “events” with **methods** on the notifier (`toggleProvider`, `setDatePreset`, …).
 - For **`ProviderContainer`** tests, **`listen`** autoDispose providers during async work so they are not disposed mid-await.

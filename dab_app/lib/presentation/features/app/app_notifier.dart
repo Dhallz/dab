@@ -11,7 +11,7 @@ import '../auth/auth_state.dart' as session;
 import 'app_state.dart';
 
 /// [ARCH: PRESENTATION]
-/// ROLE: Global application settings and metadata (replaces [AppCubit]).
+/// ROLE: Global application settings and metadata.
 /// CONTRACT: Manages [AppState]. Orchestrates initialization and cross-cutting updates (Theme).
 /// CONSTRAINTS: Directly interacts with [SystemUseCases] and [MetadataUseCases].
 ///

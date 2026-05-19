@@ -18,7 +18,7 @@ All extensions must follow these exact naming patterns:
 ### 1. File Naming & Location
 - **Presentation & Infrastructure Layers**: Exactly **one file per class** being extended (e.g., `presentation/core/extensions/color_extensions.dart`).
 - **Domain Layer**: Extensions are **co-located** in the same file as the entity class (e.g., `domain/entities/activity.dart`), below the class definition. A separate `_extensions.dart` file is **not required** for domain entities.
-- **BLoC / Cubit state classes** (`*State` in `views/*/…_state.dart`): Extensions on that state type **must** live in the **same file**, **below** the state class (e.g., `extension OnAdminState on AdminState` at the bottom of `admin_state.dart`). Do **not** use a sibling `extensions/on_*_state.dart` file for state projections.
+- **Notifier state classes** (`*State` in `views/*/…_state.dart`): Extensions on that state type **must** live in the **same file**, **below** the state class (e.g., `extension OnAdminState on AdminState` at the bottom of `admin_state.dart`). Do **not** use a sibling `extensions/on_*_state.dart` file for state projections.
 - **Pattern (when separate)**: `[lowercase_class_name]_extensions.dart` (e.g., `string_extensions.dart`).
 
 ### 2. Class Naming
