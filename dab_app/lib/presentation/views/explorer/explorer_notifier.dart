@@ -236,6 +236,24 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           slackBurstOrder.add(key);
         }
         slackBurstGroups[key]!.add(activity);
+      } else if (provider is TeamsMessageProvider &&
+          provider.channelId != null &&
+          provider.replyToId != null &&
+          provider.replyToId!.isNotEmpty) {
+        final key = '${provider.channelId}:${provider.replyToId}';
+        if (!slackConversationGroups.containsKey(key)) {
+          slackConversationGroups[key] = [];
+          slackConversationOrder.add(key);
+        }
+        slackConversationGroups[key]!.add(activity);
+      } else if (provider is TeamsMessageProvider &&
+          provider.channelId != null) {
+        final key = _buildTeamsBurstKey(activity, provider);
+        if (!slackBurstGroups.containsKey(key)) {
+          slackBurstGroups[key] = [];
+          slackBurstOrder.add(key);
+        }
+        slackBurstGroups[key]!.add(activity);
       } else {
         items.add(SingleActivityItem(activity));
       }
@@ -321,6 +339,13 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
     return '${provider.channelId}:${activity.userId}:$bucketEpoch';
   }
 
+  String _buildTeamsBurstKey(Activity activity, TeamsMessageProvider provider) {
+    final bucketEpoch =
+        activity.createdAt.toUtc().millisecondsSinceEpoch ~/
+        const Duration(minutes: 15).inMilliseconds;
+    return '${provider.channelId}:${activity.userId}:$bucketEpoch';
+  }
+
   String _extractBucketIdFromSlackBurstKey(String key) {
     final parts = key.split(':');
     return parts.isNotEmpty ? parts.last : key;
@@ -332,6 +357,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       case 'github':
         return {ActivityCategory.commit};
       case 'slack':
+      case 'teams':
         return {ActivityCategory.message};
       case 'phorge':
         return {ActivityCategory.task, ActivityCategory.revision};

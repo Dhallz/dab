@@ -13,6 +13,7 @@ class ActivitySearchQueryMapper {
       GitHubCommitProvider() => 'github',
       JiraIssueProvider() => 'jira',
       SlackMessageProvider() => 'slack',
+      TeamsMessageProvider() => 'teams',
       GenericProvider(name: final n) => _genericProviderFilterKey(n),
     };
   }

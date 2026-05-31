@@ -120,6 +120,33 @@ class SlackMessageProvider extends ActivityProvider
   String get category => 'message';
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Microsoft Teams channel messages.
+/// CONTRACT: Corresponds to the `activity_teams_message` SQL table.
+@MappableClass()
+class TeamsMessageProvider extends ActivityProvider
+    with TeamsMessageProviderMappable {
+  final String? tenantId;
+  final String? teamId;
+  final String? channelId;
+  final String? messageId;
+  final String? replyToId;
+
+  const TeamsMessageProvider({
+    this.tenantId,
+    this.teamId,
+    this.channelId,
+    this.messageId,
+    this.replyToId,
+  });
+
+  @override
+  String get name => 'Teams';
+
+  @override
+  String get category => 'message';
+}
+
 @MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override

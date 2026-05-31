@@ -3,6 +3,7 @@ import 'package:dab_api/src/infrastructure/database/tables/activity_github_commi
 import 'package:dab_api/src/infrastructure/database/tables/activity_jira_issue_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_slack_message_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_teams_message_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/provider_configs_table.dart';
@@ -23,6 +24,7 @@ part 'app_database.g.dart';
     ActivityGithubCommitTable,
     ActivityJiraIssueTable,
     ActivitySlackMessageTable,
+    ActivityTeamsMessageTable,
     SessionsTable,
     GroupsTable,
     GroupMembersTable,
@@ -34,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -168,6 +170,9 @@ WHERE id = 'slack'
       }
       if (from < 13) {
         await m.createTable(activityJiraIssueTable);
+      }
+      if (from < 14) {
+        await m.createTable(activityTeamsMessageTable);
       }
     },
     beforeOpen: (details) async {

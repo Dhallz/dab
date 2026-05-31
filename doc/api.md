@@ -169,7 +169,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Slack | ✅ Active (Messages v1) | Slack Web API |
 | Jira | ✅ Active (issues v1, polling + discovery) | REST |
 | Linear | 🧪 Scaffolded | GraphQL |
-| Teams | 🧪 Scaffolded | REST |
+| Teams | ✅ Active (messages v1, polling) | Microsoft Graph REST |
 | Discord | 🧪 Scaffolded | REST |
 | GitLab | 🔜 Planned | REST |
 | Bitbucket | 🔜 Planned | REST |
@@ -221,6 +221,15 @@ are ignored for live-feed ingestion.
 For local webhook testing, generate signature headers from the exact raw request
 body using:
 `./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
+
+Teams v1 ingestion is **read-only** and **polling-only** via Microsoft Graph.
+`TeamsMessageSource` fetches channel messages for configured
+`teamId/channelId` pairs (`settings.channels`) in the Explorer date window.
+Attribution requires linked `user_identities` rows (`provider_id: teams`,
+`external_id` = Graph user id). Admin settings: **`tenantId`**, **`clientId`**,
+**`clientSecret`**, and **`channels`**. Test connection acquires an app-only
+token and calls `GET /v1.0/organization`. Live Graph subscriptions remain
+planned separately.
 
 GitHub sends the JSON body as either **raw JSON** (`Content-Type:
 application/json`) or **URL-encoded** (`application/x-www-form-urlencoded` with a

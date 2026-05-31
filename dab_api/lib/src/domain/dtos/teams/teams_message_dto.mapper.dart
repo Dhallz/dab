@@ -21,6 +21,21 @@ class TeamsMessageDtoMapper extends ClassMapperBase<TeamsMessageDto> {
   @override
   final String id = 'TeamsMessageDto';
 
+  static String _$teamId(TeamsMessageDto v) => v.teamId;
+  static const Field<TeamsMessageDto, String> _f$teamId = Field(
+    'teamId',
+    _$teamId,
+  );
+  static String _$channelId(TeamsMessageDto v) => v.channelId;
+  static const Field<TeamsMessageDto, String> _f$channelId = Field(
+    'channelId',
+    _$channelId,
+  );
+  static String _$messageId(TeamsMessageDto v) => v.messageId;
+  static const Field<TeamsMessageDto, String> _f$messageId = Field(
+    'messageId',
+    _$messageId,
+  );
   static String _$content(TeamsMessageDto v) => v.content;
   static const Field<TeamsMessageDto, String> _f$content = Field(
     'content',
@@ -31,31 +46,94 @@ class TeamsMessageDtoMapper extends ClassMapperBase<TeamsMessageDto> {
     'fromId',
     _$fromId,
   );
-  static DateTime _$createdDateTime(TeamsMessageDto v) => v.createdDateTime;
-  static const Field<TeamsMessageDto, DateTime> _f$createdDateTime = Field(
-    'createdDateTime',
-    _$createdDateTime,
+  static DateTime _$createdAt(TeamsMessageDto v) => v.createdAt;
+  static const Field<TeamsMessageDto, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
   );
-  static String _$channelId(TeamsMessageDto v) => v.channelId;
-  static const Field<TeamsMessageDto, String> _f$channelId = Field(
-    'channelId',
-    _$channelId,
+  static String? _$channelLabel(TeamsMessageDto v) => v.channelLabel;
+  static const Field<TeamsMessageDto, String> _f$channelLabel = Field(
+    'channelLabel',
+    _$channelLabel,
+    opt: true,
+  );
+  static String? _$tenantId(TeamsMessageDto v) => v.tenantId;
+  static const Field<TeamsMessageDto, String> _f$tenantId = Field(
+    'tenantId',
+    _$tenantId,
+    opt: true,
+  );
+  static String? _$replyToId(TeamsMessageDto v) => v.replyToId;
+  static const Field<TeamsMessageDto, String> _f$replyToId = Field(
+    'replyToId',
+    _$replyToId,
+    opt: true,
+  );
+  static String? _$permalink(TeamsMessageDto v) => v.permalink;
+  static const Field<TeamsMessageDto, String> _f$permalink = Field(
+    'permalink',
+    _$permalink,
+    opt: true,
+  );
+  static String? _$userDisplayName(TeamsMessageDto v) => v.userDisplayName;
+  static const Field<TeamsMessageDto, String> _f$userDisplayName = Field(
+    'userDisplayName',
+    _$userDisplayName,
+    opt: true,
+  );
+  static String? _$userUsername(TeamsMessageDto v) => v.userUsername;
+  static const Field<TeamsMessageDto, String> _f$userUsername = Field(
+    'userUsername',
+    _$userUsername,
+    opt: true,
+  );
+  static String? _$userAvatarUrl(TeamsMessageDto v) => v.userAvatarUrl;
+  static const Field<TeamsMessageDto, String> _f$userAvatarUrl = Field(
+    'userAvatarUrl',
+    _$userAvatarUrl,
+    opt: true,
+  );
+  static String? _$dabUserId(TeamsMessageDto v) => v.dabUserId;
+  static const Field<TeamsMessageDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
   );
 
   @override
   final MappableFields<TeamsMessageDto> fields = const {
+    #teamId: _f$teamId,
+    #channelId: _f$channelId,
+    #messageId: _f$messageId,
     #content: _f$content,
     #fromId: _f$fromId,
-    #createdDateTime: _f$createdDateTime,
-    #channelId: _f$channelId,
+    #createdAt: _f$createdAt,
+    #channelLabel: _f$channelLabel,
+    #tenantId: _f$tenantId,
+    #replyToId: _f$replyToId,
+    #permalink: _f$permalink,
+    #userDisplayName: _f$userDisplayName,
+    #userUsername: _f$userUsername,
+    #userAvatarUrl: _f$userAvatarUrl,
+    #dabUserId: _f$dabUserId,
   };
 
   static TeamsMessageDto _instantiate(DecodingData data) {
     return TeamsMessageDto(
+      teamId: data.dec(_f$teamId),
+      channelId: data.dec(_f$channelId),
+      messageId: data.dec(_f$messageId),
       content: data.dec(_f$content),
       fromId: data.dec(_f$fromId),
-      createdDateTime: data.dec(_f$createdDateTime),
-      channelId: data.dec(_f$channelId),
+      createdAt: data.dec(_f$createdAt),
+      channelLabel: data.dec(_f$channelLabel),
+      tenantId: data.dec(_f$tenantId),
+      replyToId: data.dec(_f$replyToId),
+      permalink: data.dec(_f$permalink),
+      userDisplayName: data.dec(_f$userDisplayName),
+      userUsername: data.dec(_f$userUsername),
+      userAvatarUrl: data.dec(_f$userAvatarUrl),
+      dabUserId: data.dec(_f$dabUserId),
     );
   }
 
@@ -122,10 +200,20 @@ extension TeamsMessageDtoValueCopy<$R, $Out>
 abstract class TeamsMessageDtoCopyWith<$R, $In extends TeamsMessageDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   $R call({
+    String? teamId,
+    String? channelId,
+    String? messageId,
     String? content,
     String? fromId,
-    DateTime? createdDateTime,
-    String? channelId,
+    DateTime? createdAt,
+    String? channelLabel,
+    String? tenantId,
+    String? replyToId,
+    String? permalink,
+    String? userDisplayName,
+    String? userUsername,
+    String? userAvatarUrl,
+    String? dabUserId,
   });
   TeamsMessageDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -142,24 +230,54 @@ class _TeamsMessageDtoCopyWithImpl<$R, $Out>
       TeamsMessageDtoMapper.ensureInitialized();
   @override
   $R call({
+    String? teamId,
+    String? channelId,
+    String? messageId,
     String? content,
     String? fromId,
-    DateTime? createdDateTime,
-    String? channelId,
+    DateTime? createdAt,
+    Object? channelLabel = $none,
+    Object? tenantId = $none,
+    Object? replyToId = $none,
+    Object? permalink = $none,
+    Object? userDisplayName = $none,
+    Object? userUsername = $none,
+    Object? userAvatarUrl = $none,
+    Object? dabUserId = $none,
   }) => $apply(
     FieldCopyWithData({
+      if (teamId != null) #teamId: teamId,
+      if (channelId != null) #channelId: channelId,
+      if (messageId != null) #messageId: messageId,
       if (content != null) #content: content,
       if (fromId != null) #fromId: fromId,
-      if (createdDateTime != null) #createdDateTime: createdDateTime,
-      if (channelId != null) #channelId: channelId,
+      if (createdAt != null) #createdAt: createdAt,
+      if (channelLabel != $none) #channelLabel: channelLabel,
+      if (tenantId != $none) #tenantId: tenantId,
+      if (replyToId != $none) #replyToId: replyToId,
+      if (permalink != $none) #permalink: permalink,
+      if (userDisplayName != $none) #userDisplayName: userDisplayName,
+      if (userUsername != $none) #userUsername: userUsername,
+      if (userAvatarUrl != $none) #userAvatarUrl: userAvatarUrl,
+      if (dabUserId != $none) #dabUserId: dabUserId,
     }),
   );
   @override
   TeamsMessageDto $make(CopyWithData data) => TeamsMessageDto(
+    teamId: data.get(#teamId, or: $value.teamId),
+    channelId: data.get(#channelId, or: $value.channelId),
+    messageId: data.get(#messageId, or: $value.messageId),
     content: data.get(#content, or: $value.content),
     fromId: data.get(#fromId, or: $value.fromId),
-    createdDateTime: data.get(#createdDateTime, or: $value.createdDateTime),
-    channelId: data.get(#channelId, or: $value.channelId),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
+    channelLabel: data.get(#channelLabel, or: $value.channelLabel),
+    tenantId: data.get(#tenantId, or: $value.tenantId),
+    replyToId: data.get(#replyToId, or: $value.replyToId),
+    permalink: data.get(#permalink, or: $value.permalink),
+    userDisplayName: data.get(#userDisplayName, or: $value.userDisplayName),
+    userUsername: data.get(#userUsername, or: $value.userUsername),
+    userAvatarUrl: data.get(#userAvatarUrl, or: $value.userAvatarUrl),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
   );
 
   @override

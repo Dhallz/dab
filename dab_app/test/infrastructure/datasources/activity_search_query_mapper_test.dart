@@ -85,7 +85,16 @@ void main() {
       );
     });
 
-    test('providerFilterKey maps Microsoft Teams to teams config id', () {
+    test('providerFilterKey maps TeamsMessageProvider to teams config id', () {
+      expect(
+        ActivitySearchQueryMapper.providerFilterKey(
+          const TeamsMessageProvider(channelId: 'ch-1'),
+        ),
+        'teams',
+      );
+    });
+
+    test('providerFilterKey maps Microsoft Teams generic to teams config id', () {
       expect(
         ActivitySearchQueryMapper.providerFilterKey(
           const GenericProvider(name: 'Microsoft Teams'),

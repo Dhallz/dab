@@ -34,8 +34,8 @@ extension OnActivity on Activity {
       return 'commit';
     }
 
-    // Slack integration is message-oriented in DAB.
-    if (provider is SlackMessageProvider) {
+    // Slack / Teams integrations are message-oriented in DAB.
+    if (provider is SlackMessageProvider || provider is TeamsMessageProvider) {
       return 'message';
     }
 

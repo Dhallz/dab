@@ -19,6 +19,7 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
       GitHubCommitProviderMapper.ensureInitialized();
       JiraIssueProviderMapper.ensureInitialized();
       SlackMessageProviderMapper.ensureInitialized();
+      TeamsMessageProviderMapper.ensureInitialized();
       GenericProviderMapper.ensureInitialized();
     }
     return _instance!;
@@ -912,6 +913,204 @@ class _SlackMessageProviderCopyWithImpl<$R, $Out>
   SlackMessageProviderCopyWith<$R2, SlackMessageProvider, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _SlackMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class TeamsMessageProviderMapper extends ClassMapperBase<TeamsMessageProvider> {
+  TeamsMessageProviderMapper._();
+
+  static TeamsMessageProviderMapper? _instance;
+  static TeamsMessageProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = TeamsMessageProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'TeamsMessageProvider';
+
+  static String? _$tenantId(TeamsMessageProvider v) => v.tenantId;
+  static const Field<TeamsMessageProvider, String> _f$tenantId = Field(
+    'tenantId',
+    _$tenantId,
+    opt: true,
+  );
+  static String? _$teamId(TeamsMessageProvider v) => v.teamId;
+  static const Field<TeamsMessageProvider, String> _f$teamId = Field(
+    'teamId',
+    _$teamId,
+    opt: true,
+  );
+  static String? _$channelId(TeamsMessageProvider v) => v.channelId;
+  static const Field<TeamsMessageProvider, String> _f$channelId = Field(
+    'channelId',
+    _$channelId,
+    opt: true,
+  );
+  static String? _$messageId(TeamsMessageProvider v) => v.messageId;
+  static const Field<TeamsMessageProvider, String> _f$messageId = Field(
+    'messageId',
+    _$messageId,
+    opt: true,
+  );
+  static String? _$replyToId(TeamsMessageProvider v) => v.replyToId;
+  static const Field<TeamsMessageProvider, String> _f$replyToId = Field(
+    'replyToId',
+    _$replyToId,
+    opt: true,
+  );
+  static String _$name(TeamsMessageProvider v) => v.name;
+  static const Field<TeamsMessageProvider, String> _f$name = Field(
+    'name',
+    _$name,
+    mode: FieldMode.member,
+  );
+  static ActivityCategory _$category(TeamsMessageProvider v) => v.category;
+  static const Field<TeamsMessageProvider, ActivityCategory> _f$category =
+      Field('category', _$category, mode: FieldMode.member);
+
+  @override
+  final MappableFields<TeamsMessageProvider> fields = const {
+    #tenantId: _f$tenantId,
+    #teamId: _f$teamId,
+    #channelId: _f$channelId,
+    #messageId: _f$messageId,
+    #replyToId: _f$replyToId,
+    #name: _f$name,
+    #category: _f$category,
+  };
+
+  static TeamsMessageProvider _instantiate(DecodingData data) {
+    return TeamsMessageProvider(
+      tenantId: data.dec(_f$tenantId),
+      teamId: data.dec(_f$teamId),
+      channelId: data.dec(_f$channelId),
+      messageId: data.dec(_f$messageId),
+      replyToId: data.dec(_f$replyToId),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static TeamsMessageProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<TeamsMessageProvider>(map);
+  }
+
+  static TeamsMessageProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<TeamsMessageProvider>(json);
+  }
+}
+
+mixin TeamsMessageProviderMappable {
+  String toJson() {
+    return TeamsMessageProviderMapper.ensureInitialized()
+        .encodeJson<TeamsMessageProvider>(this as TeamsMessageProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return TeamsMessageProviderMapper.ensureInitialized()
+        .encodeMap<TeamsMessageProvider>(this as TeamsMessageProvider);
+  }
+
+  TeamsMessageProviderCopyWith<
+    TeamsMessageProvider,
+    TeamsMessageProvider,
+    TeamsMessageProvider
+  >
+  get copyWith =>
+      _TeamsMessageProviderCopyWithImpl<
+        TeamsMessageProvider,
+        TeamsMessageProvider
+      >(this as TeamsMessageProvider, $identity, $identity);
+  @override
+  String toString() {
+    return TeamsMessageProviderMapper.ensureInitialized().stringifyValue(
+      this as TeamsMessageProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return TeamsMessageProviderMapper.ensureInitialized().equalsValue(
+      this as TeamsMessageProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return TeamsMessageProviderMapper.ensureInitialized().hashValue(
+      this as TeamsMessageProvider,
+    );
+  }
+}
+
+extension TeamsMessageProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, TeamsMessageProvider, $Out> {
+  TeamsMessageProviderCopyWith<$R, TeamsMessageProvider, $Out>
+  get $asTeamsMessageProvider => $base.as(
+    (v, t, t2) => _TeamsMessageProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class TeamsMessageProviderCopyWith<
+  $R,
+  $In extends TeamsMessageProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({
+    String? tenantId,
+    String? teamId,
+    String? channelId,
+    String? messageId,
+    String? replyToId,
+  });
+  TeamsMessageProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _TeamsMessageProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, TeamsMessageProvider, $Out>
+    implements TeamsMessageProviderCopyWith<$R, TeamsMessageProvider, $Out> {
+  _TeamsMessageProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<TeamsMessageProvider> $mapper =
+      TeamsMessageProviderMapper.ensureInitialized();
+  @override
+  $R call({
+    Object? tenantId = $none,
+    Object? teamId = $none,
+    Object? channelId = $none,
+    Object? messageId = $none,
+    Object? replyToId = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (tenantId != $none) #tenantId: tenantId,
+      if (teamId != $none) #teamId: teamId,
+      if (channelId != $none) #channelId: channelId,
+      if (messageId != $none) #messageId: messageId,
+      if (replyToId != $none) #replyToId: replyToId,
+    }),
+  );
+  @override
+  TeamsMessageProvider $make(CopyWithData data) => TeamsMessageProvider(
+    tenantId: data.get(#tenantId, or: $value.tenantId),
+    teamId: data.get(#teamId, or: $value.teamId),
+    channelId: data.get(#channelId, or: $value.channelId),
+    messageId: data.get(#messageId, or: $value.messageId),
+    replyToId: data.get(#replyToId, or: $value.replyToId),
+  );
+
+  @override
+  TeamsMessageProviderCopyWith<$R2, TeamsMessageProvider, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _TeamsMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class GenericProviderMapper extends ClassMapperBase<GenericProvider> {

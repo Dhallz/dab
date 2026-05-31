@@ -490,6 +490,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           key: 'tenantId',
           label: l10n.adminFieldDirectoryTenantId,
         ),
+        AdminConfigField(
+          key: 'channels',
+          label: 'Team channels (teamId/channelId, comma or newline separated)',
+        ),
       ];
     }
     if (lowerId.contains('slack')) {

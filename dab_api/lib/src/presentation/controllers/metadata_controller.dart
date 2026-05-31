@@ -422,6 +422,129 @@ class MetadataController {
         }
       }
 
+      if (config.id == 'teams') {
+        final tenantId = (config.settings['tenantId'] ?? '').toString().trim();
+        final clientId = (config.settings['clientId'] ?? '').toString().trim();
+        final clientSecret =
+            (config.settings['clientSecret'] ?? '').toString().trim();
+        if (tenantId.isEmpty || clientId.isEmpty || clientSecret.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details':
+                    'Teams tenantId, clientId, and clientSecret are required',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        try {
+          final tokenUri = Uri.parse(
+            'https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token',
+          );
+          final tokenResponse = await http
+              .post(
+                tokenUri,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: {
+                  'client_id': clientId,
+                  'client_secret': clientSecret,
+                  'grant_type': 'client_credentials',
+                  'scope': 'https://graph.microsoft.com/.default',
+                },
+              )
+              .timeout(const Duration(seconds: 12));
+
+          if (tokenResponse.statusCode < 200 ||
+              tokenResponse.statusCode >= 300) {
+            return Response.badRequest(
+              body: Body.fromString(
+                jsonEncode({
+                  'error': 'Connection failed',
+                  'details':
+                      'Azure AD token request failed (${tokenResponse.statusCode}). Verify tenant and app registration.',
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          final tokenBody =
+              jsonDecode(tokenResponse.body) as Map<String, dynamic>;
+          final accessToken = tokenBody['access_token']?.toString().trim();
+          if (accessToken == null || accessToken.isEmpty) {
+            return Response.badRequest(
+              body: Body.fromString(
+                jsonEncode({
+                  'error': 'Connection failed',
+                  'details': 'Azure AD did not return an access token',
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          final orgResponse = await http
+              .get(
+                Uri.parse('https://graph.microsoft.com/v1.0/organization'),
+                headers: {
+                  'Authorization': 'Bearer $accessToken',
+                  'Accept': 'application/json',
+                },
+              )
+              .timeout(const Duration(seconds: 10));
+
+          if (orgResponse.statusCode != 200) {
+            return Response.badRequest(
+              body: Body.fromString(
+                jsonEncode({
+                  'error': 'Connection failed',
+                  'details':
+                      'Microsoft Graph returned ${orgResponse.statusCode}. Check app permissions (e.g. Organization.Read.All).',
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          final orgBody =
+              jsonDecode(orgResponse.body) as Map<String, dynamic>;
+          final orgs = orgBody['value'];
+          final orgName =
+              (orgs is List && orgs.isNotEmpty && orgs.first is Map)
+                  ? (orgs.first as Map)['displayName']?.toString() ??
+                      'organization'
+                  : 'organization';
+
+          return Response.ok(
+            body: Body.fromString(
+              jsonEncode({
+                'data': {
+                  'status': 'connected',
+                  'message':
+                      'Successfully connected to Microsoft Teams ($orgName)',
+                },
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Teams connectivity test failed: $e',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
       // Fallback for other providers (Generic ping or mock)
       await Future.delayed(const Duration(seconds: 1));
 

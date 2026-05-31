@@ -96,6 +96,30 @@ class SlackMessageProvider extends ActivityProvider
 }
 
 @MappableClass()
+class TeamsMessageProvider extends ActivityProvider
+    with TeamsMessageProviderMappable {
+  final String? tenantId;
+  final String? teamId;
+  final String? channelId;
+  final String? messageId;
+  final String? replyToId;
+
+  const TeamsMessageProvider({
+    this.tenantId,
+    this.teamId,
+    this.channelId,
+    this.messageId,
+    this.replyToId,
+  });
+
+  @override
+  String get name => 'Teams';
+
+  @override
+  ActivityCategory get category => ActivityCategory.message;
+}
+
+@MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override
   final String name;

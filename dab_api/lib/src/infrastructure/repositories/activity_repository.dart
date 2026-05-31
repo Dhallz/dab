@@ -106,6 +106,19 @@ class ActivityRepository implements AbsIActivityRepository {
                   statusName: Value(provider.statusName),
                 ),
               );
+        } else if (provider is TeamsMessageProvider) {
+          await _db
+              .into(_db.activityTeamsMessageTable)
+              .insert(
+                ActivityTeamsMessageTableCompanion.insert(
+                  activityId: activity.id,
+                  tenantId: Value(provider.tenantId),
+                  teamId: Value(provider.teamId),
+                  channelId: Value(provider.channelId),
+                  messageId: Value(provider.messageId),
+                  replyToId: Value(provider.replyToId),
+                ),
+              );
         }
         return const Right(null);
       } catch (e) {
@@ -140,6 +153,12 @@ class ActivityRepository implements AbsIActivityRepository {
         leftOuterJoin(
           _db.activityJiraIssueTable,
           _db.activityJiraIssueTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityTeamsMessageTable,
+          _db.activityTeamsMessageTable.activityId.equalsExp(
             _db.activitiesTable.id,
           ),
         ),
@@ -199,6 +218,12 @@ class ActivityRepository implements AbsIActivityRepository {
             _db.activitiesTable.id,
           ),
         ),
+        leftOuterJoin(
+          _db.activityTeamsMessageTable,
+          _db.activityTeamsMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
         // ENFORCE Deep Deactivation filtering for user-specific feeds too
         innerJoin(
           _db.providerConfigsTable,
@@ -236,6 +261,7 @@ class ActivityRepository implements AbsIActivityRepository {
     final githubData = row.readTableOrNull(_db.activityGithubCommitTable);
     final slackData = row.readTableOrNull(_db.activitySlackMessageTable);
     final jiraData = row.readTableOrNull(_db.activityJiraIssueTable);
+    final teamsData = row.readTableOrNull(_db.activityTeamsMessageTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -276,6 +302,16 @@ class ActivityRepository implements AbsIActivityRepository {
       );
     } else if (pName == 'jira') {
       provider = const JiraIssueProvider();
+    } else if (pName == 'teams' && teamsData != null) {
+      provider = TeamsMessageProvider(
+        tenantId: teamsData.tenantId,
+        teamId: teamsData.teamId,
+        channelId: teamsData.channelId,
+        messageId: teamsData.messageId,
+        replyToId: teamsData.replyToId,
+      );
+    } else if (pName == 'teams') {
+      provider = const TeamsMessageProvider();
     } else {
       provider = GenericProvider(name: activityData.providerName);
     }
