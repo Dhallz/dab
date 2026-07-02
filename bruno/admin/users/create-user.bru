@@ -1,0 +1,62 @@
+meta {
+  name: Create User
+  type: http
+  seq: 3
+}
+
+docs {
+  Administrative endpoint to create a new user account. This is the only
+  account creation path after the bootstrap admin has registered
+  (self-registration via `/auth/register` is closed once any user exists).
+
+  When domain validation is enabled (`allowed_domain_enabled` system setting),
+  the email must match the configured `allowed_domain`; otherwise any email
+  is accepted.
+
+  **Request Body**:
+  - `name`: Full display name of the user.
+  - `email`: Unique login email (any domain unless validation is enabled).
+  - `password`: Initial password (stored as a bcrypt hash).
+  - `role`: Optional role ('admin', 'manager', 'standard'). Defaults to 'standard'.
+
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `name` | `users` | `name` | User's full name |
+  | `email` | `users` | `email` | Unique login identifier |
+  | `password` | `users` | `password_hash` | Stored as bcrypt hash |
+  | `role` | `users` | `role` | Access control role |
+}
+
+post {
+  url: {{baseUrl}}/admin/users
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "New Member",
+    "email": "new.member@personal.io",
+    "password": "changeme123",
+    "role": "standard"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.id) {
+    bru.setEnvVar("targetUserId", res.body.data.id);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns created user without password hash", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("id");
+    expect(res.body.data).to.not.have.property("passwordHash");
+  });
+}

@@ -41,7 +41,7 @@ class ProviderConfigRepository extends Repository
         map = jsonDecode(data.toString());
       }
 
-      return map['data']['isSystemConfigured'] ?? false;
+      return map['data']?['isSystemConfigured'] ?? false;
     });
   }
 
@@ -68,6 +68,31 @@ class ProviderConfigRepository extends Repository
       }
 
       return map['data']?['message'] ?? 'Connected';
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, Map<String, String>>> getSystemSettings() {
+    return guardedCall(() async {
+      final response = await _remoteDataSource.getSystemSettings();
+      final data = response.data;
+      final Map<String, dynamic> map;
+
+      if (data is Map<String, dynamic>) {
+        map = data;
+      } else {
+        map = jsonDecode(data.toString());
+      }
+
+      final Map<String, dynamic> settingsData = map['data'] ?? {};
+      return settingsData.map((key, value) => MapEntry(key, value.toString()));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> saveSystemSettings(Map<String, String> settings) {
+    return guardedCall(() async {
+      await _remoteDataSource.saveSystemSettings(settings);
     });
   }
 

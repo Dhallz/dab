@@ -6,6 +6,7 @@ import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/navigation/app_route.dart';
 import '../../../core/widgets/dab_mesh_background.dart';
+import '../../../features/app/app_notifier.dart';
 import '../auth_form_notifier.dart';
 import '../auth_state.dart';
 import '../widgets/auth_form.dart';
@@ -85,8 +86,11 @@ class _AuthFormPanelState extends ConsumerState<_AuthFormPanel> {
       }
     });
 
+    final appState = ref.watch(appNotifierProvider);
+
     return AuthForm(
       state: state,
+      isSystemConfigured: appState.isSystemConfigured,
       onEmailChanged: (v) =>
           ref.read(authFormNotifierProvider.notifier).setEmail(v),
       onPasswordChanged: (v) =>

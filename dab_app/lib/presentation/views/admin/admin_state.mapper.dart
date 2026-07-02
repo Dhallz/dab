@@ -95,6 +95,13 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
     opt: true,
     def: const {},
   );
+  static Map<String, String> _$systemSettings(AdminState v) => v.systemSettings;
+  static const Field<AdminState, Map<String, String>> _f$systemSettings = Field(
+    'systemSettings',
+    _$systemSettings,
+    opt: true,
+    def: const {},
+  );
   static String? _$errorMessage(AdminState v) => v.errorMessage;
   static const Field<AdminState, String> _f$errorMessage = Field(
     'errorMessage',
@@ -113,6 +120,7 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
     #identitySortField: _f$identitySortField,
     #identitySortAscending: _f$identitySortAscending,
     #connectionStatuses: _f$connectionStatuses,
+    #systemSettings: _f$systemSettings,
     #errorMessage: _f$errorMessage,
   };
 
@@ -127,6 +135,7 @@ class AdminStateMapper extends ClassMapperBase<AdminState> {
       identitySortField: data.dec(_f$identitySortField),
       identitySortAscending: data.dec(_f$identitySortAscending),
       connectionStatuses: data.dec(_f$connectionStatuses),
+      systemSettings: data.dec(_f$systemSettings),
       errorMessage: data.dec(_f$errorMessage),
     );
   }
@@ -215,6 +224,8 @@ abstract class AdminStateCopyWith<$R, $In extends AdminState, $Out>
     >
   >
   get connectionStatuses;
+  MapCopyWith<$R, String, String, ObjectCopyWith<$R, String, String>>
+  get systemSettings;
   $R call({
     ViewStatus? status,
     AdminSection? selectedSection,
@@ -225,6 +236,7 @@ abstract class AdminStateCopyWith<$R, $In extends AdminState, $Out>
     IdentitySortField? identitySortField,
     bool? identitySortAscending,
     Map<String, ProviderConnectionStatus>? connectionStatuses,
+    Map<String, String>? systemSettings,
     String? errorMessage,
   });
   AdminStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -284,6 +296,13 @@ class _AdminStateCopyWithImpl<$R, $Out>
     (v) => call(connectionStatuses: v),
   );
   @override
+  MapCopyWith<$R, String, String, ObjectCopyWith<$R, String, String>>
+  get systemSettings => MapCopyWith(
+    $value.systemSettings,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(systemSettings: v),
+  );
+  @override
   $R call({
     ViewStatus? status,
     AdminSection? selectedSection,
@@ -294,6 +313,7 @@ class _AdminStateCopyWithImpl<$R, $Out>
     IdentitySortField? identitySortField,
     bool? identitySortAscending,
     Map<String, ProviderConnectionStatus>? connectionStatuses,
+    Map<String, String>? systemSettings,
     Object? errorMessage = $none,
   }) => $apply(
     FieldCopyWithData({
@@ -308,6 +328,7 @@ class _AdminStateCopyWithImpl<$R, $Out>
       if (identitySortAscending != null)
         #identitySortAscending: identitySortAscending,
       if (connectionStatuses != null) #connectionStatuses: connectionStatuses,
+      if (systemSettings != null) #systemSettings: systemSettings,
       if (errorMessage != $none) #errorMessage: errorMessage,
     }),
   );
@@ -334,6 +355,7 @@ class _AdminStateCopyWithImpl<$R, $Out>
       #connectionStatuses,
       or: $value.connectionStatuses,
     ),
+    systemSettings: data.get(#systemSettings, or: $value.systemSettings),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
   );
 

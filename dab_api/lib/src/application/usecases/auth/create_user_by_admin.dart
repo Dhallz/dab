@@ -8,30 +8,33 @@ import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/repositories/abs_i_system_settings_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/core/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 
 /// [ARCH: APPLICATION_USECASE]
-/// ROLE: Creates the bootstrap (first) DAB User identity via self-registration.
-/// CONTRACT: Self-registration is only open while zero users exist; the first
-/// user becomes the system admin. All subsequent accounts must be created by
-/// an administrator (see [CreateUserByAdmin]).
-/// CONSTRAINTS: Must enforce the bootstrap lock ([Config.initialAdminEmail])
-/// when configured. Must hash passwords using [BCrypt].
-class RegisterUser {
+/// ROLE: Creates a new DAB User on behalf of an administrator.
+/// CONTRACT: The only account creation path after bootstrap. Enforces the
+/// allowed-domain restriction when domain validation is enabled in system
+/// settings; otherwise accepts any email.
+/// CONSTRAINTS: Must hash passwords using [BCrypt]. Callers must be admins
+/// (enforced by the admin middleware at the presentation layer).
+class CreateUserByAdmin {
   final Config _config;
   final AbsIAuthRepository _repo;
   final IUserRepository _userRepository;
   final PhorgeUserSource _phorgeUserSource;
+  final ISystemSettingsRepository _settingsRepo;
   final _uuid = const Uuid();
 
   /// [config] is injectable for deterministic tests; defaults to the
   /// env-backed [Config] singleton.
-  RegisterUser(
+  CreateUserByAdmin(
     this._repo,
     this._userRepository,
-    this._phorgeUserSource, {
+    this._phorgeUserSource,
+    this._settingsRepo, {
     Config? config,
   }) : _config = config ?? Config();
 
@@ -40,39 +43,49 @@ class RegisterUser {
     return BCrypt.hashpw(password, BCrypt.gensalt());
   }
 
-  /// Executes the bootstrap registration logic.
+  /// Executes the admin account creation logic.
   ///
-  /// 1. Bootstrap Guard: Rejects self-registration once any user exists.
-  /// 2. Bootstrap Lock: If [Config.initialAdminEmail] is set, the email must match it.
-  /// 3. Role Assignment: The bootstrap user is always 'Admin'.
-  /// 4. Identity Linking: Attempts to find a matching PHID in Phorge to enable activity tracking.
-  /// 5. Persistence: Saves the new [User] entity.
+  /// 1. Domain Guard: When domain validation is enabled, the email must match
+  ///    the allowed domain (DB setting, falling back to [Config.allowedDomain]).
+  /// 2. Uniqueness Check: Verifies that the email is not already registered.
+  /// 3. Identity Linking: Attempts to find a matching PHID in Phorge to enable
+  ///    activity tracking.
+  /// 4. Persistence: Saves the new [User] entity with the requested [role].
   Future<Either<AuthFailure, User>> execute(
     String name,
     String email,
-    String password,
-  ) async {
-    final allUsersResult = await _repo.findAllUsers();
-    final userCount = allUsersResult.fold((_) => 0, (list) => list.length);
+    String password, {
+    UserRole role = UserRole.standard,
+  }) async {
+    final validationEnabledResult = await _settingsRepo
+        .isDomainValidationEnabled();
+    final validationEnabled = validationEnabledResult.getOrElse((_) => false);
 
-    if (userCount > 0) {
-      return const Left(
-        AuthFailure(
-          'Self-registration is disabled. Ask the administrator to create your account.',
-        ),
-      );
-    }
+    if (validationEnabled) {
+      final domain = email.split('@').last.toLowerCase();
 
-    // Bootstrap Lock: If an initial admin email is configured, only that
-    // email can create the bootstrap account.
-    final initialAdminEmail = _config.initialAdminEmail.trim();
-    if (initialAdminEmail.isNotEmpty &&
-        email.toLowerCase() != initialAdminEmail.toLowerCase()) {
-      return Left(
-        BootstrapLockFailure(
-          'Bootstrap Lock: System not configured. Only the initial admin ($initialAdminEmail) can register.',
-        ),
-      );
+      final dynamicDomainResult = await _settingsRepo.getAllowedDomain();
+      var allowedDomain = dynamicDomainResult.getOrElse((_) => null)?.trim();
+
+      // Fallback to Env Config if not configured in the database.
+      if (allowedDomain == null || allowedDomain.isEmpty) {
+        allowedDomain = _config.allowedDomain.trim();
+      }
+
+      if (allowedDomain.isEmpty) {
+        return const Left(
+          AuthFailure(
+            'Domain validation is enabled but no allowed domain is configured. '
+            'Set allowed_domain in the Admin Console or DAB_ALLOWED_DOMAIN in '
+            'the API environment.',
+          ),
+        );
+      }
+      if (domain != allowedDomain.toLowerCase()) {
+        return Left(
+          AuthFailure('Account creation restricted to $allowedDomain domain'),
+        );
+      }
     }
 
     final findResult = await _repo.findByEmail(email);
@@ -95,7 +108,7 @@ class RegisterUser {
       name: name,
       email: email,
       passwordHash: _hashPassword(password),
-      role: UserRole.admin,
+      role: role,
       phorgePhid: phorgePhid,
       createdAt: DateTime.now(),
     );

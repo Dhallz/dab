@@ -74,6 +74,7 @@ activities                  ← Base table: id, userId, providerName, title, con
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration |
+| `system_settings` | System-wide settings stored as key-value pairs (allowed_domain_enabled, allowed_domain) |
 
 Identity linkage (`user_identities`) is the runtime source of provider
 participation for activity fetchers. Legacy tenants with historical

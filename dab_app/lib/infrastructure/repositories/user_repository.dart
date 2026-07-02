@@ -125,6 +125,28 @@ class UserRepository extends Repository implements IUserRepository {
   }
 
   @override
+  Future<Either<AppFailure, User>> createUser({
+    required String name,
+    required String email,
+    required String password,
+    UserRole role = UserRole.standard,
+  }) async {
+    return guardedCall(() async {
+      final response = await _client.dio.post(
+        '/admin/users',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'role': role.name,
+        },
+      );
+      final data = _getEnvelopeData(response);
+      return UserMapper.fromMap(data as Map<String, dynamic>);
+    });
+  }
+
+  @override
   Future<Either<AppFailure, void>> updateUserRole({
     required String userId,
     required UserRole role,

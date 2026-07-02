@@ -90,6 +90,9 @@ Future<void> main() async {
     ..get('/admin/configs', MetadataController().getConfigs)
     ..post('/admin/configs', MetadataController().saveConfig)
     ..post('/admin/configs/test', MetadataController().testConfig)
+    // System Settings
+    ..get('/admin/system-settings', MetadataController().getSystemSettings)
+    ..put('/admin/system-settings', MetadataController().saveSystemSettings)
     // Identity Resolution (specific paths before list route)
     ..get('/admin/identities/summary', AdminController().getIdentitiesSummary)
     ..get('/admin/identities', AdminController().getIdentities)
@@ -97,6 +100,7 @@ Future<void> main() async {
     ..post('/admin/identities/resolve', AdminController().resolveIdentity)
     // User Management
     ..get('/admin/users', AdminController().getUsers)
+    ..post('/admin/users', AdminController().createUser)
     ..post('/admin/users/role', AdminController().postUpdateUserRole)
     // ------------------------------
     ..get('/hello/:name/age/:age', helloHandler)

@@ -23,6 +23,7 @@ import 'package:dab_api/src/application/usecases/activity/search_activities.dart
 import 'package:dab_api/src/application/usecases/activity/unarchive_live_activity.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
 import 'package:dab_api/src/application/usecases/auth/count_unresolved_identities.dart';
+import 'package:dab_api/src/application/usecases/auth/create_user_by_admin.dart';
 import 'package:dab_api/src/application/usecases/auth/find_all_users.dart';
 import 'package:dab_api/src/application/usecases/auth/get_all_identities.dart';
 import 'package:dab_api/src/application/usecases/auth/link_user_identity.dart';
@@ -55,6 +56,10 @@ import 'package:dab_api/src/domain/repositories/abs_i_health_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_metadata_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_system_settings_repository.dart';
+import 'package:dab_api/src/infrastructure/repositories/system_settings_repository.dart';
+import 'package:dab_api/src/application/usecases/metadata/get_system_settings.dart';
+import 'package:dab_api/src/application/usecases/metadata/save_system_settings.dart';
 // Activity Architecture
 // infrastructure
 import 'package:dab_api/src/infrastructure/core/config/config.dart';
@@ -212,6 +217,7 @@ Future<void> serviceLocator() async {
     ProviderMetadataRepository(phorgeGateway: phorgeGateway),
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(providerConfigRepository);
+  sl.registerSingleton<ISystemSettingsRepository>(SystemSettingsRepository(db));
 
   // -----------------------------------------------------
   // 3. System Services
@@ -259,6 +265,14 @@ Future<void> serviceLocator() async {
       sl<AbsIAuthRepository>(),
       sl<IUserRepository>(),
       sl<PhorgeUserSource>(),
+    ),
+  );
+  sl.registerSingleton<CreateUserByAdmin>(
+    CreateUserByAdmin(
+      sl<AbsIAuthRepository>(),
+      sl<IUserRepository>(),
+      sl<PhorgeUserSource>(),
+      sl<ISystemSettingsRepository>(),
     ),
   );
   sl.registerSingleton<AuthenticateUser>(
@@ -388,6 +402,12 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
     ),
   );
+  sl.registerSingleton<GetSystemSettings>(
+    GetSystemSettings(sl<ISystemSettingsRepository>()),
+  );
+  sl.registerSingleton<SaveSystemSettings>(
+    SaveSystemSettings(sl<ISystemSettingsRepository>()),
+  );
 
   // Health
   sl.registerSingleton<CheckDatabaseHealth>(
@@ -408,6 +428,7 @@ Future<void> serviceLocator() async {
       refreshToken: sl<RefreshToken>(),
       registerNewUser: sl<RegisterNewUser>(),
       registerUser: sl<RegisterUser>(),
+      createUserByAdmin: sl<CreateUserByAdmin>(),
       linkUserIdentity: sl<LinkUserIdentity>(),
       getAllIdentities: sl<GetAllIdentities>(),
       countUnresolvedIdentities: sl<CountUnresolvedIdentities>(),
@@ -455,6 +476,8 @@ Future<void> serviceLocator() async {
       getProviderMetadata: sl<GetProviderMetadata>(),
       getSystemStatus: sl<GetSystemStatus>(),
       saveProviderConfig: sl<SaveProviderConfig>(),
+      getSystemSettings: sl<GetSystemSettings>(),
+      saveSystemSettings: sl<SaveSystemSettings>(),
     ),
   );
 

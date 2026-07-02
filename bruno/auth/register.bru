@@ -5,7 +5,10 @@ meta {
 }
 
 docs {
-  Registers a new user in the DAB system.
+  Registers the bootstrap (first) user in the DAB system. Self-registration
+  is only open while zero users exist; the first user becomes the system
+  admin. All subsequent accounts must be created by an administrator via
+  `POST /admin/users`.
   Returns an `accessToken` and `refreshToken` upon success.
   
   ### Database Mapping

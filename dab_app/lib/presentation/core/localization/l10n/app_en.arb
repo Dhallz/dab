@@ -532,6 +532,74 @@
   "@adminSecuritySearchHint": {
     "description": "adminSecuritySearchHint: Search by name or email"
   },
+  "adminDomainValidationTitle": "Domain Validation",
+  "@adminDomainValidationTitle": {
+    "description": "adminDomainValidationTitle: Domain Validation"
+  },
+  "adminDomainValidationSubtitle": "Restrict account creation to a specific email domain.",
+  "@adminDomainValidationSubtitle": {
+    "description": "adminDomainValidationSubtitle: Restrict account creation to a specific email domain."
+  },
+  "adminDomainValidationToggle": "Enforce allowed email domain",
+  "@adminDomainValidationToggle": {
+    "description": "adminDomainValidationToggle: Enforce allowed email domain"
+  },
+  "adminAllowedDomainLabel": "Allowed Email Domain",
+  "@adminAllowedDomainLabel": {
+    "description": "adminAllowedDomainLabel: Allowed Email Domain"
+  },
+  "adminAllowedDomainHint": "e.g. acme.com",
+  "@adminAllowedDomainHint": {
+    "description": "adminAllowedDomainHint: e.g. acme.com"
+  },
+  "adminSaveDomain": "Save Domain",
+  "@adminSaveDomain": {
+    "description": "adminSaveDomain: Save Domain"
+  },
+  "adminDomainSavedSnack": "Allowed domain updated successfully",
+  "@adminDomainSavedSnack": {
+    "description": "adminDomainSavedSnack: Allowed domain updated successfully"
+  },
+  "adminNonCompliantAccountsWarning": "Accounts outside the allowed domain (existing accounts keep working):",
+  "@adminNonCompliantAccountsWarning": {
+    "description": "adminNonCompliantAccountsWarning: warning header listing accounts outside the allowed domain"
+  },
+  "adminAddUser": "Add User",
+  "@adminAddUser": {
+    "description": "adminAddUser: Add User"
+  },
+  "userDialogCreateTitle": "Add User",
+  "@userDialogCreateTitle": {
+    "description": "userDialogCreateTitle: Add User"
+  },
+  "userDialogCreateSubtitle": "Create a new account. The user will sign in with this email and password.",
+  "@userDialogCreateSubtitle": {
+    "description": "userDialogCreateSubtitle: Create a new account. The user will sign in with this email and password."
+  },
+  "userFieldName": "Full Name",
+  "@userFieldName": {
+    "description": "userFieldName: Full Name"
+  },
+  "userFieldEmail": "Email",
+  "@userFieldEmail": {
+    "description": "userFieldEmail: Email"
+  },
+  "userFieldPassword": "Initial Password",
+  "@userFieldPassword": {
+    "description": "userFieldPassword: Initial Password"
+  },
+  "userFieldRole": "Role",
+  "@userFieldRole": {
+    "description": "userFieldRole: Role"
+  },
+  "userDialogCreateSubmit": "Create User",
+  "@userDialogCreateSubmit": {
+    "description": "userDialogCreateSubmit: Create User"
+  },
+  "userCreatedSnack": "User created successfully",
+  "@userCreatedSnack": {
+    "description": "userCreatedSnack: User created successfully"
+  },
   "adminIslandProvidersTitle": "Providers",
   "@adminIslandProvidersTitle": {
     "description": "adminIslandProvidersTitle: Providers"

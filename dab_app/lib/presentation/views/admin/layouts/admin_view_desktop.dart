@@ -71,6 +71,7 @@ class AdminViewDesktop extends ConsumerWidget {
           identitySortField: s.identitySortField,
           identitySortAscending: s.identitySortAscending,
           connectionStatuses: s.connectionStatuses,
+          systemSettings: s.systemSettings,
           errorMessage: s.errorMessage,
         ),
       ),

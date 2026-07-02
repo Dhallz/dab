@@ -227,11 +227,11 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | Controller | Base Path | Responsibility |
 |---|---|---|
 | `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/github/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`), receive Slack and GitHub push webhooks, search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
-| `AdminController` | `/admin` | User management + identity review/link/resolve |
+| `AdminController` | `/admin` | User management (creation + roles) + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
-| `MetadataController` | `/metadata` | Provider configs, status, provider capability metadata, admin config test/save |
+| `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
 | `UserController` | `/users` | User profile, identity linking |
 
 ---

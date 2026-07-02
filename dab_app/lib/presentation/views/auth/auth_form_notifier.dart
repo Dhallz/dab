@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/containers/auth_usecases.dart';
 import '../../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
+import '../../features/app/app_notifier.dart';
 import '../../features/auth/auth_notifier.dart';
 import 'auth_state.dart';
 
@@ -98,6 +99,9 @@ class AuthFormNotifier extends AutoDisposeNotifier<AuthState> {
             email: state.email,
             password: state.password,
           );
+
+          // Refresh bootstrap status after the first registration.
+          await ref.read(appNotifierProvider.notifier).init();
           await ref.read(authNotifierProvider.notifier).checkAuth();
           state = state.copyWith(status: ViewStatus.success);
         },

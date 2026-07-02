@@ -40,4 +40,14 @@ abstract class IUserRepository {
     required String userId,
     required UserRole role,
   });
+
+  /// Admin: Create a new user account. The only account creation path after
+  /// the bootstrap admin has registered; subject to the allowed-domain
+  /// restriction when domain validation is enabled.
+  Future<Either<AppFailure, User>> createUser({
+    required String name,
+    required String email,
+    required String password,
+    UserRole role = UserRole.standard,
+  });
 }

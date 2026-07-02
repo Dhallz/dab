@@ -8,6 +8,7 @@ import 'package:dab_api/src/infrastructure/database/tables/group_members_table.d
 import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/provider_configs_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/sessions_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/system_settings_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/user_identities_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/users_table.dart';
 import 'package:drift/drift.dart';
@@ -30,13 +31,14 @@ part 'app_database.g.dart';
     GroupMembersTable,
     ProviderConfigsTable,
     UserIdentitiesTable,
+    SystemSettingsTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -173,6 +175,9 @@ WHERE id = 'slack'
       }
       if (from < 14) {
         await m.createTable(activityTeamsMessageTable);
+      }
+      if (from < 15) {
+        await m.createTable(systemSettingsTable);
       }
     },
     beforeOpen: (details) async {

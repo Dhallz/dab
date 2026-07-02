@@ -223,6 +223,64 @@ class AdminController {
     }
   }
 
+  Future<Response> createUser(Request request) async {
+    try {
+      final bodyStr = await request.readAsString();
+      final data = jsonDecode(bodyStr) as Map<String, dynamic>;
+
+      final name = data['name'] as String?;
+      final email = data['email'] as String?;
+      final password = data['password'] as String?;
+      final roleStr = data['role'] as String?;
+
+      if (name == null || email == null || password == null) {
+        return Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({'error': 'name, email and password are required'}),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
+
+      final role = UserRole.values.firstWhere(
+        (r) => r.name.toLowerCase() == (roleStr ?? '').toLowerCase(),
+        orElse: () => UserRole.standard,
+      );
+
+      final result = await _auth.createUserByAdmin.execute(
+        name,
+        email,
+        password,
+        role: role,
+      );
+
+      return result.fold(
+        (failure) => Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        ),
+        (user) {
+          final userMap = user.toMap()..remove('passwordHash');
+          return Response.ok(
+            body: Body.fromString(
+              jsonEncode({'data': userMap}),
+              mimeType: MimeType.json,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': e.toString()}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
   Future<Response> postUpdateUserRole(Request request) async {
     try {
       final bodyStr = await request.readAsString();

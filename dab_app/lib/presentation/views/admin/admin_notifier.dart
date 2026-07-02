@@ -55,6 +55,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     final configsResult = await _providerRepo.getProviderConfigs();
     final identitiesResult = await _userRepo.getIdentities();
     final usersResult = await _userRepo.getUsers();
+    final settingsResult = await _providerRepo.getSystemSettings();
 
     configsResult.fold(
       (failure) {
@@ -83,14 +84,28 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
                 );
               },
               (users) {
-                state = state.copyWith(
-                  status: ViewStatus.success,
-                  configs: configs,
-                  identities: identities,
-                  users: users,
-                  errorMessage: null,
+                settingsResult.fold(
+                  (failure) {
+                    state = state.copyWith(
+                      status: ViewStatus.failure,
+                      errorMessage: failure.message,
+                      configs: configs,
+                      identities: identities,
+                      users: users,
+                    );
+                  },
+                  (settings) {
+                    state = state.copyWith(
+                      status: ViewStatus.success,
+                      configs: configs,
+                      identities: identities,
+                      users: users,
+                      systemSettings: settings,
+                      errorMessage: null,
+                    );
+                    unawaited(refreshProviderStatuses());
+                  },
                 );
-                unawaited(refreshProviderStatuses());
               },
             );
           },
@@ -150,6 +165,36 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     }
   }
 
+  /// Creates a new user account (admin-only path). Returns true on success
+  /// so dialogs can close; failures are surfaced via [AdminState.errorMessage].
+  Future<bool> createUser({
+    required String name,
+    required String email,
+    required String password,
+    UserRole role = UserRole.standard,
+  }) async {
+    final result = await _userRepo.createUser(
+      name: name,
+      email: email,
+      password: password,
+      role: role,
+    );
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+      (user) {
+        state = state.copyWith(
+          users: [...state.users, user],
+          errorMessage: null,
+        );
+        return true;
+      },
+    );
+  }
+
   Future<void> updateUserRole(String userId, UserRole role) async {
     final result = await _userRepo.updateUserRole(userId: userId, role: role);
 
@@ -176,6 +221,29 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
             .map((c) => c.id == config.id ? config : c)
             .toList();
         state = state.copyWith(configs: newConfigs, errorMessage: null);
+      },
+    );
+  }
+
+  Future<void> saveSystemSettings(Map<String, String> settings) async {
+    state = state.copyWith(status: ViewStatus.loading);
+    final result = await _providerRepo.saveSystemSettings(settings);
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (_) {
+        state = state.copyWith(
+          status: ViewStatus.success,
+          systemSettings: settings,
+          errorMessage: null,
+        );
+        ref.read(appNotifierProvider.notifier).init().catchError((e) {
+          print('Error initializing app notifier: $e');
+        });
       },
     );
   }

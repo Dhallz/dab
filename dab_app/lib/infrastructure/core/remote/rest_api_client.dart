@@ -31,4 +31,8 @@ class RestApiClient {
   Future<Response> post(String path, {dynamic data}) {
     return dio.post(path, data: data);
   }
+
+  Future<Response> put(String path, {dynamic data}) {
+    return dio.put(path, data: data);
+  }
 }

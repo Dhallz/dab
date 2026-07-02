@@ -115,11 +115,11 @@ Thin entry points only. No business logic.
 | Controller | Path | Key Responsibilities |
 |---|---|---|
 | `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; no Postgres). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook (`/integrations/slack/events`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. |
-| `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user role management |
-| `AuthController` | `/auth/*` | Register, login, refresh token |
+| `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user creation (`POST /admin/users`) and role management |
+| `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
-| `MetadataController` | `/metadata/*`, `/admin/configs*` | Public bootstrap status/configs, provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test |
+| `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs, provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test, system settings (domain validation toggle + allowed domain) |
 | `UserController` | `/users/*` | User profile, identity linking |
 
 #### Middleware
@@ -127,7 +127,7 @@ Thin entry points only. No business logic.
 - **Vegas Middleware:** Applies only to **`GET /activities`** under the `/activities` mount. Compares client `X-Sync-Token` against Redis version and returns **`304 Not Modified`** when unchanged. **`GET /activities/search`** and **`GET /activities/live`** skip this gate.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
 - **WebSocket auth guard:** `/ws` is protected by JWT middleware and uses request-context identity for scoped delivery.
-- **Domain Lockdown:** Enforced by registration use cases (`RegisterUser` / bootstrap lock rules), not by HTTP middleware.
+- **Account creation rules:** Enforced by use cases, not HTTP middleware. `RegisterUser` is bootstrap-only (rejects once any user exists; honors the `DAB_INITIAL_ADMIN_EMAIL` bootstrap lock). `CreateUserByAdmin` (behind `POST /admin/users`) is the only creation path afterwards and applies the allowed-domain guard when the `allowed_domain_enabled` system setting is on (domain from the `allowed_domain` setting, `DAB_ALLOWED_DOMAIN` env fallback). Existing accounts outside the domain are grandfathered — the toggle never blocks login.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config.
 - **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is parsed as UTC midnight; identical start/end expands one UTC day (`ActivityController`). **`dab_app`** sends `YYYY-MM-DD` derived from the **device local calendar** (`ActivitySearchQueryMapper.toRemoteQueryParameters`), matching Explorer date controls and Insight presets so the inferred UTC window aligns with client-side filtering. **`authoredOnly`:** **`dab_app`** Explorer keeps **`true`** for personal-scope browsing; **Insights** uses **`false`** for team analytics so connectors can apply broader retrieval (e.g. Phorge sprint/global paths).

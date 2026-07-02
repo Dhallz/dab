@@ -34,6 +34,7 @@ class AdminSectionBody extends StatelessWidget {
       AdminSection.security => SecurityTab(
         users: state.users,
         notifier: notifier,
+        systemSettings: state.systemSettings,
       ),
     };
   }

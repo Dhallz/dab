@@ -904,6 +904,108 @@ abstract class AppLocalizations {
   /// **'Search by name or email'**
   String get adminSecuritySearchHint;
 
+  /// adminDomainValidationTitle: Domain Validation
+  ///
+  /// In en, this message translates to:
+  /// **'Domain Validation'**
+  String get adminDomainValidationTitle;
+
+  /// adminDomainValidationSubtitle: Restrict account creation to a specific email domain.
+  ///
+  /// In en, this message translates to:
+  /// **'Restrict account creation to a specific email domain.'**
+  String get adminDomainValidationSubtitle;
+
+  /// adminDomainValidationToggle: Enforce allowed email domain
+  ///
+  /// In en, this message translates to:
+  /// **'Enforce allowed email domain'**
+  String get adminDomainValidationToggle;
+
+  /// adminAllowedDomainLabel: Allowed Email Domain
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed Email Domain'**
+  String get adminAllowedDomainLabel;
+
+  /// adminAllowedDomainHint: e.g. acme.com
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. acme.com'**
+  String get adminAllowedDomainHint;
+
+  /// adminSaveDomain: Save Domain
+  ///
+  /// In en, this message translates to:
+  /// **'Save Domain'**
+  String get adminSaveDomain;
+
+  /// adminDomainSavedSnack: Allowed domain updated successfully
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed domain updated successfully'**
+  String get adminDomainSavedSnack;
+
+  /// adminNonCompliantAccountsWarning: warning header listing accounts outside the allowed domain
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts outside the allowed domain (existing accounts keep working):'**
+  String get adminNonCompliantAccountsWarning;
+
+  /// adminAddUser: Add User
+  ///
+  /// In en, this message translates to:
+  /// **'Add User'**
+  String get adminAddUser;
+
+  /// userDialogCreateTitle: Add User
+  ///
+  /// In en, this message translates to:
+  /// **'Add User'**
+  String get userDialogCreateTitle;
+
+  /// userDialogCreateSubtitle: Create a new account. The user will sign in with this email and password.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new account. The user will sign in with this email and password.'**
+  String get userDialogCreateSubtitle;
+
+  /// userFieldName: Full Name
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get userFieldName;
+
+  /// userFieldEmail: Email
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get userFieldEmail;
+
+  /// userFieldPassword: Initial Password
+  ///
+  /// In en, this message translates to:
+  /// **'Initial Password'**
+  String get userFieldPassword;
+
+  /// userFieldRole: Role
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get userFieldRole;
+
+  /// userDialogCreateSubmit: Create User
+  ///
+  /// In en, this message translates to:
+  /// **'Create User'**
+  String get userDialogCreateSubmit;
+
+  /// userCreatedSnack: User created successfully
+  ///
+  /// In en, this message translates to:
+  /// **'User created successfully'**
+  String get userCreatedSnack;
+
   /// adminIslandProvidersTitle: Providers
   ///
   /// In en, this message translates to:

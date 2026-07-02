@@ -116,7 +116,9 @@ class MetadataController {
       return Response.ok(
         body: Body.fromString(
           jsonEncode({
-            'data': {'isSystemConfigured': isSystemConfigured},
+            'data': {
+              'isSystemConfigured': isSystemConfigured,
+            },
             'meta': {
               'dataType': 'system_status',
               'timestamp': DateTime.now().toIso8601String(),
@@ -579,6 +581,61 @@ class MetadataController {
           ),
         );
       }
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Invalid request body',
+            'details': e.toString(),
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
+  Future<Response> getSystemSettings(Request request) async {
+    final result = await _metadata.getSystemSettings.execute();
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Failed to fetch system settings',
+            'details': failure.message,
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (settings) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({'data': settings}),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> saveSystemSettings(Request request) async {
+    try {
+      final bodyStr = await request.readAsString();
+      final data = jsonDecode(bodyStr) as Map<String, dynamic>;
+      final settings = data.map((key, value) => MapEntry(key, value.toString()));
+
+      final result = await _metadata.saveSystemSettings.execute(settings);
+      return result.fold(
+        (failure) => Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        ),
+        (_) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({'success': true}),
+            mimeType: MimeType.json,
+          ),
+        ),
+      );
     } catch (e) {
       return Response.badRequest(
         body: Body.fromString(

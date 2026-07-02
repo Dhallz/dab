@@ -33,6 +33,7 @@ class AdminState with AdminStateMappable {
   final IdentitySortField identitySortField;
   final bool identitySortAscending;
   final Map<String, ProviderConnectionStatus> connectionStatuses;
+  final Map<String, String> systemSettings;
   final String? errorMessage;
 
   const AdminState({
@@ -45,6 +46,7 @@ class AdminState with AdminStateMappable {
     this.identitySortField = IdentitySortField.fullName,
     this.identitySortAscending = true,
     this.connectionStatuses = const {},
+    this.systemSettings = const {},
     this.errorMessage,
   });
 

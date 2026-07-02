@@ -1,0 +1,38 @@
+meta {
+  name: Save System Settings
+  type: http
+  seq: 2
+}
+
+docs {
+  Administrative endpoint to update system configuration settings.
+
+  **Request Body** (key-value pairs, stored as-is):
+  - `allowed_domain_enabled`: 'true' to enforce the allowed email domain on every account creation, 'false' to accept any email.
+  - `allowed_domain`: Allowed email domain. Kept in settings even while validation is disabled so re-enabling does not require retyping it.
+
+  Existing accounts outside the allowed domain are grandfathered: enabling validation only gates future account creations, never login.
+}
+
+put {
+  url: {{baseUrl}}/admin/system-settings
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "allowed_domain_enabled": "true",
+    "allowed_domain": "example.com"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Confirms success", function() {
+    expect(res.body.success).to.equal(true);
+  });
+}

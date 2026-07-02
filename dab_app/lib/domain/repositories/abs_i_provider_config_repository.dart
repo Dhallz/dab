@@ -10,4 +10,10 @@ abstract interface class IProviderConfigRepository {
   /// Checks if the system is fully configured (at least one Admin and one Provider).
   Future<Either<AppFailure, bool>> getSystemStatus();
   Future<Either<AppFailure, String>> testProviderConfig(ProviderConfig config);
+
+  /// Retrieves key-value system settings (e.g. allowed_domain_enabled, allowed_domain).
+  Future<Either<AppFailure, Map<String, String>>> getSystemSettings();
+
+  /// Saves key-value system settings.
+  Future<Either<AppFailure, void>> saveSystemSettings(Map<String, String> settings);
 }

@@ -411,6 +411,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSecuritySearchHint => 'Search by name or email';
 
   @override
+  String get adminDomainValidationTitle => 'Domain Validation';
+
+  @override
+  String get adminDomainValidationSubtitle =>
+      'Restrict account creation to a specific email domain.';
+
+  @override
+  String get adminDomainValidationToggle => 'Enforce allowed email domain';
+
+  @override
+  String get adminAllowedDomainLabel => 'Allowed Email Domain';
+
+  @override
+  String get adminAllowedDomainHint => 'e.g. acme.com';
+
+  @override
+  String get adminSaveDomain => 'Save Domain';
+
+  @override
+  String get adminDomainSavedSnack => 'Allowed domain updated successfully';
+
+  @override
+  String get adminNonCompliantAccountsWarning =>
+      'Accounts outside the allowed domain (existing accounts keep working):';
+
+  @override
+  String get adminAddUser => 'Add User';
+
+  @override
+  String get userDialogCreateTitle => 'Add User';
+
+  @override
+  String get userDialogCreateSubtitle =>
+      'Create a new account. The user will sign in with this email and password.';
+
+  @override
+  String get userFieldName => 'Full Name';
+
+  @override
+  String get userFieldEmail => 'Email';
+
+  @override
+  String get userFieldPassword => 'Initial Password';
+
+  @override
+  String get userFieldRole => 'Role';
+
+  @override
+  String get userDialogCreateSubmit => 'Create User';
+
+  @override
+  String get userCreatedSnack => 'User created successfully';
+
+  @override
   String get adminIslandProvidersTitle => 'Providers';
 
   @override

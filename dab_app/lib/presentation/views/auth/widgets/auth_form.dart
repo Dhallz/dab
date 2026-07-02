@@ -12,6 +12,10 @@ class AuthForm extends StatefulWidget {
   final VoidCallback onSubmitted;
   final VoidCallback onModeToggled;
 
+  /// When true (system already bootstrapped), self-registration is closed on
+  /// the API, so the register toggle is hidden and only login is offered.
+  final bool isSystemConfigured;
+
   const AuthForm({
     super.key,
     required this.state,
@@ -20,6 +24,7 @@ class AuthForm extends StatefulWidget {
     required this.onNameChanged,
     required this.onSubmitted,
     required this.onModeToggled,
+    this.isSystemConfigured = true,
   });
 
   @override
@@ -179,19 +184,20 @@ class _AuthFormState extends State<AuthForm> {
                   ),
                 ),
         ),
-        const SizedBox(height: 16),
-
-        TextButton(
-          onPressed: isLoading ? null : widget.onModeToggled,
-          child: Text(
-            widget.state.isLogin
-                ? l10n.authToggleRegister
-                : l10n.authToggleSignIn,
-            style: TextStyle(
-              color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+        if (!widget.isSystemConfigured) ...[
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: isLoading ? null : widget.onModeToggled,
+            child: Text(
+              widget.state.isLogin
+                  ? l10n.authToggleRegister
+                  : l10n.authToggleSignIn,
+              style: TextStyle(
+                color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

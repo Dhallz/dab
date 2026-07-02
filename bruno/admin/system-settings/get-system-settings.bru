@@ -1,0 +1,33 @@
+meta {
+  name: Get System Settings
+  type: http
+  seq: 1
+}
+
+docs {
+  Administrative endpoint to retrieve system configuration settings.
+
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
+  | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+}
+
+get {
+  url: {{baseUrl}}/admin/system-settings
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns system settings object", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("allowed_domain_enabled");
+    expect(res.body.data).to.have.property("allowed_domain");
+  });
+}
