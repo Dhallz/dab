@@ -7,6 +7,7 @@ import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_config_field.dart';
+import 'package:dab_app/services/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,6 +38,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
   bool _showDetails = false;
   String _ingestionMode = 'webhook';
   late final TextEditingController _pollingRateController;
+  late final TextEditingController _webhookUrlController;
+  late final FocusNode _webhookUrlFocusNode;
 
   @override
   void initState() {
@@ -45,8 +48,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     _pollingRateController = TextEditingController(
       text: (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString(),
     );
+    _webhookUrlController = TextEditingController();
+    _webhookUrlFocusNode = FocusNode();
     _syncControllersFromConfig(widget.config, replaceExisting: true);
     _showDetails = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncWebhookUrlController());
   }
 
   @override
@@ -64,11 +70,14 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         _showDetails = false;
       }
     }
+    _syncWebhookUrlController();
   }
 
   @override
   void dispose() {
     _pollingRateController.dispose();
+    _webhookUrlController.dispose();
+    _webhookUrlFocusNode.dispose();
     _disposeControllers();
     super.dispose();
   }
@@ -127,6 +136,80 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     }
 
     return rawValue?.toString() ?? '';
+  }
+
+  String _webhookPathForProvider(String providerId) {
+    if (providerId == 'slack') {
+      return '/integrations/slack/events';
+    }
+    return '/integrations/$providerId/webhook';
+  }
+
+  String _resolvePublicApiBase(Map<String, String> systemSettings) {
+    final configured = systemSettings['public_api_url']?.trim();
+    if (configured != null && configured.isNotEmpty) {
+      return configured.replaceAll(RegExp(r'/+$'), '');
+    }
+    return sl.restApiClient.baseUrl.replaceAll(RegExp(r'/+$'), '');
+  }
+
+  String _buildWebhookUrl(String providerId, Map<String, String> systemSettings) {
+    return '${_resolvePublicApiBase(systemSettings)}${_webhookPathForProvider(providerId)}';
+  }
+
+  String _publicApiBaseFromWebhookUrl(String webhookUrl, String providerId) {
+    final trimmed = webhookUrl.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    final path = _webhookPathForProvider(providerId);
+    if (trimmed.endsWith(path)) {
+      return trimmed
+          .substring(0, trimmed.length - path.length)
+          .replaceAll(RegExp(r'/+$'), '');
+    }
+    return trimmed.replaceAll(RegExp(r'/+$'), '');
+  }
+
+  void _syncWebhookUrlController() {
+    if (_webhookUrlFocusNode.hasFocus) {
+      return;
+    }
+    final systemSettings = ref.read(adminNotifierProvider).systemSettings;
+    final nextUrl = _buildWebhookUrl(widget.config.id, systemSettings);
+    if (_webhookUrlController.text != nextUrl) {
+      _webhookUrlController.text = nextUrl;
+    }
+  }
+
+  void _saveProviderAndWebhookBase({
+    required AdminNotifier notifier,
+    required ProviderConfig config,
+  }) {
+    final newSettings = _buildSettings(config);
+    final newBaseUrl = _resolveBaseUrl(config);
+    final updatedConfig = config.copyWith(
+      settings: newSettings,
+      baseUrl: newBaseUrl.trim(),
+    );
+
+    final priorSettings = ref.read(adminNotifierProvider).systemSettings;
+    final publicApiBase = _publicApiBaseFromWebhookUrl(
+      _webhookUrlController.text,
+      config.id,
+    );
+    final systemSettings = Map<String, String>.from(priorSettings);
+    if (publicApiBase.isEmpty) {
+      systemSettings.remove('public_api_url');
+    } else {
+      systemSettings['public_api_url'] = publicApiBase;
+    }
+
+    notifier.saveProviderConfig(updatedConfig);
+    if ((priorSettings['public_api_url'] ?? '') !=
+        (systemSettings['public_api_url'] ?? '')) {
+      notifier.saveSystemSettings(systemSettings);
+    }
   }
 
   @override
@@ -453,23 +536,37 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: cs.onSurface.withValues(alpha: 0.05),
-                              borderRadius: AppLayout.borderMedium,
-                              border: Border.all(color: cs.outline.withValues(alpha: 0.1)),
+                          TextField(
+                            controller: _webhookUrlController,
+                            focusNode: _webhookUrlFocusNode,
+                            keyboardType: TextInputType.url,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: cs.onSurface,
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
-                            child: SelectableText(
-                              widget.config.id == 'slack'
-                                  ? 'https://[your-domain]/integrations/slack/events'
-                                  : 'https://[your-domain]/integrations/${widget.config.id}/webhook',
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                                color: cs.primary,
-                                fontWeight: FontWeight.w600,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: cs.onSurface.withValues(alpha: 0.05),
+                              hintText:
+                                  'https://your-domain.com${_webhookPathForProvider(config.id)}',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.m,
+                                vertical: AppSpacing.m,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: AppLayout.borderMedium,
+                                borderSide: BorderSide(
+                                  color: cs.outline.withValues(alpha: 0.1),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: AppLayout.borderMedium,
+                                borderSide: BorderSide(
+                                  color: cs.primary,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                           ),
@@ -560,14 +657,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                               elevation: 0,
                             ),
                             onPressed: () {
-                              final newSettings = _buildSettings(config);
-                              final newBaseUrl = _resolveBaseUrl(config);
-
-                              final updatedConfig = config.copyWith(
-                                settings: newSettings,
-                                baseUrl: newBaseUrl.trim(),
+                              _saveProviderAndWebhookBase(
+                                notifier: notifier,
+                                config: config,
                               );
-                              notifier.saveProviderConfig(updatedConfig);
                             },
                             child: Text(
                               l10n.providerCardSaveCredentials,
