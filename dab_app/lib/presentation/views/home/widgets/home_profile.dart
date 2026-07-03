@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../features/auth/auth_notifier.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: User profile display with name and avatar.
-class HomeProfile extends StatelessWidget {
+class HomeProfile extends ConsumerWidget {
   final bool showName;
   final String userName;
   final String userInitials;
@@ -20,7 +22,7 @@ class HomeProfile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -53,12 +55,19 @@ class HomeProfile extends StatelessWidget {
                 case _HomeProfileMenuAction.settings:
                   onOpenSettings();
                   break;
+                case _HomeProfileMenuAction.logout:
+                  ref.read(authNotifierProvider.notifier).logout();
+                  break;
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem<_HomeProfileMenuAction>(
                 value: _HomeProfileMenuAction.settings,
                 child: Text(context.l10n.settingsTitle),
+              ),
+              PopupMenuItem<_HomeProfileMenuAction>(
+                value: _HomeProfileMenuAction.logout,
+                child: Text(context.l10n.logoutTitle),
               ),
             ],
             child: Container(
@@ -89,4 +98,4 @@ class HomeProfile extends StatelessWidget {
   }
 }
 
-enum _HomeProfileMenuAction { settings }
+enum _HomeProfileMenuAction { settings, logout }

@@ -60,6 +60,7 @@
   "insightsNoDataForFilters": "Nessun dato per i filtri selezionati.",
   "insightsErrorLoading": "Impossibile caricare gli insights.",
   "settingsTitle": "Impostazioni",
+  "logoutTitle": "Esci",
   "settingsSectionAppearance": "Aspetto",
   "settingsSectionLanguage": "Lingua",
   "settingsSectionIslandBar": "Barra Island",

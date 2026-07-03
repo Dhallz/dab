@@ -114,6 +114,12 @@ class AuthRepository extends Repository implements IAuthRepository {
   @override
   Future<Either<AppFailure, User>> checkAuthStatus() {
     return guardedCall(() async {
+      final tokens = await _tokenStorage.readTokens();
+      if (tokens == null || tokens['accessToken'] == null) {
+        _localDataSource.clear();
+        throw const AuthFailure('No valid session tokens found');
+      }
+
       final userRecord = _localDataSource.getUser();
       if (userRecord == null) {
         throw const AuthFailure();

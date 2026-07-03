@@ -60,6 +60,7 @@
   "insightsNoDataForFilters": "Keine Daten für die ausgewählten Filter.",
   "insightsErrorLoading": "Insights konnten nicht geladen werden.",
   "settingsTitle": "Einstellungen",
+  "logoutTitle": "Abmelden",
   "settingsSectionAppearance": "Darstellung",
   "settingsSectionLanguage": "Sprache",
   "settingsSectionIslandBar": "Island-Leiste",

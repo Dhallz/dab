@@ -460,6 +460,12 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// logoutTitle: Log out
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logoutTitle;
+
   /// settingsSectionAppearance: Appearance
   ///
   /// In en, this message translates to:

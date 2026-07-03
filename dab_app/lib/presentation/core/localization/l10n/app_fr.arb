@@ -60,6 +60,7 @@
   "insightsNoDataForFilters": "Aucune donnée pour les filtres sélectionnés.",
   "insightsErrorLoading": "Impossible de charger les insights.",
   "settingsTitle": "Paramètres",
+  "logoutTitle": "Se déconnecter",
   "settingsSectionAppearance": "Apparence",
   "settingsSectionLanguage": "Langue",
   "settingsSectionIslandBar": "Barre Island",

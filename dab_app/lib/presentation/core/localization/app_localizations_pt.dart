@@ -187,6 +187,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTitle => 'Configurações';
 
   @override
+  String get logoutTitle => 'Sair';
+
+  @override
   String get settingsSectionAppearance => 'Aparência';
 
   @override

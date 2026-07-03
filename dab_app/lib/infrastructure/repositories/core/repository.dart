@@ -14,10 +14,14 @@ abstract class Repository {
       final result = await call();
       return Right(result);
     } on DioException catch (e) {
+      final responseData = e.response?.data;
+      final errorDetail = responseData is Map
+          ? responseData['error']
+          : responseData;
       debugPrint(
         'DEBUG: guardedCall DioException ${e.response?.statusCode} '
-        '${e.requestOptions.uri}'
-        '${e.response?.data['error']}',
+        '${e.requestOptions.uri} '
+        '$errorDetail',
       );
       return Left(e.toAppFailure);
     } catch (e, stack) {

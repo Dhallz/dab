@@ -236,6 +236,10 @@
   "@settingsTitle": {
     "description": "settingsTitle: Settings"
   },
+  "logoutTitle": "Log out",
+  "@logoutTitle": {
+    "description": "logoutTitle: Log out"
+  },
   "settingsSectionAppearance": "Appearance",
   "@settingsSectionAppearance": {
     "description": "settingsSectionAppearance: Appearance"

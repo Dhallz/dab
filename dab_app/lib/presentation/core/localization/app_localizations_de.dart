@@ -187,6 +187,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTitle => 'Einstellungen';
 
   @override
+  String get logoutTitle => 'Abmelden';
+
+  @override
   String get settingsSectionAppearance => 'Darstellung';
 
   @override
