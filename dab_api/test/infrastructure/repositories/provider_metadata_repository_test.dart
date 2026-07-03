@@ -55,7 +55,7 @@ void main() {
         final metadataList = result.getOrElse(
           (l) => throw Exception('Left side returned'),
         );
-        expect(metadataList.length, 7);
+        expect(metadataList.length, 6);
 
         final first = metadataList[0];
         expect(first.id, 'PHID-PROJ-111');

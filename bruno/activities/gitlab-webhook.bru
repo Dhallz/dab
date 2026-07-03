@@ -1,0 +1,78 @@
+meta {
+  name: GitLab Webhook Push
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/integrations/gitlab/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Gitlab-Token: {{gitlabWebhookSecret}}
+  X-Gitlab-Event: Push Hook
+}
+
+body:json {
+  {
+    "object_kind": "push",
+    "ref": "refs/heads/main",
+    "checkout_sha": "abcdef1234567890abcdef1234567890abcdef12",
+    "project": {
+      "path_with_namespace": "acme/app",
+      "web_url": "https://gitlab.com/acme/app"
+    },
+    "commits": [
+      {
+        "id": "abcdef1234567890abcdef1234567890abcdef12",
+        "message": "Example webhook commit",
+        "timestamp": "2026-03-01T15:30:00Z",
+        "url": "https://gitlab.com/acme/app/-/commit/abcdef1234567890abcdef1234567890abcdef12",
+        "author": {
+          "name": "Dev User",
+          "email": "dev@example.com"
+        }
+      }
+    ]
+  }
+}
+
+script:pre-request {
+  const webhookSecret =
+    bru.getEnvVar("gitlabWebhookSecret") ||
+    bru.getEnvVar("GITLAB_WEBHOOK_SECRET") ||
+    bru.getVar("gitlabWebhookSecret") ||
+    bru.getVar("GITLAB_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing GitLab webhook secret. Set gitlabWebhookSecret or GITLAB_WEBHOOK_SECRET.",
+    );
+  }
+  
+  req.setHeader("X-Gitlab-Token", webhookSecret);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("gitlabWebhookSecret", webhookSecret);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a GitLab Push Hook delivery to `POST /integrations/gitlab/webhook`.
+  
+  GitLab webhooks use a plain shared token in the `X-Gitlab-Token` header
+  (no HMAC). Set `webhookSecret` on the GitLab provider config to match.
+  
+  The project in the payload must be in the `projects` allow-list configured
+  on the active `gitlab` provider (or the list must be empty).
+  
+  Environment variables:
+  - `gitlabWebhookSecret` (or `GITLAB_WEBHOOK_SECRET`)
+}

@@ -17,9 +17,12 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
       PhorgeTaskProviderMapper.ensureInitialized();
       PhorgeRevisionProviderMapper.ensureInitialized();
       GitHubCommitProviderMapper.ensureInitialized();
+      GitLabCommitProviderMapper.ensureInitialized();
+      BitbucketCommitProviderMapper.ensureInitialized();
       JiraIssueProviderMapper.ensureInitialized();
+      LinearIssueProviderMapper.ensureInitialized();
       SlackMessageProviderMapper.ensureInitialized();
-      TeamsMessageProviderMapper.ensureInitialized();
+      DiscordMessageProviderMapper.ensureInitialized();
       GenericProviderMapper.ensureInitialized();
     }
     return _instance!;
@@ -503,6 +506,300 @@ class _GitHubCommitProviderCopyWithImpl<$R, $Out>
       _GitHubCommitProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
+class GitLabCommitProviderMapper extends ClassMapperBase<GitLabCommitProvider> {
+  GitLabCommitProviderMapper._();
+
+  static GitLabCommitProviderMapper? _instance;
+  static GitLabCommitProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = GitLabCommitProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'GitLabCommitProvider';
+
+  static String? _$project(GitLabCommitProvider v) => v.project;
+  static const Field<GitLabCommitProvider, String> _f$project = Field(
+    'project',
+    _$project,
+    opt: true,
+  );
+  static String? _$branch(GitLabCommitProvider v) => v.branch;
+  static const Field<GitLabCommitProvider, String> _f$branch = Field(
+    'branch',
+    _$branch,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<GitLabCommitProvider> fields = const {
+    #project: _f$project,
+    #branch: _f$branch,
+  };
+
+  static GitLabCommitProvider _instantiate(DecodingData data) {
+    return GitLabCommitProvider(
+      project: data.dec(_f$project),
+      branch: data.dec(_f$branch),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static GitLabCommitProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<GitLabCommitProvider>(map);
+  }
+
+  static GitLabCommitProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<GitLabCommitProvider>(json);
+  }
+}
+
+mixin GitLabCommitProviderMappable {
+  String toJson() {
+    return GitLabCommitProviderMapper.ensureInitialized()
+        .encodeJson<GitLabCommitProvider>(this as GitLabCommitProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return GitLabCommitProviderMapper.ensureInitialized()
+        .encodeMap<GitLabCommitProvider>(this as GitLabCommitProvider);
+  }
+
+  GitLabCommitProviderCopyWith<
+    GitLabCommitProvider,
+    GitLabCommitProvider,
+    GitLabCommitProvider
+  >
+  get copyWith =>
+      _GitLabCommitProviderCopyWithImpl<
+        GitLabCommitProvider,
+        GitLabCommitProvider
+      >(this as GitLabCommitProvider, $identity, $identity);
+  @override
+  String toString() {
+    return GitLabCommitProviderMapper.ensureInitialized().stringifyValue(
+      this as GitLabCommitProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return GitLabCommitProviderMapper.ensureInitialized().equalsValue(
+      this as GitLabCommitProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return GitLabCommitProviderMapper.ensureInitialized().hashValue(
+      this as GitLabCommitProvider,
+    );
+  }
+}
+
+extension GitLabCommitProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, GitLabCommitProvider, $Out> {
+  GitLabCommitProviderCopyWith<$R, GitLabCommitProvider, $Out>
+  get $asGitLabCommitProvider => $base.as(
+    (v, t, t2) => _GitLabCommitProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class GitLabCommitProviderCopyWith<
+  $R,
+  $In extends GitLabCommitProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? project, String? branch});
+  GitLabCommitProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _GitLabCommitProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, GitLabCommitProvider, $Out>
+    implements GitLabCommitProviderCopyWith<$R, GitLabCommitProvider, $Out> {
+  _GitLabCommitProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<GitLabCommitProvider> $mapper =
+      GitLabCommitProviderMapper.ensureInitialized();
+  @override
+  $R call({Object? project = $none, Object? branch = $none}) => $apply(
+    FieldCopyWithData({
+      if (project != $none) #project: project,
+      if (branch != $none) #branch: branch,
+    }),
+  );
+  @override
+  GitLabCommitProvider $make(CopyWithData data) => GitLabCommitProvider(
+    project: data.get(#project, or: $value.project),
+    branch: data.get(#branch, or: $value.branch),
+  );
+
+  @override
+  GitLabCommitProviderCopyWith<$R2, GitLabCommitProvider, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _GitLabCommitProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class BitbucketCommitProviderMapper
+    extends ClassMapperBase<BitbucketCommitProvider> {
+  BitbucketCommitProviderMapper._();
+
+  static BitbucketCommitProviderMapper? _instance;
+  static BitbucketCommitProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(
+        _instance = BitbucketCommitProviderMapper._(),
+      );
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'BitbucketCommitProvider';
+
+  static String? _$repo(BitbucketCommitProvider v) => v.repo;
+  static const Field<BitbucketCommitProvider, String> _f$repo = Field(
+    'repo',
+    _$repo,
+    opt: true,
+  );
+  static String? _$branch(BitbucketCommitProvider v) => v.branch;
+  static const Field<BitbucketCommitProvider, String> _f$branch = Field(
+    'branch',
+    _$branch,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<BitbucketCommitProvider> fields = const {
+    #repo: _f$repo,
+    #branch: _f$branch,
+  };
+
+  static BitbucketCommitProvider _instantiate(DecodingData data) {
+    return BitbucketCommitProvider(
+      repo: data.dec(_f$repo),
+      branch: data.dec(_f$branch),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static BitbucketCommitProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<BitbucketCommitProvider>(map);
+  }
+
+  static BitbucketCommitProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<BitbucketCommitProvider>(json);
+  }
+}
+
+mixin BitbucketCommitProviderMappable {
+  String toJson() {
+    return BitbucketCommitProviderMapper.ensureInitialized()
+        .encodeJson<BitbucketCommitProvider>(this as BitbucketCommitProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return BitbucketCommitProviderMapper.ensureInitialized()
+        .encodeMap<BitbucketCommitProvider>(this as BitbucketCommitProvider);
+  }
+
+  BitbucketCommitProviderCopyWith<
+    BitbucketCommitProvider,
+    BitbucketCommitProvider,
+    BitbucketCommitProvider
+  >
+  get copyWith =>
+      _BitbucketCommitProviderCopyWithImpl<
+        BitbucketCommitProvider,
+        BitbucketCommitProvider
+      >(this as BitbucketCommitProvider, $identity, $identity);
+  @override
+  String toString() {
+    return BitbucketCommitProviderMapper.ensureInitialized().stringifyValue(
+      this as BitbucketCommitProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return BitbucketCommitProviderMapper.ensureInitialized().equalsValue(
+      this as BitbucketCommitProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return BitbucketCommitProviderMapper.ensureInitialized().hashValue(
+      this as BitbucketCommitProvider,
+    );
+  }
+}
+
+extension BitbucketCommitProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, BitbucketCommitProvider, $Out> {
+  BitbucketCommitProviderCopyWith<$R, BitbucketCommitProvider, $Out>
+  get $asBitbucketCommitProvider => $base.as(
+    (v, t, t2) => _BitbucketCommitProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class BitbucketCommitProviderCopyWith<
+  $R,
+  $In extends BitbucketCommitProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? repo, String? branch});
+  BitbucketCommitProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _BitbucketCommitProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, BitbucketCommitProvider, $Out>
+    implements
+        BitbucketCommitProviderCopyWith<$R, BitbucketCommitProvider, $Out> {
+  _BitbucketCommitProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<BitbucketCommitProvider> $mapper =
+      BitbucketCommitProviderMapper.ensureInitialized();
+  @override
+  $R call({Object? repo = $none, Object? branch = $none}) => $apply(
+    FieldCopyWithData({
+      if (repo != $none) #repo: repo,
+      if (branch != $none) #branch: branch,
+    }),
+  );
+  @override
+  BitbucketCommitProvider $make(CopyWithData data) => BitbucketCommitProvider(
+    repo: data.get(#repo, or: $value.repo),
+    branch: data.get(#branch, or: $value.branch),
+  );
+
+  @override
+  BitbucketCommitProviderCopyWith<$R2, BitbucketCommitProvider, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _BitbucketCommitProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
 class JiraIssueProviderMapper extends ClassMapperBase<JiraIssueProvider> {
   JiraIssueProviderMapper._();
 
@@ -661,6 +958,165 @@ class _JiraIssueProviderCopyWithImpl<$R, $Out>
   JiraIssueProviderCopyWith<$R2, JiraIssueProvider, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _JiraIssueProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class LinearIssueProviderMapper extends ClassMapperBase<LinearIssueProvider> {
+  LinearIssueProviderMapper._();
+
+  static LinearIssueProviderMapper? _instance;
+  static LinearIssueProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = LinearIssueProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'LinearIssueProvider';
+
+  static String? _$identifier(LinearIssueProvider v) => v.identifier;
+  static const Field<LinearIssueProvider, String> _f$identifier = Field(
+    'identifier',
+    _$identifier,
+    opt: true,
+  );
+  static String? _$teamKey(LinearIssueProvider v) => v.teamKey;
+  static const Field<LinearIssueProvider, String> _f$teamKey = Field(
+    'teamKey',
+    _$teamKey,
+    opt: true,
+  );
+  static String? _$statusName(LinearIssueProvider v) => v.statusName;
+  static const Field<LinearIssueProvider, String> _f$statusName = Field(
+    'statusName',
+    _$statusName,
+    opt: true,
+  );
+
+  @override
+  final MappableFields<LinearIssueProvider> fields = const {
+    #identifier: _f$identifier,
+    #teamKey: _f$teamKey,
+    #statusName: _f$statusName,
+  };
+
+  static LinearIssueProvider _instantiate(DecodingData data) {
+    return LinearIssueProvider(
+      identifier: data.dec(_f$identifier),
+      teamKey: data.dec(_f$teamKey),
+      statusName: data.dec(_f$statusName),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static LinearIssueProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<LinearIssueProvider>(map);
+  }
+
+  static LinearIssueProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<LinearIssueProvider>(json);
+  }
+}
+
+mixin LinearIssueProviderMappable {
+  String toJson() {
+    return LinearIssueProviderMapper.ensureInitialized()
+        .encodeJson<LinearIssueProvider>(this as LinearIssueProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return LinearIssueProviderMapper.ensureInitialized()
+        .encodeMap<LinearIssueProvider>(this as LinearIssueProvider);
+  }
+
+  LinearIssueProviderCopyWith<
+    LinearIssueProvider,
+    LinearIssueProvider,
+    LinearIssueProvider
+  >
+  get copyWith =>
+      _LinearIssueProviderCopyWithImpl<
+        LinearIssueProvider,
+        LinearIssueProvider
+      >(this as LinearIssueProvider, $identity, $identity);
+  @override
+  String toString() {
+    return LinearIssueProviderMapper.ensureInitialized().stringifyValue(
+      this as LinearIssueProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return LinearIssueProviderMapper.ensureInitialized().equalsValue(
+      this as LinearIssueProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return LinearIssueProviderMapper.ensureInitialized().hashValue(
+      this as LinearIssueProvider,
+    );
+  }
+}
+
+extension LinearIssueProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, LinearIssueProvider, $Out> {
+  LinearIssueProviderCopyWith<$R, LinearIssueProvider, $Out>
+  get $asLinearIssueProvider => $base.as(
+    (v, t, t2) => _LinearIssueProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class LinearIssueProviderCopyWith<
+  $R,
+  $In extends LinearIssueProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? identifier, String? teamKey, String? statusName});
+  LinearIssueProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _LinearIssueProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, LinearIssueProvider, $Out>
+    implements LinearIssueProviderCopyWith<$R, LinearIssueProvider, $Out> {
+  _LinearIssueProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<LinearIssueProvider> $mapper =
+      LinearIssueProviderMapper.ensureInitialized();
+  @override
+  $R call({
+    Object? identifier = $none,
+    Object? teamKey = $none,
+    Object? statusName = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (identifier != $none) #identifier: identifier,
+      if (teamKey != $none) #teamKey: teamKey,
+      if (statusName != $none) #statusName: statusName,
+    }),
+  );
+  @override
+  LinearIssueProvider $make(CopyWithData data) => LinearIssueProvider(
+    identifier: data.get(#identifier, or: $value.identifier),
+    teamKey: data.get(#teamKey, or: $value.teamKey),
+    statusName: data.get(#statusName, or: $value.statusName),
+  );
+
+  @override
+  LinearIssueProviderCopyWith<$R2, LinearIssueProvider, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _LinearIssueProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class SlackMessageProviderMapper extends ClassMapperBase<SlackMessageProvider> {
@@ -838,65 +1294,58 @@ class _SlackMessageProviderCopyWithImpl<$R, $Out>
       _SlackMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
-class TeamsMessageProviderMapper extends ClassMapperBase<TeamsMessageProvider> {
-  TeamsMessageProviderMapper._();
+class DiscordMessageProviderMapper
+    extends ClassMapperBase<DiscordMessageProvider> {
+  DiscordMessageProviderMapper._();
 
-  static TeamsMessageProviderMapper? _instance;
-  static TeamsMessageProviderMapper ensureInitialized() {
+  static DiscordMessageProviderMapper? _instance;
+  static DiscordMessageProviderMapper ensureInitialized() {
     if (_instance == null) {
-      MapperContainer.globals.use(_instance = TeamsMessageProviderMapper._());
+      MapperContainer.globals.use(_instance = DiscordMessageProviderMapper._());
       ActivityProviderMapper.ensureInitialized();
     }
     return _instance!;
   }
 
   @override
-  final String id = 'TeamsMessageProvider';
+  final String id = 'DiscordMessageProvider';
 
-  static String? _$tenantId(TeamsMessageProvider v) => v.tenantId;
-  static const Field<TeamsMessageProvider, String> _f$tenantId = Field(
-    'tenantId',
-    _$tenantId,
+  static String? _$guildId(DiscordMessageProvider v) => v.guildId;
+  static const Field<DiscordMessageProvider, String> _f$guildId = Field(
+    'guildId',
+    _$guildId,
     opt: true,
   );
-  static String? _$teamId(TeamsMessageProvider v) => v.teamId;
-  static const Field<TeamsMessageProvider, String> _f$teamId = Field(
-    'teamId',
-    _$teamId,
-    opt: true,
-  );
-  static String? _$channelId(TeamsMessageProvider v) => v.channelId;
-  static const Field<TeamsMessageProvider, String> _f$channelId = Field(
+  static String? _$channelId(DiscordMessageProvider v) => v.channelId;
+  static const Field<DiscordMessageProvider, String> _f$channelId = Field(
     'channelId',
     _$channelId,
     opt: true,
   );
-  static String? _$messageId(TeamsMessageProvider v) => v.messageId;
-  static const Field<TeamsMessageProvider, String> _f$messageId = Field(
+  static String? _$messageId(DiscordMessageProvider v) => v.messageId;
+  static const Field<DiscordMessageProvider, String> _f$messageId = Field(
     'messageId',
     _$messageId,
     opt: true,
   );
-  static String? _$replyToId(TeamsMessageProvider v) => v.replyToId;
-  static const Field<TeamsMessageProvider, String> _f$replyToId = Field(
+  static String? _$replyToId(DiscordMessageProvider v) => v.replyToId;
+  static const Field<DiscordMessageProvider, String> _f$replyToId = Field(
     'replyToId',
     _$replyToId,
     opt: true,
   );
 
   @override
-  final MappableFields<TeamsMessageProvider> fields = const {
-    #tenantId: _f$tenantId,
-    #teamId: _f$teamId,
+  final MappableFields<DiscordMessageProvider> fields = const {
+    #guildId: _f$guildId,
     #channelId: _f$channelId,
     #messageId: _f$messageId,
     #replyToId: _f$replyToId,
   };
 
-  static TeamsMessageProvider _instantiate(DecodingData data) {
-    return TeamsMessageProvider(
-      tenantId: data.dec(_f$tenantId),
-      teamId: data.dec(_f$teamId),
+  static DiscordMessageProvider _instantiate(DecodingData data) {
+    return DiscordMessageProvider(
+      guildId: data.dec(_f$guildId),
       channelId: data.dec(_f$channelId),
       messageId: data.dec(_f$messageId),
       replyToId: data.dec(_f$replyToId),
@@ -906,123 +1355,120 @@ class TeamsMessageProviderMapper extends ClassMapperBase<TeamsMessageProvider> {
   @override
   final Function instantiate = _instantiate;
 
-  static TeamsMessageProvider fromMap(Map<String, dynamic> map) {
-    return ensureInitialized().decodeMap<TeamsMessageProvider>(map);
+  static DiscordMessageProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<DiscordMessageProvider>(map);
   }
 
-  static TeamsMessageProvider fromJson(String json) {
-    return ensureInitialized().decodeJson<TeamsMessageProvider>(json);
+  static DiscordMessageProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<DiscordMessageProvider>(json);
   }
 }
 
-mixin TeamsMessageProviderMappable {
+mixin DiscordMessageProviderMappable {
   String toJson() {
-    return TeamsMessageProviderMapper.ensureInitialized()
-        .encodeJson<TeamsMessageProvider>(this as TeamsMessageProvider);
+    return DiscordMessageProviderMapper.ensureInitialized()
+        .encodeJson<DiscordMessageProvider>(this as DiscordMessageProvider);
   }
 
   Map<String, dynamic> toMap() {
-    return TeamsMessageProviderMapper.ensureInitialized()
-        .encodeMap<TeamsMessageProvider>(this as TeamsMessageProvider);
+    return DiscordMessageProviderMapper.ensureInitialized()
+        .encodeMap<DiscordMessageProvider>(this as DiscordMessageProvider);
   }
 
-  TeamsMessageProviderCopyWith<
-    TeamsMessageProvider,
-    TeamsMessageProvider,
-    TeamsMessageProvider
+  DiscordMessageProviderCopyWith<
+    DiscordMessageProvider,
+    DiscordMessageProvider,
+    DiscordMessageProvider
   >
   get copyWith =>
-      _TeamsMessageProviderCopyWithImpl<
-        TeamsMessageProvider,
-        TeamsMessageProvider
-      >(this as TeamsMessageProvider, $identity, $identity);
+      _DiscordMessageProviderCopyWithImpl<
+        DiscordMessageProvider,
+        DiscordMessageProvider
+      >(this as DiscordMessageProvider, $identity, $identity);
   @override
   String toString() {
-    return TeamsMessageProviderMapper.ensureInitialized().stringifyValue(
-      this as TeamsMessageProvider,
+    return DiscordMessageProviderMapper.ensureInitialized().stringifyValue(
+      this as DiscordMessageProvider,
     );
   }
 
   @override
   bool operator ==(Object other) {
-    return TeamsMessageProviderMapper.ensureInitialized().equalsValue(
-      this as TeamsMessageProvider,
+    return DiscordMessageProviderMapper.ensureInitialized().equalsValue(
+      this as DiscordMessageProvider,
       other,
     );
   }
 
   @override
   int get hashCode {
-    return TeamsMessageProviderMapper.ensureInitialized().hashValue(
-      this as TeamsMessageProvider,
+    return DiscordMessageProviderMapper.ensureInitialized().hashValue(
+      this as DiscordMessageProvider,
     );
   }
 }
 
-extension TeamsMessageProviderValueCopy<$R, $Out>
-    on ObjectCopyWith<$R, TeamsMessageProvider, $Out> {
-  TeamsMessageProviderCopyWith<$R, TeamsMessageProvider, $Out>
-  get $asTeamsMessageProvider => $base.as(
-    (v, t, t2) => _TeamsMessageProviderCopyWithImpl<$R, $Out>(v, t, t2),
+extension DiscordMessageProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, DiscordMessageProvider, $Out> {
+  DiscordMessageProviderCopyWith<$R, DiscordMessageProvider, $Out>
+  get $asDiscordMessageProvider => $base.as(
+    (v, t, t2) => _DiscordMessageProviderCopyWithImpl<$R, $Out>(v, t, t2),
   );
 }
 
-abstract class TeamsMessageProviderCopyWith<
+abstract class DiscordMessageProviderCopyWith<
   $R,
-  $In extends TeamsMessageProvider,
+  $In extends DiscordMessageProvider,
   $Out
 >
     implements ActivityProviderCopyWith<$R, $In, $Out> {
   @override
   $R call({
-    String? tenantId,
-    String? teamId,
+    String? guildId,
     String? channelId,
     String? messageId,
     String? replyToId,
   });
-  TeamsMessageProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+  DiscordMessageProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
 }
 
-class _TeamsMessageProviderCopyWithImpl<$R, $Out>
-    extends ClassCopyWithBase<$R, TeamsMessageProvider, $Out>
-    implements TeamsMessageProviderCopyWith<$R, TeamsMessageProvider, $Out> {
-  _TeamsMessageProviderCopyWithImpl(super.value, super.then, super.then2);
+class _DiscordMessageProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, DiscordMessageProvider, $Out>
+    implements
+        DiscordMessageProviderCopyWith<$R, DiscordMessageProvider, $Out> {
+  _DiscordMessageProviderCopyWithImpl(super.value, super.then, super.then2);
 
   @override
-  late final ClassMapperBase<TeamsMessageProvider> $mapper =
-      TeamsMessageProviderMapper.ensureInitialized();
+  late final ClassMapperBase<DiscordMessageProvider> $mapper =
+      DiscordMessageProviderMapper.ensureInitialized();
   @override
   $R call({
-    Object? tenantId = $none,
-    Object? teamId = $none,
+    Object? guildId = $none,
     Object? channelId = $none,
     Object? messageId = $none,
     Object? replyToId = $none,
   }) => $apply(
     FieldCopyWithData({
-      if (tenantId != $none) #tenantId: tenantId,
-      if (teamId != $none) #teamId: teamId,
+      if (guildId != $none) #guildId: guildId,
       if (channelId != $none) #channelId: channelId,
       if (messageId != $none) #messageId: messageId,
       if (replyToId != $none) #replyToId: replyToId,
     }),
   );
   @override
-  TeamsMessageProvider $make(CopyWithData data) => TeamsMessageProvider(
-    tenantId: data.get(#tenantId, or: $value.tenantId),
-    teamId: data.get(#teamId, or: $value.teamId),
+  DiscordMessageProvider $make(CopyWithData data) => DiscordMessageProvider(
+    guildId: data.get(#guildId, or: $value.guildId),
     channelId: data.get(#channelId, or: $value.channelId),
     messageId: data.get(#messageId, or: $value.messageId),
     replyToId: data.get(#replyToId, or: $value.replyToId),
   );
 
   @override
-  TeamsMessageProviderCopyWith<$R2, TeamsMessageProvider, $Out2>
+  DiscordMessageProviderCopyWith<$R2, DiscordMessageProvider, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
-      _TeamsMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+      _DiscordMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class GenericProviderMapper extends ClassMapperBase<GenericProvider> {

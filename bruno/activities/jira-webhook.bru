@@ -1,0 +1,80 @@
+meta {
+  name: Jira Webhook
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/integrations/jira/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Webhook-Secret: {{jiraWebhookSecret}}
+}
+
+body:json {
+  {
+    "webhookEvent": "jira:issue_updated",
+    "issue": {
+      "id": "10001",
+      "key": "DAB-42",
+      "fields": {
+        "summary": "Example issue from webhook",
+        "status": {
+          "name": "In Progress"
+        },
+        "updated": "2026-03-01T15:30:00.000+0000",
+        "assignee": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Dev User",
+          "emailAddress": "dev@example.com"
+        }
+      }
+    },
+    "user": {
+      "accountId": "5b10ac8d82e05b22cc7d4ef5",
+      "displayName": "Dev User"
+    }
+  }
+}
+
+script:pre-request {
+  const webhookSecret =
+    bru.getEnvVar("jiraWebhookSecret") ||
+    bru.getEnvVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getVar("jiraWebhookSecret") ||
+    bru.getVar("JIRA_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing Jira webhook secret. Set jiraWebhookSecret or JIRA_WEBHOOK_SECRET.",
+    );
+  }
+  
+  req.setHeader("X-Webhook-Secret", webhookSecret);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("jiraWebhookSecret", webhookSecret);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Jira Cloud webhook delivery to `POST /integrations/jira/webhook`.
+  
+  Jira admin-registered webhooks carry no HMAC signature, so the endpoint is
+  secured with a shared secret sent via the `X-Webhook-Secret` header or a
+  `?secret=` query parameter. Set `webhookSecret` on the Jira provider config
+  to match.
+  
+  Supported events: `jira:issue_created`, `jira:issue_updated`.
+  
+  Environment variables:
+  - `jiraWebhookSecret` (or `JIRA_WEBHOOK_SECRET`)
+}

@@ -1,0 +1,213 @@
+import 'package:dab_api/src/application/usecases/activity/ingest_linear_webhook.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
+import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
+import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
+import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/entities/user/user_identity.dart';
+import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
+import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:test/test.dart';
+
+class _MockUserRepository extends Mock implements IUserRepository {}
+
+class _MockActivityRepository extends Mock implements AbsIActivityRepository {}
+
+class _MockProviderConfigRepository extends Mock
+    implements AbsIProviderConfigRepository {}
+
+class _MockRedisService extends Mock implements RedisService {}
+
+class _MockPresenceService extends Mock implements PresenceService {}
+
+void main() {
+  late _MockUserRepository userRepository;
+  late _MockActivityRepository activityRepository;
+  late _MockProviderConfigRepository providerConfigRepository;
+  late _MockRedisService redisService;
+  late _MockPresenceService presenceService;
+  late IngestLinearWebhook useCase;
+
+  final user = User(
+    id: 'u-linear',
+    name: 'Ada',
+    email: 'ada@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final identity = UserIdentity(
+    id: 'ident-1',
+    userId: 'u-linear',
+    providerId: 'linear',
+    externalId: 'linear-user-ada',
+    status: UserIdentityStatus.linked,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final config = ProviderConfig(
+    id: 'linear',
+    name: 'Linear',
+    baseUrl: 'https://linear.app',
+    isActive: true,
+    settings: const {'apiKey': 'k', 'webhookSecret': 's'},
+  );
+
+  Map<String, dynamic> issuePayload({
+    String action = 'update',
+    String type = 'Issue',
+    String assigneeId = 'linear-user-ada',
+  }) {
+    return <String, dynamic>{
+      'type': type,
+      'action': action,
+      'url': 'https://linear.app/acme/issue/ENG-42/fix-login',
+      'data': {
+        'id': 'issue-uuid',
+        'identifier': 'ENG-42',
+        'title': 'Fix login',
+        'updatedAt': '2026-06-30T10:00:00.000Z',
+        'assigneeId': assigneeId,
+        'state': {'name': 'In Progress'},
+        'team': {'key': 'ENG'},
+      },
+    };
+  }
+
+  setUpAll(() {
+    registerFallbackValue(
+      Activity(
+        id: 'fallback',
+        userId: 'u',
+        provider: const GenericProvider(name: 'Mock'),
+        title: 'fallback',
+        content: 'fallback',
+        authorName: 'fallback',
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+  });
+
+  setUp(() {
+    userRepository = _MockUserRepository();
+    activityRepository = _MockActivityRepository();
+    providerConfigRepository = _MockProviderConfigRepository();
+    redisService = _MockRedisService();
+    presenceService = _MockPresenceService();
+
+    useCase = IngestLinearWebhook(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+    );
+
+    when(
+      () => presenceService.broadcastToUser(any(), any(), any()),
+    ).thenReturn(null);
+    when(
+      () => redisService.reserveIngestionEventId(any(), any()),
+    ).thenAnswer((_) async => true);
+    when(
+      () => providerConfigRepository.getConfigs(),
+    ).thenAnswer((_) async => Right([config]));
+    when(
+      () => userRepository.getUsers(),
+    ).thenAnswer((_) async => Right([user]));
+    when(
+      () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
+    ).thenAnswer((_) async => Right([identity]));
+    when(
+      () => activityRepository.createActivity(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => redisService.incrementVersion()).thenAnswer((_) async => 1);
+    when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
+  });
+
+  test('ingests an Issue update attributed via assigneeId', () async {
+    final out = await useCase.execute(
+      payload: issuePayload(),
+      deliveryId: 'delivery-1',
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-linear');
+    expect(captured.title, '[ENG-42] Fix login');
+    final provider = captured.provider as LinearIssueProvider;
+    expect(provider.identifier, 'ENG-42');
+    expect(provider.teamKey, 'ENG');
+    expect(provider.statusName, 'In Progress');
+    verify(() => redisService.reserveIngestionEventId('linear', 'delivery-1'))
+        .called(1);
+    verify(
+      () => presenceService.broadcastToUser(
+        'u-linear',
+        'ACTIVITY_RECEIVED',
+        any(),
+      ),
+    ).called(1);
+  });
+
+  test('ignores non-Issue payloads', () async {
+    final out = await useCase.execute(payload: issuePayload(type: 'Comment'));
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isFalse);
+    expect(result.reason, 'unsupported_type:Comment');
+    verifyNever(() => redisService.reserveIngestionEventId(any(), any()));
+  });
+
+  test('ignores unsupported actions', () async {
+    final out = await useCase.execute(payload: issuePayload(action: 'remove'));
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.reason, 'unsupported_action:remove');
+  });
+
+  test('ignores duplicate deliveries via Redis reservation', () async {
+    when(
+      () => redisService.reserveIngestionEventId(any(), any()),
+    ).thenAnswer((_) async => false);
+
+    final out = await useCase.execute(payload: issuePayload());
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.reason, 'duplicate_delivery');
+    verifyNever(() => activityRepository.createActivity(any()));
+  });
+
+  test('drops issues whose assignee/creator is not linked', () async {
+    final out = await useCase.execute(
+      payload: issuePayload(assigneeId: 'linear-user-stranger'),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isFalse);
+    expect(result.reason, 'no_attributable_users');
+    verifyNever(() => activityRepository.createActivity(any()));
+  });
+
+  test('ignores payloads when linear provider is inactive', () async {
+    when(() => providerConfigRepository.getConfigs()).thenAnswer(
+      (_) async => Right([config.copyWith(isActive: false)]),
+    );
+
+    final out = await useCase.execute(payload: issuePayload());
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.reason, 'linear_not_configured');
+  });
+}

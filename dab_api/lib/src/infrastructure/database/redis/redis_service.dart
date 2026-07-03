@@ -348,6 +348,29 @@ class RedisService {
     return result != null;
   }
 
+  /// Attempts to reserve a provider-scoped live-ingestion event id for
+  /// one-time processing (`SET NX EX` on `ingest:{provider}:{eventId}`).
+  ///
+  /// Shared by all webhook / gateway ingestion paths that do not have a
+  /// dedicated legacy key format. Returns true when the event was not seen
+  /// recently and is now reserved; false on duplicate deliveries.
+  Future<bool> reserveIngestionEventId(
+    String provider,
+    String eventId, {
+    Duration ttl = const Duration(hours: 24),
+  }) async {
+    final key = 'ingest:$provider:$eventId';
+    final result = await _cmd.send_object([
+      'SET',
+      key,
+      '1',
+      'NX',
+      'EX',
+      ttl.inSeconds,
+    ]);
+    return result != null;
+  }
+
   /// --- HELPERS ---
 
   String _encodeActivity(Activity activity) {

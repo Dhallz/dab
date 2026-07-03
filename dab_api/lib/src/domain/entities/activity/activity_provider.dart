@@ -78,6 +78,46 @@ class GitHubCommitProvider extends ActivityProvider
 }
 
 /// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for GitLab Commits.
+/// CONTRACT: Corresponds to the `activity_gitlab_commit` SQL table.
+@MappableClass()
+class GitLabCommitProvider extends ActivityProvider
+    with GitLabCommitProviderMappable {
+  /// Full project path (`group/project`).
+  final String? project;
+
+  final String? branch;
+
+  const GitLabCommitProvider({this.project, this.branch});
+
+  @override
+  String get name => 'GitLab';
+
+  @override
+  String get category => 'commit';
+}
+
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Bitbucket Commits.
+/// CONTRACT: Corresponds to the `activity_bitbucket_commit` SQL table.
+@MappableClass()
+class BitbucketCommitProvider extends ActivityProvider
+    with BitbucketCommitProviderMappable {
+  /// Full repository path (`workspace/repo`).
+  final String? repo;
+
+  final String? branch;
+
+  const BitbucketCommitProvider({this.repo, this.branch});
+
+  @override
+  String get name => 'Bitbucket';
+
+  @override
+  String get category => 'commit';
+}
+
+/// [ARCH: DOMAIN_MODEL]
 /// ROLE: Metadata for Jira Issues (Maniphest-style issue tracking).
 /// CONTRACT: Corresponds to the `activity_jira_issue` SQL table.
 @MappableClass()
@@ -90,6 +130,29 @@ class JiraIssueProvider extends ActivityProvider with JiraIssueProviderMappable 
 
   @override
   String get name => 'Jira';
+
+  @override
+  String get category => 'task';
+}
+
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Linear Issues.
+/// CONTRACT: Corresponds to the `activity_linear_issue` SQL table.
+@MappableClass()
+class LinearIssueProvider extends ActivityProvider
+    with LinearIssueProviderMappable {
+  /// Human-readable issue key (`ENG-123`).
+  final String? identifier;
+
+  /// Team key prefix (`ENG`).
+  final String? teamKey;
+
+  final String? statusName;
+
+  const LinearIssueProvider({this.identifier, this.teamKey, this.statusName});
+
+  @override
+  String get name => 'Linear';
 
   @override
   String get category => 'task';
@@ -121,27 +184,27 @@ class SlackMessageProvider extends ActivityProvider
 }
 
 /// [ARCH: DOMAIN_MODEL]
-/// ROLE: Metadata for Microsoft Teams channel messages.
-/// CONTRACT: Corresponds to the `activity_teams_message` SQL table.
+/// ROLE: Metadata for Discord Messages.
+/// CONTRACT: Corresponds to the `activity_discord_message` SQL table.
 @MappableClass()
-class TeamsMessageProvider extends ActivityProvider
-    with TeamsMessageProviderMappable {
-  final String? tenantId;
-  final String? teamId;
+class DiscordMessageProvider extends ActivityProvider
+    with DiscordMessageProviderMappable {
+  final String? guildId;
   final String? channelId;
   final String? messageId;
+
+  /// Referenced message id when this message is a reply.
   final String? replyToId;
 
-  const TeamsMessageProvider({
-    this.tenantId,
-    this.teamId,
+  const DiscordMessageProvider({
+    this.guildId,
     this.channelId,
     this.messageId,
     this.replyToId,
   });
 
   @override
-  String get name => 'Teams';
+  String get name => 'Discord';
 
   @override
   String get category => 'message';

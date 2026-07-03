@@ -85,27 +85,18 @@ void main() {
       );
     });
 
-    test('providerFilterKey maps TeamsMessageProvider to teams config id', () {
+    test('providerFilterKey maps generic providers to lowercase config id', () {
       expect(
         ActivitySearchQueryMapper.providerFilterKey(
-          const TeamsMessageProvider(channelId: 'ch-1'),
+          const GenericProvider(name: 'Discord'),
         ),
-        'teams',
-      );
-    });
-
-    test('providerFilterKey maps Microsoft Teams generic to teams config id', () {
-      expect(
-        ActivitySearchQueryMapper.providerFilterKey(
-          const GenericProvider(name: 'Microsoft Teams'),
-        ),
-        'teams',
+        'discord',
       );
 
       final activity = Activity(
-        id: 'a-teams',
+        id: 'a-discord',
         userId: 'u1',
-        provider: const GenericProvider(name: 'Microsoft Teams'),
+        provider: const GenericProvider(name: 'Discord'),
         title: 'msg',
         content: 'hello',
         authorName: 'Bob',
@@ -118,14 +109,14 @@ void main() {
           activity,
           const ActivitySearchQuery(
             users: ['u1'],
-            providers: {'teams'},
+            providers: {'discord'},
             categories: {ActivityCategory.generic},
           ),
         ),
         isTrue,
       );
 
-      expect(activity.toExplorerRecord().providerKey, 'teams');
+      expect(activity.toExplorerRecord().providerKey, 'discord');
     });
   });
 }

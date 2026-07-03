@@ -17,6 +17,12 @@ import 'package:dab_api/src/application/usecases/activity/fetch_remote_activitie
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_github_webhook.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_bitbucket_webhook.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_discord_message.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_gitlab_webhook.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_jira_webhook.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_linear_webhook.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_phorge_webhook.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_slack_event.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
@@ -65,6 +71,9 @@ import 'package:dab_api/src/application/usecases/metadata/save_system_settings.d
 import 'package:dab_api/src/infrastructure/core/config/config.dart';
 import 'package:dab_api/src/infrastructure/core/security/github_webhook_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/jwt_provider.dart';
+import 'package:dab_api/src/infrastructure/core/security/linear_webhook_verifier.dart';
+import 'package:dab_api/src/infrastructure/core/security/phorge_webhook_verifier.dart';
+import 'package:dab_api/src/infrastructure/core/security/shared_secret_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/slack_request_verifier.dart';
 import 'package:dab_api/src/infrastructure/database/app_database.dart';
 import 'package:dab_api/src/infrastructure/database/postgres_client.dart';
@@ -86,7 +95,10 @@ import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
+import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
@@ -96,7 +108,6 @@ import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
-import 'package:dab_api/src/infrastructure/sources/teams/teams_message_source.dart';
 import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -135,6 +146,9 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<JwtProvider>(JwtProvider());
   sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
   sl.registerSingleton<GitHubWebhookVerifier>(GitHubWebhookVerifier());
+  sl.registerSingleton<PhorgeWebhookVerifier>(PhorgeWebhookVerifier());
+  sl.registerSingleton<SharedSecretVerifier>(SharedSecretVerifier());
+  sl.registerSingleton<LinearWebhookVerifier>(LinearWebhookVerifier());
 
   // -----------------------------------------------------
   // 2. Activity Architecture (Domain & Infrastructure)
@@ -158,25 +172,38 @@ Future<void> serviceLocator() async {
     projectSource: phorgeProjectSource,
   );
 
-  // New Scaffolds (Slack, Teams, Jira, Linear, Discord)
+  // New Scaffolds (Slack, Jira, Linear, Discord)
   final slackSource = SlackMessageSource(
     providerConfigRepository,
     userRepository,
     slackWebProtocol,
-  );
-  final teamsSource = TeamsMessageSource(
-    providerConfigRepository,
-    userRepository,
-    jsonRestProtocol,
   );
   final jiraSource = JiraIssueSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
   );
-  final linearSource = LinearIssueSource(graphqlProtocol);
-  final discordSource = DiscordMessageSource();
+  final linearSource = LinearIssueSource(
+    providerConfigRepository,
+    userRepository,
+    graphqlProtocol,
+  );
+  final discordSource = DiscordMessageSource(
+    providerConfigRepository,
+    userRepository,
+    jsonRestProtocol,
+  );
   final githubSource = GitHubCommitSource(
+    providerConfigRepository,
+    userRepository,
+    jsonRestProtocol,
+  );
+  final gitlabSource = GitLabCommitSource(
+    providerConfigRepository,
+    userRepository,
+    jsonRestProtocol,
+  );
+  final bitbucketSource = BitbucketCommitSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
@@ -185,10 +212,12 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
   sl.registerSingleton<AbsIPhorgeGateway>(phorgeGateway);
   sl.registerSingleton<SlackMessageSource>(slackSource);
-  sl.registerSingleton<TeamsMessageSource>(teamsSource);
   sl.registerSingleton<JiraIssueSource>(jiraSource);
   sl.registerSingleton<LinearIssueSource>(linearSource);
+  sl.registerSingleton<DiscordMessageSource>(discordSource);
   sl.registerSingleton<GitHubCommitSource>(githubSource);
+  sl.registerSingleton<GitLabCommitSource>(gitlabSource);
+  sl.registerSingleton<BitbucketCommitSource>(bitbucketSource);
 
   // Application Orchestration: Mapping Sources to Mappers (single registration site)
   final registry = ConnectorRegistry();
@@ -197,11 +226,12 @@ Future<void> serviceLocator() async {
     phorgeTaskSource: phorgeTaskSource,
     phorgeRevisionSource: phorgeRevisionSource,
     slackSource: slackSource,
-    teamsSource: teamsSource,
     jiraSource: jiraSource,
     linearSource: linearSource,
     discordSource: discordSource,
     githubSource: githubSource,
+    gitlabSource: gitlabSource,
+    bitbucketSource: bitbucketSource,
   );
 
   sl.registerSingleton<ConnectorRegistry>(registry);
@@ -244,9 +274,11 @@ Future<void> serviceLocator() async {
       {
         'phorge': sl<PhorgeUserSource>(),
         'slack': sl<SlackMessageSource>(),
-        'teams': sl<TeamsMessageSource>(),
         'jira': sl<JiraIssueSource>(),
         'linear': sl<LinearIssueSource>(),
+        'discord': sl<DiscordMessageSource>(),
+        'gitlab': sl<GitLabCommitSource>(),
+        'bitbucket': sl<BitbucketCommitSource>(),
       },
     ),
   );
@@ -339,6 +371,67 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestPhorgeWebhook>(
+    IngestPhorgeWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      phorgeTaskSource,
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestJiraWebhook>(
+    IngestJiraWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestLinearWebhook>(
+    IngestLinearWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestGitLabWebhook>(
+    IngestGitLabWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestBitbucketWebhook>(
+    IngestBitbucketWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<IngestDiscordMessage>(
+    IngestDiscordMessage(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<RedisService>(),
+      sl<PresenceService>(),
+    ),
+  );
+  sl.registerSingleton<DiscordGatewayService>(
+    DiscordGatewayService(
+      sl<AbsIProviderConfigRepository>(),
+      sl<IngestDiscordMessage>(),
     ),
   );
   sl.registerSingleton<LogActivity>(
@@ -444,7 +537,12 @@ Future<void> serviceLocator() async {
       fetchRemoteActivities: sl<FetchRemoteActivities>(),
       getLiveActivities: sl<GetLiveActivities>(),
       getRecentActivities: sl<GetRecentActivities>(),
+      ingestBitbucketWebhook: sl<IngestBitbucketWebhook>(),
       ingestGitHubWebhook: sl<IngestGitHubWebhook>(),
+      ingestGitLabWebhook: sl<IngestGitLabWebhook>(),
+      ingestJiraWebhook: sl<IngestJiraWebhook>(),
+      ingestLinearWebhook: sl<IngestLinearWebhook>(),
+      ingestPhorgeWebhook: sl<IngestPhorgeWebhook>(),
       ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),
@@ -518,12 +616,6 @@ Future<void> _seedProviders() async {
           'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png',
         ),
         (
-          'teams',
-          'Microsoft Teams',
-          'https://teams.microsoft.com',
-          'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico',
-        ),
-        (
           'slack',
           'Slack',
           'https://slack.com',
@@ -546,6 +638,12 @@ Future<void> _seedProviders() async {
           'GitLab',
           'https://gitlab.com',
           'https://gitlab.com/favicon.ico',
+        ),
+        (
+          'bitbucket',
+          'Bitbucket',
+          'https://bitbucket.org',
+          'https://bitbucket.org/favicon.ico',
         ),
       ];
 

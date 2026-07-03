@@ -41,10 +41,10 @@ class AppIcons {
   // Providers
   static final IconData github = SimpleIcons.github;
   static final IconData gitlab = SimpleIcons.gitlab;
+  static final IconData bitbucket = SimpleIcons.bitbucket;
   static final IconData phorge = HeroIcons.codeBracket.outline;
   static final IconData linear = SimpleIcons.linear;
   static final IconData jira = SimpleIcons.jira;
-  static final IconData teams = HeroIcons.userGroup.outline;
   static final IconData slack = SimpleIcons.slack;
   static final IconData discord = SimpleIcons.discord;
   static final IconData unknownProvider = HeroIcons.questionMarkCircle.outline;

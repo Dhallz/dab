@@ -52,9 +52,14 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 
 ```
 activities                  ← Base table: id, userId, providerName, title, content, author, createdAt
-  └── activity_phorge       ← Phorge metadata: taskPhid, revisionId, tags
-  └── activity_github_commit← GitHub commit metadata: repo, branch
-  └── activity_slack_message← Slack metadata: workspaceId, channelId, threadTs, messageTs
+  └── activity_phorge            ← Phorge metadata: taskPhid, revisionId, tags
+  └── activity_github_commit    ← GitHub commit metadata: repo, branch
+  └── activity_gitlab_commit    ← GitLab commit metadata: project, branch
+  └── activity_bitbucket_commit ← Bitbucket commit metadata: repo, branch
+  └── activity_jira_issue       ← Jira issue metadata: issueKey, projectKey, status
+  └── activity_linear_issue     ← Linear issue metadata: identifier, teamKey, status
+  └── activity_slack_message    ← Slack metadata: workspaceId, channelId, threadTs, messageTs
+  └── activity_discord_message  ← Discord metadata: guildId, channelId, messageId, replyToId
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -68,7 +73,12 @@ activities                  ← Base table: id, userId, providerName, title, con
 | `activities` | Normalized activity base |
 | `activity_phorge` | Phorge-specific metadata |
 | `activity_github_commit` | GitHub commit-specific metadata |
+| `activity_gitlab_commit` | GitLab commit-specific metadata |
+| `activity_bitbucket_commit` | Bitbucket commit-specific metadata |
+| `activity_jira_issue` | Jira issue-specific metadata |
+| `activity_linear_issue` | Linear issue-specific metadata |
 | `activity_slack_message` | Slack message-specific metadata |
+| `activity_discord_message` | Discord message-specific metadata |
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `sessions` | Active auth sessions |
@@ -115,14 +125,20 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 
 The **dashboard** `GET /activities/live` response is built exclusively from Redis live keys (`activities:global` and `activities:user:{id}`); it never queries Postgres. Explorer uses **`GET /activities/search`**, which aggregates **provider APIs via `UnifiedActivityFetcher`** (no Postgres in that handler).
 
-Slack live events reach these keys through a signed Events API webhook endpoint
-(`POST /integrations/slack/events`) that ingests push callbacks. GitHub push
-callbacks use `POST /integrations/github/webhook` with TLS + HMAC body
-verification.
+Live events reach these keys through provider push receivers: Slack Events API
+(`POST /integrations/slack/events`), signed push webhooks for GitHub, GitLab,
+Bitbucket, Phorge (Herald), Jira, and Linear
+(`POST /integrations/{provider}/webhook`), and — for Discord, which has no
+message webhooks — the outbound `DiscordGatewayService` WebSocket client. The
+Gateway service connects to the Discord Gateway with the configured bot token
+(`GUILD_MESSAGES`/`MESSAGE_CONTENT` intents), maintains the heartbeat loop with
+sequence tracking, and reconnects with RESUME + exponential backoff. It starts
+at boot when the Discord provider is active and reloads on config save.
 
-Optional **webhook dedupe**: short-TTL Redis keys `slack:event:{eventId}` and
-`github:delivery:{delivery}` prevent replayed provider deliveries from
-double-writing during the TTL window.
+**Webhook dedupe**: short-TTL Redis keys (`SET NX EX`, per-provider prefixes
+such as `slack:event:{eventId}`, `github:delivery:{delivery}`, and
+`ingest:{provider}:{fingerprint}` for the newer receivers) prevent replayed
+provider deliveries from double-writing during the TTL window.
 
 **Live feed window.** A background job runs at **UTC midnight** and rewrites
 materialized lists `activities:user:*` and `activities:global`, removing entries

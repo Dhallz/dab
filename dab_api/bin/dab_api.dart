@@ -12,6 +12,7 @@ import 'package:dab_api/src/presentation/controllers/user_controller.dart';
 import 'package:dab_api/src/presentation/middlewares/admin_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
 import 'package:dab_api/src/service_locator.dart';
@@ -25,13 +26,13 @@ Future<void> main() async {
   await serviceLocator();
   print('Dependency injection and database ready.');
 
-  // 2. Start background polling
-  // sl<ActivityService>().startPolling();
-  print('Phorge polling started.');
-
-  // 3. Start the daily UTC midnight purge of stale live-feed entries (archived
+  // 2. Start the daily UTC midnight purge of stale live-feed entries (archived
   //    or older than the current UTC calendar day).
   sl<ActivityPurgeScheduler>().start();
+
+  // 3. Start the Discord Gateway client (live Dashboard ingestion) when the
+  //    Discord provider is active. No-op otherwise.
+  await sl<DiscordGatewayService>().start();
 
   final app = RelicApp()
     ..use('/', GlobalErrorHandler().call)
@@ -64,6 +65,26 @@ Future<void> main() async {
     ..post(
       '/integrations/github/webhook',
       ActivityController().receiveGitHubWebhook,
+    )
+    ..post(
+      '/integrations/phorge/webhook',
+      ActivityController().receivePhorgeWebhook,
+    )
+    ..post(
+      '/integrations/jira/webhook',
+      ActivityController().receiveJiraWebhook,
+    )
+    ..post(
+      '/integrations/linear/webhook',
+      ActivityController().receiveLinearWebhook,
+    )
+    ..post(
+      '/integrations/gitlab/webhook',
+      ActivityController().receiveGitLabWebhook,
+    )
+    ..post(
+      '/integrations/bitbucket/webhook',
+      ActivityController().receiveBitbucketWebhook,
     )
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)

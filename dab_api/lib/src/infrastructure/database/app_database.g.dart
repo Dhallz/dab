@@ -1875,6 +1875,576 @@ class ActivityGithubCommitTableCompanion
   }
 }
 
+class $ActivityGitlabCommitTableTable extends ActivityGitlabCommitTable
+    with
+        TableInfo<
+          $ActivityGitlabCommitTableTable,
+          ActivityGitlabCommitTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityGitlabCommitTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _projectMeta = const VerificationMeta(
+    'project',
+  );
+  @override
+  late final GeneratedColumn<String> project = GeneratedColumn<String>(
+    'project',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _branchMeta = const VerificationMeta('branch');
+  @override
+  late final GeneratedColumn<String> branch = GeneratedColumn<String>(
+    'branch',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [activityId, project, branch];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_gitlab_commit';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityGitlabCommitTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('project')) {
+      context.handle(
+        _projectMeta,
+        project.isAcceptableOrUnknown(data['project']!, _projectMeta),
+      );
+    }
+    if (data.containsKey('branch')) {
+      context.handle(
+        _branchMeta,
+        branch.isAcceptableOrUnknown(data['branch']!, _branchMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityGitlabCommitTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityGitlabCommitTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      project: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project'],
+      ),
+      branch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityGitlabCommitTableTable createAlias(String alias) {
+    return $ActivityGitlabCommitTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityGitlabCommitTableData extends DataClass
+    implements Insertable<ActivityGitlabCommitTableData> {
+  final String activityId;
+
+  /// Full project path (e.g. `group/project`).
+  final String? project;
+  final String? branch;
+  const ActivityGitlabCommitTableData({
+    required this.activityId,
+    this.project,
+    this.branch,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    if (!nullToAbsent || project != null) {
+      map['project'] = Variable<String>(project);
+    }
+    if (!nullToAbsent || branch != null) {
+      map['branch'] = Variable<String>(branch);
+    }
+    return map;
+  }
+
+  ActivityGitlabCommitTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityGitlabCommitTableCompanion(
+      activityId: Value(activityId),
+      project: project == null && nullToAbsent
+          ? const Value.absent()
+          : Value(project),
+      branch: branch == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branch),
+    );
+  }
+
+  factory ActivityGitlabCommitTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityGitlabCommitTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      project: serializer.fromJson<String?>(json['project']),
+      branch: serializer.fromJson<String?>(json['branch']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'project': serializer.toJson<String?>(project),
+      'branch': serializer.toJson<String?>(branch),
+    };
+  }
+
+  ActivityGitlabCommitTableData copyWith({
+    String? activityId,
+    Value<String?> project = const Value.absent(),
+    Value<String?> branch = const Value.absent(),
+  }) => ActivityGitlabCommitTableData(
+    activityId: activityId ?? this.activityId,
+    project: project.present ? project.value : this.project,
+    branch: branch.present ? branch.value : this.branch,
+  );
+  ActivityGitlabCommitTableData copyWithCompanion(
+    ActivityGitlabCommitTableCompanion data,
+  ) {
+    return ActivityGitlabCommitTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      project: data.project.present ? data.project.value : this.project,
+      branch: data.branch.present ? data.branch.value : this.branch,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityGitlabCommitTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('project: $project, ')
+          ..write('branch: $branch')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(activityId, project, branch);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityGitlabCommitTableData &&
+          other.activityId == this.activityId &&
+          other.project == this.project &&
+          other.branch == this.branch);
+}
+
+class ActivityGitlabCommitTableCompanion
+    extends UpdateCompanion<ActivityGitlabCommitTableData> {
+  final Value<String> activityId;
+  final Value<String?> project;
+  final Value<String?> branch;
+  final Value<int> rowid;
+  const ActivityGitlabCommitTableCompanion({
+    this.activityId = const Value.absent(),
+    this.project = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityGitlabCommitTableCompanion.insert({
+    required String activityId,
+    this.project = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId);
+  static Insertable<ActivityGitlabCommitTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? project,
+    Expression<String>? branch,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (project != null) 'project': project,
+      if (branch != null) 'branch': branch,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityGitlabCommitTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String?>? project,
+    Value<String?>? branch,
+    Value<int>? rowid,
+  }) {
+    return ActivityGitlabCommitTableCompanion(
+      activityId: activityId ?? this.activityId,
+      project: project ?? this.project,
+      branch: branch ?? this.branch,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (project.present) {
+      map['project'] = Variable<String>(project.value);
+    }
+    if (branch.present) {
+      map['branch'] = Variable<String>(branch.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityGitlabCommitTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('project: $project, ')
+          ..write('branch: $branch, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ActivityBitbucketCommitTableTable extends ActivityBitbucketCommitTable
+    with
+        TableInfo<
+          $ActivityBitbucketCommitTableTable,
+          ActivityBitbucketCommitTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityBitbucketCommitTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _repoMeta = const VerificationMeta('repo');
+  @override
+  late final GeneratedColumn<String> repo = GeneratedColumn<String>(
+    'repo',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _branchMeta = const VerificationMeta('branch');
+  @override
+  late final GeneratedColumn<String> branch = GeneratedColumn<String>(
+    'branch',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [activityId, repo, branch];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_bitbucket_commit';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityBitbucketCommitTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('repo')) {
+      context.handle(
+        _repoMeta,
+        repo.isAcceptableOrUnknown(data['repo']!, _repoMeta),
+      );
+    }
+    if (data.containsKey('branch')) {
+      context.handle(
+        _branchMeta,
+        branch.isAcceptableOrUnknown(data['branch']!, _branchMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityBitbucketCommitTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityBitbucketCommitTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      repo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}repo'],
+      ),
+      branch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityBitbucketCommitTableTable createAlias(String alias) {
+    return $ActivityBitbucketCommitTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityBitbucketCommitTableData extends DataClass
+    implements Insertable<ActivityBitbucketCommitTableData> {
+  final String activityId;
+
+  /// Full repository slug (e.g. `workspace/repo`).
+  final String? repo;
+  final String? branch;
+  const ActivityBitbucketCommitTableData({
+    required this.activityId,
+    this.repo,
+    this.branch,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    if (!nullToAbsent || repo != null) {
+      map['repo'] = Variable<String>(repo);
+    }
+    if (!nullToAbsent || branch != null) {
+      map['branch'] = Variable<String>(branch);
+    }
+    return map;
+  }
+
+  ActivityBitbucketCommitTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityBitbucketCommitTableCompanion(
+      activityId: Value(activityId),
+      repo: repo == null && nullToAbsent ? const Value.absent() : Value(repo),
+      branch: branch == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branch),
+    );
+  }
+
+  factory ActivityBitbucketCommitTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityBitbucketCommitTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      repo: serializer.fromJson<String?>(json['repo']),
+      branch: serializer.fromJson<String?>(json['branch']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'repo': serializer.toJson<String?>(repo),
+      'branch': serializer.toJson<String?>(branch),
+    };
+  }
+
+  ActivityBitbucketCommitTableData copyWith({
+    String? activityId,
+    Value<String?> repo = const Value.absent(),
+    Value<String?> branch = const Value.absent(),
+  }) => ActivityBitbucketCommitTableData(
+    activityId: activityId ?? this.activityId,
+    repo: repo.present ? repo.value : this.repo,
+    branch: branch.present ? branch.value : this.branch,
+  );
+  ActivityBitbucketCommitTableData copyWithCompanion(
+    ActivityBitbucketCommitTableCompanion data,
+  ) {
+    return ActivityBitbucketCommitTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      repo: data.repo.present ? data.repo.value : this.repo,
+      branch: data.branch.present ? data.branch.value : this.branch,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityBitbucketCommitTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('repo: $repo, ')
+          ..write('branch: $branch')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(activityId, repo, branch);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityBitbucketCommitTableData &&
+          other.activityId == this.activityId &&
+          other.repo == this.repo &&
+          other.branch == this.branch);
+}
+
+class ActivityBitbucketCommitTableCompanion
+    extends UpdateCompanion<ActivityBitbucketCommitTableData> {
+  final Value<String> activityId;
+  final Value<String?> repo;
+  final Value<String?> branch;
+  final Value<int> rowid;
+  const ActivityBitbucketCommitTableCompanion({
+    this.activityId = const Value.absent(),
+    this.repo = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityBitbucketCommitTableCompanion.insert({
+    required String activityId,
+    this.repo = const Value.absent(),
+    this.branch = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId);
+  static Insertable<ActivityBitbucketCommitTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? repo,
+    Expression<String>? branch,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (repo != null) 'repo': repo,
+      if (branch != null) 'branch': branch,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityBitbucketCommitTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String?>? repo,
+    Value<String?>? branch,
+    Value<int>? rowid,
+  }) {
+    return ActivityBitbucketCommitTableCompanion(
+      activityId: activityId ?? this.activityId,
+      repo: repo ?? this.repo,
+      branch: branch ?? this.branch,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (repo.present) {
+      map['repo'] = Variable<String>(repo.value);
+    }
+    if (branch.present) {
+      map['branch'] = Variable<String>(branch.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityBitbucketCommitTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('repo: $repo, ')
+          ..write('branch: $branch, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ActivityJiraIssueTableTable extends ActivityJiraIssueTable
     with TableInfo<$ActivityJiraIssueTableTable, ActivityJiraIssueTableData> {
   @override
@@ -2205,6 +2775,347 @@ class ActivityJiraIssueTableCompanion
           ..write('activityId: $activityId, ')
           ..write('issueKey: $issueKey, ')
           ..write('projectKey: $projectKey, ')
+          ..write('statusName: $statusName, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ActivityLinearIssueTableTable extends ActivityLinearIssueTable
+    with
+        TableInfo<
+          $ActivityLinearIssueTableTable,
+          ActivityLinearIssueTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityLinearIssueTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _identifierMeta = const VerificationMeta(
+    'identifier',
+  );
+  @override
+  late final GeneratedColumn<String> identifier = GeneratedColumn<String>(
+    'identifier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _teamKeyMeta = const VerificationMeta(
+    'teamKey',
+  );
+  @override
+  late final GeneratedColumn<String> teamKey = GeneratedColumn<String>(
+    'team_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusNameMeta = const VerificationMeta(
+    'statusName',
+  );
+  @override
+  late final GeneratedColumn<String> statusName = GeneratedColumn<String>(
+    'status_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    activityId,
+    identifier,
+    teamKey,
+    statusName,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_linear_issue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityLinearIssueTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('identifier')) {
+      context.handle(
+        _identifierMeta,
+        identifier.isAcceptableOrUnknown(data['identifier']!, _identifierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_identifierMeta);
+    }
+    if (data.containsKey('team_key')) {
+      context.handle(
+        _teamKeyMeta,
+        teamKey.isAcceptableOrUnknown(data['team_key']!, _teamKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamKeyMeta);
+    }
+    if (data.containsKey('status_name')) {
+      context.handle(
+        _statusNameMeta,
+        statusName.isAcceptableOrUnknown(data['status_name']!, _statusNameMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityLinearIssueTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityLinearIssueTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      identifier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}identifier'],
+      )!,
+      teamKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_key'],
+      )!,
+      statusName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status_name'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityLinearIssueTableTable createAlias(String alias) {
+    return $ActivityLinearIssueTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityLinearIssueTableData extends DataClass
+    implements Insertable<ActivityLinearIssueTableData> {
+  final String activityId;
+  final String identifier;
+  final String teamKey;
+  final String? statusName;
+  const ActivityLinearIssueTableData({
+    required this.activityId,
+    required this.identifier,
+    required this.teamKey,
+    this.statusName,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    map['identifier'] = Variable<String>(identifier);
+    map['team_key'] = Variable<String>(teamKey);
+    if (!nullToAbsent || statusName != null) {
+      map['status_name'] = Variable<String>(statusName);
+    }
+    return map;
+  }
+
+  ActivityLinearIssueTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityLinearIssueTableCompanion(
+      activityId: Value(activityId),
+      identifier: Value(identifier),
+      teamKey: Value(teamKey),
+      statusName: statusName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statusName),
+    );
+  }
+
+  factory ActivityLinearIssueTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityLinearIssueTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      identifier: serializer.fromJson<String>(json['identifier']),
+      teamKey: serializer.fromJson<String>(json['teamKey']),
+      statusName: serializer.fromJson<String?>(json['statusName']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'identifier': serializer.toJson<String>(identifier),
+      'teamKey': serializer.toJson<String>(teamKey),
+      'statusName': serializer.toJson<String?>(statusName),
+    };
+  }
+
+  ActivityLinearIssueTableData copyWith({
+    String? activityId,
+    String? identifier,
+    String? teamKey,
+    Value<String?> statusName = const Value.absent(),
+  }) => ActivityLinearIssueTableData(
+    activityId: activityId ?? this.activityId,
+    identifier: identifier ?? this.identifier,
+    teamKey: teamKey ?? this.teamKey,
+    statusName: statusName.present ? statusName.value : this.statusName,
+  );
+  ActivityLinearIssueTableData copyWithCompanion(
+    ActivityLinearIssueTableCompanion data,
+  ) {
+    return ActivityLinearIssueTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      identifier: data.identifier.present
+          ? data.identifier.value
+          : this.identifier,
+      teamKey: data.teamKey.present ? data.teamKey.value : this.teamKey,
+      statusName: data.statusName.present
+          ? data.statusName.value
+          : this.statusName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLinearIssueTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('identifier: $identifier, ')
+          ..write('teamKey: $teamKey, ')
+          ..write('statusName: $statusName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(activityId, identifier, teamKey, statusName);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityLinearIssueTableData &&
+          other.activityId == this.activityId &&
+          other.identifier == this.identifier &&
+          other.teamKey == this.teamKey &&
+          other.statusName == this.statusName);
+}
+
+class ActivityLinearIssueTableCompanion
+    extends UpdateCompanion<ActivityLinearIssueTableData> {
+  final Value<String> activityId;
+  final Value<String> identifier;
+  final Value<String> teamKey;
+  final Value<String?> statusName;
+  final Value<int> rowid;
+  const ActivityLinearIssueTableCompanion({
+    this.activityId = const Value.absent(),
+    this.identifier = const Value.absent(),
+    this.teamKey = const Value.absent(),
+    this.statusName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityLinearIssueTableCompanion.insert({
+    required String activityId,
+    required String identifier,
+    required String teamKey,
+    this.statusName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId),
+       identifier = Value(identifier),
+       teamKey = Value(teamKey);
+  static Insertable<ActivityLinearIssueTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? identifier,
+    Expression<String>? teamKey,
+    Expression<String>? statusName,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (identifier != null) 'identifier': identifier,
+      if (teamKey != null) 'team_key': teamKey,
+      if (statusName != null) 'status_name': statusName,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityLinearIssueTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String>? identifier,
+    Value<String>? teamKey,
+    Value<String?>? statusName,
+    Value<int>? rowid,
+  }) {
+    return ActivityLinearIssueTableCompanion(
+      activityId: activityId ?? this.activityId,
+      identifier: identifier ?? this.identifier,
+      teamKey: teamKey ?? this.teamKey,
+      statusName: statusName ?? this.statusName,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (identifier.present) {
+      map['identifier'] = Variable<String>(identifier.value);
+    }
+    if (teamKey.present) {
+      map['team_key'] = Variable<String>(teamKey.value);
+    }
+    if (statusName.present) {
+      map['status_name'] = Variable<String>(statusName.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLinearIssueTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('identifier: $identifier, ')
+          ..write('teamKey: $teamKey, ')
           ..write('statusName: $statusName, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2605,16 +3516,16 @@ class ActivitySlackMessageTableCompanion
   }
 }
 
-class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
+class $ActivityDiscordMessageTableTable extends ActivityDiscordMessageTable
     with
         TableInfo<
-          $ActivityTeamsMessageTableTable,
-          ActivityTeamsMessageTableData
+          $ActivityDiscordMessageTableTable,
+          ActivityDiscordMessageTableData
         > {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ActivityTeamsMessageTableTable(this.attachedDatabase, [this._alias]);
+  $ActivityDiscordMessageTableTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _activityIdMeta = const VerificationMeta(
     'activityId',
   );
@@ -2629,21 +3540,12 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
       'REFERENCES activities (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _tenantIdMeta = const VerificationMeta(
-    'tenantId',
+  static const VerificationMeta _guildIdMeta = const VerificationMeta(
+    'guildId',
   );
   @override
-  late final GeneratedColumn<String> tenantId = GeneratedColumn<String>(
-    'tenant_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
-  @override
-  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
-    'team_id',
+  late final GeneratedColumn<String> guildId = GeneratedColumn<String>(
+    'guild_id',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -2685,8 +3587,7 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
   @override
   List<GeneratedColumn> get $columns => [
     activityId,
-    tenantId,
-    teamId,
+    guildId,
     channelId,
     messageId,
     replyToId,
@@ -2695,10 +3596,10 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'activity_teams_message';
+  static const String $name = 'activity_discord_message';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ActivityTeamsMessageTableData> instance, {
+    Insertable<ActivityDiscordMessageTableData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2711,16 +3612,10 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
     } else if (isInserting) {
       context.missing(_activityIdMeta);
     }
-    if (data.containsKey('tenant_id')) {
+    if (data.containsKey('guild_id')) {
       context.handle(
-        _tenantIdMeta,
-        tenantId.isAcceptableOrUnknown(data['tenant_id']!, _tenantIdMeta),
-      );
-    }
-    if (data.containsKey('team_id')) {
-      context.handle(
-        _teamIdMeta,
-        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+        _guildIdMeta,
+        guildId.isAcceptableOrUnknown(data['guild_id']!, _guildIdMeta),
       );
     }
     if (data.containsKey('channel_id')) {
@@ -2747,23 +3642,19 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
   @override
   Set<GeneratedColumn> get $primaryKey => {activityId};
   @override
-  ActivityTeamsMessageTableData map(
+  ActivityDiscordMessageTableData map(
     Map<String, dynamic> data, {
     String? tablePrefix,
   }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ActivityTeamsMessageTableData(
+    return ActivityDiscordMessageTableData(
       activityId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}activity_id'],
       )!,
-      tenantId: attachedDatabase.typeMapping.read(
+      guildId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}tenant_id'],
-      ),
-      teamId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}team_id'],
+        data['${effectivePrefix}guild_id'],
       ),
       channelId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -2781,23 +3672,21 @@ class $ActivityTeamsMessageTableTable extends ActivityTeamsMessageTable
   }
 
   @override
-  $ActivityTeamsMessageTableTable createAlias(String alias) {
-    return $ActivityTeamsMessageTableTable(attachedDatabase, alias);
+  $ActivityDiscordMessageTableTable createAlias(String alias) {
+    return $ActivityDiscordMessageTableTable(attachedDatabase, alias);
   }
 }
 
-class ActivityTeamsMessageTableData extends DataClass
-    implements Insertable<ActivityTeamsMessageTableData> {
+class ActivityDiscordMessageTableData extends DataClass
+    implements Insertable<ActivityDiscordMessageTableData> {
   final String activityId;
-  final String? tenantId;
-  final String? teamId;
+  final String? guildId;
   final String? channelId;
   final String? messageId;
   final String? replyToId;
-  const ActivityTeamsMessageTableData({
+  const ActivityDiscordMessageTableData({
     required this.activityId,
-    this.tenantId,
-    this.teamId,
+    this.guildId,
     this.channelId,
     this.messageId,
     this.replyToId,
@@ -2806,11 +3695,8 @@ class ActivityTeamsMessageTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['activity_id'] = Variable<String>(activityId);
-    if (!nullToAbsent || tenantId != null) {
-      map['tenant_id'] = Variable<String>(tenantId);
-    }
-    if (!nullToAbsent || teamId != null) {
-      map['team_id'] = Variable<String>(teamId);
+    if (!nullToAbsent || guildId != null) {
+      map['guild_id'] = Variable<String>(guildId);
     }
     if (!nullToAbsent || channelId != null) {
       map['channel_id'] = Variable<String>(channelId);
@@ -2824,15 +3710,12 @@ class ActivityTeamsMessageTableData extends DataClass
     return map;
   }
 
-  ActivityTeamsMessageTableCompanion toCompanion(bool nullToAbsent) {
-    return ActivityTeamsMessageTableCompanion(
+  ActivityDiscordMessageTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityDiscordMessageTableCompanion(
       activityId: Value(activityId),
-      tenantId: tenantId == null && nullToAbsent
+      guildId: guildId == null && nullToAbsent
           ? const Value.absent()
-          : Value(tenantId),
-      teamId: teamId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(teamId),
+          : Value(guildId),
       channelId: channelId == null && nullToAbsent
           ? const Value.absent()
           : Value(channelId),
@@ -2845,15 +3728,14 @@ class ActivityTeamsMessageTableData extends DataClass
     );
   }
 
-  factory ActivityTeamsMessageTableData.fromJson(
+  factory ActivityDiscordMessageTableData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ActivityTeamsMessageTableData(
+    return ActivityDiscordMessageTableData(
       activityId: serializer.fromJson<String>(json['activityId']),
-      tenantId: serializer.fromJson<String?>(json['tenantId']),
-      teamId: serializer.fromJson<String?>(json['teamId']),
+      guildId: serializer.fromJson<String?>(json['guildId']),
       channelId: serializer.fromJson<String?>(json['channelId']),
       messageId: serializer.fromJson<String?>(json['messageId']),
       replyToId: serializer.fromJson<String?>(json['replyToId']),
@@ -2864,38 +3746,34 @@ class ActivityTeamsMessageTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'activityId': serializer.toJson<String>(activityId),
-      'tenantId': serializer.toJson<String?>(tenantId),
-      'teamId': serializer.toJson<String?>(teamId),
+      'guildId': serializer.toJson<String?>(guildId),
       'channelId': serializer.toJson<String?>(channelId),
       'messageId': serializer.toJson<String?>(messageId),
       'replyToId': serializer.toJson<String?>(replyToId),
     };
   }
 
-  ActivityTeamsMessageTableData copyWith({
+  ActivityDiscordMessageTableData copyWith({
     String? activityId,
-    Value<String?> tenantId = const Value.absent(),
-    Value<String?> teamId = const Value.absent(),
+    Value<String?> guildId = const Value.absent(),
     Value<String?> channelId = const Value.absent(),
     Value<String?> messageId = const Value.absent(),
     Value<String?> replyToId = const Value.absent(),
-  }) => ActivityTeamsMessageTableData(
+  }) => ActivityDiscordMessageTableData(
     activityId: activityId ?? this.activityId,
-    tenantId: tenantId.present ? tenantId.value : this.tenantId,
-    teamId: teamId.present ? teamId.value : this.teamId,
+    guildId: guildId.present ? guildId.value : this.guildId,
     channelId: channelId.present ? channelId.value : this.channelId,
     messageId: messageId.present ? messageId.value : this.messageId,
     replyToId: replyToId.present ? replyToId.value : this.replyToId,
   );
-  ActivityTeamsMessageTableData copyWithCompanion(
-    ActivityTeamsMessageTableCompanion data,
+  ActivityDiscordMessageTableData copyWithCompanion(
+    ActivityDiscordMessageTableCompanion data,
   ) {
-    return ActivityTeamsMessageTableData(
+    return ActivityDiscordMessageTableData(
       activityId: data.activityId.present
           ? data.activityId.value
           : this.activityId,
-      tenantId: data.tenantId.present ? data.tenantId.value : this.tenantId,
-      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      guildId: data.guildId.present ? data.guildId.value : this.guildId,
       channelId: data.channelId.present ? data.channelId.value : this.channelId,
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
       replyToId: data.replyToId.present ? data.replyToId.value : this.replyToId,
@@ -2904,10 +3782,9 @@ class ActivityTeamsMessageTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('ActivityTeamsMessageTableData(')
+    return (StringBuffer('ActivityDiscordMessageTableData(')
           ..write('activityId: $activityId, ')
-          ..write('tenantId: $tenantId, ')
-          ..write('teamId: $teamId, ')
+          ..write('guildId: $guildId, ')
           ..write('channelId: $channelId, ')
           ..write('messageId: $messageId, ')
           ..write('replyToId: $replyToId')
@@ -2916,57 +3793,46 @@ class ActivityTeamsMessageTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    activityId,
-    tenantId,
-    teamId,
-    channelId,
-    messageId,
-    replyToId,
-  );
+  int get hashCode =>
+      Object.hash(activityId, guildId, channelId, messageId, replyToId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ActivityTeamsMessageTableData &&
+      (other is ActivityDiscordMessageTableData &&
           other.activityId == this.activityId &&
-          other.tenantId == this.tenantId &&
-          other.teamId == this.teamId &&
+          other.guildId == this.guildId &&
           other.channelId == this.channelId &&
           other.messageId == this.messageId &&
           other.replyToId == this.replyToId);
 }
 
-class ActivityTeamsMessageTableCompanion
-    extends UpdateCompanion<ActivityTeamsMessageTableData> {
+class ActivityDiscordMessageTableCompanion
+    extends UpdateCompanion<ActivityDiscordMessageTableData> {
   final Value<String> activityId;
-  final Value<String?> tenantId;
-  final Value<String?> teamId;
+  final Value<String?> guildId;
   final Value<String?> channelId;
   final Value<String?> messageId;
   final Value<String?> replyToId;
   final Value<int> rowid;
-  const ActivityTeamsMessageTableCompanion({
+  const ActivityDiscordMessageTableCompanion({
     this.activityId = const Value.absent(),
-    this.tenantId = const Value.absent(),
-    this.teamId = const Value.absent(),
+    this.guildId = const Value.absent(),
     this.channelId = const Value.absent(),
     this.messageId = const Value.absent(),
     this.replyToId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  ActivityTeamsMessageTableCompanion.insert({
+  ActivityDiscordMessageTableCompanion.insert({
     required String activityId,
-    this.tenantId = const Value.absent(),
-    this.teamId = const Value.absent(),
+    this.guildId = const Value.absent(),
     this.channelId = const Value.absent(),
     this.messageId = const Value.absent(),
     this.replyToId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : activityId = Value(activityId);
-  static Insertable<ActivityTeamsMessageTableData> custom({
+  static Insertable<ActivityDiscordMessageTableData> custom({
     Expression<String>? activityId,
-    Expression<String>? tenantId,
-    Expression<String>? teamId,
+    Expression<String>? guildId,
     Expression<String>? channelId,
     Expression<String>? messageId,
     Expression<String>? replyToId,
@@ -2974,8 +3840,7 @@ class ActivityTeamsMessageTableCompanion
   }) {
     return RawValuesInsertable({
       if (activityId != null) 'activity_id': activityId,
-      if (tenantId != null) 'tenant_id': tenantId,
-      if (teamId != null) 'team_id': teamId,
+      if (guildId != null) 'guild_id': guildId,
       if (channelId != null) 'channel_id': channelId,
       if (messageId != null) 'message_id': messageId,
       if (replyToId != null) 'reply_to_id': replyToId,
@@ -2983,19 +3848,17 @@ class ActivityTeamsMessageTableCompanion
     });
   }
 
-  ActivityTeamsMessageTableCompanion copyWith({
+  ActivityDiscordMessageTableCompanion copyWith({
     Value<String>? activityId,
-    Value<String?>? tenantId,
-    Value<String?>? teamId,
+    Value<String?>? guildId,
     Value<String?>? channelId,
     Value<String?>? messageId,
     Value<String?>? replyToId,
     Value<int>? rowid,
   }) {
-    return ActivityTeamsMessageTableCompanion(
+    return ActivityDiscordMessageTableCompanion(
       activityId: activityId ?? this.activityId,
-      tenantId: tenantId ?? this.tenantId,
-      teamId: teamId ?? this.teamId,
+      guildId: guildId ?? this.guildId,
       channelId: channelId ?? this.channelId,
       messageId: messageId ?? this.messageId,
       replyToId: replyToId ?? this.replyToId,
@@ -3009,11 +3872,8 @@ class ActivityTeamsMessageTableCompanion
     if (activityId.present) {
       map['activity_id'] = Variable<String>(activityId.value);
     }
-    if (tenantId.present) {
-      map['tenant_id'] = Variable<String>(tenantId.value);
-    }
-    if (teamId.present) {
-      map['team_id'] = Variable<String>(teamId.value);
+    if (guildId.present) {
+      map['guild_id'] = Variable<String>(guildId.value);
     }
     if (channelId.present) {
       map['channel_id'] = Variable<String>(channelId.value);
@@ -3032,10 +3892,9 @@ class ActivityTeamsMessageTableCompanion
 
   @override
   String toString() {
-    return (StringBuffer('ActivityTeamsMessageTableCompanion(')
+    return (StringBuffer('ActivityDiscordMessageTableCompanion(')
           ..write('activityId: $activityId, ')
-          ..write('tenantId: $tenantId, ')
-          ..write('teamId: $teamId, ')
+          ..write('guildId: $guildId, ')
           ..write('channelId: $channelId, ')
           ..write('messageId: $messageId, ')
           ..write('replyToId: $replyToId, ')
@@ -5232,12 +6091,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ActivityPhorgeTableTable(this);
   late final $ActivityGithubCommitTableTable activityGithubCommitTable =
       $ActivityGithubCommitTableTable(this);
+  late final $ActivityGitlabCommitTableTable activityGitlabCommitTable =
+      $ActivityGitlabCommitTableTable(this);
+  late final $ActivityBitbucketCommitTableTable activityBitbucketCommitTable =
+      $ActivityBitbucketCommitTableTable(this);
   late final $ActivityJiraIssueTableTable activityJiraIssueTable =
       $ActivityJiraIssueTableTable(this);
+  late final $ActivityLinearIssueTableTable activityLinearIssueTable =
+      $ActivityLinearIssueTableTable(this);
   late final $ActivitySlackMessageTableTable activitySlackMessageTable =
       $ActivitySlackMessageTableTable(this);
-  late final $ActivityTeamsMessageTableTable activityTeamsMessageTable =
-      $ActivityTeamsMessageTableTable(this);
+  late final $ActivityDiscordMessageTableTable activityDiscordMessageTable =
+      $ActivityDiscordMessageTableTable(this);
   late final $SessionsTableTable sessionsTable = $SessionsTableTable(this);
   late final $GroupsTableTable groupsTable = $GroupsTableTable(this);
   late final $GroupMembersTableTable groupMembersTable =
@@ -5257,9 +6122,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     activitiesTable,
     activityPhorgeTable,
     activityGithubCommitTable,
+    activityGitlabCommitTable,
+    activityBitbucketCommitTable,
     activityJiraIssueTable,
+    activityLinearIssueTable,
     activitySlackMessageTable,
-    activityTeamsMessageTable,
+    activityDiscordMessageTable,
     sessionsTable,
     groupsTable,
     groupMembersTable,
@@ -5288,7 +6156,30 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         'activities',
         limitUpdateKind: UpdateKind.delete,
       ),
+      result: [TableUpdate('activity_gitlab_commit', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('activity_bitbucket_commit', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
       result: [TableUpdate('activity_jira_issue', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('activity_linear_issue', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -5302,7 +6193,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         'activities',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('activity_teams_message', kind: UpdateKind.delete)],
+      result: [
+        TableUpdate('activity_discord_message', kind: UpdateKind.delete),
+      ],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -5833,6 +6726,62 @@ final class $$ActivitiesTableTableReferences
   }
 
   static MultiTypedResultKey<
+    $ActivityGitlabCommitTableTable,
+    List<ActivityGitlabCommitTableData>
+  >
+  _activityGitlabCommitTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityGitlabCommitTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityGitlabCommitTable.activityId,
+        ),
+      );
+
+  $$ActivityGitlabCommitTableTableProcessedTableManager
+  get activityGitlabCommitTableRefs {
+    final manager = $$ActivityGitlabCommitTableTableTableManager(
+      $_db,
+      $_db.activityGitlabCommitTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityGitlabCommitTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ActivityBitbucketCommitTableTable,
+    List<ActivityBitbucketCommitTableData>
+  >
+  _activityBitbucketCommitTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityBitbucketCommitTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityBitbucketCommitTable.activityId,
+        ),
+      );
+
+  $$ActivityBitbucketCommitTableTableProcessedTableManager
+  get activityBitbucketCommitTableRefs {
+    final manager = $$ActivityBitbucketCommitTableTableTableManager(
+      $_db,
+      $_db.activityBitbucketCommitTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityBitbucketCommitTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
     $ActivityJiraIssueTableTable,
     List<ActivityJiraIssueTableData>
   >
@@ -5854,6 +6803,34 @@ final class $$ActivitiesTableTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _activityJiraIssueTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ActivityLinearIssueTableTable,
+    List<ActivityLinearIssueTableData>
+  >
+  _activityLinearIssueTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityLinearIssueTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityLinearIssueTable.activityId,
+        ),
+      );
+
+  $$ActivityLinearIssueTableTableProcessedTableManager
+  get activityLinearIssueTableRefs {
+    final manager = $$ActivityLinearIssueTableTableTableManager(
+      $_db,
+      $_db.activityLinearIssueTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityLinearIssueTableRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -5889,27 +6866,27 @@ final class $$ActivitiesTableTableReferences
   }
 
   static MultiTypedResultKey<
-    $ActivityTeamsMessageTableTable,
-    List<ActivityTeamsMessageTableData>
+    $ActivityDiscordMessageTableTable,
+    List<ActivityDiscordMessageTableData>
   >
-  _activityTeamsMessageTableRefsTable(_$AppDatabase db) =>
+  _activityDiscordMessageTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
-        db.activityTeamsMessageTable,
+        db.activityDiscordMessageTable,
         aliasName: $_aliasNameGenerator(
           db.activitiesTable.id,
-          db.activityTeamsMessageTable.activityId,
+          db.activityDiscordMessageTable.activityId,
         ),
       );
 
-  $$ActivityTeamsMessageTableTableProcessedTableManager
-  get activityTeamsMessageTableRefs {
-    final manager = $$ActivityTeamsMessageTableTableTableManager(
+  $$ActivityDiscordMessageTableTableProcessedTableManager
+  get activityDiscordMessageTableRefs {
+    final manager = $$ActivityDiscordMessageTableTableTableManager(
       $_db,
-      $_db.activityTeamsMessageTable,
+      $_db.activityDiscordMessageTable,
     ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(
-      _activityTeamsMessageTableRefsTable($_db),
+      _activityDiscordMessageTableRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -6028,6 +7005,62 @@ class $$ActivitiesTableTableFilterComposer
     return f(composer);
   }
 
+  Expression<bool> activityGitlabCommitTableRefs(
+    Expression<bool> Function($$ActivityGitlabCommitTableTableFilterComposer f)
+    f,
+  ) {
+    final $$ActivityGitlabCommitTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityGitlabCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityGitlabCommitTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityGitlabCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> activityBitbucketCommitTableRefs(
+    Expression<bool> Function(
+      $$ActivityBitbucketCommitTableTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$ActivityBitbucketCommitTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityBitbucketCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityBitbucketCommitTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityBitbucketCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<bool> activityJiraIssueTableRefs(
     Expression<bool> Function($$ActivityJiraIssueTableTableFilterComposer f) f,
   ) {
@@ -6045,6 +7078,33 @@ class $$ActivitiesTableTableFilterComposer
               }) => $$ActivityJiraIssueTableTableFilterComposer(
                 $db: $db,
                 $table: $db.activityJiraIssueTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> activityLinearIssueTableRefs(
+    Expression<bool> Function($$ActivityLinearIssueTableTableFilterComposer f)
+    f,
+  ) {
+    final $$ActivityLinearIssueTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityLinearIssueTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityLinearIssueTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityLinearIssueTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -6081,24 +7141,26 @@ class $$ActivitiesTableTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> activityTeamsMessageTableRefs(
-    Expression<bool> Function($$ActivityTeamsMessageTableTableFilterComposer f)
+  Expression<bool> activityDiscordMessageTableRefs(
+    Expression<bool> Function(
+      $$ActivityDiscordMessageTableTableFilterComposer f,
+    )
     f,
   ) {
-    final $$ActivityTeamsMessageTableTableFilterComposer composer =
+    final $$ActivityDiscordMessageTableTableFilterComposer composer =
         $composerBuilder(
           composer: this,
           getCurrentColumn: (t) => t.id,
-          referencedTable: $db.activityTeamsMessageTable,
+          referencedTable: $db.activityDiscordMessageTable,
           getReferencedColumn: (t) => t.activityId,
           builder:
               (
                 joinBuilder, {
                 $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-              }) => $$ActivityTeamsMessageTableTableFilterComposer(
+              }) => $$ActivityDiscordMessageTableTableFilterComposer(
                 $db: $db,
-                $table: $db.activityTeamsMessageTable,
+                $table: $db.activityDiscordMessageTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -6269,6 +7331,62 @@ class $$ActivitiesTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> activityGitlabCommitTableRefs<T extends Object>(
+    Expression<T> Function($$ActivityGitlabCommitTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$ActivityGitlabCommitTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityGitlabCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityGitlabCommitTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityGitlabCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> activityBitbucketCommitTableRefs<T extends Object>(
+    Expression<T> Function(
+      $$ActivityBitbucketCommitTableTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$ActivityBitbucketCommitTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityBitbucketCommitTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityBitbucketCommitTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityBitbucketCommitTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> activityJiraIssueTableRefs<T extends Object>(
     Expression<T> Function($$ActivityJiraIssueTableTableAnnotationComposer a) f,
   ) {
@@ -6286,6 +7404,33 @@ class $$ActivitiesTableTableAnnotationComposer
               }) => $$ActivityJiraIssueTableTableAnnotationComposer(
                 $db: $db,
                 $table: $db.activityJiraIssueTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> activityLinearIssueTableRefs<T extends Object>(
+    Expression<T> Function($$ActivityLinearIssueTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$ActivityLinearIssueTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityLinearIssueTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityLinearIssueTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityLinearIssueTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -6322,24 +7467,26 @@ class $$ActivitiesTableTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> activityTeamsMessageTableRefs<T extends Object>(
-    Expression<T> Function($$ActivityTeamsMessageTableTableAnnotationComposer a)
+  Expression<T> activityDiscordMessageTableRefs<T extends Object>(
+    Expression<T> Function(
+      $$ActivityDiscordMessageTableTableAnnotationComposer a,
+    )
     f,
   ) {
-    final $$ActivityTeamsMessageTableTableAnnotationComposer composer =
+    final $$ActivityDiscordMessageTableTableAnnotationComposer composer =
         $composerBuilder(
           composer: this,
           getCurrentColumn: (t) => t.id,
-          referencedTable: $db.activityTeamsMessageTable,
+          referencedTable: $db.activityDiscordMessageTable,
           getReferencedColumn: (t) => t.activityId,
           builder:
               (
                 joinBuilder, {
                 $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-              }) => $$ActivityTeamsMessageTableTableAnnotationComposer(
+              }) => $$ActivityDiscordMessageTableTableAnnotationComposer(
                 $db: $db,
-                $table: $db.activityTeamsMessageTable,
+                $table: $db.activityDiscordMessageTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -6366,9 +7513,12 @@ class $$ActivitiesTableTableTableManager
           PrefetchHooks Function({
             bool activityPhorgeTableRefs,
             bool activityGithubCommitTableRefs,
+            bool activityGitlabCommitTableRefs,
+            bool activityBitbucketCommitTableRefs,
             bool activityJiraIssueTableRefs,
+            bool activityLinearIssueTableRefs,
             bool activitySlackMessageTableRefs,
-            bool activityTeamsMessageTableRefs,
+            bool activityDiscordMessageTableRefs,
           })
         > {
   $$ActivitiesTableTableTableManager(
@@ -6448,9 +7598,12 @@ class $$ActivitiesTableTableTableManager
               ({
                 activityPhorgeTableRefs = false,
                 activityGithubCommitTableRefs = false,
+                activityGitlabCommitTableRefs = false,
+                activityBitbucketCommitTableRefs = false,
                 activityJiraIssueTableRefs = false,
+                activityLinearIssueTableRefs = false,
                 activitySlackMessageTableRefs = false,
-                activityTeamsMessageTableRefs = false,
+                activityDiscordMessageTableRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6458,11 +7611,17 @@ class $$ActivitiesTableTableTableManager
                     if (activityPhorgeTableRefs) db.activityPhorgeTable,
                     if (activityGithubCommitTableRefs)
                       db.activityGithubCommitTable,
+                    if (activityGitlabCommitTableRefs)
+                      db.activityGitlabCommitTable,
+                    if (activityBitbucketCommitTableRefs)
+                      db.activityBitbucketCommitTable,
                     if (activityJiraIssueTableRefs) db.activityJiraIssueTable,
+                    if (activityLinearIssueTableRefs)
+                      db.activityLinearIssueTable,
                     if (activitySlackMessageTableRefs)
                       db.activitySlackMessageTable,
-                    if (activityTeamsMessageTableRefs)
-                      db.activityTeamsMessageTable,
+                    if (activityDiscordMessageTableRefs)
+                      db.activityDiscordMessageTable,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6509,6 +7668,48 @@ class $$ActivitiesTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (activityGitlabCommitTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityGitlabCommitTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityGitlabCommitTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityGitlabCommitTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (activityBitbucketCommitTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityBitbucketCommitTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityBitbucketCommitTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityBitbucketCommitTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (activityJiraIssueTableRefs)
                         await $_getPrefetchedData<
                           ActivitiesTableData,
@@ -6524,6 +7725,27 @@ class $$ActivitiesTableTableTableManager
                                 table,
                                 p0,
                               ).activityJiraIssueTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (activityLinearIssueTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityLinearIssueTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityLinearIssueTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityLinearIssueTableRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.activityId == item.id,
@@ -6551,21 +7773,21 @@ class $$ActivitiesTableTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (activityTeamsMessageTableRefs)
+                      if (activityDiscordMessageTableRefs)
                         await $_getPrefetchedData<
                           ActivitiesTableData,
                           $ActivitiesTableTable,
-                          ActivityTeamsMessageTableData
+                          ActivityDiscordMessageTableData
                         >(
                           currentTable: table,
                           referencedTable: $$ActivitiesTableTableReferences
-                              ._activityTeamsMessageTableRefsTable(db),
+                              ._activityDiscordMessageTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$ActivitiesTableTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).activityTeamsMessageTableRefs,
+                              ).activityDiscordMessageTableRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.activityId == item.id,
@@ -6595,9 +7817,12 @@ typedef $$ActivitiesTableTableProcessedTableManager =
       PrefetchHooks Function({
         bool activityPhorgeTableRefs,
         bool activityGithubCommitTableRefs,
+        bool activityGitlabCommitTableRefs,
+        bool activityBitbucketCommitTableRefs,
         bool activityJiraIssueTableRefs,
+        bool activityLinearIssueTableRefs,
         bool activitySlackMessageTableRefs,
-        bool activityTeamsMessageTableRefs,
+        bool activityDiscordMessageTableRefs,
       })
     >;
 typedef $$ActivityPhorgeTableTableCreateCompanionBuilder =
@@ -7236,6 +8461,630 @@ typedef $$ActivityGithubCommitTableTableProcessedTableManager =
       ActivityGithubCommitTableData,
       PrefetchHooks Function({bool activityId})
     >;
+typedef $$ActivityGitlabCommitTableTableCreateCompanionBuilder =
+    ActivityGitlabCommitTableCompanion Function({
+      required String activityId,
+      Value<String?> project,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+typedef $$ActivityGitlabCommitTableTableUpdateCompanionBuilder =
+    ActivityGitlabCommitTableCompanion Function({
+      Value<String> activityId,
+      Value<String?> project,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+
+final class $$ActivityGitlabCommitTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityGitlabCommitTableTable,
+          ActivityGitlabCommitTableData
+        > {
+  $$ActivityGitlabCommitTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityGitlabCommitTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityGitlabCommitTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityGitlabCommitTableTable> {
+  $$ActivityGitlabCommitTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get project => $composableBuilder(
+    column: $table.project,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGitlabCommitTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityGitlabCommitTableTable> {
+  $$ActivityGitlabCommitTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get project => $composableBuilder(
+    column: $table.project,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGitlabCommitTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityGitlabCommitTableTable> {
+  $$ActivityGitlabCommitTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get project =>
+      $composableBuilder(column: $table.project, builder: (column) => column);
+
+  GeneratedColumn<String> get branch =>
+      $composableBuilder(column: $table.branch, builder: (column) => column);
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityGitlabCommitTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityGitlabCommitTableTable,
+          ActivityGitlabCommitTableData,
+          $$ActivityGitlabCommitTableTableFilterComposer,
+          $$ActivityGitlabCommitTableTableOrderingComposer,
+          $$ActivityGitlabCommitTableTableAnnotationComposer,
+          $$ActivityGitlabCommitTableTableCreateCompanionBuilder,
+          $$ActivityGitlabCommitTableTableUpdateCompanionBuilder,
+          (
+            ActivityGitlabCommitTableData,
+            $$ActivityGitlabCommitTableTableReferences,
+          ),
+          ActivityGitlabCommitTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityGitlabCommitTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityGitlabCommitTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityGitlabCommitTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityGitlabCommitTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityGitlabCommitTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String?> project = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityGitlabCommitTableCompanion(
+                activityId: activityId,
+                project: project,
+                branch: branch,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                Value<String?> project = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityGitlabCommitTableCompanion.insert(
+                activityId: activityId,
+                project: project,
+                branch: branch,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityGitlabCommitTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityGitlabCommitTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityGitlabCommitTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityGitlabCommitTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityGitlabCommitTableTable,
+      ActivityGitlabCommitTableData,
+      $$ActivityGitlabCommitTableTableFilterComposer,
+      $$ActivityGitlabCommitTableTableOrderingComposer,
+      $$ActivityGitlabCommitTableTableAnnotationComposer,
+      $$ActivityGitlabCommitTableTableCreateCompanionBuilder,
+      $$ActivityGitlabCommitTableTableUpdateCompanionBuilder,
+      (
+        ActivityGitlabCommitTableData,
+        $$ActivityGitlabCommitTableTableReferences,
+      ),
+      ActivityGitlabCommitTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
+typedef $$ActivityBitbucketCommitTableTableCreateCompanionBuilder =
+    ActivityBitbucketCommitTableCompanion Function({
+      required String activityId,
+      Value<String?> repo,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+typedef $$ActivityBitbucketCommitTableTableUpdateCompanionBuilder =
+    ActivityBitbucketCommitTableCompanion Function({
+      Value<String> activityId,
+      Value<String?> repo,
+      Value<String?> branch,
+      Value<int> rowid,
+    });
+
+final class $$ActivityBitbucketCommitTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityBitbucketCommitTableTable,
+          ActivityBitbucketCommitTableData
+        > {
+  $$ActivityBitbucketCommitTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityBitbucketCommitTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityBitbucketCommitTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityBitbucketCommitTableTable> {
+  $$ActivityBitbucketCommitTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get repo => $composableBuilder(
+    column: $table.repo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityBitbucketCommitTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityBitbucketCommitTableTable> {
+  $$ActivityBitbucketCommitTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get repo => $composableBuilder(
+    column: $table.repo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branch => $composableBuilder(
+    column: $table.branch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityBitbucketCommitTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityBitbucketCommitTableTable> {
+  $$ActivityBitbucketCommitTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get repo =>
+      $composableBuilder(column: $table.repo, builder: (column) => column);
+
+  GeneratedColumn<String> get branch =>
+      $composableBuilder(column: $table.branch, builder: (column) => column);
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityBitbucketCommitTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityBitbucketCommitTableTable,
+          ActivityBitbucketCommitTableData,
+          $$ActivityBitbucketCommitTableTableFilterComposer,
+          $$ActivityBitbucketCommitTableTableOrderingComposer,
+          $$ActivityBitbucketCommitTableTableAnnotationComposer,
+          $$ActivityBitbucketCommitTableTableCreateCompanionBuilder,
+          $$ActivityBitbucketCommitTableTableUpdateCompanionBuilder,
+          (
+            ActivityBitbucketCommitTableData,
+            $$ActivityBitbucketCommitTableTableReferences,
+          ),
+          ActivityBitbucketCommitTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityBitbucketCommitTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityBitbucketCommitTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityBitbucketCommitTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityBitbucketCommitTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityBitbucketCommitTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String?> repo = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityBitbucketCommitTableCompanion(
+                activityId: activityId,
+                repo: repo,
+                branch: branch,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                Value<String?> repo = const Value.absent(),
+                Value<String?> branch = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityBitbucketCommitTableCompanion.insert(
+                activityId: activityId,
+                repo: repo,
+                branch: branch,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityBitbucketCommitTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityBitbucketCommitTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityBitbucketCommitTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityBitbucketCommitTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityBitbucketCommitTableTable,
+      ActivityBitbucketCommitTableData,
+      $$ActivityBitbucketCommitTableTableFilterComposer,
+      $$ActivityBitbucketCommitTableTableOrderingComposer,
+      $$ActivityBitbucketCommitTableTableAnnotationComposer,
+      $$ActivityBitbucketCommitTableTableCreateCompanionBuilder,
+      $$ActivityBitbucketCommitTableTableUpdateCompanionBuilder,
+      (
+        ActivityBitbucketCommitTableData,
+        $$ActivityBitbucketCommitTableTableReferences,
+      ),
+      ActivityBitbucketCommitTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
 typedef $$ActivityJiraIssueTableTableCreateCompanionBuilder =
     ActivityJiraIssueTableCompanion Function({
       required String activityId,
@@ -7563,6 +9412,338 @@ typedef $$ActivityJiraIssueTableTableProcessedTableManager =
       $$ActivityJiraIssueTableTableUpdateCompanionBuilder,
       (ActivityJiraIssueTableData, $$ActivityJiraIssueTableTableReferences),
       ActivityJiraIssueTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
+typedef $$ActivityLinearIssueTableTableCreateCompanionBuilder =
+    ActivityLinearIssueTableCompanion Function({
+      required String activityId,
+      required String identifier,
+      required String teamKey,
+      Value<String?> statusName,
+      Value<int> rowid,
+    });
+typedef $$ActivityLinearIssueTableTableUpdateCompanionBuilder =
+    ActivityLinearIssueTableCompanion Function({
+      Value<String> activityId,
+      Value<String> identifier,
+      Value<String> teamKey,
+      Value<String?> statusName,
+      Value<int> rowid,
+    });
+
+final class $$ActivityLinearIssueTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityLinearIssueTableTable,
+          ActivityLinearIssueTableData
+        > {
+  $$ActivityLinearIssueTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityLinearIssueTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityLinearIssueTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityLinearIssueTableTable> {
+  $$ActivityLinearIssueTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get identifier => $composableBuilder(
+    column: $table.identifier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamKey => $composableBuilder(
+    column: $table.teamKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityLinearIssueTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityLinearIssueTableTable> {
+  $$ActivityLinearIssueTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get identifier => $composableBuilder(
+    column: $table.identifier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamKey => $composableBuilder(
+    column: $table.teamKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityLinearIssueTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityLinearIssueTableTable> {
+  $$ActivityLinearIssueTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get identifier => $composableBuilder(
+    column: $table.identifier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get teamKey =>
+      $composableBuilder(column: $table.teamKey, builder: (column) => column);
+
+  GeneratedColumn<String> get statusName => $composableBuilder(
+    column: $table.statusName,
+    builder: (column) => column,
+  );
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityLinearIssueTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityLinearIssueTableTable,
+          ActivityLinearIssueTableData,
+          $$ActivityLinearIssueTableTableFilterComposer,
+          $$ActivityLinearIssueTableTableOrderingComposer,
+          $$ActivityLinearIssueTableTableAnnotationComposer,
+          $$ActivityLinearIssueTableTableCreateCompanionBuilder,
+          $$ActivityLinearIssueTableTableUpdateCompanionBuilder,
+          (
+            ActivityLinearIssueTableData,
+            $$ActivityLinearIssueTableTableReferences,
+          ),
+          ActivityLinearIssueTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityLinearIssueTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityLinearIssueTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityLinearIssueTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityLinearIssueTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityLinearIssueTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String> identifier = const Value.absent(),
+                Value<String> teamKey = const Value.absent(),
+                Value<String?> statusName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityLinearIssueTableCompanion(
+                activityId: activityId,
+                identifier: identifier,
+                teamKey: teamKey,
+                statusName: statusName,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                required String identifier,
+                required String teamKey,
+                Value<String?> statusName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityLinearIssueTableCompanion.insert(
+                activityId: activityId,
+                identifier: identifier,
+                teamKey: teamKey,
+                statusName: statusName,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityLinearIssueTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityLinearIssueTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityLinearIssueTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityLinearIssueTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityLinearIssueTableTable,
+      ActivityLinearIssueTableData,
+      $$ActivityLinearIssueTableTableFilterComposer,
+      $$ActivityLinearIssueTableTableOrderingComposer,
+      $$ActivityLinearIssueTableTableAnnotationComposer,
+      $$ActivityLinearIssueTableTableCreateCompanionBuilder,
+      $$ActivityLinearIssueTableTableUpdateCompanionBuilder,
+      (ActivityLinearIssueTableData, $$ActivityLinearIssueTableTableReferences),
+      ActivityLinearIssueTableData,
       PrefetchHooks Function({bool activityId})
     >;
 typedef $$ActivitySlackMessageTableTableCreateCompanionBuilder =
@@ -7917,35 +10098,33 @@ typedef $$ActivitySlackMessageTableTableProcessedTableManager =
       ActivitySlackMessageTableData,
       PrefetchHooks Function({bool activityId})
     >;
-typedef $$ActivityTeamsMessageTableTableCreateCompanionBuilder =
-    ActivityTeamsMessageTableCompanion Function({
+typedef $$ActivityDiscordMessageTableTableCreateCompanionBuilder =
+    ActivityDiscordMessageTableCompanion Function({
       required String activityId,
-      Value<String?> tenantId,
-      Value<String?> teamId,
+      Value<String?> guildId,
       Value<String?> channelId,
       Value<String?> messageId,
       Value<String?> replyToId,
       Value<int> rowid,
     });
-typedef $$ActivityTeamsMessageTableTableUpdateCompanionBuilder =
-    ActivityTeamsMessageTableCompanion Function({
+typedef $$ActivityDiscordMessageTableTableUpdateCompanionBuilder =
+    ActivityDiscordMessageTableCompanion Function({
       Value<String> activityId,
-      Value<String?> tenantId,
-      Value<String?> teamId,
+      Value<String?> guildId,
       Value<String?> channelId,
       Value<String?> messageId,
       Value<String?> replyToId,
       Value<int> rowid,
     });
 
-final class $$ActivityTeamsMessageTableTableReferences
+final class $$ActivityDiscordMessageTableTableReferences
     extends
         BaseReferences<
           _$AppDatabase,
-          $ActivityTeamsMessageTableTable,
-          ActivityTeamsMessageTableData
+          $ActivityDiscordMessageTableTable,
+          ActivityDiscordMessageTableData
         > {
-  $$ActivityTeamsMessageTableTableReferences(
+  $$ActivityDiscordMessageTableTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
@@ -7954,7 +10133,7 @@ final class $$ActivityTeamsMessageTableTableReferences
   static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
       db.activitiesTable.createAlias(
         $_aliasNameGenerator(
-          db.activityTeamsMessageTable.activityId,
+          db.activityDiscordMessageTable.activityId,
           db.activitiesTable.id,
         ),
       );
@@ -7974,22 +10153,17 @@ final class $$ActivityTeamsMessageTableTableReferences
   }
 }
 
-class $$ActivityTeamsMessageTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ActivityTeamsMessageTableTable> {
-  $$ActivityTeamsMessageTableTableFilterComposer({
+class $$ActivityDiscordMessageTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityDiscordMessageTableTable> {
+  $$ActivityDiscordMessageTableTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get tenantId => $composableBuilder(
-    column: $table.tenantId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get teamId => $composableBuilder(
-    column: $table.teamId,
+  ColumnFilters<String> get guildId => $composableBuilder(
+    column: $table.guildId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8032,22 +10206,17 @@ class $$ActivityTeamsMessageTableTableFilterComposer
   }
 }
 
-class $$ActivityTeamsMessageTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ActivityTeamsMessageTableTable> {
-  $$ActivityTeamsMessageTableTableOrderingComposer({
+class $$ActivityDiscordMessageTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityDiscordMessageTableTable> {
+  $$ActivityDiscordMessageTableTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get tenantId => $composableBuilder(
-    column: $table.tenantId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get teamId => $composableBuilder(
-    column: $table.teamId,
+  ColumnOrderings<String> get guildId => $composableBuilder(
+    column: $table.guildId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8090,20 +10259,17 @@ class $$ActivityTeamsMessageTableTableOrderingComposer
   }
 }
 
-class $$ActivityTeamsMessageTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ActivityTeamsMessageTableTable> {
-  $$ActivityTeamsMessageTableTableAnnotationComposer({
+class $$ActivityDiscordMessageTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityDiscordMessageTableTable> {
+  $$ActivityDiscordMessageTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get tenantId =>
-      $composableBuilder(column: $table.tenantId, builder: (column) => column);
-
-  GeneratedColumn<String> get teamId =>
-      $composableBuilder(column: $table.teamId, builder: (column) => column);
+  GeneratedColumn<String> get guildId =>
+      $composableBuilder(column: $table.guildId, builder: (column) => column);
 
   GeneratedColumn<String> get channelId =>
       $composableBuilder(column: $table.channelId, builder: (column) => column);
@@ -8138,59 +10304,57 @@ class $$ActivityTeamsMessageTableTableAnnotationComposer
   }
 }
 
-class $$ActivityTeamsMessageTableTableTableManager
+class $$ActivityDiscordMessageTableTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $ActivityTeamsMessageTableTable,
-          ActivityTeamsMessageTableData,
-          $$ActivityTeamsMessageTableTableFilterComposer,
-          $$ActivityTeamsMessageTableTableOrderingComposer,
-          $$ActivityTeamsMessageTableTableAnnotationComposer,
-          $$ActivityTeamsMessageTableTableCreateCompanionBuilder,
-          $$ActivityTeamsMessageTableTableUpdateCompanionBuilder,
+          $ActivityDiscordMessageTableTable,
+          ActivityDiscordMessageTableData,
+          $$ActivityDiscordMessageTableTableFilterComposer,
+          $$ActivityDiscordMessageTableTableOrderingComposer,
+          $$ActivityDiscordMessageTableTableAnnotationComposer,
+          $$ActivityDiscordMessageTableTableCreateCompanionBuilder,
+          $$ActivityDiscordMessageTableTableUpdateCompanionBuilder,
           (
-            ActivityTeamsMessageTableData,
-            $$ActivityTeamsMessageTableTableReferences,
+            ActivityDiscordMessageTableData,
+            $$ActivityDiscordMessageTableTableReferences,
           ),
-          ActivityTeamsMessageTableData,
+          ActivityDiscordMessageTableData,
           PrefetchHooks Function({bool activityId})
         > {
-  $$ActivityTeamsMessageTableTableTableManager(
+  $$ActivityDiscordMessageTableTableTableManager(
     _$AppDatabase db,
-    $ActivityTeamsMessageTableTable table,
+    $ActivityDiscordMessageTableTable table,
   ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ActivityTeamsMessageTableTableFilterComposer(
+              $$ActivityDiscordMessageTableTableFilterComposer(
                 $db: db,
                 $table: table,
               ),
           createOrderingComposer: () =>
-              $$ActivityTeamsMessageTableTableOrderingComposer(
+              $$ActivityDiscordMessageTableTableOrderingComposer(
                 $db: db,
                 $table: table,
               ),
           createComputedFieldComposer: () =>
-              $$ActivityTeamsMessageTableTableAnnotationComposer(
+              $$ActivityDiscordMessageTableTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
           updateCompanionCallback:
               ({
                 Value<String> activityId = const Value.absent(),
-                Value<String?> tenantId = const Value.absent(),
-                Value<String?> teamId = const Value.absent(),
+                Value<String?> guildId = const Value.absent(),
                 Value<String?> channelId = const Value.absent(),
                 Value<String?> messageId = const Value.absent(),
                 Value<String?> replyToId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ActivityTeamsMessageTableCompanion(
+              }) => ActivityDiscordMessageTableCompanion(
                 activityId: activityId,
-                tenantId: tenantId,
-                teamId: teamId,
+                guildId: guildId,
                 channelId: channelId,
                 messageId: messageId,
                 replyToId: replyToId,
@@ -8199,16 +10363,14 @@ class $$ActivityTeamsMessageTableTableTableManager
           createCompanionCallback:
               ({
                 required String activityId,
-                Value<String?> tenantId = const Value.absent(),
-                Value<String?> teamId = const Value.absent(),
+                Value<String?> guildId = const Value.absent(),
                 Value<String?> channelId = const Value.absent(),
                 Value<String?> messageId = const Value.absent(),
                 Value<String?> replyToId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ActivityTeamsMessageTableCompanion.insert(
+              }) => ActivityDiscordMessageTableCompanion.insert(
                 activityId: activityId,
-                tenantId: tenantId,
-                teamId: teamId,
+                guildId: guildId,
                 channelId: channelId,
                 messageId: messageId,
                 replyToId: replyToId,
@@ -8218,7 +10380,7 @@ class $$ActivityTeamsMessageTableTableTableManager
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$ActivityTeamsMessageTableTableReferences(db, table, e),
+                  $$ActivityDiscordMessageTableTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -8248,10 +10410,10 @@ class $$ActivityTeamsMessageTableTableTableManager
                                 currentTable: table,
                                 currentColumn: table.activityId,
                                 referencedTable:
-                                    $$ActivityTeamsMessageTableTableReferences
+                                    $$ActivityDiscordMessageTableTableReferences
                                         ._activityIdTable(db),
                                 referencedColumn:
-                                    $$ActivityTeamsMessageTableTableReferences
+                                    $$ActivityDiscordMessageTableTableReferences
                                         ._activityIdTable(db)
                                         .id,
                               )
@@ -8269,21 +10431,21 @@ class $$ActivityTeamsMessageTableTableTableManager
       );
 }
 
-typedef $$ActivityTeamsMessageTableTableProcessedTableManager =
+typedef $$ActivityDiscordMessageTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $ActivityTeamsMessageTableTable,
-      ActivityTeamsMessageTableData,
-      $$ActivityTeamsMessageTableTableFilterComposer,
-      $$ActivityTeamsMessageTableTableOrderingComposer,
-      $$ActivityTeamsMessageTableTableAnnotationComposer,
-      $$ActivityTeamsMessageTableTableCreateCompanionBuilder,
-      $$ActivityTeamsMessageTableTableUpdateCompanionBuilder,
+      $ActivityDiscordMessageTableTable,
+      ActivityDiscordMessageTableData,
+      $$ActivityDiscordMessageTableTableFilterComposer,
+      $$ActivityDiscordMessageTableTableOrderingComposer,
+      $$ActivityDiscordMessageTableTableAnnotationComposer,
+      $$ActivityDiscordMessageTableTableCreateCompanionBuilder,
+      $$ActivityDiscordMessageTableTableUpdateCompanionBuilder,
       (
-        ActivityTeamsMessageTableData,
-        $$ActivityTeamsMessageTableTableReferences,
+        ActivityDiscordMessageTableData,
+        $$ActivityDiscordMessageTableTableReferences,
       ),
-      ActivityTeamsMessageTableData,
+      ActivityDiscordMessageTableData,
       PrefetchHooks Function({bool activityId})
     >;
 typedef $$SessionsTableTableCreateCompanionBuilder =
@@ -9884,20 +12046,37 @@ class $AppDatabaseManager {
         _db,
         _db.activityGithubCommitTable,
       );
+  $$ActivityGitlabCommitTableTableTableManager get activityGitlabCommitTable =>
+      $$ActivityGitlabCommitTableTableTableManager(
+        _db,
+        _db.activityGitlabCommitTable,
+      );
+  $$ActivityBitbucketCommitTableTableTableManager
+  get activityBitbucketCommitTable =>
+      $$ActivityBitbucketCommitTableTableTableManager(
+        _db,
+        _db.activityBitbucketCommitTable,
+      );
   $$ActivityJiraIssueTableTableTableManager get activityJiraIssueTable =>
       $$ActivityJiraIssueTableTableTableManager(
         _db,
         _db.activityJiraIssueTable,
+      );
+  $$ActivityLinearIssueTableTableTableManager get activityLinearIssueTable =>
+      $$ActivityLinearIssueTableTableTableManager(
+        _db,
+        _db.activityLinearIssueTable,
       );
   $$ActivitySlackMessageTableTableTableManager get activitySlackMessageTable =>
       $$ActivitySlackMessageTableTableTableManager(
         _db,
         _db.activitySlackMessageTable,
       );
-  $$ActivityTeamsMessageTableTableTableManager get activityTeamsMessageTable =>
-      $$ActivityTeamsMessageTableTableTableManager(
+  $$ActivityDiscordMessageTableTableTableManager
+  get activityDiscordMessageTable =>
+      $$ActivityDiscordMessageTableTableTableManager(
         _db,
-        _db.activityTeamsMessageTable,
+        _db.activityDiscordMessageTable,
       );
   $$SessionsTableTableTableManager get sessionsTable =>
       $$SessionsTableTableTableManager(_db, _db.sessionsTable);

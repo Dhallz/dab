@@ -55,14 +55,6 @@ class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
           icon: 'slack',
         ),
         ProviderMetadata(
-          id: 'teams-global',
-          name: 'MS Teams',
-          provider: 'Teams',
-          type: 'message',
-          color: '#6264A7',
-          icon: 'teams',
-        ),
-        ProviderMetadata(
           id: 'jira-global',
           name: 'Jira',
           provider: 'Jira',

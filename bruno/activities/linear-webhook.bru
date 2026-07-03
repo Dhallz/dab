@@ -1,0 +1,95 @@
+meta {
+  name: Linear Webhook
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/integrations/linear/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  linear-signature: {{linearSignature}}
+  linear-delivery: {{linearDelivery}}
+  linear-event: Issue
+}
+
+body:json {
+  {
+    "action": "update",
+    "type": "Issue",
+    "createdAt": "2026-03-01T15:30:00.000Z",
+    "data": {
+      "id": "issue-uuid-example",
+      "identifier": "DAB-42",
+      "title": "Example issue from webhook",
+      "url": "https://linear.app/acme/issue/DAB-42",
+      "updatedAt": "2026-03-01T15:30:00.000Z",
+      "state": {
+        "name": "In Progress"
+      },
+      "team": {
+        "key": "DAB"
+      },
+      "assignee": {
+        "id": "user-uuid-example",
+        "name": "Dev User",
+        "email": "dev@example.com"
+      }
+    }
+  }
+}
+
+vars:pre-request {
+  linearSignature: 
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const signingSecret =
+    bru.getEnvVar("linearWebhookSecret") ||
+    bru.getEnvVar("LINEAR_WEBHOOK_SECRET") ||
+    bru.getVar("linearWebhookSecret") ||
+    bru.getVar("LINEAR_WEBHOOK_SECRET");
+  
+  if (!signingSecret) {
+    throw new Error(
+      "Missing Linear webhook secret. Set linearWebhookSecret or LINEAR_WEBHOOK_SECRET.",
+    );
+  }
+  
+  const rawBody = req.getBody({ raw: true });
+  const digest = CryptoJS.HmacSHA256(rawBody, signingSecret).toString(
+    CryptoJS.enc.Hex,
+  );
+  const delivery = `del-${Date.now()}`;
+  
+  req.setHeader("linear-signature", digest);
+  req.setHeader("linear-delivery", delivery);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("linearSignature", digest);
+  bru.setVar("linearDelivery", delivery);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Linear webhook delivery to `POST /integrations/linear/webhook`.
+  
+  Linear signs the raw body with HMAC-SHA256 and sends the hex digest in the
+  `linear-signature` header. Set `webhookSecret` on the Linear provider config
+  to match the signing secret used below.
+  
+  Supported events: `Issue` create/update.
+  
+  Environment variables:
+  - `linearWebhookSecret` (or `LINEAR_WEBHOOK_SECRET`)
+}

@@ -116,6 +116,53 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
     );
   }
 
+  /// [ARCH: INFRASTRUCTURE_ENTRY]
+  /// ROLE: Hydrates a Herald webhook notification into a task bundle.
+  /// CONTRACT: Herald payloads are thin (object PHID + transaction PHIDs), so
+  /// this fetches the object's recent transactions via `transaction.search`
+  /// (`objectIdentifier`), keeps only the notified transaction PHIDs, and
+  /// hydrates the parent task via `maniphest.search` — the exact Conduit calls
+  /// used by polling, so downstream mapping stays identical.
+  Future<PhorgeTaskBundleDto?> fetchBundleForWebhook({
+    required String taskPhid,
+    required List<String> transactionPhids,
+  }) async {
+    if (taskPhid.isEmpty || transactionPhids.isEmpty) return null;
+
+    final txResult = await _client.call('transaction.search', {
+      'objectIdentifier': taskPhid,
+      'limit': 100,
+    });
+    final rawRows = txResult['data'] as List<dynamic>? ?? const [];
+    final wanted = transactionPhids.toSet();
+    final transactions = rawRows
+        .whereType<Map<String, dynamic>>()
+        .where((row) => wanted.contains(row['phid']?.toString()))
+        .map(_mapToTransactionData)
+        .toList();
+    if (transactions.isEmpty) return null;
+
+    final taskResult = await _client.call('maniphest.search', {
+      'constraints': {
+        'phids': [taskPhid],
+      },
+      'attachments': {'projects': true},
+    });
+    final rawTaskData = taskResult['data'] as List<dynamic>?;
+    if (rawTaskData == null || rawTaskData.isEmpty) return null;
+
+    final task = PhorgeTaskDtoMapper.fromMap(
+      rawTaskData.first as Map<String, dynamic>,
+    );
+    final sprintTag = transactions.first.dateCreated.phorgeSprintTag;
+
+    return PhorgeTaskBundleDto(
+      task: task,
+      transactions: transactions,
+      sprintTag: sprintTag,
+    );
+  }
+
   Future<List<dynamic>> _fetchPagedTransactions({
     required Map<String, dynamic> constraints,
     required DateTime start,

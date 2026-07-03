@@ -440,6 +440,326 @@ paths:
           description: Invalid webhook signature or missing headers
         '500':
           description: Webhook secret not configured for active github provider
+  /integrations/phorge/webhook:
+    post:
+      summary: Phorge Herald webhook receiver.
+      description: |
+        Receives Herald webhook deliveries signed with HMAC-SHA256
+        (`X-Phabricator-Webhook-Signature`). Payloads are thin (object PHID +
+        transaction PHIDs); the server hydrates the object via Conduit and
+        ingests it asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Phabricator-Webhook-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              object:
+                type: TASK
+                phid: PHID-TASK-example123
+              transactions:
+                - phid: PHID-XACT-TASK-example456
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['phorge_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook HMAC key not configured for active phorge provider
+  /integrations/jira/webhook:
+    post:
+      summary: Jira Cloud webhook receiver (issue created/updated).
+      description: |
+        Receives Jira admin-registered webhooks. Jira sends no HMAC signature,
+        so the endpoint is secured with a shared secret provided via the
+        `X-Webhook-Secret` header or a `secret` query parameter. Supported
+        events are `jira:issue_created` and `jira:issue_updated`; processing
+        is asynchronous.
+      parameters:
+        - name: X-Webhook-Secret
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: secret
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              webhookEvent: jira:issue_updated
+              issue:
+                key: DAB-42
+                fields:
+                  summary: Example issue
+                  status:
+                    name: In Progress
+                  updated: "2026-03-01T15:30:00.000+0000"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['jira_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook secret
+        '500':
+          description: Webhook secret not configured for active jira provider
+  /integrations/linear/webhook:
+    post:
+      summary: Linear webhook receiver (Issue create/update).
+      description: |
+        Receives Linear webhooks signed with HMAC-SHA256 of the raw body
+        (`linear-signature` header, hex digest). `linear-delivery` is used for
+        deduplication when present. Processing is asynchronous.
+      parameters:
+        - name: linear-signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: linear-delivery
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              action: update
+              type: Issue
+              data:
+                id: issue-uuid-example
+                identifier: DAB-42
+                title: Example issue
+                url: https://linear.app/acme/issue/DAB-42
+                updatedAt: "2026-03-01T15:30:00.000Z"
+                state:
+                  name: In Progress
+                team:
+                  key: DAB
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['linear_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook secret not configured for active linear provider
+  /integrations/gitlab/webhook:
+    post:
+      summary: GitLab webhook receiver (Push Hook).
+      description: |
+        Receives GitLab project webhooks authenticated with a plain shared
+        token in the `X-Gitlab-Token` header (constant-time compare, no HMAC).
+        Processes `push` events asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Gitlab-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Gitlab-Event
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              object_kind: push
+              ref: refs/heads/main
+              checkout_sha: abcdef1234567890abcdef1234567890abcdef12
+              project:
+                path_with_namespace: acme/app
+              commits:
+                - id: abcdef1234567890abcdef1234567890abcdef12
+                  message: Example commit
+                  timestamp: "2026-03-01T15:30:00Z"
+                  url: https://gitlab.com/acme/app/-/commit/abcdef1
+                  author:
+                    name: Dev User
+                    email: dev@example.com
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['gitlab_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook token
+        '500':
+          description: Webhook secret not configured for active gitlab provider
+  /integrations/bitbucket/webhook:
+    post:
+      summary: Bitbucket Cloud webhook receiver (repo:push).
+      description: |
+        Receives Bitbucket Cloud repository webhooks signed with HMAC-SHA256
+        (`X-Hub-Signature` header, `sha256=<hex>`). `X-Request-UUID` /
+        `X-Hook-UUID` are used for deduplication when present. Processes
+        `repo:push` events asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Hub-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Event-Key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: X-Request-UUID
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              repository:
+                full_name: acme/app
+              push:
+                changes:
+                  - new:
+                      type: branch
+                      name: main
+                    commits:
+                      - hash: abcdef1234567890abcdef1234567890abcdef12
+                        message: Example commit
+                        date: "2026-03-01T15:30:00+00:00"
+                        author:
+                          raw: "Dev User <dev@example.com>"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['bitbucket_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook secret not configured for active bitbucket provider
   /ws:
     get:
       summary: WebSocket Connection for real-time broadcasts

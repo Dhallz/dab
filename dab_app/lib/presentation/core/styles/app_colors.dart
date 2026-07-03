@@ -80,7 +80,6 @@ class AppColors {
   static const Color brandJira = Color(0xFF0052CC);
   static const Color brandLinear = Color(0xFF5E6AD2);
   static const Color brandSlack = Color(0xFF4A154B);
-  static const Color brandTeams = Color(0xFF464EB8);
   static const Color brandDiscord = Color(0xFF5865F2);
 
   // Gradient Getters

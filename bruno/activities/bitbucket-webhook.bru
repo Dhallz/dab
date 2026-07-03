@@ -1,0 +1,114 @@
+meta {
+  name: Bitbucket Webhook Push
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/integrations/bitbucket/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Hub-Signature: {{bitbucketSignature}}
+  X-Event-Key: repo:push
+  X-Request-UUID: {{bitbucketDelivery}}
+}
+
+body:json {
+  {
+    "repository": {
+      "full_name": "acme/app",
+      "links": {
+        "html": {
+          "href": "https://bitbucket.org/acme/app"
+        }
+      }
+    },
+    "push": {
+      "changes": [
+        {
+          "new": {
+            "type": "branch",
+            "name": "main"
+          },
+          "commits": [
+            {
+              "hash": "abcdef1234567890abcdef1234567890abcdef12",
+              "message": "Example webhook commit",
+              "date": "2026-03-01T15:30:00+00:00",
+              "links": {
+                "html": {
+                  "href": "https://bitbucket.org/acme/app/commits/abcdef1234567890abcdef1234567890abcdef12"
+                }
+              },
+              "author": {
+                "raw": "Dev User <dev@example.com>",
+                "user": {
+                  "account_id": "5b10ac8d82e05b22cc7d4ef5",
+                  "display_name": "Dev User"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+vars:pre-request {
+  bitbucketSignature: 
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const webhookSecret =
+    bru.getEnvVar("bitbucketWebhookSecret") ||
+    bru.getEnvVar("BITBUCKET_WEBHOOK_SECRET") ||
+    bru.getVar("bitbucketWebhookSecret") ||
+    bru.getVar("BITBUCKET_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing Bitbucket webhook secret. Set bitbucketWebhookSecret or BITBUCKET_WEBHOOK_SECRET.",
+    );
+  }
+  
+  const rawBody = req.getBody({ raw: true });
+  const digest = CryptoJS.HmacSHA256(rawBody, webhookSecret).toString(
+    CryptoJS.enc.Hex,
+  );
+  const signature = `sha256=${digest}`;
+  const delivery = `del-${Date.now()}`;
+  
+  req.setHeader("X-Hub-Signature", signature);
+  req.setHeader("X-Request-UUID", delivery);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("bitbucketSignature", signature);
+  bru.setVar("bitbucketDelivery", delivery);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Bitbucket Cloud `repo:push` webhook delivery to
+  `POST /integrations/bitbucket/webhook`.
+  
+  Bitbucket signs the raw body with HMAC-SHA256 and sends
+  `sha256=<hex digest>` in the `X-Hub-Signature` header. Set `webhookSecret`
+  on the Bitbucket provider config to match.
+  
+  The repository must be in the `repos` allow-list configured on the active
+  `bitbucket` provider (or the list must be empty).
+  
+  Environment variables:
+  - `bitbucketWebhookSecret` (or `BITBUCKET_WEBHOOK_SECRET`)
+}

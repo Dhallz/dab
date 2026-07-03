@@ -90,7 +90,7 @@ dab_app/lib/
 | Entity | Description |
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
-| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub commits, Slack messages, Teams messages, Jira issues, …) |
+| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, …) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
 | `Group` | Team / organizational group |
@@ -153,6 +153,30 @@ External Provider (Phorge, GitHub, Slack, …)
                           Riverpod notifiers ──► Flutter UI
 ```
 
+### Live push ingestion (Dashboard)
+
+The polling flow above powers Explorer (historical backfill). Dashboard live
+data arrives through provider push instead:
+
+```
+Provider push (webhook / Gateway WebSocket)
+        │
+        ▼
+ ActivityController (Presentation)
+  ── verify signature/secret, fast ACK ──
+        │
+        ▼
+ Ingest use case (Application)
+  ── Redis dedup + business filter + DTO mapping ──
+        │
+        ▼
+ SQL ActivityRepository ──► Redis fan-out ──► PresenceService (ACTIVITY_RECEIVED over /ws)
+```
+
+Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge
+(Herald), Jira, Linear, and Slack (Events API); Discord uses the outbound
+`DiscordGatewayService` WebSocket client since Discord has no message webhooks.
+
 ---
 
 ## 5. Key Shared Patterns
@@ -188,12 +212,18 @@ Client request  ──►  Vegas Middleware
 
 ```
 activities               ← shared fields (id, userId, title, content, createdAt)
-activity_phorge          ← Phorge-specific metadata (taskPhid, revisionId, tags)
-activity_github_commit   ← GitHub commit metadata (repo, branch)
-activity_slack_message   ← Slack message metadata (workspace/channel/thread/message ids)
-activity_teams_message   ← Teams message metadata (tenant/team/channel/message ids)
-activity_jira_issue      ← Jira issue metadata (issue key, project key, status snapshot)
+activity_phorge            ← Phorge-specific metadata (taskPhid, revisionId, tags)
+activity_github_commit     ← GitHub commit metadata (repo, branch)
+activity_gitlab_commit     ← GitLab commit metadata (project, branch)
+activity_bitbucket_commit  ← Bitbucket commit metadata (repo, branch)
+activity_slack_message     ← Slack message metadata (workspace/channel/thread/message ids)
+activity_discord_message   ← Discord message metadata (guild/channel/message ids)
+activity_jira_issue        ← Jira issue metadata (issue key, project key, status snapshot)
+activity_linear_issue      ← Linear issue metadata (identifier, team key, status snapshot)
 ```
+
+The orphaned `activity_teams_message` table remains on installs upgraded from
+schema ≤ 15 (Teams support was retired in v16); it is no longer mapped by Drift.
 
 - Child tables reference `activities.id` with `CASCADE DELETE`.
 - Hydration uses `leftOuterJoin` in SQL repositories.
@@ -226,7 +256,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/github/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`), receive Slack and GitHub push webhooks, search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management (creation + roles) + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |

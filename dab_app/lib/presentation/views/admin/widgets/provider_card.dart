@@ -35,10 +35,16 @@ class ProviderCard extends ConsumerStatefulWidget {
 class _ProviderCardState extends ConsumerState<ProviderCard> {
   final Map<String, TextEditingController> _controllers = {};
   bool _showDetails = false;
+  String _ingestionMode = 'webhook';
+  late final TextEditingController _pollingRateController;
 
   @override
   void initState() {
     super.initState();
+    _ingestionMode = widget.config.settings['ingestionMode'] ?? widget.config.settings['ingestion_mode'] ?? 'webhook';
+    _pollingRateController = TextEditingController(
+      text: (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString(),
+    );
     _syncControllersFromConfig(widget.config, replaceExisting: true);
     _showDetails = false;
   }
@@ -51,6 +57,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         oldWidget.config.settings != widget.config.settings ||
         oldWidget.config.baseUrl != widget.config.baseUrl;
     if (configChanged) {
+      _ingestionMode = widget.config.settings['ingestionMode'] ?? widget.config.settings['ingestion_mode'] ?? 'webhook';
+      _pollingRateController.text = (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString();
       _syncControllersFromConfig(widget.config, replaceExisting: true);
       if (oldWidget.config.id != widget.config.id) {
         _showDetails = false;
@@ -60,6 +68,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
 
   @override
   void dispose() {
+    _pollingRateController.dispose();
     _disposeControllers();
     super.dispose();
   }
@@ -312,6 +321,161 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                           color: cs.outline.withValues(alpha: 0.4),
                         ),
                         SizedBox(height: AppSpacing.l),
+                        
+                        // Ingestion Mode Configuration
+                        Text(
+                          'INGESTION MODE',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: cs.onSurfaceVariant,
+                            letterSpacing: 1.1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: cs.onSurface.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: cs.outline.withValues(alpha: 0.1)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _ingestionMode = 'webhook';
+                                    });
+                                  },
+                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: _ingestionMode == 'webhook'
+                                          ? cs.primary
+                                          : Colors.transparent,
+                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Webhook',
+                                        style: TextStyle(
+                                          color: _ingestionMode == 'webhook' ? Colors.white : cs.onSurfaceVariant,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _ingestionMode = 'polling';
+                                    });
+                                  },
+                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(11)),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: _ingestionMode == 'polling'
+                                          ? cs.primary
+                                          : Colors.transparent,
+                                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(11)),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Polling',
+                                        style: TextStyle(
+                                          color: _ingestionMode == 'polling' ? Colors.white : cs.onSurfaceVariant,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        if (_ingestionMode == 'polling') ...[
+                          Text(
+                            'POLLING RATE (SECONDS)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.onSurfaceVariant,
+                              letterSpacing: 1.1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _pollingRateController,
+                            keyboardType: TextInputType.number,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: cs.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: cs.surfaceContainer.withValues(alpha: 0.65),
+                              hintText: 'e.g. 60',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.m,
+                                vertical: AppSpacing.m,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: AppLayout.borderMedium,
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: AppLayout.borderMedium,
+                                borderSide: BorderSide(
+                                  color: cs.primary,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        
+                        if (_ingestionMode == 'webhook') ...[
+                          Text(
+                            'WEBHOOK ENDPOINT URL',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: cs.onSurfaceVariant,
+                              letterSpacing: 1.1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: cs.onSurface.withValues(alpha: 0.05),
+                              borderRadius: AppLayout.borderMedium,
+                              border: Border.all(color: cs.outline.withValues(alpha: 0.1)),
+                            ),
+                            child: SelectableText(
+                              widget.config.id == 'slack'
+                                  ? 'https://[your-domain]/integrations/slack/events'
+                                  : 'https://[your-domain]/integrations/${widget.config.id}/webhook',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                color: cs.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        
                         ...fields.map((field) {
                           final isMultiValueField =
                               field.key == 'repos' ||
@@ -428,11 +592,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     if (lowerId.contains('phorge')) return AppIcons.phorge;
     if (lowerId.contains('linear')) return AppIcons.linear;
     if (lowerId.contains('jira')) return AppIcons.jira;
-    if (lowerId.contains('teams')) return AppIcons.teams;
     if (lowerId.contains('slack')) return AppIcons.slack;
     if (lowerId.contains('discord')) return AppIcons.discord;
     if (lowerId.contains('github')) return AppIcons.github;
     if (lowerId.contains('gitlab')) return AppIcons.gitlab;
+    if (lowerId.contains('bitbucket')) return AppIcons.bitbucket;
     return AppIcons.unknownProvider;
   }
 
@@ -446,6 +610,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           isSecret: true,
         ),
         AdminConfigField(key: 'baseUrl', label: l10n.adminFieldBaseUrl),
+        AdminConfigField(
+          key: 'webhookHmacKey',
+          label: 'Herald webhook HMAC key',
+          isSecret: true,
+        ),
       ];
     }
     if (lowerId.contains('linear')) {
@@ -453,6 +622,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         AdminConfigField(
           key: 'apiKey',
           label: l10n.adminFieldApiKey,
+          isSecret: true,
+        ),
+        AdminConfigField(
+          key: 'webhookSecret',
+          label: l10n.adminFieldWebhookSecret,
           isSecret: true,
         ),
       ];
@@ -473,26 +647,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           key: 'projectKeys',
           label: 'Project Keys (comma or newline separated)',
         ),
-      ];
-    }
-    if (lowerId.contains('teams')) {
-      return [
         AdminConfigField(
-          key: 'clientId',
-          label: l10n.adminFieldApplicationClientId,
-        ),
-        AdminConfigField(
-          key: 'clientSecret',
-          label: l10n.adminFieldClientSecret,
+          key: 'webhookSecret',
+          label: l10n.adminFieldWebhookSecret,
           isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'tenantId',
-          label: l10n.adminFieldDirectoryTenantId,
-        ),
-        AdminConfigField(
-          key: 'channels',
-          label: 'Team channels (teamId/channelId, comma or newline separated)',
         ),
       ];
     }
@@ -532,6 +690,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         AdminConfigField(
           key: 'guildId',
           label: l10n.adminFieldGuildServerId,
+        ),
+        AdminConfigField(
+          key: 'channels',
+          label: l10n.adminFieldChannelIdsOnePerLine,
         ),
       ];
     }
@@ -574,6 +736,39 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           key: 'instanceUrl',
           label: l10n.adminFieldGitLabInstanceUrl,
         ),
+        AdminConfigField(
+          key: 'projects',
+          label: 'Projects (group/project, one per line)',
+        ),
+        AdminConfigField(
+          key: 'branch',
+          label: l10n.adminFieldBranchOptional,
+        ),
+        AdminConfigField(
+          key: 'webhookSecret',
+          label: l10n.adminFieldWebhookSecret,
+          isSecret: true,
+        ),
+      ];
+    }
+    if (lowerId.contains('bitbucket')) {
+      return [
+        AdminConfigField(key: 'username', label: 'Username'),
+        AdminConfigField(
+          key: 'apiToken',
+          label: 'App password / API token',
+          isSecret: true,
+        ),
+        AdminConfigField(key: 'workspace', label: 'Workspace'),
+        AdminConfigField(
+          key: 'repos',
+          label: l10n.adminFieldRepositoriesOnePerLine,
+        ),
+        AdminConfigField(
+          key: 'webhookSecret',
+          label: l10n.adminFieldWebhookSecret,
+          isSecret: true,
+        ),
       ];
     }
     return [
@@ -587,9 +782,12 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
 
   Map<String, dynamic> _buildSettings(ProviderConfig config) {
     final Map<String, dynamic> settings = Map.from(config.settings);
+    settings['ingestionMode'] = _ingestionMode;
+    settings['pollingRateSeconds'] = int.tryParse(_pollingRateController.text) ?? 60;
+    
     _controllers.forEach((key, controller) {
       final value = controller.text.trim();
-      if (key == 'repos' || key == 'channels') {
+      if (key == 'repos' || key == 'channels' || key == 'projects') {
         if (value.isEmpty) {
           settings.remove(key);
         } else {
@@ -606,6 +804,9 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       } else if (key == 'webhookSecret' && value.isEmpty) {
         settings.remove('webhookSecret');
         settings.remove('webhook_secret');
+      } else if (key == 'webhookHmacKey' && value.isEmpty) {
+        settings.remove('webhookHmacKey');
+        settings.remove('webhook_hmac_key');
       } else {
         settings[key] = value;
       }

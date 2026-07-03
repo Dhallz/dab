@@ -1,20 +1,22 @@
 import 'package:dab_api/src/application/services/connector_registry.dart';
+import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/discord/discord_message_dto.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
+import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
 import 'package:dab_api/src/domain/dtos/linear/linear_issue_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
-import 'package:dab_api/src/domain/dtos/teams/teams_message_dto.dart';
+import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
+import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
-import 'package:dab_api/src/infrastructure/sources/teams/teams_message_source.dart';
 
 /// [ARCH: APPLICATION_BOOTSTRAP]
 /// ROLE: Single registration site for all activity [TypedConnectorPair]s.
@@ -25,11 +27,12 @@ void registerActivityConnectors({
   required PhorgeTaskSource phorgeTaskSource,
   required PhorgeRevisionSource phorgeRevisionSource,
   required SlackMessageSource slackSource,
-  required TeamsMessageSource teamsSource,
   required JiraIssueSource jiraSource,
   required LinearIssueSource linearSource,
   required DiscordMessageSource discordSource,
   required GitHubCommitSource githubSource,
+  required GitLabCommitSource gitlabSource,
+  required BitbucketCommitSource bitbucketSource,
 }) {
   registry.register<PhorgeTaskBundleDto>(
     TypedConnectorPair<PhorgeTaskBundleDto>(
@@ -49,13 +52,6 @@ void registerActivityConnectors({
     TypedConnectorPair<SlackMessageDto>(
       source: slackSource,
       providerId: 'slack',
-      mapItemToActivities: (dto, users) => dto.toActivities(users),
-    ),
-  );
-  registry.register<TeamsMessageDto>(
-    TypedConnectorPair<TeamsMessageDto>(
-      source: teamsSource,
-      providerId: 'teams',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
@@ -84,6 +80,20 @@ void registerActivityConnectors({
     TypedConnectorPair<GitHubCommitDto>(
       source: githubSource,
       providerId: 'github',
+      mapItemToActivities: (dto, users) => dto.toActivities(users),
+    ),
+  );
+  registry.register<GitLabCommitDto>(
+    TypedConnectorPair<GitLabCommitDto>(
+      source: gitlabSource,
+      providerId: 'gitlab',
+      mapItemToActivities: (dto, users) => dto.toActivities(users),
+    ),
+  );
+  registry.register<BitbucketCommitDto>(
+    TypedConnectorPair<BitbucketCommitDto>(
+      source: bitbucketSource,
+      providerId: 'bitbucket',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );

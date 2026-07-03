@@ -26,33 +26,60 @@ class LinearIssueDtoMapper extends ClassMapperBase<LinearIssueDto> {
     'identifier',
     _$identifier,
   );
+  static String _$teamKey(LinearIssueDto v) => v.teamKey;
+  static const Field<LinearIssueDto, String> _f$teamKey = Field(
+    'teamKey',
+    _$teamKey,
+  );
   static String _$title(LinearIssueDto v) => v.title;
   static const Field<LinearIssueDto, String> _f$title = Field('title', _$title);
-  static String _$status(LinearIssueDto v) => v.status;
-  static const Field<LinearIssueDto, String> _f$status = Field(
-    'status',
-    _$status,
+  static String _$statusName(LinearIssueDto v) => v.statusName;
+  static const Field<LinearIssueDto, String> _f$statusName = Field(
+    'statusName',
+    _$statusName,
   );
+  static String _$url(LinearIssueDto v) => v.url;
+  static const Field<LinearIssueDto, String> _f$url = Field('url', _$url);
   static DateTime _$updatedAt(LinearIssueDto v) => v.updatedAt;
   static const Field<LinearIssueDto, DateTime> _f$updatedAt = Field(
     'updatedAt',
     _$updatedAt,
   );
+  static String? _$dabUserId(LinearIssueDto v) => v.dabUserId;
+  static const Field<LinearIssueDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
+  );
+  static String? _$authorDisplayName(LinearIssueDto v) => v.authorDisplayName;
+  static const Field<LinearIssueDto, String> _f$authorDisplayName = Field(
+    'authorDisplayName',
+    _$authorDisplayName,
+    opt: true,
+  );
 
   @override
   final MappableFields<LinearIssueDto> fields = const {
     #identifier: _f$identifier,
+    #teamKey: _f$teamKey,
     #title: _f$title,
-    #status: _f$status,
+    #statusName: _f$statusName,
+    #url: _f$url,
     #updatedAt: _f$updatedAt,
+    #dabUserId: _f$dabUserId,
+    #authorDisplayName: _f$authorDisplayName,
   };
 
   static LinearIssueDto _instantiate(DecodingData data) {
     return LinearIssueDto(
       identifier: data.dec(_f$identifier),
+      teamKey: data.dec(_f$teamKey),
       title: data.dec(_f$title),
-      status: data.dec(_f$status),
+      statusName: data.dec(_f$statusName),
+      url: data.dec(_f$url),
       updatedAt: data.dec(_f$updatedAt),
+      dabUserId: data.dec(_f$dabUserId),
+      authorDisplayName: data.dec(_f$authorDisplayName),
     );
   }
 
@@ -120,9 +147,13 @@ abstract class LinearIssueDtoCopyWith<$R, $In extends LinearIssueDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   $R call({
     String? identifier,
+    String? teamKey,
     String? title,
-    String? status,
+    String? statusName,
+    String? url,
     DateTime? updatedAt,
+    String? dabUserId,
+    String? authorDisplayName,
   });
   LinearIssueDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -140,23 +171,38 @@ class _LinearIssueDtoCopyWithImpl<$R, $Out>
   @override
   $R call({
     String? identifier,
+    String? teamKey,
     String? title,
-    String? status,
+    String? statusName,
+    String? url,
     DateTime? updatedAt,
+    Object? dabUserId = $none,
+    Object? authorDisplayName = $none,
   }) => $apply(
     FieldCopyWithData({
       if (identifier != null) #identifier: identifier,
+      if (teamKey != null) #teamKey: teamKey,
       if (title != null) #title: title,
-      if (status != null) #status: status,
+      if (statusName != null) #statusName: statusName,
+      if (url != null) #url: url,
       if (updatedAt != null) #updatedAt: updatedAt,
+      if (dabUserId != $none) #dabUserId: dabUserId,
+      if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
     }),
   );
   @override
   LinearIssueDto $make(CopyWithData data) => LinearIssueDto(
     identifier: data.get(#identifier, or: $value.identifier),
+    teamKey: data.get(#teamKey, or: $value.teamKey),
     title: data.get(#title, or: $value.title),
-    status: data.get(#status, or: $value.status),
+    statusName: data.get(#statusName, or: $value.statusName),
+    url: data.get(#url, or: $value.url),
     updatedAt: data.get(#updatedAt, or: $value.updatedAt),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
+    authorDisplayName: data.get(
+      #authorDisplayName,
+      or: $value.authorDisplayName,
+    ),
   );
 
   @override

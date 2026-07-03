@@ -106,14 +106,50 @@ class ActivityRepository implements AbsIActivityRepository {
                   statusName: Value(provider.statusName),
                 ),
               );
-        } else if (provider is TeamsMessageProvider) {
+        } else if (provider is LinearIssueProvider) {
           await _db
-              .into(_db.activityTeamsMessageTable)
+              .into(_db.activityLinearIssueTable)
               .insert(
-                ActivityTeamsMessageTableCompanion.insert(
+                ActivityLinearIssueTableCompanion.insert(
                   activityId: activity.id,
-                  tenantId: Value(provider.tenantId),
-                  teamId: Value(provider.teamId),
+                  identifier: () {
+                    final v = provider.identifier?.trim();
+                    return (v == null || v.isEmpty) ? 'unknown' : v;
+                  }(),
+                  teamKey: () {
+                    final v = provider.teamKey?.trim();
+                    return (v == null || v.isEmpty) ? 'unknown' : v;
+                  }(),
+                  statusName: Value(provider.statusName),
+                ),
+              );
+        } else if (provider is GitLabCommitProvider) {
+          await _db
+              .into(_db.activityGitlabCommitTable)
+              .insert(
+                ActivityGitlabCommitTableCompanion.insert(
+                  activityId: activity.id,
+                  project: Value(provider.project),
+                  branch: Value(provider.branch),
+                ),
+              );
+        } else if (provider is BitbucketCommitProvider) {
+          await _db
+              .into(_db.activityBitbucketCommitTable)
+              .insert(
+                ActivityBitbucketCommitTableCompanion.insert(
+                  activityId: activity.id,
+                  repo: Value(provider.repo),
+                  branch: Value(provider.branch),
+                ),
+              );
+        } else if (provider is DiscordMessageProvider) {
+          await _db
+              .into(_db.activityDiscordMessageTable)
+              .insert(
+                ActivityDiscordMessageTableCompanion.insert(
+                  activityId: activity.id,
+                  guildId: Value(provider.guildId),
                   channelId: Value(provider.channelId),
                   messageId: Value(provider.messageId),
                   replyToId: Value(provider.replyToId),
@@ -157,8 +193,26 @@ class ActivityRepository implements AbsIActivityRepository {
           ),
         ),
         leftOuterJoin(
-          _db.activityTeamsMessageTable,
-          _db.activityTeamsMessageTable.activityId.equalsExp(
+          _db.activityLinearIssueTable,
+          _db.activityLinearIssueTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityDiscordMessageTable,
+          _db.activityDiscordMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityGitlabCommitTable,
+          _db.activityGitlabCommitTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityBitbucketCommitTable,
+          _db.activityBitbucketCommitTable.activityId.equalsExp(
             _db.activitiesTable.id,
           ),
         ),
@@ -219,8 +273,26 @@ class ActivityRepository implements AbsIActivityRepository {
           ),
         ),
         leftOuterJoin(
-          _db.activityTeamsMessageTable,
-          _db.activityTeamsMessageTable.activityId.equalsExp(
+          _db.activityLinearIssueTable,
+          _db.activityLinearIssueTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityDiscordMessageTable,
+          _db.activityDiscordMessageTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityGitlabCommitTable,
+          _db.activityGitlabCommitTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityBitbucketCommitTable,
+          _db.activityBitbucketCommitTable.activityId.equalsExp(
             _db.activitiesTable.id,
           ),
         ),
@@ -261,7 +333,10 @@ class ActivityRepository implements AbsIActivityRepository {
     final githubData = row.readTableOrNull(_db.activityGithubCommitTable);
     final slackData = row.readTableOrNull(_db.activitySlackMessageTable);
     final jiraData = row.readTableOrNull(_db.activityJiraIssueTable);
-    final teamsData = row.readTableOrNull(_db.activityTeamsMessageTable);
+    final linearData = row.readTableOrNull(_db.activityLinearIssueTable);
+    final discordData = row.readTableOrNull(_db.activityDiscordMessageTable);
+    final gitlabData = row.readTableOrNull(_db.activityGitlabCommitTable);
+    final bitbucketData = row.readTableOrNull(_db.activityBitbucketCommitTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -302,16 +377,37 @@ class ActivityRepository implements AbsIActivityRepository {
       );
     } else if (pName == 'jira') {
       provider = const JiraIssueProvider();
-    } else if (pName == 'teams' && teamsData != null) {
-      provider = TeamsMessageProvider(
-        tenantId: teamsData.tenantId,
-        teamId: teamsData.teamId,
-        channelId: teamsData.channelId,
-        messageId: teamsData.messageId,
-        replyToId: teamsData.replyToId,
+    } else if (pName == 'linear' && linearData != null) {
+      provider = LinearIssueProvider(
+        identifier: linearData.identifier,
+        teamKey: linearData.teamKey,
+        statusName: linearData.statusName,
       );
-    } else if (pName == 'teams') {
-      provider = const TeamsMessageProvider();
+    } else if (pName == 'linear') {
+      provider = const LinearIssueProvider();
+    } else if (pName == 'discord' && discordData != null) {
+      provider = DiscordMessageProvider(
+        guildId: discordData.guildId,
+        channelId: discordData.channelId,
+        messageId: discordData.messageId,
+        replyToId: discordData.replyToId,
+      );
+    } else if (pName == 'discord') {
+      provider = const DiscordMessageProvider();
+    } else if (pName == 'gitlab' && gitlabData != null) {
+      provider = GitLabCommitProvider(
+        project: gitlabData.project,
+        branch: gitlabData.branch,
+      );
+    } else if (pName == 'gitlab') {
+      provider = const GitLabCommitProvider();
+    } else if (pName == 'bitbucket' && bitbucketData != null) {
+      provider = BitbucketCommitProvider(
+        repo: bitbucketData.repo,
+        branch: bitbucketData.branch,
+      );
+    } else if (pName == 'bitbucket') {
+      provider = const BitbucketCommitProvider();
     } else {
       provider = GenericProvider(name: activityData.providerName);
     }

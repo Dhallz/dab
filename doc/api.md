@@ -114,7 +114,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; no Postgres). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), Slack Events webhook (`/integrations/slack/events`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; no Postgres). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
@@ -162,17 +162,17 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 
 ## Provider Roadmap
 
-| Provider | Status | Protocol |
-|---|---|---|
-| Phorge | ✅ Active | Conduit REST API |
-| GitHub | ✅ Active (Commits v1) | REST (+ push webhook) |
-| Slack | ✅ Active (Messages v1) | Slack Web API |
-| Jira | ✅ Active (issues v1, polling + discovery) | REST |
-| Linear | 🧪 Scaffolded | GraphQL |
-| Teams | ✅ Active (messages v1, polling) | Microsoft Graph REST |
-| Discord | 🧪 Scaffolded | REST |
-| GitLab | 🔜 Planned | REST |
-| Bitbucket | 🔜 Planned | REST |
+| Provider | Status | Explorer (polling) | Dashboard (live) |
+|---|---|---|---|
+| Phorge | ✅ Active | Conduit REST API | Herald webhook (HMAC-SHA256) |
+| GitHub | ✅ Active (Commits v1) | REST | Push webhook (`X-Hub-Signature-256`) |
+| Slack | ✅ Active (Messages v1) | Slack Web API | Events API webhook |
+| Jira | ✅ Active (issues v1) | REST + discovery | Webhook (shared secret) |
+| Linear | ✅ Active (issues v1) | GraphQL + discovery | Webhook (`linear-signature` HMAC) |
+| Discord | ✅ Active (messages v1) | REST + discovery | Gateway WebSocket client (`MESSAGE_CREATE`) |
+| GitLab | ✅ Active (commits v1) | REST + discovery | Push Hook webhook (`X-Gitlab-Token`) |
+| Bitbucket | ✅ Active (commits v1) | REST + discovery | `repo:push` webhook (`X-Hub-Signature` HMAC) |
+| Teams | 🔜 Planned (removed from v1; Graph change notifications operationally heavy) | Microsoft Graph REST | — |
 
 GitHub v1 ingestion is commits-only and uses provider-linked identities from
 `user_identities` (`provider_id: github`) to scope attribution. Saved provider
@@ -222,14 +222,60 @@ For local webhook testing, generate signature headers from the exact raw request
 body using:
 `./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
 
-Teams v1 ingestion is **read-only** and **polling-only** via Microsoft Graph.
-`TeamsMessageSource` fetches channel messages for configured
-`teamId/channelId` pairs (`settings.channels`) in the Explorer date window.
-Attribution requires linked `user_identities` rows (`provider_id: teams`,
-`external_id` = Graph user id). Admin settings: **`tenantId`**, **`clientId`**,
-**`clientSecret`**, and **`channels`**. Test connection acquires an app-only
-token and calls `GET /v1.0/organization`. Live Graph subscriptions remain
-planned separately.
+Phorge live ingestion uses Herald webhooks (`POST /integrations/phorge/webhook`).
+Herald payloads are thin (object PHID + transaction PHIDs), so `IngestPhorgeWebhook`
+hydrates the object via the existing Conduit client before mapping. Signature is
+HMAC-SHA256 of the raw body in `X-Phabricator-Webhook-Signature`, keyed by the
+provider setting **`webhookHmacKey`**; dedup is per transaction PHID via Redis.
+
+Jira live ingestion (`POST /integrations/jira/webhook`) handles
+`jira:issue_created` / `jira:issue_updated`. Jira Cloud admin webhooks carry no
+HMAC, so the endpoint compares a shared secret from the `X-Webhook-Secret`
+header (or `?secret=` query parameter) against the provider setting
+**`webhookSecret`**. Events map through the same `JiraIssueDto.toActivities`
+path as polling and dedup on event id + issue updated timestamp.
+
+Linear ingestion is issue-oriented: `LinearIssueSource` queries the GraphQL API
+(`issues` filtered by an `updatedAt` window and, with `authoredOnly`, by linked
+assignee/creator identities) using the provider **`apiKey`** setting; discovery
+resolves Linear user ids by email. Live ingestion
+(`POST /integrations/linear/webhook`) handles `Issue` create/update payloads,
+verifying the `linear-signature` HMAC-SHA256 header against **`webhookSecret`**
+and deduping on the `linear-delivery` id.
+
+Discord has no outbound webhooks for messages, so live ingestion uses
+`DiscordGatewayService` — an outbound Gateway WebSocket client (IDENTIFY with
+the **`botToken`**, `GUILD_MESSAGES`/`MESSAGE_CONTENT` intents, heartbeat +
+RESUME reconnect). `MESSAGE_CREATE` dispatches flow through
+`IngestDiscordMessage` into the same persist/fan-out pipeline. The service
+starts on boot when the Discord config is active and reloads on config save.
+Explorer backfill polls `GET /channels/{id}/messages` per configured
+**`channels`** id; attribution requires linked identities
+(`provider_id: discord`).
+
+GitLab ingestion is commit-oriented: `GitLabCommitSource` polls
+`GET /projects/:id/repository/commits` per configured **`projects`** entry
+(token auth via **`apiToken`**, instance URL from `baseUrl`/**`instanceUrl`**),
+attributing commits by `author_email` against user emails and linked
+identities. Live ingestion (`POST /integrations/gitlab/webhook`) handles Push
+Hook events authenticated with the plain shared **`webhookSecret`** in
+`X-Gitlab-Token` (constant-time compare; GitLab does not sign payloads).
+
+Bitbucket ingestion mirrors GitLab: `BitbucketCommitSource` polls
+`GET /repositories/{workspace}/{repo}/commits` (Basic auth with **`username`** +
+app password **`apiToken`**, **`workspace`** + **`repos`** allow-list),
+preferring `account_id` from linked identities with email fallback from the raw
+commit signature. Live ingestion (`POST /integrations/bitbucket/webhook`)
+handles `repo:push` events verified with HMAC-SHA256 (`X-Hub-Signature`,
+`sha256=<hex>`) against **`webhookSecret`**, deduping on `X-Request-UUID`.
+
+Microsoft Teams support was removed from the active codebase and returned to
+the roadmap: Graph change notifications require tenant-wide admin consent,
+encrypted payload handling, and short-lived subscription renewal, which makes
+live ingestion operationally heavy for self-hosted deployments. Historical
+Teams rows remain in the orphaned `activity_teams_message` table and are hidden
+by the Deep Deactivation join (the `teams` provider config row is deleted in
+schema v16).
 
 GitHub sends the JSON body as either **raw JSON** (`Content-Type:
 application/json`) or **URL-encoded** (`application/x-www-form-urlencoded` with a

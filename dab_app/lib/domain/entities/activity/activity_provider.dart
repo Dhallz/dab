@@ -74,6 +74,74 @@ class JiraIssueProvider extends ActivityProvider with JiraIssueProviderMappable 
 }
 
 @MappableClass()
+class GitLabCommitProvider extends ActivityProvider
+    with GitLabCommitProviderMappable {
+  final String? project;
+  final String? branch;
+
+  const GitLabCommitProvider({this.project, this.branch});
+
+  @override
+  String get name => 'GitLab';
+
+  @override
+  ActivityCategory get category => ActivityCategory.commit;
+}
+
+@MappableClass()
+class BitbucketCommitProvider extends ActivityProvider
+    with BitbucketCommitProviderMappable {
+  final String? repo;
+  final String? branch;
+
+  const BitbucketCommitProvider({this.repo, this.branch});
+
+  @override
+  String get name => 'Bitbucket';
+
+  @override
+  ActivityCategory get category => ActivityCategory.commit;
+}
+
+@MappableClass()
+class LinearIssueProvider extends ActivityProvider
+    with LinearIssueProviderMappable {
+  final String? identifier;
+  final String? teamKey;
+  final String? statusName;
+
+  const LinearIssueProvider({this.identifier, this.teamKey, this.statusName});
+
+  @override
+  String get name => 'Linear';
+
+  @override
+  ActivityCategory get category => ActivityCategory.task;
+}
+
+@MappableClass()
+class DiscordMessageProvider extends ActivityProvider
+    with DiscordMessageProviderMappable {
+  final String? guildId;
+  final String? channelId;
+  final String? messageId;
+  final String? replyToId;
+
+  const DiscordMessageProvider({
+    this.guildId,
+    this.channelId,
+    this.messageId,
+    this.replyToId,
+  });
+
+  @override
+  String get name => 'Discord';
+
+  @override
+  ActivityCategory get category => ActivityCategory.message;
+}
+
+@MappableClass()
 class SlackMessageProvider extends ActivityProvider
     with SlackMessageProviderMappable {
   final String? workspaceId;
@@ -90,30 +158,6 @@ class SlackMessageProvider extends ActivityProvider
 
   @override
   String get name => 'Slack';
-
-  @override
-  ActivityCategory get category => ActivityCategory.message;
-}
-
-@MappableClass()
-class TeamsMessageProvider extends ActivityProvider
-    with TeamsMessageProviderMappable {
-  final String? tenantId;
-  final String? teamId;
-  final String? channelId;
-  final String? messageId;
-  final String? replyToId;
-
-  const TeamsMessageProvider({
-    this.tenantId,
-    this.teamId,
-    this.channelId,
-    this.messageId,
-    this.replyToId,
-  });
-
-  @override
-  String get name => 'Teams';
 
   @override
   ActivityCategory get category => ActivityCategory.message;

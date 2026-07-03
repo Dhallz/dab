@@ -60,10 +60,11 @@ extension OnGitHubCommitDto on GitHubCommitDto {
         ? '[$branchTag] $subject'
         : subject;
 
+    final displayAuthorName = authorName?.trim().isNotEmpty == true ? authorName!.trim() : user.name;
     final login = authorLogin?.trim();
     final authorLine = login != null && login.isNotEmpty
-        ? '${user.name} (@$login)'
-        : user.name;
+        ? '$displayAuthorName (@$login)'
+        : displayAuthorName;
 
     return [
       Activity(

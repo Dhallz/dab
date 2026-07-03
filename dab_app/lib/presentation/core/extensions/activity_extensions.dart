@@ -29,13 +29,16 @@ extension OnActivity on Activity {
   Color brandColor(BuildContext context) => providerStyle(context).brandColor;
 
   String granularKey() {
-    // GitHub integration is commit-only in DAB.
-    if (provider is GitHubCommitProvider) {
+    // Git hosting integrations are commit-only in DAB.
+    if (provider is GitHubCommitProvider ||
+        provider is GitLabCommitProvider ||
+        provider is BitbucketCommitProvider) {
       return 'commit';
     }
 
-    // Slack / Teams integrations are message-oriented in DAB.
-    if (provider is SlackMessageProvider || provider is TeamsMessageProvider) {
+    // Chat integrations are message-oriented in DAB.
+    if (provider is SlackMessageProvider ||
+        provider is DiscordMessageProvider) {
       return 'message';
     }
 

@@ -218,6 +218,14 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           taskOrder.add(key);
         }
         taskGroups[key]!.add(activity);
+      } else if (provider is LinearIssueProvider &&
+          provider.identifier != null) {
+        final key = '${activity.userId}_${provider.identifier}';
+        if (!taskGroups.containsKey(key)) {
+          taskGroups[key] = [];
+          taskOrder.add(key);
+        }
+        taskGroups[key]!.add(activity);
       } else if (provider is SlackMessageProvider &&
           provider.channelId != null &&
           provider.threadTs != null) {
@@ -231,24 +239,6 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           provider.channelId != null &&
           provider.threadTs == null) {
         final key = _buildSlackBurstKey(activity, provider);
-        if (!slackBurstGroups.containsKey(key)) {
-          slackBurstGroups[key] = [];
-          slackBurstOrder.add(key);
-        }
-        slackBurstGroups[key]!.add(activity);
-      } else if (provider is TeamsMessageProvider &&
-          provider.channelId != null &&
-          provider.replyToId != null &&
-          provider.replyToId!.isNotEmpty) {
-        final key = '${provider.channelId}:${provider.replyToId}';
-        if (!slackConversationGroups.containsKey(key)) {
-          slackConversationGroups[key] = [];
-          slackConversationOrder.add(key);
-        }
-        slackConversationGroups[key]!.add(activity);
-      } else if (provider is TeamsMessageProvider &&
-          provider.channelId != null) {
-        final key = _buildTeamsBurstKey(activity, provider);
         if (!slackBurstGroups.containsKey(key)) {
           slackBurstGroups[key] = [];
           slackBurstOrder.add(key);
@@ -268,6 +258,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         final taskId = switch (provider) {
           PhorgeTaskProvider(:final taskPhid?) => taskPhid,
           JiraIssueProvider(:final issueKey?) => issueKey,
+          LinearIssueProvider(:final identifier?) => identifier,
           _ => groupedActivities.first.id,
         };
         items.add(
@@ -339,13 +330,6 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
     return '${provider.channelId}:${activity.userId}:$bucketEpoch';
   }
 
-  String _buildTeamsBurstKey(Activity activity, TeamsMessageProvider provider) {
-    final bucketEpoch =
-        activity.createdAt.toUtc().millisecondsSinceEpoch ~/
-        const Duration(minutes: 15).inMilliseconds;
-    return '${provider.channelId}:${activity.userId}:$bucketEpoch';
-  }
-
   String _extractBucketIdFromSlackBurstKey(String key) {
     final parts = key.split(':');
     return parts.isNotEmpty ? parts.last : key;
@@ -355,13 +339,16 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
     final normalized = providerId.toLowerCase();
     switch (normalized) {
       case 'github':
+      case 'gitlab':
+      case 'bitbucket':
         return {ActivityCategory.commit};
       case 'slack':
-      case 'teams':
+      case 'discord':
         return {ActivityCategory.message};
       case 'phorge':
         return {ActivityCategory.task, ActivityCategory.revision};
       case 'jira':
+      case 'linear':
         return {ActivityCategory.task};
       default:
         return {ActivityCategory.generic};

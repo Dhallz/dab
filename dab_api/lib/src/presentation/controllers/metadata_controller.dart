@@ -3,6 +3,7 @@ import 'package:relic/relic.dart';
 import 'package:http/http.dart' as http;
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
+import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 import '../../service_locator.dart';
 import '../../infrastructure/protocols/conduit/conduit_protocol.dart';
 import '../../infrastructure/protocols/conduit/http_conduit_protocol.dart';
@@ -157,12 +158,19 @@ class MetadataController {
             mimeType: MimeType.json,
           ),
         ),
-        (savedConfig) => Response.ok(
-          body: Body.fromString(
-            jsonEncode({'data': savedConfig.toMap()}),
-            mimeType: MimeType.json,
-          ),
-        ),
+        (savedConfig) {
+          if (savedConfig.id == 'discord') {
+            sl<DiscordGatewayService>().reload().catchError((e) {
+              print('Error reloading DiscordGatewayService: $e');
+            });
+          }
+          return Response.ok(
+            body: Body.fromString(
+              jsonEncode({'data': savedConfig.toMap()}),
+              mimeType: MimeType.json,
+            ),
+          );
+        },
       );
     } catch (e) {
       return Response.badRequest(
@@ -335,6 +343,79 @@ class MetadataController {
         }
       }
 
+      if (config.id == 'bitbucket') {
+        final username = (config.settings['username'] ?? '').toString().trim();
+        final secret =
+            (config.settings['apiToken'] ??
+                    config.settings['appPassword'] ??
+                    config.settings['token'] ??
+                    '')
+                .toString()
+                .trim();
+        if (username.isEmpty || secret.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Bitbucket username or app password is missing',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        final uri = Uri.parse('https://api.bitbucket.org/2.0/user');
+        try {
+          final basic = base64Encode(utf8.encode('$username:$secret'));
+          final response = await http
+              .get(
+                uri,
+                headers: {
+                  'Authorization': 'Basic $basic',
+                  'Accept': 'application/json',
+                },
+              )
+              .timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            final display = body['display_name']?.toString() ?? 'unknown';
+            return Response.ok(
+              body: Body.fromString(
+                jsonEncode({
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected as $display',
+                  },
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details':
+                    'Bitbucket API returned ${response.statusCode}. Verify username and app password.',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Bitbucket connectivity test failed: $e',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
       if (config.id == 'slack') {
         final token =
             (config.settings['botToken'] ??
@@ -424,112 +505,57 @@ class MetadataController {
         }
       }
 
-      if (config.id == 'teams') {
-        final tenantId = (config.settings['tenantId'] ?? '').toString().trim();
-        final clientId = (config.settings['clientId'] ?? '').toString().trim();
-        final clientSecret =
-            (config.settings['clientSecret'] ?? '').toString().trim();
-        if (tenantId.isEmpty || clientId.isEmpty || clientSecret.isEmpty) {
+      if (config.id == 'jira') {
+        final apiToken = (config.settings['apiToken'] ?? config.settings['api.token'] ?? config.settings['token'] ?? '').toString().trim();
+        final email = (config.settings['email'] ?? '').toString().trim();
+        var instanceUrl = (config.settings['instanceUrl'] ?? config.baseUrl ?? '').toString().trim();
+
+        if (apiToken.isEmpty || email.isEmpty || instanceUrl.isEmpty) {
           return Response.badRequest(
             body: Body.fromString(
               jsonEncode({
                 'error': 'Connection failed',
-                'details':
-                    'Teams tenantId, clientId, and clientSecret are required',
+                'details': 'Jira API token, email, and instance URL are required',
               }),
               mimeType: MimeType.json,
             ),
           );
         }
 
+        instanceUrl = instanceUrl.replaceAll(RegExp(r'/+$'), '');
+        final credentials = base64Encode(utf8.encode('$email:$apiToken'));
+        final uri = Uri.parse('$instanceUrl/rest/api/3/myself');
+
         try {
-          final tokenUri = Uri.parse(
-            'https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token',
-          );
-          final tokenResponse = await http
-              .post(
-                tokenUri,
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: {
-                  'client_id': clientId,
-                  'client_secret': clientSecret,
-                  'grant_type': 'client_credentials',
-                  'scope': 'https://graph.microsoft.com/.default',
-                },
-              )
-              .timeout(const Duration(seconds: 12));
+          final response = await http.get(
+            uri,
+            headers: {
+              'Authorization': 'Basic $credentials',
+              'Accept': 'application/json',
+            },
+          ).timeout(const Duration(seconds: 10));
 
-          if (tokenResponse.statusCode < 200 ||
-              tokenResponse.statusCode >= 300) {
-            return Response.badRequest(
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            final displayName = body['displayName']?.toString() ?? 'unknown';
+            return Response.ok(
               body: Body.fromString(
                 jsonEncode({
-                  'error': 'Connection failed',
-                  'details':
-                      'Azure AD token request failed (${tokenResponse.statusCode}). Verify tenant and app registration.',
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected as $displayName',
+                  },
                 }),
                 mimeType: MimeType.json,
               ),
             );
           }
 
-          final tokenBody =
-              jsonDecode(tokenResponse.body) as Map<String, dynamic>;
-          final accessToken = tokenBody['access_token']?.toString().trim();
-          if (accessToken == null || accessToken.isEmpty) {
-            return Response.badRequest(
-              body: Body.fromString(
-                jsonEncode({
-                  'error': 'Connection failed',
-                  'details': 'Azure AD did not return an access token',
-                }),
-                mimeType: MimeType.json,
-              ),
-            );
-          }
-
-          final orgResponse = await http
-              .get(
-                Uri.parse('https://graph.microsoft.com/v1.0/organization'),
-                headers: {
-                  'Authorization': 'Bearer $accessToken',
-                  'Accept': 'application/json',
-                },
-              )
-              .timeout(const Duration(seconds: 10));
-
-          if (orgResponse.statusCode != 200) {
-            return Response.badRequest(
-              body: Body.fromString(
-                jsonEncode({
-                  'error': 'Connection failed',
-                  'details':
-                      'Microsoft Graph returned ${orgResponse.statusCode}. Check app permissions (e.g. Organization.Read.All).',
-                }),
-                mimeType: MimeType.json,
-              ),
-            );
-          }
-
-          final orgBody =
-              jsonDecode(orgResponse.body) as Map<String, dynamic>;
-          final orgs = orgBody['value'];
-          final orgName =
-              (orgs is List && orgs.isNotEmpty && orgs.first is Map)
-                  ? (orgs.first as Map)['displayName']?.toString() ??
-                      'organization'
-                  : 'organization';
-
-          return Response.ok(
+          return Response.badRequest(
             body: Body.fromString(
               jsonEncode({
-                'data': {
-                  'status': 'connected',
-                  'message':
-                      'Successfully connected to Microsoft Teams ($orgName)',
-                },
+                'error': 'Connection failed',
+                'details': 'Jira API returned ${response.statusCode}. Verify credentials and URL.',
               }),
               mimeType: MimeType.json,
             ),
@@ -539,7 +565,218 @@ class MetadataController {
             body: Body.fromString(
               jsonEncode({
                 'error': 'Connection failed',
-                'details': 'Teams connectivity test failed: $e',
+                'details': 'Jira connectivity test failed: $e',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
+      if (config.id == 'linear') {
+        final apiKey = (config.settings['apiKey'] ?? config.settings['api.token'] ?? config.settings['token'] ?? '').toString().trim();
+
+        if (apiKey.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Linear API key is missing',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        final uri = Uri.parse('https://api.linear.app/v1/graphql');
+
+        try {
+          final response = await http.post(
+            uri,
+            headers: {
+              'Authorization': apiKey,
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'query': 'query { viewer { id name } }',
+            }),
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            if (body['errors'] != null) {
+              final errors = body['errors'] as List;
+              final errorMsg = errors.isNotEmpty ? errors.first['message'] : 'GraphQL error';
+              return Response.badRequest(
+                body: Body.fromString(
+                  jsonEncode({
+                    'error': 'Connection failed',
+                    'details': 'Linear GraphQL error: $errorMsg',
+                  }),
+                  mimeType: MimeType.json,
+                ),
+              );
+            }
+            final viewerName = body['data']?['viewer']?['name']?.toString() ?? 'unknown';
+            return Response.ok(
+              body: Body.fromString(
+                jsonEncode({
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected as $viewerName',
+                  },
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Linear API returned ${response.statusCode}. Verify API key.',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Linear connectivity test failed: $e',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
+      if (config.id == 'discord') {
+        final botToken = (config.settings['botToken'] ?? config.settings['api.token'] ?? config.settings['token'] ?? '').toString().trim();
+        final guildId = (config.settings['guildId'] ?? '').toString().trim();
+
+        if (botToken.isEmpty || guildId.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Discord bot token and guild ID are required',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        final uri = Uri.parse('https://discord.com/api/v10/guilds/$guildId');
+
+        try {
+          final response = await http.get(
+            uri,
+            headers: {
+              'Authorization': 'Bot $botToken',
+              'Accept': 'application/json',
+            },
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            final guildName = body['name']?.toString() ?? 'unknown guild';
+            return Response.ok(
+              body: Body.fromString(
+                jsonEncode({
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected to server: $guildName',
+                  },
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Discord API returned ${response.statusCode}. Verify bot token and guild ID.',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'Discord connectivity test failed: $e',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+      }
+
+      if (config.id == 'gitlab') {
+        final apiToken = (config.settings['apiToken'] ?? config.settings['api.token'] ?? config.settings['token'] ?? '').toString().trim();
+        var instanceUrl = (config.settings['instanceUrl'] ?? config.baseUrl ?? '').toString().trim();
+
+        if (apiToken.isEmpty || instanceUrl.isEmpty) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'GitLab API token and instance URL are required',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+
+        instanceUrl = instanceUrl.replaceAll(RegExp(r'/+$'), '');
+        final uri = Uri.parse('$instanceUrl/api/v4/user');
+
+        try {
+          final response = await http.get(
+            uri,
+            headers: {
+              'PRIVATE-TOKEN': apiToken,
+              'Accept': 'application/json',
+            },
+          ).timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body) as Map<String, dynamic>;
+            final username = body['username']?.toString() ?? 'unknown';
+            return Response.ok(
+              body: Body.fromString(
+                jsonEncode({
+                  'data': {
+                    'status': 'connected',
+                    'message': 'Successfully connected as $username',
+                  },
+                }),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'GitLab API returned ${response.statusCode}. Verify API token and instance URL.',
+              }),
+              mimeType: MimeType.json,
+            ),
+          );
+        } catch (e) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({
+                'error': 'Connection failed',
+                'details': 'GitLab connectivity test failed: $e',
               }),
               mimeType: MimeType.json,
             ),
@@ -629,12 +866,14 @@ class MetadataController {
             mimeType: MimeType.json,
           ),
         ),
-        (_) => Response.ok(
-          body: Body.fromString(
-            jsonEncode({'success': true}),
-            mimeType: MimeType.json,
-          ),
-        ),
+        (_) {
+          return Response.ok(
+            body: Body.fromString(
+              jsonEncode({'success': true}),
+              mimeType: MimeType.json,
+            ),
+          );
+        },
       );
     } catch (e) {
       return Response.badRequest(

@@ -11,6 +11,9 @@ import '../../domain/entities/activity/activity_provider.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../infrastructure/core/http/github_webhook_payload.dart';
 import '../../infrastructure/core/security/github_webhook_verifier.dart';
+import '../../infrastructure/core/security/linear_webhook_verifier.dart';
+import '../../infrastructure/core/security/phorge_webhook_verifier.dart';
+import '../../infrastructure/core/security/shared_secret_verifier.dart';
 import '../../infrastructure/core/security/slack_request_verifier.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
 import '../../infrastructure/websockets/presence_service.dart';
@@ -355,6 +358,417 @@ class ActivityController {
     );
   }
 
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/phorge/webhook — verifies the Herald
+  /// `X-Phabricator-Webhook-Signature` HMAC and ingests task transactions.
+  Future<Response> receivePhorgeWebhook(Request request) async {
+    final body = await request.readAsString();
+    final signature =
+        request.headers['X-Phabricator-Webhook-Signature']?.first ?? '';
+
+    final hmacKey = await _resolveProviderSetting('phorge', const [
+      'webhookHmacKey',
+      'webhook_hmac_key',
+    ]);
+    if (hmacKey.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Phorge webhook HMAC key is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<PhorgeWebhookVerifier>();
+    final valid = verifier.isValidSignature(
+      body: body,
+      signatureHeader: signature,
+      hmacKey: hmacKey,
+    );
+    if (!valid) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Phorge webhook signature'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Phorge webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Phorge webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print(
+      '[PHORGE_WEBHOOK] webhook_received object=${decoded['object']?['phid']}',
+    );
+
+    unawaited(
+      _activity.ingestPhorgeWebhook.execute(payload: decoded).then((result) {
+        result.fold((failure) {
+          print('Phorge live ingestion failed: ${failure.message}');
+        }, (_) {});
+      }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'phorge_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/bitbucket/webhook — verifies the Bitbucket
+  /// `X-Hub-Signature` header (`sha256=` HMAC of the raw body — same scheme
+  /// as GitHub, so the GitHub verifier is reused) and ingests `repo:push`
+  /// events.
+  Future<Response> receiveBitbucketWebhook(Request request) async {
+    final body = await request.readAsString();
+    final signature = request.headers['X-Hub-Signature']?.first ?? '';
+    final deliveryId =
+        request.headers['X-Request-UUID']?.first ??
+        request.headers['X-Hook-UUID']?.first;
+    final eventKey = request.headers['X-Event-Key']?.first ?? '';
+
+    final webhookSecret = await _resolveProviderSetting('bitbucket', const [
+      'webhookSecret',
+      'webhook_secret',
+    ]);
+    if (webhookSecret.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Bitbucket webhook secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<GitHubWebhookVerifier>();
+    final valid = verifier.isValidSha256Signature(
+      body: body,
+      signature256Header: signature,
+      webhookSecret: webhookSecret,
+    );
+    if (!valid) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Bitbucket webhook signature'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Bitbucket webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Bitbucket webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print('[BITBUCKET_WEBHOOK] webhook_received event=$eventKey');
+
+    unawaited(
+      _activity.ingestBitbucketWebhook
+          .execute(payload: decoded, deliveryId: deliveryId)
+          .then((result) {
+            result.fold((failure) {
+              print('Bitbucket live ingestion failed: ${failure.message}');
+            }, (_) {});
+          }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'bitbucket_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/gitlab/webhook — GitLab webhooks carry a plain shared
+  /// token (`X-Gitlab-Token` header, no HMAC), compared constant-time against
+  /// the provider's `webhookSecret` setting.
+  Future<Response> receiveGitLabWebhook(Request request) async {
+    final provided = request.headers['X-Gitlab-Token']?.first ?? '';
+
+    final expected = await _resolveProviderSetting('gitlab', const [
+      'webhookSecret',
+      'webhook_secret',
+    ]);
+    if (expected.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'GitLab webhook secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<SharedSecretVerifier>();
+    if (!verifier.isValid(provided: provided, expected: expected)) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid GitLab webhook token'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final body = await request.readAsString();
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid GitLab webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid GitLab webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print(
+      '[GITLAB_WEBHOOK] webhook_received kind=${decoded['object_kind']} ref=${decoded['ref']}',
+    );
+
+    unawaited(
+      _activity.ingestGitLabWebhook.execute(payload: decoded).then((result) {
+        result.fold((failure) {
+          print('GitLab live ingestion failed: ${failure.message}');
+        }, (_) {});
+      }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'gitlab_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/linear/webhook — verifies the `linear-signature`
+  /// HMAC against the provider's `webhookSecret` and ingests Issue events.
+  Future<Response> receiveLinearWebhook(Request request) async {
+    final body = await request.readAsString();
+    final signature = request.headers['linear-signature']?.first ?? '';
+    final deliveryId = request.headers['linear-delivery']?.first;
+
+    final signingSecret = await _resolveProviderSetting('linear', const [
+      'webhookSecret',
+      'webhook_secret',
+    ]);
+    if (signingSecret.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Linear webhook secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<LinearWebhookVerifier>();
+    final valid = verifier.isValidSignature(
+      body: body,
+      signatureHeader: signature,
+      signingSecret: signingSecret,
+    );
+    if (!valid) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Linear webhook signature'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Linear webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Linear webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print(
+      '[LINEAR_WEBHOOK] webhook_received type=${decoded['type']} action=${decoded['action']}',
+    );
+
+    unawaited(
+      _activity.ingestLinearWebhook
+          .execute(payload: decoded, deliveryId: deliveryId)
+          .then((result) {
+            result.fold((failure) {
+              print('Linear live ingestion failed: ${failure.message}');
+            }, (_) {});
+          }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'linear_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  /// [ARCH: PRESENTATION_ROUTE]
+  /// POST /integrations/jira/webhook — Jira Cloud admin webhooks carry no HMAC
+  /// signature, so access is gated by a shared secret (header
+  /// `X-Webhook-Secret` or `?secret=` query parameter) compared against the
+  /// provider's `webhookSecret` setting.
+  Future<Response> receiveJiraWebhook(Request request) async {
+    final provided =
+        request.headers['X-Webhook-Secret']?.first ??
+        request.url.queryParameters['secret'] ??
+        '';
+
+    final expected = await _resolveProviderSetting('jira', const [
+      'webhookSecret',
+      'webhook_secret',
+    ]);
+    if (expected.isEmpty) {
+      return Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': 'Jira webhook secret is not configured'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final verifier = sl<SharedSecretVerifier>();
+    if (!verifier.isValid(provided: provided, expected: expected)) {
+      return Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Jira webhook secret'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final body = await request.readAsString();
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Jira webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Jira webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    print(
+      '[JIRA_WEBHOOK] webhook_received event=${decoded['webhookEvent']} issue=${decoded['issue']?['key']}',
+    );
+
+    unawaited(
+      _activity.ingestJiraWebhook.execute(payload: decoded).then((result) {
+        result.fold((failure) {
+          print('Jira live ingestion failed: ${failure.message}');
+        }, (_) {});
+      }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'jira_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
   Future<Response> searchActivities(Request request) async {
     final callerId = userIdProperty.get(request);
 
@@ -516,5 +930,28 @@ class ActivityController {
     return (settings['webhookSecret'] ?? settings['webhook_secret'] ?? '')
         .toString()
         .trim();
+  }
+
+  /// Reads the first non-empty settings value among [keys] from the active
+  /// provider config identified by [providerId]. Returns '' when the provider
+  /// is inactive, missing, or no key is set.
+  Future<String> _resolveProviderSetting(
+    String providerId,
+    List<String> keys,
+  ) async {
+    final repo = sl<AbsIProviderConfigRepository>();
+    final result = await repo.getConfigs();
+    final config = result
+        .getOrElse((_) => const [])
+        .where((c) => c.id.toLowerCase() == providerId && c.isActive)
+        .firstOrNull;
+    if (config == null) {
+      return '';
+    }
+    for (final key in keys) {
+      final value = (config.settings[key] ?? '').toString().trim();
+      if (value.isNotEmpty) return value;
+    }
+    return '';
   }
 }

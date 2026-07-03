@@ -268,6 +268,10 @@ void main() {
   });
 
   test('returns empty when no selection exists in active directory', () async {
+    when(
+      () => mockUserRepository.getUsers(),
+    ).thenAnswer((_) async => const Right([]));
+
     final container = ProviderContainer(
       overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
     );

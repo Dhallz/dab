@@ -1,9 +1,12 @@
 import 'package:dab_api/src/infrastructure/database/tables/activities_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_bitbucket_commit_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_discord_message_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_github_commit_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_gitlab_commit_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_jira_issue_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/activity_linear_issue_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_phorge_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/activity_slack_message_table.dart';
-import 'package:dab_api/src/infrastructure/database/tables/activity_teams_message_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/group_members_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/groups_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/provider_configs_table.dart';
@@ -23,9 +26,12 @@ part 'app_database.g.dart';
     ActivitiesTable,
     ActivityPhorgeTable,
     ActivityGithubCommitTable,
+    ActivityGitlabCommitTable,
+    ActivityBitbucketCommitTable,
     ActivityJiraIssueTable,
+    ActivityLinearIssueTable,
     ActivitySlackMessageTable,
-    ActivityTeamsMessageTable,
+    ActivityDiscordMessageTable,
     SessionsTable,
     GroupsTable,
     GroupMembersTable,
@@ -38,7 +44,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -174,10 +180,39 @@ WHERE id = 'slack'
         await m.createTable(activityJiraIssueTable);
       }
       if (from < 14) {
-        await m.createTable(activityTeamsMessageTable);
+        // Teams was removed in v16; the table class no longer exists, so the
+        // historical step is preserved as raw SQL to keep upgrades consistent.
+        await m.database.customStatement(r'''
+CREATE TABLE IF NOT EXISTS activity_teams_message (
+  activity_id TEXT NOT NULL PRIMARY KEY REFERENCES activities (id) ON DELETE CASCADE,
+  tenant_id TEXT NULL,
+  team_id TEXT NULL,
+  channel_id TEXT NULL,
+  message_id TEXT NULL,
+  reply_to_id TEXT NULL
+);
+''');
       }
       if (from < 15) {
         await m.createTable(systemSettingsTable);
+      }
+      if (from < 16) {
+        await m.createTable(activityGitlabCommitTable);
+        await m.createTable(activityBitbucketCommitTable);
+        await m.createTable(activityLinearIssueTable);
+        await m.createTable(activityDiscordMessageTable);
+        // Teams is retired from the active roadmap. Removing its config row
+        // hides historical Teams activities via the Deep Deactivation join;
+        // the orphaned activity_teams_message table is left untouched.
+        await m.database.customStatement(r'''
+DELETE FROM provider_configs WHERE id = 'teams';
+''');
+        // Seed Bitbucket for existing installs (fresh installs get it in beforeOpen).
+        await m.database.customStatement(r'''
+INSERT INTO provider_configs (id, name, base_url, is_active, icon_url, settings, updated_at)
+VALUES ('bitbucket', 'Bitbucket', 'https://bitbucket.org', 1, 'https://bitbucket.org/favicon.ico', '{}', NOW())
+ON CONFLICT (id) DO NOTHING;
+''');
       }
     },
     beforeOpen: (details) async {
@@ -208,16 +243,6 @@ WHERE id = 'slack'
               isActive: const Value(1),
               iconUrl: const Value(
                 'https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png',
-              ),
-              settings: const Value('{}'),
-            ),
-            ProviderConfigsTableCompanion.insert(
-              id: 'teams',
-              name: 'Microsoft Teams',
-              baseUrl: 'https://teams.microsoft.com',
-              isActive: const Value(1),
-              iconUrl: const Value(
-                'https://statics.teams.cdn.office.net/evergreen-assets/icons/favicon.ico',
               ),
               settings: const Value('{}'),
             ),
@@ -255,6 +280,14 @@ WHERE id = 'slack'
               baseUrl: 'https://gitlab.com',
               isActive: const Value(1),
               iconUrl: const Value('https://gitlab.com/favicon.ico'),
+              settings: const Value('{}'),
+            ),
+            ProviderConfigsTableCompanion.insert(
+              id: 'bitbucket',
+              name: 'Bitbucket',
+              baseUrl: 'https://bitbucket.org',
+              isActive: const Value(1),
+              iconUrl: const Value('https://bitbucket.org/favicon.ico'),
               settings: const Value('{}'),
             ),
           ]);

@@ -87,12 +87,12 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 
 | Provider | Status | Notes |
 |---|---|---|
-| Phorge | ✅ Active | Maniphest Tasks + Differential Revisions |
-| GitHub | ✅ Active (Commits v1) | Issues/PR timeline still planned |
-| GitLab | 🔜 Planned | Via generic `IActivitySource` |
-| Bitbucket | 🔜 Planned | Via generic `IActivitySource` |
-| Slack | ✅ Active (Messages v1) | Identity-scoped Slack message ingestion |
-| Jira | ✅ Active (issues v1) | REST `/rest/api/3/search/jql` polling + identity discovery (`DAB-79`) |
-| Linear | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
-| Microsoft Teams | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
-| Discord | 🧪 Scaffolded | Source/mapper wiring exists; mapper enrichment pending |
+| Phorge | ✅ Active | Maniphest Tasks + Differential Revisions; Herald webhook live path |
+| GitHub | ✅ Active (Commits v1) | Issues/PR timeline still planned; push webhook live path |
+| GitLab | ✅ Active (Commits v1) | REST polling + Push Hook webhook live path |
+| Bitbucket | ✅ Active (Commits v1) | REST polling + `repo:push` webhook live path |
+| Slack | ✅ Active (Messages v1) | Identity-scoped Slack message ingestion; Events API live path |
+| Jira | ✅ Active (issues v1) | REST `/rest/api/3/search/jql` polling + identity discovery (`DAB-79`); webhook live path |
+| Linear | ✅ Active (issues v1) | GraphQL polling + signed webhook live path |
+| Discord | ✅ Active (messages v1) | REST polling + Gateway WebSocket live path |
+| Microsoft Teams | 🔜 Planned | Removed from v1; Graph change notifications operationally heavy |

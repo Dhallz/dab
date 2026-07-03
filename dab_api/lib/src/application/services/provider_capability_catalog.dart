@@ -5,8 +5,8 @@
 class ProviderCapabilityCatalog {
   static const Map<String, Map<String, dynamic>> _capabilities = {
     'phorge': {
-      'ingestionMode': 'polling',
-      'supportsWebhook': false,
+      'ingestionMode': 'hybrid',
+      'supportsWebhook': true,
       'supportsWebSocket': false,
       'supportsPolling': true,
     },
@@ -29,16 +29,16 @@ class ProviderCapabilityCatalog {
       'supportsPolling': true,
     },
     'jira': {
-      'ingestionMode': 'polling',
-      'supportsWebhook': false,
+      'ingestionMode': 'hybrid',
+      'supportsWebhook': true,
       'supportsWebSocket': false,
       'supportsPolling': true,
     },
     'linear': {
-      'ingestionMode': 'webhook',
+      'ingestionMode': 'hybrid',
       'supportsWebhook': true,
       'supportsWebSocket': false,
-      'supportsPolling': false,
+      'supportsPolling': true,
     },
     'slack': {
       'ingestionMode': 'hybrid',
@@ -46,17 +46,11 @@ class ProviderCapabilityCatalog {
       'supportsWebSocket': false,
       'supportsPolling': true,
     },
-    'teams': {
-      'ingestionMode': 'polling',
-      'supportsWebhook': false,
-      'supportsWebSocket': false,
-      'supportsPolling': true,
-    },
     'discord': {
-      'ingestionMode': 'webhook',
-      'supportsWebhook': true,
+      'ingestionMode': 'hybrid',
+      'supportsWebhook': false,
       'supportsWebSocket': true,
-      'supportsPolling': false,
+      'supportsPolling': true,
     },
   };
 

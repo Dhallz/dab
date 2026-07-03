@@ -4,26 +4,17 @@ import '../core/local/records/explorer_activity_record.dart';
 
 class ActivitySearchQueryMapper {
   /// Lowercase identifier aligned with [ProviderConfig.id] for filter/cache keys.
-  ///
-  /// Uses sealed provider types where the display [ActivityProvider.name] differs
-  /// from the canonical id (e.g. Microsoft Teams ↔ `teams`).
   static String providerFilterKey(ActivityProvider provider) {
     return switch (provider) {
       PhorgeTaskProvider() || PhorgeRevisionProvider() => 'phorge',
       GitHubCommitProvider() => 'github',
+      GitLabCommitProvider() => 'gitlab',
+      BitbucketCommitProvider() => 'bitbucket',
       JiraIssueProvider() => 'jira',
+      LinearIssueProvider() => 'linear',
       SlackMessageProvider() => 'slack',
-      TeamsMessageProvider() => 'teams',
-      GenericProvider(name: final n) => _genericProviderFilterKey(n),
-    };
-  }
-
-  static String _genericProviderFilterKey(String displayOrId) {
-    final lower = displayOrId.toLowerCase().trim();
-    return switch (lower) {
-      'microsoft teams' => 'teams',
-      'ms teams' => 'teams',
-      _ => lower,
+      DiscordMessageProvider() => 'discord',
+      GenericProvider(name: final n) => n.toLowerCase().trim(),
     };
   }
 

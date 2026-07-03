@@ -42,9 +42,13 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
           brandColor: AppColors.brandGitLab,
           icon: AppIcons.gitlab,
         ),
+        'bitbucket': ProviderStyle(
+          brandColor: AppColors.brandBitbucket,
+          icon: AppIcons.bitbucket,
+        ),
         'linear': ProviderStyle(
           brandColor: AppColors.brandLinear,
-          icon: AppIcons.genericActivity,
+          icon: AppIcons.linear,
         ),
         'jira': ProviderStyle(
           brandColor: AppColors.brandJira,
@@ -57,10 +61,6 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
         'slack': ProviderStyle(
           brandColor: AppColors.brandSlack,
           icon: AppIcons.slack,
-        ),
-        'teams': ProviderStyle(
-          brandColor: AppColors.brandTeams,
-          icon: AppIcons.teams,
         ),
         'discord': ProviderStyle(
           brandColor: AppColors.brandDiscord,
