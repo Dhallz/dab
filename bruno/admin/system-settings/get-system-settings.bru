@@ -12,6 +12,8 @@ docs {
   | :--- | :--- | :--- | :--- |
   | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
   | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+  | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+  | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
 }
 
 get {
@@ -29,5 +31,7 @@ tests {
     expect(res.body.data).to.be.an("object");
     expect(res.body.data).to.have.property("allowed_domain_enabled");
     expect(res.body.data).to.have.property("allowed_domain");
+    expect(res.body.data).to.have.property("public_api_url");
+    expect(res.body.data).to.have.property("system_timezone");
   });
 }

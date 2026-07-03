@@ -3,6 +3,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/system/app_settings.dart';
+import '../../../../domain/core/org_calendar.dart';
 
 part 'app_state.mapper.dart';
 
@@ -15,6 +16,9 @@ class AppState with AppStateMappable {
   final List<ProviderConfig> configs;
   final bool isSystemConfigured;
 
+  /// IANA organization timezone for calendar-day boundaries (from bootstrap).
+  final String orgTimezoneId;
+
   /// Pending + failed identity rows (admin shell badge). Non-admins: keep 0.
   final int unresolvedIdentityCount;
 
@@ -23,6 +27,7 @@ class AppState with AppStateMappable {
     this.settings = const AppSettings(),
     this.configs = const [],
     this.isSystemConfigured = false,
+    this.orgTimezoneId = kDefaultOrgTimezoneId,
     this.unresolvedIdentityCount = 0,
   });
 }

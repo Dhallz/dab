@@ -52,6 +52,13 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: false,
   );
+  static String _$orgTimezoneId(AppState v) => v.orgTimezoneId;
+  static const Field<AppState, String> _f$orgTimezoneId = Field(
+    'orgTimezoneId',
+    _$orgTimezoneId,
+    opt: true,
+    def: kDefaultOrgTimezoneId,
+  );
   static int _$unresolvedIdentityCount(AppState v) => v.unresolvedIdentityCount;
   static const Field<AppState, int> _f$unresolvedIdentityCount = Field(
     'unresolvedIdentityCount',
@@ -66,6 +73,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #settings: _f$settings,
     #configs: _f$configs,
     #isSystemConfigured: _f$isSystemConfigured,
+    #orgTimezoneId: _f$orgTimezoneId,
     #unresolvedIdentityCount: _f$unresolvedIdentityCount,
   };
 
@@ -75,6 +83,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       settings: data.dec(_f$settings),
       configs: data.dec(_f$configs),
       isSystemConfigured: data.dec(_f$isSystemConfigured),
+      orgTimezoneId: data.dec(_f$orgTimezoneId),
       unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
     );
   }
@@ -148,6 +157,7 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     AppSettings? settings,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
+    String? orgTimezoneId,
     int? unresolvedIdentityCount,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -181,6 +191,7 @@ class _AppStateCopyWithImpl<$R, $Out>
     AppSettings? settings,
     List<ProviderConfig>? configs,
     bool? isSystemConfigured,
+    String? orgTimezoneId,
     int? unresolvedIdentityCount,
   }) => $apply(
     FieldCopyWithData({
@@ -188,6 +199,7 @@ class _AppStateCopyWithImpl<$R, $Out>
       if (settings != null) #settings: settings,
       if (configs != null) #configs: configs,
       if (isSystemConfigured != null) #isSystemConfigured: isSystemConfigured,
+      if (orgTimezoneId != null) #orgTimezoneId: orgTimezoneId,
       if (unresolvedIdentityCount != null)
         #unresolvedIdentityCount: unresolvedIdentityCount,
     }),
@@ -201,6 +213,7 @@ class _AppStateCopyWithImpl<$R, $Out>
       #isSystemConfigured,
       or: $value.isSystemConfigured,
     ),
+    orgTimezoneId: data.get(#orgTimezoneId, or: $value.orgTimezoneId),
     unresolvedIdentityCount: data.get(
       #unresolvedIdentityCount,
       or: $value.unresolvedIdentityCount,

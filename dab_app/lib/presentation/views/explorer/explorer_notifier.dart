@@ -12,6 +12,7 @@ import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
+import '../../features/app/app_notifier.dart';
 import 'explorer_state.dart';
 import 'models/directory_type.dart';
 import 'models/explorer_date_mode.dart';
@@ -166,6 +167,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         coverageProviders: Set<String>.from(state.availableProviders),
         categories: state.selectedActivityCategories,
         authoredOnly: true,
+        orgTimezoneId: ref.read(appNotifierProvider).orgTimezoneId,
       ),
     );
 

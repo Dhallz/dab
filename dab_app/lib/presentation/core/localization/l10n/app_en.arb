@@ -564,6 +564,22 @@
   "@adminDomainSavedSnack": {
     "description": "adminDomainSavedSnack: Allowed domain updated successfully"
   },
+  "adminOrgTimezoneTitle": "Organization timezone",
+  "@adminOrgTimezoneTitle": {
+    "description": "Title for organization timezone settings on Admin Security tab"
+  },
+  "adminOrgTimezoneSubtitle": "Calendar days in Explorer, Insights, and the live feed follow this timezone.",
+  "@adminOrgTimezoneSubtitle": {
+    "description": "Subtitle for organization timezone settings"
+  },
+  "adminOrgTimezoneLabel": "Timezone",
+  "@adminOrgTimezoneLabel": {
+    "description": "Label for organization timezone dropdown"
+  },
+  "adminTimezoneSavedSnack": "Organization timezone updated. Explorer cache was cleared.",
+  "@adminTimezoneSavedSnack": {
+    "description": "Snack bar after saving organization timezone"
+  },
   "adminNonCompliantAccountsWarning": "Accounts outside the allowed domain (existing accounts keep working):",
   "@adminNonCompliantAccountsWarning": {
     "description": "adminNonCompliantAccountsWarning: warning header listing accounts outside the allowed domain"

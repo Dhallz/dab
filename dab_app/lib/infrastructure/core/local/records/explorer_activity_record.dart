@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:objectbox/objectbox.dart';
 
+import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../datasources/activity_search_query_mapper.dart';
 
@@ -57,11 +58,10 @@ extension OnExplorerActivityRecord on ExplorerActivityRecord {
 }
 
 extension OnActivityForExplorerRecord on Activity {
-  ExplorerActivityRecord toExplorerRecord() {
+  ExplorerActivityRecord toExplorerRecord(String orgTimezoneId) {
     final lowerProvider = provider.name.toLowerCase();
     final filterKey = ActivitySearchQueryMapper.providerFilterKey(provider);
-    final day = createdAt.toLocal();
-    final dayKey = _buildDayKey(day);
+    final dayKey = orgDayKeyFromUtc(orgTimezoneId, createdAt);
     final searchable = [
       title,
       content,
@@ -83,10 +83,4 @@ extension OnActivityForExplorerRecord on Activity {
       payloadJson: jsonEncode(toMap()),
     );
   }
-}
-
-String _buildDayKey(DateTime value) {
-  final month = value.month.toString().padLeft(2, '0');
-  final day = value.day.toString().padLeft(2, '0');
-  return '${value.year}-$month-$day';
 }

@@ -1,10 +1,11 @@
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_search_query.dart';
-import '../../objectbox.g.dart';
-import '../core/local/objectbox_store.dart';
+import '../../domain/core/org_calendar.dart';
 import '../core/local/records/explorer_activity_record.dart';
 import '../core/local/records/explorer_cache_meta_record.dart';
 import '../core/local/records/explorer_coverage_record.dart';
+import '../../objectbox.g.dart';
+import '../core/local/objectbox_store.dart';
 import 'activity_search_query_mapper.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
@@ -24,6 +25,11 @@ class ActivityLocalDataSource {
 
   Box<ExplorerCacheMetaRecord> get _metaBox =>
       _store.store.box<ExplorerCacheMetaRecord>();
+
+  Future<void> clearExplorerCache() async {
+    _activityBox.removeAll();
+    _coverageBox.removeAll();
+  }
 
   Future<List<Activity>> searchActivities(ActivitySearchQuery query) async {
     _ensureCacheMetadata();
@@ -50,10 +56,13 @@ class ActivityLocalDataSource {
     return limited.map((record) => record.toDomain).toList();
   }
 
-  Future<void> upsertActivities(Iterable<Activity> activities) async {
+  Future<void> upsertActivities(
+    Iterable<Activity> activities, {
+    required String orgTimezoneId,
+  }) async {
     _ensureCacheMetadata();
     final records = activities
-        .map((activity) => activity.toExplorerRecord())
+        .map((activity) => activity.toExplorerRecord(orgTimezoneId))
         .toList();
     if (records.isEmpty) return;
     _activityBox.putMany(records);
@@ -64,15 +73,18 @@ class ActivityLocalDataSource {
     required DateTime endDate,
     required Set<String> users,
     required Set<String> providers,
+    required String orgTimezoneId,
   }) async {
     if (users.isEmpty || providers.isEmpty) return const {};
 
-    final startKey = _dayKeyFromDate(startDate);
-    final endKey = _dayKeyFromDate(endDate);
-    final startEpoch = _dayEpochFromDayKey(startKey);
-    final endEpoch = _dayEpochFromDayKey(endKey);
+    final window = orgDateWindowEpochMs(orgTimezoneId, startDate, endDate);
     final query = _coverageBox
-        .query(ExplorerCoverageRecord_.dayEpochMs.between(startEpoch, endEpoch))
+        .query(
+          ExplorerCoverageRecord_.dayEpochMs.between(
+            window.startEpochMs,
+            window.endEpochMsExclusive - 1,
+          ),
+        )
         .build();
     final records = query.find();
     query.close();
@@ -84,11 +96,14 @@ class ActivityLocalDataSource {
         .toSet();
   }
 
-  Future<void> markCoverage(Iterable<String> keys) async {
+  Future<void> markCoverage(
+    Iterable<String> keys, {
+    required String orgTimezoneId,
+  }) async {
     _ensureCacheMetadata();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final records = keys
-        .map((key) => _coverageRecordFromKey(key, now))
+        .map((key) => _coverageRecordFromKey(key, now, orgTimezoneId))
         .whereType<ExplorerCoverageRecord>()
         .toList();
     if (records.isEmpty) return;
@@ -99,6 +114,7 @@ class ActivityLocalDataSource {
     required DateTime date,
     List<String> users = const [],
     Set<String> providers = const {},
+    String orgTimezoneId = kDefaultOrgTimezoneId,
   }) {
     return searchActivities(
       ActivitySearchQuery(
@@ -106,6 +122,7 @@ class ActivityLocalDataSource {
         endDate: date,
         users: users,
         providers: providers,
+        orgTimezoneId: orgTimezoneId,
       ),
     );
   }
@@ -115,6 +132,7 @@ class ActivityLocalDataSource {
     required DateTime endDate,
     List<String> users = const [],
     Set<String> providers = const {},
+    String orgTimezoneId = kDefaultOrgTimezoneId,
   }) {
     return searchActivities(
       ActivitySearchQuery(
@@ -122,6 +140,7 @@ class ActivityLocalDataSource {
         endDate: endDate,
         users: users,
         providers: providers,
+        orgTimezoneId: orgTimezoneId,
       ),
     );
   }
@@ -131,6 +150,7 @@ class ActivityLocalDataSource {
     DateTime? startDate,
     DateTime? endDate,
     List<String> users = const [],
+    String orgTimezoneId = kDefaultOrgTimezoneId,
   }) {
     return searchActivities(
       ActivitySearchQuery(
@@ -138,6 +158,7 @@ class ActivityLocalDataSource {
         endDate: endDate,
         users: users,
         providers: providers,
+        orgTimezoneId: orgTimezoneId,
       ),
     );
   }
@@ -147,6 +168,7 @@ class ActivityLocalDataSource {
     DateTime? startDate,
     DateTime? endDate,
     Set<String> providers = const {},
+    String orgTimezoneId = kDefaultOrgTimezoneId,
   }) {
     return searchActivities(
       ActivitySearchQuery(
@@ -154,6 +176,7 @@ class ActivityLocalDataSource {
         endDate: endDate,
         users: users,
         providers: providers,
+        orgTimezoneId: orgTimezoneId,
       ),
     );
   }
@@ -163,6 +186,7 @@ class ActivityLocalDataSource {
     required DateTime endDate,
     required Set<String> providers,
     required List<String> users,
+    String orgTimezoneId = kDefaultOrgTimezoneId,
   }) {
     return searchActivities(
       ActivitySearchQuery(
@@ -170,6 +194,7 @@ class ActivityLocalDataSource {
         endDate: endDate,
         users: users,
         providers: providers,
+        orgTimezoneId: orgTimezoneId,
       ),
     );
   }
@@ -194,16 +219,13 @@ class ActivityLocalDataSource {
 
     final start = query.startDate ?? query.endDate!;
     final end = query.endDate ?? query.startDate!;
-    final startBoundary = DateTime(start.year, start.month, start.day);
-    final endBoundary = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
-    final startEpoch = startBoundary.millisecondsSinceEpoch;
-    final endEpoch = endBoundary.millisecondsSinceEpoch;
+    final window = orgDateWindowEpochMs(query.orgTimezoneId, start, end);
 
     return _activityBox
         .query(
           ExplorerActivityRecord_.createdAtEpochMs.between(
-            startEpoch,
-            endEpoch,
+            window.startEpochMs,
+            window.endEpochMsExclusive - 1,
           ),
         )
         .build();
@@ -213,6 +235,7 @@ class ActivityLocalDataSource {
 ExplorerCoverageRecord? _coverageRecordFromKey(
   String key,
   int fetchedAtEpochMs,
+  String orgTimezoneId,
 ) {
   final parts = key.split('|');
   if (parts.length != 3) return null;
@@ -220,28 +243,9 @@ ExplorerCoverageRecord? _coverageRecordFromKey(
   return ExplorerCoverageRecord(
     coverageKey: key,
     dayKey: parts[0],
-    dayEpochMs: _dayEpochFromDayKey(parts[0]),
+    dayEpochMs: orgDayEpochMsFromDayKey(orgTimezoneId, parts[0]),
     userId: parts[1],
     providerKey: parts[2],
     lastFetchedAtEpochMs: fetchedAtEpochMs,
   );
-}
-
-String _dayKeyFromDate(DateTime value) {
-  final normalized = value.toLocal();
-  final month = normalized.month.toString().padLeft(2, '0');
-  final day = normalized.day.toString().padLeft(2, '0');
-  return '${normalized.year}-$month-$day';
-}
-
-int _dayEpochFromDayKey(String dayKey) {
-  final parts = dayKey.split('-');
-  if (parts.length != 3) return 0;
-
-  final year = int.tryParse(parts[0]);
-  final month = int.tryParse(parts[1]);
-  final day = int.tryParse(parts[2]);
-  if (year == null || month == null || day == null) return 0;
-
-  return DateTime(year, month, day).millisecondsSinceEpoch;
 }

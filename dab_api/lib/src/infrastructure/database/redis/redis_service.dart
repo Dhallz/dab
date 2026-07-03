@@ -2,13 +2,16 @@ import 'dart:convert';
 
 import 'package:redis/redis.dart';
 
+import '../../../domain/core/org_calendar.dart' as org_calendar;
 import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/repositories/abs_i_system_settings_repository.dart';
 import 'redis_client.dart';
 
 class RedisService {
   final RedisClient _client;
+  final ISystemSettingsRepository _settings;
 
-  RedisService(this._client);
+  RedisService(this._client, this._settings);
 
   Command get _cmd => _client.command;
 
@@ -109,7 +112,7 @@ class RedisService {
     bool includeArchived = false,
   }) async {
     final normalizedLimit = limit.clamp(1, 100);
-    final startOfTodayUtc = liveFeedStartOfTodayUtc();
+    final startOfTodayUtc = await liveFeedStartOfTodayUtc();
     final key = global ? 'activities:global' : 'activities:user:$userId';
     // Over-read so filtering by `archived` / date can still fill up to the limit.
     final fetchSize = includeArchived ? normalizedLimit : 100;
@@ -176,7 +179,7 @@ class RedisService {
   /// Returns a map of Redis key -> removedCount for observability.
   Future<Map<String, int>> purgeStaleLiveFeedActivities() async {
     final removed = <String, int>{};
-    final startOfTodayUtc = liveFeedStartOfTodayUtc();
+    final startOfTodayUtc = await liveFeedStartOfTodayUtc();
     var totalArchived = 0;
     var totalStale = 0;
 
@@ -206,12 +209,19 @@ class RedisService {
     return removed;
   }
 
-  /// Start of the current UTC calendar day. Live feeds only surface activities
-  /// at or after this instant.
-  static DateTime liveFeedStartOfTodayUtc([DateTime? now]) {
-    final u = (now ?? DateTime.now()).toUtc();
-    return DateTime.utc(u.year, u.month, u.day);
+  /// Start of the current org calendar day as a UTC instant. Live feeds only
+  /// surface activities at or after this instant.
+  Future<DateTime> liveFeedStartOfTodayUtc([DateTime? now]) async {
+    final orgTimezoneId = await loadOrgTimezoneId(_settings);
+    return org_calendar.liveFeedStartOfTodayUtc(orgTimezoneId, now);
   }
+
+  /// Start of the current org calendar day for a fixed timezone (tests).
+  static DateTime liveFeedStartOfTodayForTimezone(
+    String orgTimezoneId, [
+    DateTime? now,
+  ]) =>
+      org_calendar.liveFeedStartOfTodayUtc(orgTimezoneId, now);
 
   static bool shouldRemoveFromLiveFeed(Activity activity, DateTime startOfTodayUtc) {
     return activity.archived || activity.createdAt.isBefore(startOfTodayUtc);

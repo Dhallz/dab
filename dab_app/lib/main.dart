@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/presentation/core/styles/app_theme.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
@@ -12,6 +13,7 @@ import 'services/service_locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initializeOrgCalendar();
 
   await sl.init();
 

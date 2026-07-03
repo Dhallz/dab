@@ -34,7 +34,7 @@ void main() {
         commentCount: 0,
         createdAt: DateTime.utc(2026, 1, 2, 9),
       );
-      final record = activity.toExplorerRecord();
+      final record = activity.toExplorerRecord('UTC');
 
       final query = ActivitySearchQuery(
         users: const ['u1'],
@@ -116,7 +116,38 @@ void main() {
         isTrue,
       );
 
-      expect(activity.toExplorerRecord().providerKey, 'discord');
+      expect(activity.toExplorerRecord('UTC').providerKey, 'discord');
     });
+
+    test(
+      'matches America/New_York org day for evening UTC Slack message',
+      () {
+        final activity = Activity(
+          id: 'slack-ny',
+          userId: 'u1',
+          provider: const SlackMessageProvider(channelId: 'C123'),
+          title: 'Evening ping',
+          content: 'ok',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 7, 3, 0, 42),
+        );
+
+        final query = ActivitySearchQuery(
+          startDate: DateTime(2026, 7, 2),
+          endDate: DateTime(2026, 7, 2),
+          orgTimezoneId: 'America/New_York',
+        );
+
+        expect(
+          ActivitySearchQueryMapper.matchesActivity(activity, query),
+          isTrue,
+        );
+        expect(
+          ActivitySearchQueryMapper.toRemoteQueryParameters(query)['startDate'],
+          '2026-07-02',
+        );
+      },
+    );
   });
 }

@@ -6,9 +6,11 @@ import 'package:relic/relic.dart';
 
 import '../../application/containers/activity_usecases.dart';
 import '../../domain/core/failures/failure.dart';
+import '../../domain/core/org_calendar.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_provider.dart';
 import '../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../domain/repositories/abs_i_system_settings_repository.dart';
 import '../../infrastructure/core/http/github_webhook_payload.dart';
 import '../../infrastructure/core/security/github_webhook_verifier.dart';
 import '../../infrastructure/core/security/linear_webhook_verifier.dart';
@@ -788,33 +790,16 @@ class ActivityController {
     DateTime startDate;
     DateTime endDate;
     try {
-      // Helper to ensure date strings are interpreted as UTC if no TZ provided
-      DateTime parseUtc(String s) {
-        if (!s.contains('Z') && !s.contains('+') && !s.contains('-') ||
-            (s.length <= 10 && !s.contains('T'))) {
-          // If it's YYYY-MM-DD or lacks TZ, force UTC
-          return DateTime.parse('${s.contains('T') ? s : '${s}T00:00:00'}Z');
-        }
-        return DateTime.parse(s).toUtc();
-      }
-
-      startDate = parseUtc(startDateStr);
-      endDate = parseUtc(endDateStr);
-
-      // If dates are the same, expand endDate to cover the full day
-      if (startDate.isAtSameMomentAs(endDate)) {
-        startDate = DateTime.utc(
-          startDate.year,
-          startDate.month,
-          startDate.day,
-        );
-        endDate = startDate.add(const Duration(days: 1));
-      } else if (endDate.hour == 0 &&
-          endDate.minute == 0 &&
-          endDate.second == 0) {
-        // If endDate is just a date (at midnight UTC), make it cover that full day
-        endDate = endDate.add(const Duration(days: 1));
-      }
+      final orgTimezoneId = await loadOrgTimezoneId(
+        sl<ISystemSettingsRepository>(),
+      );
+      final range = parseOrgDateQueryRange(
+        orgTimezoneId: orgTimezoneId,
+        startDate: startDateStr,
+        endDate: endDateStr,
+      );
+      startDate = range.startUtc;
+      endDate = range.endUtc;
     } catch (_) {
       return Response.badRequest(
         body: Body.fromString(

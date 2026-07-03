@@ -129,7 +129,6 @@ Future<void> serviceLocator() async {
   );
   await redisClient.connect();
   sl.registerSingleton<RedisClient>(redisClient);
-  sl.registerSingleton<RedisService>(RedisService(redisClient));
 
   // clients
   final conduitProtocol = HttpConduitProtocol();
@@ -248,6 +247,9 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(providerConfigRepository);
   sl.registerSingleton<ISystemSettingsRepository>(SystemSettingsRepository(db));
+  sl.registerSingleton<RedisService>(
+    RedisService(redisClient, sl<ISystemSettingsRepository>()),
+  );
 
   // -----------------------------------------------------
   // 3. System Services
@@ -449,7 +451,10 @@ Future<void> serviceLocator() async {
     UnarchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
   );
   sl.registerSingleton<ActivityPurgeScheduler>(
-    ActivityPurgeScheduler(sl<RedisService>()),
+    ActivityPurgeScheduler(
+      sl<RedisService>(),
+      sl<ISystemSettingsRepository>(),
+    ),
   );
 
   // User

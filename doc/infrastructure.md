@@ -84,7 +84,7 @@ activities                  ← Base table: id, userId, providerName, title, con
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration |
-| `system_settings` | System-wide settings stored as key-value pairs (allowed_domain_enabled, allowed_domain) |
+| `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`) |
 
 Identity linkage (`user_identities`) is the runtime source of provider
 participation for activity fetchers. Legacy tenants with historical
@@ -140,7 +140,7 @@ such as `slack:event:{eventId}`, `github:delivery:{delivery}`, and
 `ingest:{provider}:{fingerprint}` for the newer receivers) prevent replayed
 provider deliveries from double-writing during the TTL window.
 
-**Live feed window.** A background job runs at **UTC midnight** and rewrites
+**Live feed window.** A background job runs at **organization-timezone midnight** (from `system_timezone`, default `UTC`) and rewrites
 materialized lists `activities:user:*` and `activities:global`, removing entries
 that are **archived** or whose `createdAt` is **before** the current UTC day.
 The `GET /activities/live` handler applies the same UTC-day filter so clients

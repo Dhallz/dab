@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../../domain/entities/system/app_settings.dart';
+import '../../../domain/entities/system/system_status.dart';
 import '../../../domain/entities/user/user_role.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../services/service_locator.dart';
@@ -44,11 +45,15 @@ class AppNotifier extends Notifier<AppState> {
     final settingsResult = await _systemUseCases.getAppSettings.execute();
     final configsResult = await _metadataUseCases.getProviderConfigs.execute();
     final statusResult = await _metadataUseCases.getSystemStatus.execute();
+    final systemStatus = statusResult.getOrElse(
+      (failure) => const SystemStatus(isSystemConfigured: true),
+    );
 
     state = state.copyWith(
       settings: settingsResult.getOrElse((failure) => state.settings),
       configs: configsResult.getOrElse((failure) => []),
-      isSystemConfigured: statusResult.getOrElse((failure) => true),
+      isSystemConfigured: systemStatus.isSystemConfigured,
+      orgTimezoneId: systemStatus.orgTimezoneId,
       status: ViewStatus.success,
     );
   }

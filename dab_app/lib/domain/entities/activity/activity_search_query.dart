@@ -1,4 +1,5 @@
 import 'activity_category.dart';
+import '../../core/org_calendar.dart';
 
 /// [ARCH: DOMAIN_ENTITY]
 /// ROLE: Canonical search contract for activity retrieval across local and remote sources.
@@ -16,6 +17,7 @@ class ActivitySearchQuery {
   final bool sortDescending;
   final int? limit;
   final String? cursor;
+  final String orgTimezoneId;
 
   const ActivitySearchQuery({
     this.startDate,
@@ -29,6 +31,7 @@ class ActivitySearchQuery {
     this.sortDescending = true,
     this.limit,
     this.cursor,
+    this.orgTimezoneId = kDefaultOrgTimezoneId,
   });
 
   Set<String> get normalizedUsers => users

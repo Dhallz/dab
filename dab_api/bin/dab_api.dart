@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dab_api/dab_api.dart';
+import 'package:dab_api/src/domain/core/org_calendar.dart';
 import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/admin_controller.dart';
@@ -20,14 +21,15 @@ import 'package:relic/relic.dart';
 
 Future<void> main() async {
   final config = Config();
+  initializeOrgCalendar();
 
   // 1. Setup Service Locator (DI)
   // This now also initializes the database with Drift's native migrations
   await serviceLocator();
   print('Dependency injection and database ready.');
 
-  // 2. Start the daily UTC midnight purge of stale live-feed entries (archived
-  //    or older than the current UTC calendar day).
+  // 2. Start the daily org-timezone midnight purge of stale live-feed entries
+  //    (archived or older than the current org calendar day).
   sl<ActivityPurgeScheduler>().start();
 
   // 3. Start the Discord Gateway client (live Dashboard ingestion) when the

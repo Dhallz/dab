@@ -1,1 +1,36 @@
-{}
+{
+  "de": [
+    "adminOrgTimezoneTitle",
+    "adminOrgTimezoneSubtitle",
+    "adminOrgTimezoneLabel",
+    "adminTimezoneSavedSnack"
+  ],
+
+  "es": [
+    "adminOrgTimezoneTitle",
+    "adminOrgTimezoneSubtitle",
+    "adminOrgTimezoneLabel",
+    "adminTimezoneSavedSnack"
+  ],
+
+  "fr": [
+    "adminOrgTimezoneTitle",
+    "adminOrgTimezoneSubtitle",
+    "adminOrgTimezoneLabel",
+    "adminTimezoneSavedSnack"
+  ],
+
+  "it": [
+    "adminOrgTimezoneTitle",
+    "adminOrgTimezoneSubtitle",
+    "adminOrgTimezoneLabel",
+    "adminTimezoneSavedSnack"
+  ],
+
+  "pt": [
+    "adminOrgTimezoneTitle",
+    "adminOrgTimezoneSubtitle",
+    "adminOrgTimezoneLabel",
+    "adminTimezoneSavedSnack"
+  ]
+}

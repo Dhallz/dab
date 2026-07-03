@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../core/failures.dart';
+import '../../entities/system/system_status.dart';
 import '../../repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: DOMAIN_USECASE]
@@ -10,7 +11,7 @@ class GetSystemStatus {
 
   GetSystemStatus(this._repository);
 
-  Future<Either<AppFailure, bool>> execute() async {
+  Future<Either<AppFailure, SystemStatus>> execute() async {
     return _repository.getSystemStatus();
   }
 }

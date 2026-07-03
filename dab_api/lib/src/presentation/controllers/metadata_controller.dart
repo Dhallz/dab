@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:relic/relic.dart';
 import 'package:http/http.dart' as http;
+import '../../application/services/activity_purge_scheduler.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
+import '../../domain/repositories/abs_i_system_settings_repository.dart';
 import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 import '../../service_locator.dart';
 import '../../infrastructure/protocols/conduit/conduit_protocol.dart';
@@ -113,12 +115,16 @@ class MetadataController {
     try {
       final statusResult = await _metadata.getSystemStatus.execute();
       final isSystemConfigured = statusResult.getOrElse((_) => false);
+      final systemTimezone = await loadOrgTimezoneId(
+        sl<ISystemSettingsRepository>(),
+      );
 
       return Response.ok(
         body: Body.fromString(
           jsonEncode({
             'data': {
               'isSystemConfigured': isSystemConfigured,
+              'systemTimezone': systemTimezone,
             },
             'meta': {
               'dataType': 'system_status',
@@ -867,6 +873,7 @@ class MetadataController {
           ),
         ),
         (_) {
+          sl<ActivityPurgeScheduler>().reschedule();
           return Response.ok(
             body: Body.fromString(
               jsonEncode({'success': true}),

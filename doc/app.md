@@ -127,7 +127,7 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe; on load selects **all** directory users (`selectedUserIds`) then narrows to the signed-in user when matched (same breadth as Insights for the logged-in path) |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table; search uses **`authoredOnly=false`** for team-aggregate provider queries (Explorer keeps **`true`**) |
 | **Settings** | User personalization | Dynamic forms for theme variant (Light, DAB, grayscale Dark), runtime language selection, and per-view Island Bar item visibility (Dashboard/Explorer/Insights) |
-| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing; GitHub includes **Webhook Secret** for `POST /integrations/github/webhook` HMAC; Slack includes **Signing Secret** for Events API), **Identity Management** (Approval workflow), **Security** (Domain Validation switch + allowed domain editor saved via `PUT /admin/system-settings`, a grandfathered non-compliant-accounts warning, user search, and an **Add User** dialog (`UserCreateDialog`) calling `POST /admin/users` through `AdminNotifier.createUser`), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
+| **Admin Console** | System administration | Multi-tab dashboard: **Provider Config** (with live connection pulsing; webhook-mode providers expose an editable **Webhook Endpoint URL** composed from the `public_api_url` system setting and saved with provider credentials; GitHub includes **Webhook Secret** for `POST /integrations/github/webhook` HMAC; Slack includes **Signing Secret** for Events API), **Identity Management** (Approval workflow), **Security** (Domain Validation switch + allowed domain editor, **Organization timezone** dropdown saved via `PUT /admin/system-settings` as `system_timezone` — changing it clears the Explorer ObjectBox cache; grandfathered non-compliant-accounts warning, user search, and an **Add User** dialog (`UserCreateDialog`) calling `POST /admin/users` through `AdminNotifier.createUser`), and an **Admin** nav badge when identities need resolution (`GET /admin/identities/summary`). |
 
 #### Dashboard (Live Feed + Triage + Upcoming)
 
@@ -147,7 +147,8 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 
 - Explorer searches now use a shared `ActivitySearchQuery` contract across remote and local sources.
 - For date windows fully in the past, the repository reads ObjectBox first (`ExplorerActivityRecord`) and only falls back to API when provider coverage is incomplete.
-- Coverage is tracked per `(day, user, provider)` via `ExplorerCoverageRecord` so newly activated providers trigger targeted backfill for already-cached days.
+- Coverage is tracked per `(day, user, provider)` via `ExplorerCoverageRecord` so newly activated providers trigger targeted backfill for already-cached days. Day keys follow the organization timezone from bootstrap (`GET /metadata/status` → `AppState.orgTimezoneId`).
+- Explorer and Insights date filtering, API query parameters, and ObjectBox cache keys all use the same org-calendar semantics.
 - For windows including today, Explorer remains remote-first to keep mutable day data fresh.
 
 ---

@@ -6,16 +6,19 @@ import 'package:test/test.dart';
 void main() {
   group('RedisService live-feed window', () {
     final clock = DateTime.utc(2026, 4, 17, 15, 30);
-    final startOfToday = DateTime.utc(2026, 4, 17);
 
-    test('liveFeedStartOfTodayUtc uses UTC calendar date', () {
+    test('liveFeedStartOfTodayForTimezone uses org calendar date', () {
       expect(
-        RedisService.liveFeedStartOfTodayUtc(clock),
-        DateTime.utc(2026, 4, 17),
+        RedisService.liveFeedStartOfTodayForTimezone('America/New_York', clock),
+        DateTime.utc(2026, 4, 17, 4),
       );
     });
 
     test('shouldRemoveFromLiveFeed drops archived', () {
+      final startOfToday = RedisService.liveFeedStartOfTodayForTimezone(
+        'UTC',
+        clock,
+      );
       final a = Activity(
         id: 'a1',
         userId: 'u1',
@@ -30,6 +33,10 @@ void main() {
     });
 
     test('shouldRemoveFromLiveFeed drops before start of today', () {
+      final startOfToday = RedisService.liveFeedStartOfTodayForTimezone(
+        'UTC',
+        clock,
+      );
       final a = Activity(
         id: 'a1',
         userId: 'u1',
@@ -44,6 +51,10 @@ void main() {
     });
 
     test('shouldRemoveFromLiveFeed keeps today non-archived', () {
+      final startOfToday = RedisService.liveFeedStartOfTodayForTimezone(
+        'UTC',
+        clock,
+      );
       final a = Activity(
         id: 'a1',
         userId: 'u1',

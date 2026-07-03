@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures.dart';
+import '../../../domain/core/org_calendar.dart';
 import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/entities/system/system_status.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../datasources/provider_config_remote_data_source.dart';
 import '../repositories/core/repository.dart';
@@ -29,7 +31,7 @@ class ProviderConfigRepository extends Repository
   }
 
   @override
-  Future<Either<AppFailure, bool>> getSystemStatus() {
+  Future<Either<AppFailure, SystemStatus>> getSystemStatus() {
     return guardedCall(() async {
       final response = await _remoteDataSource.getSystemStatus();
       final data = response.data;
@@ -41,7 +43,13 @@ class ProviderConfigRepository extends Repository
         map = jsonDecode(data.toString());
       }
 
-      return map['data']?['isSystemConfigured'] ?? false;
+      final payload = map['data'] as Map<String, dynamic>? ?? {};
+      return SystemStatus(
+        isSystemConfigured: payload['isSystemConfigured'] ?? false,
+        orgTimezoneId: resolveOrgTimezoneId(
+          payload['systemTimezone']?.toString(),
+        ),
+      );
     });
   }
 

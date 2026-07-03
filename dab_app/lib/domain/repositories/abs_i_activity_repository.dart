@@ -26,4 +26,7 @@ abstract class IActivityRepository {
 
   /// Streams live feed events — new activities + archive/unarchive mutations.
   Stream<ActivityLiveEvent> watchActivities();
+
+  /// Clears Explorer ObjectBox activity and coverage cache.
+  Future<Either<AppFailure, void>> clearExplorerCache();
 }

@@ -26,6 +26,7 @@ dependencies:
   get_it: ^9.2.1
   redis: ^4.1.0
   web_socket_channel: ^3.0.3
+  timezone: ^0.10.1
 
 dev_dependencies:
   lints: ^6.1.0

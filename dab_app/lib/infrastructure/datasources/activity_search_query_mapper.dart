@@ -1,5 +1,6 @@
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_search_query.dart';
+import '../../domain/core/org_calendar.dart';
 import '../core/local/records/explorer_activity_record.dart';
 
 class ActivitySearchQueryMapper {
@@ -26,10 +27,16 @@ class ActivitySearchQueryMapper {
     };
 
     if (query.startDate != null) {
-      queryParameters['startDate'] = _localCalendarDay(query.startDate!);
+      queryParameters['startDate'] = orgCalendarDayString(
+        query.orgTimezoneId,
+        query.startDate!,
+      );
     }
     if (query.endDate != null) {
-      queryParameters['endDate'] = _localCalendarDay(query.endDate!);
+      queryParameters['endDate'] = orgCalendarDayString(
+        query.orgTimezoneId,
+        query.endDate!,
+      );
     }
 
     final users = query.normalizedUsers.toList()..sort();
@@ -38,17 +45,6 @@ class ActivitySearchQueryMapper {
     }
 
     return queryParameters;
-  }
-
-  /// `YYYY-MM-DD` for the user's **local** calendar (matches Explorer/Insights
-  /// date pickers). Using [DateTime.toIso8601String] alone maps late-evening
-  /// local instants to the next UTC day and desynchronizes the API window from
-  /// client-side [matchesActivity] filtering.
-  static String _localCalendarDay(DateTime value) {
-    final local = value.toLocal();
-    final m = local.month.toString().padLeft(2, '0');
-    final d = local.day.toString().padLeft(2, '0');
-    return '${local.year}-$m-$d';
   }
 
   static bool matchesLocalRecord(
@@ -111,19 +107,11 @@ class ActivitySearchQueryMapper {
 
     final start = query.startDate ?? query.endDate!;
     final end = query.endDate ?? query.startDate!;
-    final normalizedStart = DateTime(start.year, start.month, start.day);
-    final normalizedEnd = DateTime(
-      end.year,
-      end.month,
-      end.day,
-      23,
-      59,
-      59,
-      999,
+    return isInstantInOrgDateWindow(
+      query.orgTimezoneId,
+      createdAt,
+      start,
+      end,
     );
-    final created = createdAt.toLocal();
-
-    return !created.isBefore(normalizedStart) &&
-        !created.isAfter(normalizedEnd);
   }
 }

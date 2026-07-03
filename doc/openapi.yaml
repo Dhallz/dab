@@ -927,7 +927,7 @@ paths:
   /metadata/status:
     get:
       summary: Get bootstrap/system readiness state.
-      description: Returns whether the platform is configured (admin + active provider config).
+      description: Returns whether the platform is configured (admin + active provider config) and the organization timezone used for calendar-day boundaries.
       responses:
         '200':
           description: Successful system status envelope
@@ -941,6 +941,10 @@ paths:
                     properties:
                       isSystemConfigured:
                         type: boolean
+                      systemTimezone:
+                        type: string
+                        example: UTC
+                        description: IANA organization timezone for calendar-day boundaries.
                   meta:
                     type: object
                     properties:
@@ -1246,13 +1250,15 @@ paths:
     get:
       summary: Retrieve system configuration settings.
       description: |
-        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled` and `allowed_domain`.
+        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, and `system_timezone`.
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
         | :--- | :--- | :--- | :--- |
         | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+        | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
       security:
         - bearerAuth: []
       responses:
@@ -1271,7 +1277,11 @@ paths:
                         enum: ['true', 'false']
                       allowed_domain:
                         type: string
-    put:
+                      public_api_url:
+                        type: string
+                      system_timezone:
+                        type: string
+                        example: America/New_York
       summary: Update system configuration settings.
       description: |
         Administrative endpoint to update system configuration settings
@@ -1285,6 +1295,7 @@ paths:
         | :--- | :--- | :--- | :--- |
         | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
       security:
         - bearerAuth: []
       requestBody:
@@ -1298,6 +1309,9 @@ paths:
                   type: string
                   enum: ['true', 'false']
                 allowed_domain:
+                  type: string
+                  nullable: true
+                public_api_url:
                   type: string
                   nullable: true
       responses:

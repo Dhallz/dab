@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../domain/entities/system/app_settings.dart';
+import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
+import '../../../../domain/entities/system/app_settings.dart';
 import '../../../../domain/entities/user/user_identity_status.dart';
 import '../../../../domain/entities/user/user_role.dart';
+import '../../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../../services/service_locator.dart';
@@ -29,6 +31,7 @@ final adminNotifierProvider =
       () => AdminNotifier(
         providerRepo: sl.providerConfigRepository,
         userRepo: sl.userRepository,
+        activityRepo: sl.activityRepository,
       ),
     );
 
@@ -38,11 +41,14 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   AdminNotifier({
     required IProviderConfigRepository providerRepo,
     required IUserRepository userRepo,
+    required IActivityRepository activityRepo,
   }) : _providerRepo = providerRepo,
-       _userRepo = userRepo;
+       _userRepo = userRepo,
+       _activityRepo = activityRepo;
 
   final IProviderConfigRepository _providerRepo;
   final IUserRepository _userRepo;
+  final IActivityRepository _activityRepo;
 
   @override
   AdminState build() {
@@ -226,24 +232,31 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   }
 
   Future<void> saveSystemSettings(Map<String, String> settings) async {
+    final previousTimezone =
+        state.systemSettings[kSystemTimezoneSettingKey];
+    final nextTimezone = settings[kSystemTimezoneSettingKey];
+    final timezoneChanged =
+        nextTimezone != null && previousTimezone != nextTimezone;
+
     state = state.copyWith(status: ViewStatus.loading);
     final result = await _providerRepo.saveSystemSettings(settings);
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
         );
       },
-      (_) {
+      (_) async {
+        if (timezoneChanged) {
+          await _activityRepo.clearExplorerCache();
+        }
         state = state.copyWith(
           status: ViewStatus.success,
           systemSettings: settings,
           errorMessage: null,
         );
-        ref.read(appNotifierProvider.notifier).init().catchError((e) {
-          print('Error initializing app notifier: $e');
-        });
+        await ref.read(appNotifierProvider.notifier).init();
       },
     );
   }

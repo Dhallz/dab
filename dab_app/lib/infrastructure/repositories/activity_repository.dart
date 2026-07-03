@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures.dart';
+import '../../../domain/core/org_calendar.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_category.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
@@ -103,8 +104,14 @@ class ActivityRepository extends Repository implements IActivityRepository {
       if (missingCoverageKeys.isEmpty) return localActivities;
 
       final remoteActivities = await _fetchRemoteActivities(normalizedQuery);
-      await _localDataSource.upsertActivities(remoteActivities);
-      await _localDataSource.markCoverage(missingCoverageKeys);
+      await _localDataSource.upsertActivities(
+        remoteActivities,
+        orgTimezoneId: normalizedQuery.orgTimezoneId,
+      );
+      await _localDataSource.markCoverage(
+        missingCoverageKeys,
+        orgTimezoneId: normalizedQuery.orgTimezoneId,
+      );
 
       return _localDataSource.searchActivities(normalizedQuery);
     });
@@ -223,13 +230,23 @@ class ActivityRepository extends Repository implements IActivityRepository {
     return filtered;
   }
 
+  @override
+  Future<Either<AppFailure, void>> clearExplorerCache() {
+    return guardedCall(() async {
+      await _localDataSource.clearExplorerCache();
+    });
+  }
+
   bool _isPastDateWindow(ActivitySearchQuery query) {
     final end = query.endDate ?? query.startDate;
     if (end == null) return false;
 
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-    return end.isBefore(todayStart);
+    final todayKey = orgDayKeyFromUtc(
+      query.orgTimezoneId,
+      DateTime.now().toUtc(),
+    );
+    final endKey = orgCalendarDayString(query.orgTimezoneId, end);
+    return endKey.compareTo(todayKey) < 0;
   }
 
   Future<Set<String>> _getMissingCoverageKeys(ActivitySearchQuery query) async {
@@ -249,6 +266,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
       endDate: dateRange.$2,
       users: users,
       providers: providers,
+      orgTimezoneId: query.orgTimezoneId,
     );
     if (expected.isEmpty) return const {};
 
@@ -257,6 +275,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
       endDate: dateRange.$2,
       users: users,
       providers: providers,
+      orgTimezoneId: query.orgTimezoneId,
     );
     return expected.difference(covered);
   }
@@ -266,12 +285,13 @@ class ActivityRepository extends Repository implements IActivityRepository {
     required DateTime endDate,
     required Set<String> users,
     required Set<String> providers,
+    required String orgTimezoneId,
   }) {
     final keys = <String>{};
     var cursor = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day);
     while (!cursor.isAfter(end)) {
-      final dayKey = _toDayKey(cursor);
+      final dayKey = orgCalendarDayString(orgTimezoneId, cursor);
       for (final user in users) {
         for (final provider in providers) {
           keys.add('$dayKey|$user|$provider');
@@ -295,13 +315,6 @@ class ActivityRepository extends Repository implements IActivityRepository {
     return (resolvedEnd, resolvedStart);
   }
 
-  String _toDayKey(DateTime value) {
-    final normalized = value.toLocal();
-    final month = normalized.month.toString().padLeft(2, '0');
-    final day = normalized.day.toString().padLeft(2, '0');
-    return '${normalized.year}-$month-$day';
-  }
-
   ActivitySearchQuery _normalizeQuery(ActivitySearchQuery query) {
     final users = query.normalizedUsers.toList()..sort();
     final providers = query.normalizedProviders;
@@ -320,6 +333,7 @@ class ActivityRepository extends Repository implements IActivityRepository {
       sortDescending: query.sortDescending,
       limit: query.limit,
       cursor: query.cursor,
+      orgTimezoneId: query.orgTimezoneId,
     );
   }
 

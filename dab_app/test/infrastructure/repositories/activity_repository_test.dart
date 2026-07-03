@@ -38,13 +38,20 @@ void main() {
         endDate: any(named: 'endDate'),
         users: any(named: 'users'),
         providers: any(named: 'providers'),
+        orgTimezoneId: any(named: 'orgTimezoneId'),
       ),
     ).thenAnswer((_) async => const {});
     when(
-      () => mockLocalDataSource.markCoverage(any()),
+      () => mockLocalDataSource.markCoverage(
+        any(),
+        orgTimezoneId: any(named: 'orgTimezoneId'),
+      ),
     ).thenAnswer((_) async {});
     when(
-      () => mockLocalDataSource.upsertActivities(any()),
+      () => mockLocalDataSource.upsertActivities(
+        any(),
+        orgTimezoneId: any(named: 'orgTimezoneId'),
+      ),
     ).thenAnswer((_) async {});
   });
 
@@ -165,8 +172,14 @@ void main() {
 
         verify(() => mockLocalDataSource.searchActivities(any())).called(2);
         verify(() => mockDataSource.searchActivities(any())).called(1);
-        verify(() => mockLocalDataSource.upsertActivities(any())).called(1);
-        verify(() => mockLocalDataSource.markCoverage(any())).called(1);
+        verify(() => mockLocalDataSource.upsertActivities(
+          any(),
+          orgTimezoneId: any(named: 'orgTimezoneId'),
+        )).called(1);
+        verify(() => mockLocalDataSource.markCoverage(
+          any(),
+          orgTimezoneId: any(named: 'orgTimezoneId'),
+        )).called(1);
       },
     );
   });

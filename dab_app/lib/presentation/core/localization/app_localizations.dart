@@ -952,6 +952,30 @@ abstract class AppLocalizations {
   /// **'Allowed domain updated successfully'**
   String get adminDomainSavedSnack;
 
+  /// Title for organization timezone settings on Admin Security tab
+  ///
+  /// In en, this message translates to:
+  /// **'Organization timezone'**
+  String get adminOrgTimezoneTitle;
+
+  /// Subtitle for organization timezone settings
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar days in Explorer, Insights, and the live feed follow this timezone.'**
+  String get adminOrgTimezoneSubtitle;
+
+  /// Label for organization timezone dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get adminOrgTimezoneLabel;
+
+  /// Snack bar after saving organization timezone
+  ///
+  /// In en, this message translates to:
+  /// **'Organization timezone updated. Explorer cache was cleared.'**
+  String get adminTimezoneSavedSnack;
+
   /// adminNonCompliantAccountsWarning: warning header listing accounts outside the allowed domain
   ///
   /// In en, this message translates to:

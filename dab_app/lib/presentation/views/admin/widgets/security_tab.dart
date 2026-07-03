@@ -1,9 +1,11 @@
+import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
 import 'bootstrap_status_card.dart';
+import 'org_timezone_options.dart';
 import 'user_create_dialog.dart';
 import 'user_tile.dart';
 
@@ -29,12 +31,16 @@ class SecurityTab extends StatefulWidget {
 class _SecurityTabState extends State<SecurityTab> {
   String _query = '';
   late final TextEditingController _domainController;
+  late String _selectedTimezone;
 
   @override
   void initState() {
     super.initState();
     _domainController = TextEditingController(
       text: widget.systemSettings['allowed_domain'] ?? '',
+    );
+    _selectedTimezone = resolveOrgTimezoneId(
+      widget.systemSettings[kSystemTimezoneSettingKey],
     );
   }
 
@@ -44,6 +50,12 @@ class _SecurityTabState extends State<SecurityTab> {
     if (widget.systemSettings['allowed_domain'] !=
         oldWidget.systemSettings['allowed_domain']) {
       _domainController.text = widget.systemSettings['allowed_domain'] ?? '';
+    }
+    final nextTz = resolveOrgTimezoneId(
+      widget.systemSettings[kSystemTimezoneSettingKey],
+    );
+    if (nextTz != _selectedTimezone) {
+      _selectedTimezone = nextTz;
     }
   }
 
@@ -67,13 +79,16 @@ class _SecurityTabState extends State<SecurityTab> {
         .toList();
   }
 
-  void _saveSettings({bool? enabled, String? domain}) {
+  void _saveSettings({bool? enabled, String? domain, String? timezone}) {
     final settings = Map<String, String>.from(widget.systemSettings);
     if (enabled != null) {
       settings['allowed_domain_enabled'] = enabled.toString();
     }
     if (domain != null) {
       settings['allowed_domain'] = domain;
+    }
+    if (timezone != null) {
+      settings[kSystemTimezoneSettingKey] = timezone;
     }
     widget.notifier.saveSystemSettings(settings);
   }
@@ -107,6 +122,17 @@ class _SecurityTabState extends State<SecurityTab> {
             _saveSettings(domain: _domainController.text.trim());
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(l10n.adminDomainSavedSnack)),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        _OrganizationTimezonePanel(
+          selectedTimezone: _selectedTimezone,
+          onTimezoneChanged: (timezone) {
+            setState(() => _selectedTimezone = timezone);
+            _saveSettings(timezone: timezone);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
             );
           },
         ),
@@ -370,6 +396,99 @@ class _DomainValidationPanel extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OrganizationTimezonePanel extends StatelessWidget {
+  final String selectedTimezone;
+  final ValueChanged<String> onTimezoneChanged;
+
+  const _OrganizationTimezonePanel({
+    required this.selectedTimezone,
+    required this.onTimezoneChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.schedule_outlined, color: cs.primary, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.adminOrgTimezoneTitle,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    Text(
+                      l10n.adminOrgTimezoneSubtitle,
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.adminOrgTimezoneLabel,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownMenu<String>(
+            initialSelection: selectedTimezone,
+            expandedInsets: EdgeInsets.zero,
+            requestFocusOnTap: true,
+            enableFilter: true,
+            label: Text(l10n.adminOrgTimezoneLabel),
+            onSelected: (value) {
+              if (value != null) onTimezoneChanged(value);
+            },
+            dropdownMenuEntries: kOrgTimezoneOptions
+                .map(
+                  (tz) => DropdownMenuEntry<String>(
+                    value: tz,
+                    label: tz,
+                  ),
+                )
+                .toList(),
+          ),
         ],
       ),
     );

@@ -437,6 +437,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adminDomainSavedSnack => 'Allowed domain updated successfully';
 
   @override
+  String get adminOrgTimezoneTitle => 'Organization timezone';
+
+  @override
+  String get adminOrgTimezoneSubtitle =>
+      'Calendar days in Explorer, Insights, and the live feed follow this timezone.';
+
+  @override
+  String get adminOrgTimezoneLabel => 'Timezone';
+
+  @override
+  String get adminTimezoneSavedSnack =>
+      'Organization timezone updated. Explorer cache was cleared.';
+
+  @override
   String get adminNonCompliantAccountsWarning =>
       'Accounts outside the allowed domain (existing accounts keep working):';
 

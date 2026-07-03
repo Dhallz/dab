@@ -21,5 +21,6 @@ tests {
   });
   test("Returns isSystemConfigured", function() {
     expect(res.body.data).to.have.property("isSystemConfigured");
+    expect(res.body.data).to.have.property("systemTimezone");
   });
 }
