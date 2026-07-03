@@ -153,15 +153,19 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   }
 
   void _updateStatus(String providerId, ViewStatus status, {String? message}) {
-    final updatedStatuses = Map<String, ProviderConnectionStatus>.from(
-      state.connectionStatuses,
-    );
-    updatedStatuses[providerId] = ProviderConnectionStatus(
+    final connectionStatus = ProviderConnectionStatus(
       status: status,
       message: message,
       lastCheck: DateTime.now(),
     );
+    final updatedStatuses = Map<String, ProviderConnectionStatus>.from(
+      state.connectionStatuses,
+    );
+    updatedStatuses[providerId] = connectionStatus;
     state = state.copyWith(connectionStatuses: updatedStatuses);
+    ref
+        .read(appNotifierProvider.notifier)
+        .setProviderConnectionStatus(providerId, connectionStatus);
   }
 
   Future<void> setSection(AdminSection section) async {
@@ -220,13 +224,16 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
 
   Future<void> saveProviderConfig(ProviderConfig config) async {
     final result = await _providerRepo.saveProviderConfig(config);
-    result.fold(
-      (failure) => state = state.copyWith(errorMessage: failure.message),
-      (_) {
+    await result.fold(
+      (failure) async {
+        state = state.copyWith(errorMessage: failure.message);
+      },
+      (_) async {
         final newConfigs = state.configs
             .map((c) => c.id == config.id ? config : c)
             .toList();
         state = state.copyWith(configs: newConfigs, errorMessage: null);
+        await ref.read(appNotifierProvider.notifier).init();
       },
     );
   }

@@ -17,6 +17,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       ViewStatusMapper.ensureInitialized();
       AppSettingsMapper.ensureInitialized();
       ProviderConfigMapper.ensureInitialized();
+      ProviderConnectionStatusMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -66,6 +67,16 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: 0,
   );
+  static Map<String, ProviderConnectionStatus> _$providerConnectionStatuses(
+    AppState v,
+  ) => v.providerConnectionStatuses;
+  static const Field<AppState, Map<String, ProviderConnectionStatus>>
+  _f$providerConnectionStatuses = Field(
+    'providerConnectionStatuses',
+    _$providerConnectionStatuses,
+    opt: true,
+    def: const {},
+  );
 
   @override
   final MappableFields<AppState> fields = const {
@@ -75,6 +86,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #isSystemConfigured: _f$isSystemConfigured,
     #orgTimezoneId: _f$orgTimezoneId,
     #unresolvedIdentityCount: _f$unresolvedIdentityCount,
+    #providerConnectionStatuses: _f$providerConnectionStatuses,
   };
 
   static AppState _instantiate(DecodingData data) {
@@ -85,6 +97,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       isSystemConfigured: data.dec(_f$isSystemConfigured),
       orgTimezoneId: data.dec(_f$orgTimezoneId),
       unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
+      providerConnectionStatuses: data.dec(_f$providerConnectionStatuses),
     );
   }
 
@@ -152,6 +165,17 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     ProviderConfigCopyWith<$R, ProviderConfig, ProviderConfig>
   >
   get configs;
+  MapCopyWith<
+    $R,
+    String,
+    ProviderConnectionStatus,
+    ProviderConnectionStatusCopyWith<
+      $R,
+      ProviderConnectionStatus,
+      ProviderConnectionStatus
+    >
+  >
+  get providerConnectionStatuses;
   $R call({
     ViewStatus? status,
     AppSettings? settings,
@@ -159,6 +183,7 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     bool? isSystemConfigured,
     String? orgTimezoneId,
     int? unresolvedIdentityCount,
+    Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -186,6 +211,22 @@ class _AppStateCopyWithImpl<$R, $Out>
     (v) => call(configs: v),
   );
   @override
+  MapCopyWith<
+    $R,
+    String,
+    ProviderConnectionStatus,
+    ProviderConnectionStatusCopyWith<
+      $R,
+      ProviderConnectionStatus,
+      ProviderConnectionStatus
+    >
+  >
+  get providerConnectionStatuses => MapCopyWith(
+    $value.providerConnectionStatuses,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(providerConnectionStatuses: v),
+  );
+  @override
   $R call({
     ViewStatus? status,
     AppSettings? settings,
@@ -193,6 +234,7 @@ class _AppStateCopyWithImpl<$R, $Out>
     bool? isSystemConfigured,
     String? orgTimezoneId,
     int? unresolvedIdentityCount,
+    Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -202,6 +244,8 @@ class _AppStateCopyWithImpl<$R, $Out>
       if (orgTimezoneId != null) #orgTimezoneId: orgTimezoneId,
       if (unresolvedIdentityCount != null)
         #unresolvedIdentityCount: unresolvedIdentityCount,
+      if (providerConnectionStatuses != null)
+        #providerConnectionStatuses: providerConnectionStatuses,
     }),
   );
   @override
@@ -217,6 +261,10 @@ class _AppStateCopyWithImpl<$R, $Out>
     unresolvedIdentityCount: data.get(
       #unresolvedIdentityCount,
       or: $value.unresolvedIdentityCount,
+    ),
+    providerConnectionStatuses: data.get(
+      #providerConnectionStatuses,
+      or: $value.providerConnectionStatuses,
     ),
   );
 

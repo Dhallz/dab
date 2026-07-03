@@ -4,6 +4,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/system/app_settings.dart';
 import '../../../../domain/core/org_calendar.dart';
+import '../../views/admin/models/provider_connection_status.dart';
 
 part 'app_state.mapper.dart';
 
@@ -22,6 +23,9 @@ class AppState with AppStateMappable {
   /// Pending + failed identity rows (admin shell badge). Non-admins: keep 0.
   final int unresolvedIdentityCount;
 
+  /// Last-known Admin connection-test results keyed by provider id.
+  final Map<String, ProviderConnectionStatus> providerConnectionStatuses;
+
   const AppState({
     this.status = ViewStatus.initial,
     this.settings = const AppSettings(),
@@ -29,5 +33,6 @@ class AppState with AppStateMappable {
     this.isSystemConfigured = false,
     this.orgTimezoneId = kDefaultOrgTimezoneId,
     this.unresolvedIdentityCount = 0,
+    this.providerConnectionStatuses = const {},
   });
 }

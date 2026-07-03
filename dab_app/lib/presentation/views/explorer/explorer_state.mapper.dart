@@ -114,13 +114,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     'availableActivityCategories',
     _$availableActivityCategories,
     opt: true,
-    def: const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
+    def: const {},
   );
   static Set<ActivityCategory> _$selectedActivityCategories(ExplorerState v) =>
       v.selectedActivityCategories;
@@ -129,13 +123,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     'selectedActivityCategories',
     _$selectedActivityCategories,
     opt: true,
-    def: const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
+    def: const {},
   );
   static List<String> _$availableProviders(ExplorerState v) =>
       v.availableProviders;

@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
+import 'package:dab_app/domain/containers/system_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_category.dart';
@@ -11,6 +12,11 @@ import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/app/app_state.dart';
+import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_notifier.dart';
 import 'package:dab_app/presentation/views/explorer/models/directory_type.dart';
 import 'package:dab_app/presentation/views/explorer/models/explorer_date_mode.dart';
@@ -26,6 +32,37 @@ class MockUserRepository extends Mock implements IUserRepository {}
 
 class MockProviderConfigRepository extends Mock
     implements IProviderConfigRepository {}
+
+class MockSystemUseCases extends Mock implements SystemUseCases {}
+
+class MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+Map<String, ProviderConnectionStatus> successConnectionsFor(
+  Iterable<String> providerIds,
+) {
+  return {
+    for (final id in providerIds)
+      id: const ProviderConnectionStatus(status: ViewStatus.success),
+  };
+}
+
+/// Stable [AppState] without async [AppNotifier.init] for unit tests.
+class TestAppNotifier extends AppNotifier {
+  TestAppNotifier({Map<String, ProviderConnectionStatus>? connections})
+    : _connections =
+          connections ?? successConnectionsFor(const ['slack', 'github']),
+      super(
+        MockSystemUseCases(),
+        MockMetadataUseCases(),
+        MockUserRepository(),
+        MockProviderConfigRepository(),
+      );
+
+  final Map<String, ProviderConnectionStatus> _connections;
+
+  @override
+  AppState build() => AppState(providerConnectionStatuses: _connections);
+}
 
 void main() {
   late MockActivityRepository mockActivityRepository;
@@ -72,6 +109,18 @@ void main() {
 
   ExplorerNotifier createNotifier() =>
       ExplorerNotifier(activityUseCases, userUseCases, metadataUseCases);
+
+  ProviderContainer createTestContainer({
+    Map<String, ProviderConnectionStatus>? connections,
+  }) =>
+      ProviderContainer(
+        overrides: [
+          explorerNotifierProvider.overrideWith(createNotifier),
+          appNotifierProvider.overrideWith(
+            () => TestAppNotifier(connections: connections),
+          ),
+        ],
+      );
 
   /// Avoid auto-disposing [explorerNotifierProvider] between async gaps.
   void subscribeExplorer(ProviderContainer container) {
@@ -121,7 +170,7 @@ void main() {
   });
 
   test(
-    'uses only active admin-configured providers for provider/activity filters',
+    'uses only active connected providers for provider/activity filters',
     () async {
       when(() => mockProviderConfigRepository.getProviderConfigs()).thenAnswer(
         (_) async => Right([
@@ -130,9 +179,7 @@ void main() {
         ]),
       );
 
-      final container = ProviderContainer(
-        overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-      );
+      final container = createTestContainer();
       subscribeExplorer(container);
       addTearDown(container.dispose);
 
@@ -147,10 +194,57 @@ void main() {
     },
   );
 
-  test('preselects connected user on first load', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
+  test('syncProviderFilters drops deactivated providers without full reload', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    await container.read(explorerNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    clearInteractions(mockActivityRepository);
+
+    await container.read(explorerNotifierProvider.notifier).syncProviderFilters(
+      [
+        providerConfig,
+        githubProviderConfig.copyWith(isActive: false),
+      ],
+      successConnectionsFor(['slack']),
     );
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.availableProviders, ['slack']);
+    expect(state.selectedProviders, {'slack'});
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>().having(
+            (query) => query.providers,
+            'providers',
+            {'slack'},
+          ),
+        ),
+      ),
+    ).called(1);
+  });
+
+  test('omits active providers that failed connection tests', () async {
+    final container = createTestContainer(
+      connections: successConnectionsFor(['slack']),
+    );
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    await container.read(explorerNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.availableProviders, ['slack']);
+    expect(state.selectedProviders, {'slack'});
+  });
+
+  test('preselects connected user on first load', () async {
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -181,9 +275,7 @@ void main() {
   });
 
   test('uses inclusive start/end dates in range mode', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -217,9 +309,7 @@ void main() {
   });
 
   test('uses selected users only while in users directory', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -242,9 +332,7 @@ void main() {
   });
 
   test('uses selected group members only while in groups directory', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -272,9 +360,7 @@ void main() {
       () => mockUserRepository.getUsers(),
     ).thenAnswer((_) async => const Right([]));
 
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -319,9 +405,7 @@ void main() {
       return Right(filtered);
     });
 
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -341,9 +425,7 @@ void main() {
   });
 
   test('renames a group in state through saveGroup', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -364,9 +446,7 @@ void main() {
   });
 
   test('deletes a group from state and selection', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 
@@ -384,9 +464,7 @@ void main() {
   });
 
   test('updates existing group members through saveGroup', () async {
-    final container = ProviderContainer(
-      overrides: [explorerNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeExplorer(container);
     addTearDown(container.dispose);
 

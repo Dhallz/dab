@@ -83,13 +83,7 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
     'availableActivityCategories',
     _$availableActivityCategories,
     opt: true,
-    def: const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
+    def: const {},
   );
   static Set<ActivityCategory> _$selectedActivityCategories(InsightsState v) =>
       v.selectedActivityCategories;
@@ -98,13 +92,7 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
     'selectedActivityCategories',
     _$selectedActivityCategories,
     opt: true,
-    def: const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
+    def: const {},
   );
   static InsightsDatePreset _$datePreset(InsightsState v) => v.datePreset;
   static const Field<InsightsState, InsightsDatePreset> _f$datePreset = Field(

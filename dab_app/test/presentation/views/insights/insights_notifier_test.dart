@@ -1,6 +1,8 @@
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
+import 'package:dab_app/domain/containers/system_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
+import 'package:dab_app/domain/entities/activity/activity_category.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
@@ -8,6 +10,11 @@ import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/app/app_state.dart';
+import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
 import 'package:dab_app/presentation/views/insights/insights_notifier.dart';
 import 'package:dab_app/presentation/views/insights/insights_state.dart';
 import 'package:dab_app/presentation/views/insights/models/insights_date_preset.dart';
@@ -22,6 +29,37 @@ class MockUserRepository extends Mock implements IUserRepository {}
 
 class MockProviderConfigRepository extends Mock
     implements IProviderConfigRepository {}
+
+class MockSystemUseCases extends Mock implements SystemUseCases {}
+
+class MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+Map<String, ProviderConnectionStatus> successConnectionsFor(
+  Iterable<String> providerIds,
+) {
+  return {
+    for (final id in providerIds)
+      id: const ProviderConnectionStatus(status: ViewStatus.success),
+  };
+}
+
+/// Stable [AppState] without async [AppNotifier.init] for unit tests.
+class TestAppNotifier extends AppNotifier {
+  TestAppNotifier({Map<String, ProviderConnectionStatus>? connections})
+    : _connections =
+          connections ?? successConnectionsFor(const ['slack', 'github']),
+      super(
+        MockSystemUseCases(),
+        MockMetadataUseCases(),
+        MockUserRepository(),
+        MockProviderConfigRepository(),
+      );
+
+  final Map<String, ProviderConnectionStatus> _connections;
+
+  @override
+  AppState build() => AppState(providerConnectionStatuses: _connections);
+}
 
 void main() {
   late MockActivityRepository mockActivityRepository;
@@ -86,15 +124,25 @@ void main() {
   InsightsNotifier createNotifier() =>
       InsightsNotifier(activityUseCases, userUseCases, metadataUseCases);
 
+  ProviderContainer createTestContainer({
+    Map<String, ProviderConnectionStatus>? connections,
+  }) =>
+      ProviderContainer(
+        overrides: [
+          insightsNotifierProvider.overrideWith(createNotifier),
+          appNotifierProvider.overrideWith(
+            () => TestAppNotifier(connections: connections),
+          ),
+        ],
+      );
+
   void subscribeInsights(ProviderContainer container) {
     final sub = container.listen(insightsNotifierProvider, (_, _) {});
     addTearDown(sub.close);
   }
 
   test('preselects connected user and queries by selected filters', () async {
-    final container = ProviderContainer(
-      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeInsights(container);
     addTearDown(container.dispose);
 
@@ -116,10 +164,41 @@ void main() {
     ).called(1);
   });
 
-  test('switches to last 30 days preset', () async {
-    final container = ProviderContainer(
-      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
+  test('uses only active connected providers for filters', () async {
+    when(() => mockProviderConfigRepository.getProviderConfigs()).thenAnswer(
+      (_) async => Right([
+        const ProviderConfig(
+          id: 'slack',
+          name: 'Slack',
+          baseUrl: 'https://slack.example.com',
+          isActive: true,
+        ),
+        const ProviderConfig(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.example.com',
+          isActive: false,
+        ),
+      ]),
     );
+
+    final container = createTestContainer(
+      connections: successConnectionsFor(['slack']),
+    );
+    subscribeInsights(container);
+    addTearDown(container.dispose);
+
+    await container.read(insightsNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+
+    final state = container.read(insightsNotifierProvider);
+    expect(state.availableProviders, ['slack']);
+    expect(state.selectedProviders, {'slack'});
+    expect(state.availableActivityCategories, {ActivityCategory.message});
+  });
+
+  test('switches to last 30 days preset', () async {
+    final container = createTestContainer();
     subscribeInsights(container);
     addTearDown(container.dispose);
 
@@ -160,9 +239,7 @@ void main() {
       ]),
     );
 
-    final container = ProviderContainer(
-      overrides: [insightsNotifierProvider.overrideWith(createNotifier)],
-    );
+    final container = createTestContainer();
     subscribeInsights(container);
     addTearDown(container.dispose);
 

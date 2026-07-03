@@ -12,7 +12,9 @@ import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
+import '../../core/provider_browse_filter.dart';
 import '../../features/app/app_notifier.dart';
+import '../../views/admin/models/provider_connection_status.dart';
 import 'explorer_state.dart';
 import 'models/directory_type.dart';
 import 'models/explorer_date_mode.dart';
@@ -81,24 +83,18 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       (l) => null,
       (groups) => newState = newState.copyWith(groups: groups),
     );
-    providerResult.fold((failure) => null, (configs) {
-      final activeConfigs = (configs as List)
-          .whereType<ProviderConfig>()
-          .where((c) => c.isActive)
-          .toList();
-      final providerIds = activeConfigs.map((c) => c.id).toList();
-      final availableCategories = activeConfigs
-          .expand((config) => _categoriesForProvider(config.id))
-          .toSet();
-      newState = newState.copyWith(
-        availableProviders: providerIds,
-        selectedProviders: Set<String>.from(providerIds),
-        availableActivityCategories: availableCategories,
-        selectedActivityCategories: Set<ActivityCategory>.from(
-          availableCategories,
-        ),
-      );
-    });
+    providerResult.fold(
+      (failure) => null,
+      (configs) {
+        final app = ref.read(appNotifierProvider);
+        newState = _applyProviderConfigFilters(
+          newState,
+          (configs as List).whereType<ProviderConfig>().toList(),
+          app.providerConnectionStatuses,
+          selectAll: true,
+        );
+      },
+    );
 
     if (connectedUserId != null &&
         newState.users.any((user) => user.id == connectedUserId)) {
@@ -464,8 +460,95 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
     await _fetchActivities();
   }
 
+  /// Reconciles provider and activity-type filters when admin activation or
+  /// connection health changes.
+  Future<void> syncProviderFilters(
+    List<ProviderConfig> configs,
+    Map<String, ProviderConnectionStatus> connectionStatuses,
+  ) async {
+    if (configs.isEmpty) return;
+
+    final previousAvailable = state.availableProviders.toSet();
+    final previousSelected = state.selectedProviders;
+    final previousCategories = state.availableActivityCategories;
+
+    final nextState = _applyProviderConfigFilters(
+      state,
+      configs,
+      connectionStatuses,
+      selectAll: false,
+    );
+    final filtersChanged =
+        previousAvailable != nextState.availableProviders.toSet() ||
+        previousSelected != nextState.selectedProviders ||
+        previousCategories != nextState.availableActivityCategories;
+
+    state = nextState;
+    if (filtersChanged) {
+      await _fetchActivities();
+    }
+  }
+
   Future<void> refresh() async {
+    final app = ref.read(appNotifierProvider);
+    if (app.configs.isNotEmpty) {
+      await syncProviderFilters(app.configs, app.providerConnectionStatuses);
+      return;
+    }
     await _fetchActivities();
+  }
+
+  ExplorerState _applyProviderConfigFilters(
+    ExplorerState base,
+    List<ProviderConfig> configs,
+    Map<String, ProviderConnectionStatus> connectionStatuses, {
+    required bool selectAll,
+  }) {
+    final activeConfigs = browsableProviderConfigs(configs, connectionStatuses);
+    final providerIds = activeConfigs.map((c) => c.id).toList();
+    final availableCategories = activeConfigs
+        .expand((config) => _categoriesForProvider(config.id))
+        .toSet();
+
+    final selectedProviders = selectAll
+        ? Set<String>.from(providerIds)
+        : _reconcileProviderSelection(base.selectedProviders, providerIds);
+    final selectedCategories = selectAll
+        ? Set<ActivityCategory>.from(availableCategories)
+        : _reconcileCategorySelection(
+            base.selectedActivityCategories,
+            availableCategories,
+          );
+
+    return base.copyWith(
+      availableProviders: providerIds,
+      selectedProviders: selectedProviders,
+      availableActivityCategories: availableCategories,
+      selectedActivityCategories: selectedCategories,
+    );
+  }
+
+  Set<String> _reconcileProviderSelection(
+    Set<String> selected,
+    List<String> available,
+  ) {
+    final availableSet = available.toSet();
+    final reconciled = selected.intersection(availableSet);
+    if (reconciled.isEmpty && availableSet.isNotEmpty) {
+      return availableSet;
+    }
+    return reconciled;
+  }
+
+  Set<ActivityCategory> _reconcileCategorySelection(
+    Set<ActivityCategory> selected,
+    Set<ActivityCategory> available,
+  ) {
+    final reconciled = selected.intersection(available);
+    if (reconciled.isEmpty && available.isNotEmpty) {
+      return Set<ActivityCategory>.from(available);
+    }
+    return reconciled;
   }
 
   void toggleStackExpanded(String taskId) {

@@ -55,20 +55,8 @@ class ExplorerState with ExplorerStateMappable {
     this.groups = const [],
     this.selectedUserIds = const {},
     this.selectedGroupIds = const {},
-    this.availableActivityCategories = const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
-    this.selectedActivityCategories = const {
-      ActivityCategory.commit,
-      ActivityCategory.revision,
-      ActivityCategory.task,
-      ActivityCategory.message,
-      ActivityCategory.generic,
-    },
+    this.availableActivityCategories = const {},
+    this.selectedActivityCategories = const {},
     this.availableProviders = const [],
     this.selectedProviders = const {},
   });

@@ -5,6 +5,7 @@ import 'package:dab_app/domain/containers/system_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_app/presentation/core/localization/app_localizations.dart';
+import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/explorer/widgets/activity_card/activity_card.dart';
@@ -19,10 +20,18 @@ class MockMetadataUseCases extends Mock implements MetadataUseCases {}
 
 class MockUserRepository extends Mock implements IUserRepository {}
 
+class MockProviderConfigRepository extends Mock
+    implements IProviderConfigRepository {}
+
 /// Test notifier with stable [AppState] and no async [AppNotifier.init].
 class TestAppNotifier extends AppNotifier {
   TestAppNotifier()
-    : super(MockSystemUseCases(), MockMetadataUseCases(), MockUserRepository());
+    : super(
+        MockSystemUseCases(),
+        MockMetadataUseCases(),
+        MockUserRepository(),
+        MockProviderConfigRepository(),
+      );
 
   @override
   AppState build() => const AppState(configs: []);
