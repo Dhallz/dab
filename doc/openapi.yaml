@@ -1282,6 +1282,7 @@ paths:
                       system_timezone:
                         type: string
                         example: America/New_York
+    put:
       summary: Update system configuration settings.
       description: |
         Administrative endpoint to update system configuration settings
@@ -1296,6 +1297,7 @@ paths:
         | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
         | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+        | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
       security:
         - bearerAuth: []
       requestBody:
@@ -1314,6 +1316,10 @@ paths:
                 public_api_url:
                   type: string
                   nullable: true
+                system_timezone:
+                  type: string
+                  nullable: true
+                  example: America/New_York
       responses:
         '200':
           description: Settings updated
