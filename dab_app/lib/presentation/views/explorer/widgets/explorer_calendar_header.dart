@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/localization/l10n_extension.dart';
+import '../../../core/models/view_status.dart';
+import '../../../core/styles/app_icons.dart';
+import '../explorer_notifier.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import '../models/explorer_item.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Header display for the active date in the explorer, including activity counts.
-class ExplorerCalendarHeader extends StatelessWidget {
+class ExplorerCalendarHeader extends ConsumerWidget {
   final DateTime displayDate;
   final ExplorerState state;
   final bool compact;
@@ -21,7 +25,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final localeName = Localizations.localeOf(context).toString();
     final isRangeMode = state.dateMode == ExplorerDateMode.range;
     final dateStr = isRangeMode
@@ -30,6 +34,22 @@ class ExplorerCalendarHeader extends StatelessWidget {
     final shortDate = isRangeMode
         ? _rangeLabel(localeName, short: true)
         : DateFormat.MMMEd(localeName).format(displayDate);
+    final isLoading = state.status == ViewStatus.loading;
+    final refreshAction = IconButton(
+      tooltip: context.l10n.explorerClearCacheRefreshTooltip,
+      onPressed: isLoading
+          ? null
+          : () => ref
+                .read(explorerNotifierProvider.notifier)
+                .clearCacheAndRefresh(),
+      icon: isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(AppIcons.refresh, size: 20),
+    );
 
     final cs = Theme.of(context).colorScheme;
     if (compact) {
@@ -65,6 +85,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
                 ],
               ),
             ),
+            refreshAction,
           ],
         ),
       );
@@ -102,6 +123,7 @@ class ExplorerCalendarHeader extends StatelessWidget {
               ],
             ),
           ),
+          refreshAction,
         ],
       ),
     );

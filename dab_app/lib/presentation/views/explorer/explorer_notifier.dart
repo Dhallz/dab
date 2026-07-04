@@ -8,6 +8,7 @@ import '../../../../domain/containers/user_usecases.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../../domain/entities/activity/activity_search_query.dart';
+import '../../../../domain/entities/activity/explorer_cache_clear_request.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../services/service_locator.dart';
@@ -496,6 +497,40 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       return;
     }
     await _fetchActivities();
+  }
+
+  /// Clears ObjectBox cache for the active date window and all browsable
+  /// providers, then refetches activities from provider APIs.
+  Future<bool> clearCacheAndRefresh() async {
+    final providers = Set<String>.from(state.availableProviders);
+    final (startDate, endDate) = _resolveDateWindow();
+    state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
+
+    if (providers.isNotEmpty) {
+      final orgTimezoneId = ref.read(appNotifierProvider).orgTimezoneId;
+      final clearResult = await _activityUseCases.clearExplorerCache.execute(
+        request: ExplorerCacheClearRequest(
+          startDate: startDate,
+          endDate: endDate,
+          providerIds: providers,
+          orgTimezoneId: orgTimezoneId,
+        ),
+      );
+      final cleared = await clearResult.fold(
+        (failure) async {
+          state = state.copyWith(
+            status: ViewStatus.failure,
+            errorMessage: failure.message,
+          );
+          return false;
+        },
+        (_) async => true,
+      );
+      if (!cleared) return false;
+    }
+
+    await _fetchActivities();
+    return state.status != ViewStatus.failure;
   }
 
   ExplorerState _applyProviderConfigFilters(

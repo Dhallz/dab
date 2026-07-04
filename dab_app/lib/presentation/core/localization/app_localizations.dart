@@ -1862,6 +1862,12 @@ abstract class AppLocalizations {
   /// **'Jump to date'**
   String get explorerJumpToDateTooltip;
 
+  /// explorerClearCacheRefreshTooltip: Clears cached Explorer data for the current date or range and refetches all providers
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cache and refresh'**
+  String get explorerClearCacheRefreshTooltip;
+
   /// explorerSectionActivityProviders: ACTIVITY PROVIDERS
   ///
   /// In en, this message translates to:

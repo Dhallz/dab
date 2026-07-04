@@ -1258,6 +1258,10 @@
   "@explorerJumpToDateTooltip": {
     "description": "explorerJumpToDateTooltip: Jump to date"
   },
+  "explorerClearCacheRefreshTooltip": "Clear cache and refresh",
+  "@explorerClearCacheRefreshTooltip": {
+    "description": "explorerClearCacheRefreshTooltip: Clears cached Explorer data for the current date or range and refetches all providers"
+  },
   "explorerSectionActivityProviders": "ACTIVITY PROVIDERS",
   "@explorerSectionActivityProviders": {
     "description": "explorerSectionActivityProviders: ACTIVITY PROVIDERS"

@@ -966,6 +966,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get explorerJumpToDateTooltip => 'Vai alla data';
 
   @override
+  String get explorerClearCacheRefreshTooltip => 'Clear cache and refresh';
+
+  @override
   String get explorerSectionActivityProviders => 'FORNITORI ATTIVITÀ';
 
   @override

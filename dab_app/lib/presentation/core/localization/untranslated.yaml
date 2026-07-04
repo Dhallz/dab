@@ -16,7 +16,8 @@
     "adminOrgTimezoneTitle",
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
-    "adminTimezoneSavedSnack"
+    "adminTimezoneSavedSnack",
+    "explorerClearCacheRefreshTooltip"
   ],
 
   "es": [
@@ -36,7 +37,8 @@
     "adminOrgTimezoneTitle",
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
-    "adminTimezoneSavedSnack"
+    "adminTimezoneSavedSnack",
+    "explorerClearCacheRefreshTooltip"
   ],
 
   "fr": [
@@ -56,7 +58,8 @@
     "adminOrgTimezoneTitle",
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
-    "adminTimezoneSavedSnack"
+    "adminTimezoneSavedSnack",
+    "explorerClearCacheRefreshTooltip"
   ],
 
   "it": [
@@ -76,7 +79,8 @@
     "adminOrgTimezoneTitle",
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
-    "adminTimezoneSavedSnack"
+    "adminTimezoneSavedSnack",
+    "explorerClearCacheRefreshTooltip"
   ],
 
   "pt": [
@@ -96,6 +100,7 @@
     "adminOrgTimezoneTitle",
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
-    "adminTimezoneSavedSnack"
+    "adminTimezoneSavedSnack",
+    "explorerClearCacheRefreshTooltip"
   ]
 }

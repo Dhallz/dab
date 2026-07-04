@@ -5,6 +5,7 @@ import 'package:dab_app/domain/containers/user_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_category.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
+import 'package:dab_app/domain/entities/activity/explorer_cache_clear_request.dart';
 import 'package:dab_app/domain/entities/group/group.dart';
 import 'package:dab_app/domain/entities/group/group_type.dart';
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
@@ -138,6 +139,14 @@ void main() {
       ),
     );
     registerFallbackValue(const ActivitySearchQuery());
+    registerFallbackValue(
+      ExplorerCacheClearRequest(
+        startDate: DateTime(2026, 1, 1),
+        endDate: DateTime(2026, 1, 1),
+        providerIds: {'slack'},
+        orgTimezoneId: 'UTC',
+      ),
+    );
   });
 
   setUp(() {
@@ -160,6 +169,16 @@ void main() {
     ).thenAnswer((_) async => Right([providerConfig, githubProviderConfig]));
     when(() => mockActivityRepository.searchActivities(any())).thenAnswer(
       (_) async => Right([activityFor('u1', DateTime.utc(2026, 1, 1, 10))]),
+    );
+    when(
+      () => mockActivityRepository.clearExplorerCache(request: any(named: 'request')),
+    ).thenAnswer(
+      (_) async => right(
+        const ExplorerCacheClearResult(
+          removedActivities: 1,
+          removedCoverageRecords: 1,
+        ),
+      ),
     );
     when(() => mockUserRepository.saveGroup(any())).thenAnswer(
       (invocation) async => Right(invocation.positionalArguments.first),
@@ -478,5 +497,31 @@ void main() {
     expect(updatedGroup.members.map((m) => m.id).toList(), ['u1']);
     expect(state.groups.where((g) => g.id == 'g1').length, 1);
     verify(() => mockUserRepository.saveGroup(any())).called(greaterThan(0));
+  });
+
+  test('clearCacheAndRefresh clears all browsable providers for active window', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.clearCacheAndRefresh();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    final captured = verify(
+      () => mockActivityRepository.clearExplorerCache(
+        request: captureAny(named: 'request'),
+      ),
+    ).captured.single as ExplorerCacheClearRequest;
+
+    expect(captured.providerIds, {'slack', 'github'});
+    verify(() => mockActivityRepository.searchActivities(any())).called(
+      greaterThan(0),
+    );
+    expect(
+      container.read(explorerNotifierProvider).status,
+      ViewStatus.success,
+    );
   });
 }
