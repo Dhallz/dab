@@ -1,0 +1,45 @@
+meta {
+  name: 91 Test GitHub Connectivity
+  type: http
+  seq: 91
+}
+
+docs {
+  Runs `POST /admin/configs/test` with GitHub settings from the environment.
+  Run after **10 Save GitHub** (or standalone to validate vars before save).
+}
+
+post {
+  url: {{baseUrl}}/admin/configs/test
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "github",
+    "name": "GitHub",
+    "baseUrl": "https://github.com",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{githubApiToken}}",
+      "apiBaseUrl": "{{githubApiBaseUrl}}",
+      "webhookSecret": "{{githubWebhookSecret}}",
+      "owner": "{{githubOwner}}",
+      "repo": "{{githubRepo}}",
+      "repos": "{{githubRepos}}",
+      "branch": "{{githubBranch}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns connectivity report", function() {
+    expect(res.body.data).to.have.property("sections");
+    const polling = res.body.data.sections.polling;
+    console.log("GitHub polling:", polling?.status, "-", polling?.message);
+  });
+}

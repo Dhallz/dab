@@ -1,0 +1,48 @@
+meta {
+  name: 4. Test GitHub Polling (Admin)
+  type: http
+  seq: 4
+}
+
+docs {
+  Runs `POST /admin/configs/test` using the **saved GitHub config** from step 2.
+  Verifies Core (token) and **Polling** (commits API on configured repos).
+
+  Expect `sections.polling.status` = `success` when PAT and repo access work.
+  Live section may also pass via internal webhook test if `webhookSecret` is set.
+}
+
+post {
+  url: {{baseUrl}}/admin/configs/test
+  body: json
+  auth: inherit
+}
+
+script:pre-request {
+  const raw = bru.getVar("githubConfigPayload");
+  if (!raw) {
+    throw new Error(
+      "githubConfigPayload missing. Run step 2 (Load GitHub Config) first.",
+    );
+  }
+  req.setBody(raw);
+}
+
+tests {
+  test("Status 200", function() {
+    if (res.status !== 200) {
+      console.log("Error:", JSON.stringify(res.body));
+    }
+    expect(res.status).to.equal(200);
+  });
+  test("Polling section succeeds", function() {
+    const polling = res.body.data?.sections?.polling;
+    expect(polling, "polling section").to.exist;
+    console.log("Polling:", polling.status, "-", polling.message);
+    expect(polling.status).to.equal("success");
+  });
+  test("Core section succeeds", function() {
+    const core = res.body.data?.sections?.core;
+    expect(core?.status).to.equal("success");
+  });
+}

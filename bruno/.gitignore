@@ -3,6 +3,11 @@
 
 # Local environment with real credentials — never commit
 environments/local.bru
+environments/local-secrets.bru
 
-# The .example file IS safe to commit (no real secrets)
+# The .example files ARE safe to commit (no real secrets)
 !environments/local.bru.example
+!environments/local-secrets.bru.example
+
+# Personal provider restore flow — copy from local-secrets.example/
+local-secrets/

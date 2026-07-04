@@ -9,6 +9,7 @@ import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../settings_notifier.dart';
+import '../widgets/settings_explorer_cache_section.dart';
 import '../widgets/settings_island_bar_visibility_section.dart';
 import '../widgets/settings_language_selector.dart';
 import '../widgets/settings_section_header.dart';
@@ -83,6 +84,10 @@ class _SettingsViewMobileState extends ConsumerState<SettingsViewMobile> {
           settings: draft,
           onSelectionChanged: notifier.setIslandBarItems,
         ),
+        const Divider(height: 32, color: AppColors.outline),
+        SettingsSectionHeader(title: context.l10n.settingsSectionExplorerCache),
+        const SizedBox(height: 8),
+        const SettingsExplorerCacheSection(),
         const Divider(height: 32, color: AppColors.outline),
         SettingsSectionHeader(title: context.l10n.settingsSectionAbout),
         const SizedBox(height: 8),

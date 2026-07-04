@@ -204,6 +204,8 @@
   "adminFieldGuildServerId": "Guild (Server) ID",
   "adminFieldPersonalAccessToken": "Personal Access Token",
   "adminFieldWebhookSecret": "Webhook Secret",
+  "adminFieldWebhookEndpointUrl": "Webhook Endpoint URL",
+  "adminFieldWebhookEndpointUrlHint": "Default: {defaultUrl}. Edit to expose a different public URL for this provider.",
   "adminFieldRepositoryOwner": "Repository Owner",
   "adminFieldRepositoryName": "Repository Name",
   "adminFieldBranchOptional": "Branch (optional, defaults to repository default)",

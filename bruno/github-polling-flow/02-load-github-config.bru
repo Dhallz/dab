@@ -1,0 +1,74 @@
+meta {
+  name: 2. Load GitHub Config
+  type: http
+  seq: 2
+}
+
+docs {
+  Loads the saved **GitHub** provider config from `GET /admin/configs` and stores it
+  for the polling test and search steps.
+
+  Prerequisites:
+  - GitHub provider exists in Admin with `api.token`, repos (`owner`/`repo` or `repos`), and is **active**.
+
+  Sets collection vars used by later steps:
+  - `githubConfigPayload` — full config JSON for `POST /admin/configs/test`
+  - `githubApiToken`, `githubReposSummary` — human-readable log helpers
+}
+
+get {
+  url: {{baseUrl}}/admin/configs
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status !== 200 || !Array.isArray(res.body.data)) {
+    console.error("Failed to load provider configs");
+    return;
+  }
+
+  const github = res.body.data.find(
+    (c) => (c.id || "").toLowerCase() === "github",
+  );
+  if (!github) {
+    console.error("No github provider config found. Save one in Admin first.");
+    return;
+  }
+
+  bru.setVar("githubConfigPayload", JSON.stringify(github));
+  bru.setEnvVar("targetProviderId", "github");
+
+  const settings = github.settings || {};
+  const token = settings["api.token"] || settings.token || "";
+  bru.setVar("githubApiToken", token ? "(set)" : "(missing)");
+  const repos = Array.isArray(settings.repos)
+    ? settings.repos.join(", ")
+    : [settings.owner, settings.repo].filter(Boolean).join("/");
+  bru.setVar("githubReposSummary", repos || "(no repos configured)");
+  bru.setVar("githubIsActive", String(github.isActive === true));
+
+  console.log(
+    "GitHub config loaded: active=" +
+      github.isActive +
+      " repos=" +
+      repos +
+      " token=" +
+      (token ? "set" : "MISSING"),
+  );
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("GitHub config present", function() {
+    const github = (res.body.data || []).find(
+      (c) => (c.id || "").toLowerCase() === "github",
+    );
+    expect(github, "github provider config").to.exist;
+    expect(github.isActive, "github should be active for polling").to.equal(true);
+    const token = github.settings?.["api.token"] || github.settings?.token || "";
+    expect(token, "api.token").to.be.a("string").and.not.empty;
+  });
+}

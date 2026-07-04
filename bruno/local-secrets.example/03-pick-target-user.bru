@@ -1,0 +1,41 @@
+meta {
+  name: 03 Pick Target User
+  type: http
+  seq: 3
+}
+
+docs {
+  Loads admin users and sets `targetUserId` for identity-linking steps.
+
+  If `targetUserId` is already set in the environment, this request still runs
+  but the script prefers the first user when the var is empty.
+}
+
+get {
+  url: {{baseUrl}}/admin/users
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status !== 200 || !Array.isArray(res.body.data)) {
+    return;
+  }
+  const existing = bru.getEnvVar("targetUserId");
+  if (existing) {
+    console.log("targetUserId already set:", existing);
+    return;
+  }
+  const first = res.body.data[0];
+  if (first && first.id) {
+    bru.setEnvVar("targetUserId", first.id);
+    bru.setVar("targetUserId", first.id);
+    console.log("targetUserId set to", first.id, "(" + (first.email || first.name) + ")");
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,41 @@
+meta {
+  name: 01 Login
+  type: http
+  seq: 1
+}
+
+docs {
+  Authenticates an existing admin and captures `accessToken`.
+  Use after **00 Register** on a fresh DB, or alone when the database already has users.
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+    bru.setVar("accessToken", res.body.accessToken);
+    console.log("Local secrets flow: accessToken captured");
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns accessToken", function() {
+    expect(res.body.accessToken).to.be.a("string");
+  });
+}

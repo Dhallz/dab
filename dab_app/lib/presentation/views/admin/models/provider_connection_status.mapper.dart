@@ -18,6 +18,7 @@ class ProviderConnectionStatusMapper
         _instance = ProviderConnectionStatusMapper._(),
       );
       ViewStatusMapper.ensureInitialized();
+      ProviderSectionResultMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -44,12 +45,25 @@ class ProviderConnectionStatusMapper
     _$lastCheck,
     opt: true,
   );
+  static ProviderSectionResult? _$core(ProviderConnectionStatus v) => v.core;
+  static const Field<ProviderConnectionStatus, ProviderSectionResult> _f$core =
+      Field('core', _$core, opt: true);
+  static ProviderSectionResult? _$live(ProviderConnectionStatus v) => v.live;
+  static const Field<ProviderConnectionStatus, ProviderSectionResult> _f$live =
+      Field('live', _$live, opt: true);
+  static ProviderSectionResult? _$polling(ProviderConnectionStatus v) =>
+      v.polling;
+  static const Field<ProviderConnectionStatus, ProviderSectionResult>
+  _f$polling = Field('polling', _$polling, opt: true);
 
   @override
   final MappableFields<ProviderConnectionStatus> fields = const {
     #status: _f$status,
     #message: _f$message,
     #lastCheck: _f$lastCheck,
+    #core: _f$core,
+    #live: _f$live,
+    #polling: _f$polling,
   };
 
   static ProviderConnectionStatus _instantiate(DecodingData data) {
@@ -57,6 +71,9 @@ class ProviderConnectionStatusMapper
       status: data.dec(_f$status),
       message: data.dec(_f$message),
       lastCheck: data.dec(_f$lastCheck),
+      core: data.dec(_f$core),
+      live: data.dec(_f$live),
+      polling: data.dec(_f$polling),
     );
   }
 
@@ -130,7 +147,32 @@ abstract class ProviderConnectionStatusCopyWith<
   $Out
 >
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({ViewStatus? status, String? message, DateTime? lastCheck});
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get core;
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get live;
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get polling;
+  $R call({
+    ViewStatus? status,
+    String? message,
+    DateTime? lastCheck,
+    ProviderSectionResult? core,
+    ProviderSectionResult? live,
+    ProviderSectionResult? polling,
+  });
   ProviderConnectionStatusCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -146,15 +188,42 @@ class _ProviderConnectionStatusCopyWithImpl<$R, $Out>
   late final ClassMapperBase<ProviderConnectionStatus> $mapper =
       ProviderConnectionStatusMapper.ensureInitialized();
   @override
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get core => $value.core?.copyWith.$chain((v) => call(core: v));
+  @override
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get live => $value.live?.copyWith.$chain((v) => call(live: v));
+  @override
+  ProviderSectionResultCopyWith<
+    $R,
+    ProviderSectionResult,
+    ProviderSectionResult
+  >?
+  get polling => $value.polling?.copyWith.$chain((v) => call(polling: v));
+  @override
   $R call({
     ViewStatus? status,
     Object? message = $none,
     Object? lastCheck = $none,
+    Object? core = $none,
+    Object? live = $none,
+    Object? polling = $none,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
       if (message != $none) #message: message,
       if (lastCheck != $none) #lastCheck: lastCheck,
+      if (core != $none) #core: core,
+      if (live != $none) #live: live,
+      if (polling != $none) #polling: polling,
     }),
   );
   @override
@@ -162,6 +231,9 @@ class _ProviderConnectionStatusCopyWithImpl<$R, $Out>
     status: data.get(#status, or: $value.status),
     message: data.get(#message, or: $value.message),
     lastCheck: data.get(#lastCheck, or: $value.lastCheck),
+    core: data.get(#core, or: $value.core),
+    live: data.get(#live, or: $value.live),
+    polling: data.get(#polling, or: $value.polling),
   );
 
   @override

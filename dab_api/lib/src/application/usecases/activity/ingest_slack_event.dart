@@ -267,6 +267,7 @@ class IngestSlackEvent {
         SlackEventIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('slack');
     return const Right(SlackEventIngestionResult.ingested());
   }
 

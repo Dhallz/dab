@@ -3,10 +3,19 @@ import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
 import 'package:flutter/material.dart';
 
+/// [ARCH: PRESENTATION_WIDGET]
+/// ROLE: Pulsing status icon for provider connectivity (main + section lights).
 class LivePulsingIcon extends StatefulWidget {
   final ProviderConnectionStatus? status;
+  final bool compact;
+  final bool enablePulse;
 
-  const LivePulsingIcon({super.key, this.status});
+  const LivePulsingIcon({
+    super.key,
+    required this.status,
+    this.compact = false,
+    this.enablePulse = true,
+  });
 
   @override
   State<LivePulsingIcon> createState() => _LivePulsingIconState();
@@ -50,6 +59,10 @@ class _LivePulsingIconState extends State<LivePulsingIcon>
         color = Colors.greenAccent;
         icon = Icons.check_circle_rounded;
         break;
+      case ViewStatus.warning:
+        color = Colors.orangeAccent;
+        icon = Icons.warning_amber_rounded;
+        break;
       case ViewStatus.failure:
         color = Colors.redAccent;
         icon = Icons.error_rounded;
@@ -62,30 +75,38 @@ class _LivePulsingIconState extends State<LivePulsingIcon>
         return const SizedBox.shrink();
     }
 
+    final iconSize = widget.compact ? 12.0 : 14.0;
+    final padding = widget.compact ? 2.0 : 4.0;
+
+    final child = Container(
+      padding: EdgeInsets.all(padding),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+        boxShadow: widget.compact
+            ? null
+            : [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ],
+      ),
+      child: Icon(icon, color: color, size: iconSize),
+    );
+
+    final animatedChild = widget.enablePulse && !widget.compact
+        ? FadeTransition(opacity: _pulseAnimation, child: child)
+        : child;
+
     return Tooltip(
       message:
           widget.status?.message ??
           (widget.status!.status == ViewStatus.success
               ? l10n.adminConnectionConnected
               : l10n.adminConnectionDisconnected),
-      child: FadeTransition(
-        opacity: _pulseAnimation,
-        child: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.2),
-                blurRadius: 8,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Icon(icon, color: color, size: 14),
-        ),
-      ),
+      child: animatedChild,
     );
   }
 }

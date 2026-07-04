@@ -1,11 +1,15 @@
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../../domain/core/failures.dart';
 import '../../../domain/core/org_calendar.dart';
 import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/entities/provider/provider_connectivity_report.dart';
 import '../../../domain/entities/system/system_status.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../presentation/core/models/view_status.dart';
 import '../datasources/provider_config_remote_data_source.dart';
 import '../repositories/core/repository.dart';
 
@@ -61,7 +65,9 @@ class ProviderConfigRepository extends Repository
   }
 
   @override
-  Future<Either<AppFailure, String>> testProviderConfig(ProviderConfig config) {
+  Future<Either<AppFailure, ProviderConnectivityReport>> testProviderConfig(
+    ProviderConfig config,
+  ) {
     return guardedCall(() async {
       final response = await _remoteDataSource.testProviderConfig(
         config.toMap(),
@@ -75,8 +81,41 @@ class ProviderConfigRepository extends Repository
         map = jsonDecode(data.toString());
       }
 
-      return map['data']?['message'] ?? 'Connected';
+      final payload = map['data'] as Map<String, dynamic>? ?? {};
+      final sections = payload['sections'] as Map<String, dynamic>? ?? {};
+
+      return ProviderConnectivityReport(
+        aggregate: _parseStatus(payload['aggregate']?.toString()),
+        summaryMessage:
+            payload['summaryMessage']?.toString() ?? 'Connectivity test complete',
+        core: _parseSection(sections['core']),
+        live: _parseSection(sections['live']),
+        polling: _parseSection(sections['polling']),
+      );
     });
+  }
+
+  ProviderSectionResult _parseSection(dynamic raw) {
+    if (raw is! Map<String, dynamic>) {
+      return const ProviderSectionResult(
+        status: ViewStatus.failure,
+        message: 'Section result missing',
+      );
+    }
+    return ProviderSectionResult(
+      status: _parseStatus(raw['status']?.toString()),
+      message: raw['message']?.toString() ?? '',
+    );
+  }
+
+  ViewStatus _parseStatus(String? raw) {
+    return switch (raw?.toLowerCase()) {
+      'success' => ViewStatus.success,
+      'warning' => ViewStatus.warning,
+      'failure' => ViewStatus.failure,
+      'loading' => ViewStatus.loading,
+      _ => ViewStatus.failure,
+    };
   }
 
   @override
@@ -98,7 +137,9 @@ class ProviderConfigRepository extends Repository
   }
 
   @override
-  Future<Either<AppFailure, void>> saveSystemSettings(Map<String, String> settings) {
+  Future<Either<AppFailure, void>> saveSystemSettings(
+    Map<String, String> settings,
+  ) {
     return guardedCall(() async {
       await _remoteDataSource.saveSystemSettings(settings);
     });

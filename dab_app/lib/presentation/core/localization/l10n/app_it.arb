@@ -204,6 +204,8 @@
   "adminFieldGuildServerId": "ID guild (server)",
   "adminFieldPersonalAccessToken": "Token di accesso personale",
   "adminFieldWebhookSecret": "Secret webhook",
+  "adminFieldWebhookEndpointUrl": "URL endpoint webhook",
+  "adminFieldWebhookEndpointUrlHint": "Predefinito: {defaultUrl}. Modifica per un URL pubblico diverso per questo provider.",
   "adminFieldRepositoryOwner": "Proprietario repository",
   "adminFieldRepositoryName": "Nome repository",
   "adminFieldBranchOptional": "Branch (opzionale, predefinito del repo)",

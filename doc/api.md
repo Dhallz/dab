@@ -119,7 +119,7 @@ Thin entry points only. No business logic.
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
-| `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs, provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test, system settings (domain validation toggle + allowed domain) |
+| `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs, provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test (`POST /admin/configs/test` returns Core/Live/Polling section report; Live green = Redis `live:last_ingest:{providerId}` within 7 days), system settings (domain validation toggle + allowed domain + `public_api_url`) |
 | `UserController` | `/users/*` | User profile, identity linking |
 
 #### Middleware
@@ -180,6 +180,10 @@ settings may include **`webhookSecret`** (matching the secret configured on the
 repository webhook in GitHub) for **`POST /integrations/github/webhook`**. The
 configured repo allow-list (`owner`/`repo`, `repos` list — same shaping as polling)
 gates which repositories may deliver push events into DAB; the unified fetcher continues to backfill commits via polling when configured.
+
+**Bruno — GitHub historical polling:** run the `bruno/github-polling-flow/` folder in order (login → load config → pick linked user → test polling → search → optional direct GitHub API probe). Set `githubSearchStartDate` / `githubSearchEndDate` in the environment to a window with known commits. Step **07 Probe GitHub API Direct** calls `GET https://api.github.com/repos/{owner}/{repo}/commits` with the same `since`/`until`/`sha`/`author` params DAB uses — use it to tell whether empty search results come from GitHub or from DAB mapping.
+
+**Bruno — local provider restore (after DB reset):** copy `bruno/local-secrets.example/` to `bruno/local-secrets/` and `bruno/environments/local-secrets.bru.example` to `bruno/environments/local-secrets.bru`, fill secrets, select the `local-secrets` environment, then run requests in order (register/login → system settings → webhook endpoints → save providers → optional identity links → verify). Step **04 Webhook Endpoints** derives `*WebhookUrl` vars from `public_api_url` for pasting into provider webhook consoles. The working copies are gitignored.
 
 Bootstrap remains local-first for the first admin; teams can onboard with any provider
 afterward (no Phorge prerequisite).
@@ -286,6 +290,10 @@ login matches a **linked** `user_identities` row (`provider_id: github`), then t
 pipeline matches Slack: Postgres + Redis **`fanOutActivity`** +
 **`PresenceService`** (`ACTIVITY_RECEIVED`). **`ping`** is acknowledged without
 persisting commits. Other event types return success but perform no ingestion.
+
+### Admin provider connectivity (Live ingest signal)
+
+Successful webhook/event ingest paths call `RedisService.recordLiveIngestSuccess(providerId)` with a **7-day TTL** (`live:last_ingest:{providerId}`). `POST /admin/configs/test` Live section is green when that timestamp is within the window (Discord also requires `DiscordGatewayService` connected). If no recent ingest exists, **Try** runs an internal **webhook test delivery** that validates Live signing secrets (HMAC round-trip or shared-secret check) and records the same Redis key — so Live can turn green without waiting for a real provider event. New installs should configure Live secrets and click **Try**.
 
 ---
 

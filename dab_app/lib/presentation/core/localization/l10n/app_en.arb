@@ -256,6 +256,74 @@
   "@settingsSectionAbout": {
     "description": "settingsSectionAbout: About"
   },
+  "settingsSectionExplorerCache": "Explorer cache",
+  "@settingsSectionExplorerCache": {
+    "description": "settingsSectionExplorerCache: Explorer cache section title"
+  },
+  "settingsExplorerCacheDescription": "Remove cached Explorer activities for selected providers and dates. The next browse refetches from provider APIs.",
+  "@settingsExplorerCacheDescription": {
+    "description": "settingsExplorerCacheDescription: Helper text for Explorer cache controls"
+  },
+  "settingsExplorerCacheDateRange": "Date range",
+  "@settingsExplorerCacheDateRange": {
+    "description": "settingsExplorerCacheDateRange: Date range label"
+  },
+  "settingsExplorerCacheProviders": "Providers",
+  "@settingsExplorerCacheProviders": {
+    "description": "settingsExplorerCacheProviders: Provider checklist label"
+  },
+  "settingsExplorerCacheSelectAll": "Select all",
+  "@settingsExplorerCacheSelectAll": {
+    "description": "settingsExplorerCacheSelectAll: Select all providers action"
+  },
+  "settingsExplorerCacheClearSelection": "Clear selection",
+  "@settingsExplorerCacheClearSelection": {
+    "description": "settingsExplorerCacheClearSelection: Clear provider selection action"
+  },
+  "settingsExplorerCacheClearButton": "Clear cache",
+  "@settingsExplorerCacheClearButton": {
+    "description": "settingsExplorerCacheClearButton: Clear cache button label"
+  },
+  "settingsExplorerCacheConfirmTitle": "Clear Explorer cache?",
+  "@settingsExplorerCacheConfirmTitle": {
+    "description": "settingsExplorerCacheConfirmTitle: Confirmation dialog title"
+  },
+  "settingsExplorerCacheConfirmMessage": "Remove cached Explorer data from {startDate} through {endDate} for: {providers}.",
+  "@settingsExplorerCacheConfirmMessage": {
+    "description": "settingsExplorerCacheConfirmMessage: Confirmation dialog body",
+    "placeholders": {
+      "startDate": {
+        "type": "String"
+      },
+      "endDate": {
+        "type": "String"
+      },
+      "providers": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsExplorerCacheSuccess": "Cleared {count} cached Explorer entries.",
+  "@settingsExplorerCacheSuccess": {
+    "description": "settingsExplorerCacheSuccess: Snackbar after successful clear",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsExplorerCacheFailure": "Unable to clear Explorer cache.",
+  "@settingsExplorerCacheFailure": {
+    "description": "settingsExplorerCacheFailure: Snackbar when clear fails"
+  },
+  "settingsExplorerCacheNoProviders": "No active providers are configured.",
+  "@settingsExplorerCacheNoProviders": {
+    "description": "settingsExplorerCacheNoProviders: Empty state when no providers"
+  },
+  "settingsExplorerCacheSelectProvider": "Select at least one provider.",
+  "@settingsExplorerCacheSelectProvider": {
+    "description": "settingsExplorerCacheSelectProvider: Validation when none selected"
+  },
   "settingsThemeLight": "Light",
   "@settingsThemeLight": {
     "description": "settingsThemeLight: Light"
@@ -833,6 +901,19 @@
   "adminFieldWebhookSecret": "Webhook Secret",
   "@adminFieldWebhookSecret": {
     "description": "adminFieldWebhookSecret: Webhook Secret"
+  },
+  "adminFieldWebhookEndpointUrl": "Webhook Endpoint URL",
+  "@adminFieldWebhookEndpointUrl": {
+    "description": "adminFieldWebhookEndpointUrl: Webhook Endpoint URL"
+  },
+  "adminFieldWebhookEndpointUrlHint": "Default: {defaultUrl}. Edit to expose a different public URL for this provider.",
+  "@adminFieldWebhookEndpointUrlHint": {
+    "description": "adminFieldWebhookEndpointUrlHint: Helper under webhook endpoint field",
+    "placeholders": {
+      "defaultUrl": {
+        "type": "String"
+      }
+    }
   },
   "adminFieldRepositoryOwner": "Repository Owner",
   "@adminFieldRepositoryOwner": {

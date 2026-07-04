@@ -32,6 +32,8 @@ class ViewStatusMapper extends EnumMapper<ViewStatus> {
         return ViewStatus.loading;
       case r'success':
         return ViewStatus.success;
+      case r'warning':
+        return ViewStatus.warning;
       case r'failure':
         return ViewStatus.failure;
       default:
@@ -48,6 +50,8 @@ class ViewStatusMapper extends EnumMapper<ViewStatus> {
         return r'loading';
       case ViewStatus.success:
         return r'success';
+      case ViewStatus.warning:
+        return r'warning';
       case ViewStatus.failure:
         return r'failure';
     }

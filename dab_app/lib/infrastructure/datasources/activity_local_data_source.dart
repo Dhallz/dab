@@ -1,3 +1,4 @@
+import '../../domain/entities/activity/explorer_cache_clear_request.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_search_query.dart';
 import '../../domain/core/org_calendar.dart';
@@ -26,9 +27,79 @@ class ActivityLocalDataSource {
   Box<ExplorerCacheMetaRecord> get _metaBox =>
       _store.store.box<ExplorerCacheMetaRecord>();
 
-  Future<void> clearExplorerCache() async {
-    _activityBox.removeAll();
-    _coverageBox.removeAll();
+  Future<ExplorerCacheClearResult> clearExplorerCache({
+    ExplorerCacheClearRequest? request,
+  }) async {
+    if (request == null) {
+      final activityCount = _activityBox.count();
+      final coverageCount = _coverageBox.count();
+      _activityBox.removeAll();
+      _coverageBox.removeAll();
+      return ExplorerCacheClearResult(
+        removedActivities: activityCount,
+        removedCoverageRecords: coverageCount,
+      );
+    }
+
+    final providers = request.providerIds
+        .map((id) => id.trim().toLowerCase())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    if (providers.isEmpty) {
+      return const ExplorerCacheClearResult(
+        removedActivities: 0,
+        removedCoverageRecords: 0,
+      );
+    }
+
+    final window = orgDateWindowEpochMs(
+      request.orgTimezoneId,
+      request.startDate,
+      request.endDate,
+    );
+
+    final activityQuery = _activityBox
+        .query(
+          ExplorerActivityRecord_.createdAtEpochMs.between(
+            window.startEpochMs,
+            window.endEpochMsExclusive - 1,
+          ),
+        )
+        .build();
+    final activities = activityQuery.find();
+    activityQuery.close();
+
+    final activityIds = activities
+        .where((record) => providers.contains(record.providerKey.toLowerCase()))
+        .map((record) => record.id)
+        .toList();
+    if (activityIds.isNotEmpty) {
+      _activityBox.removeMany(activityIds);
+    }
+
+    final coverageQuery = _coverageBox
+        .query(
+          ExplorerCoverageRecord_.dayEpochMs.between(
+            window.startEpochMs,
+            window.endEpochMsExclusive - 1,
+          ),
+        )
+        .build();
+    final coverageRows = coverageQuery.find();
+    coverageQuery.close();
+
+    final coverageIds = coverageRows
+        .where((record) => providers.contains(record.providerKey.toLowerCase()))
+        .map((record) => record.id)
+        .toList();
+    if (coverageIds.isNotEmpty) {
+      _coverageBox.removeMany(coverageIds);
+    }
+
+    return ExplorerCacheClearResult(
+      removedActivities: activityIds.length,
+      removedCoverageRecords: coverageIds.length,
+    );
   }
 
   Future<List<Activity>> searchActivities(ActivitySearchQuery query) async {

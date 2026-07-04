@@ -192,6 +192,7 @@ class IngestGitLabWebhook {
         GitLabWebhookIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('gitlab');
     return const Right(GitLabWebhookIngestionResult.ingested());
   }
 

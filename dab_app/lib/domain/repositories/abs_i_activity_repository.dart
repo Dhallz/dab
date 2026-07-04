@@ -4,6 +4,7 @@ import '../../domain/core/failures.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_live_event.dart';
 import '../../domain/entities/activity/activity_search_query.dart';
+import '../../domain/entities/activity/explorer_cache_clear_request.dart';
 
 abstract class IActivityRepository {
   Future<Either<AppFailure, List<Activity>>> getRecentActivities();
@@ -28,5 +29,8 @@ abstract class IActivityRepository {
   Stream<ActivityLiveEvent> watchActivities();
 
   /// Clears Explorer ObjectBox activity and coverage cache.
-  Future<Either<AppFailure, void>> clearExplorerCache();
+  /// When [request] is omitted, removes all cached activities and coverage rows.
+  Future<Either<AppFailure, ExplorerCacheClearResult>> clearExplorerCache({
+    ExplorerCacheClearRequest? request,
+  });
 }

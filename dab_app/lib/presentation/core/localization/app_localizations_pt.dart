@@ -202,6 +202,56 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSectionAbout => 'Sobre';
 
   @override
+  String get settingsSectionExplorerCache => 'Explorer cache';
+
+  @override
+  String get settingsExplorerCacheDescription =>
+      'Remove cached Explorer activities for selected providers and dates. The next browse refetches from provider APIs.';
+
+  @override
+  String get settingsExplorerCacheDateRange => 'Date range';
+
+  @override
+  String get settingsExplorerCacheProviders => 'Providers';
+
+  @override
+  String get settingsExplorerCacheSelectAll => 'Select all';
+
+  @override
+  String get settingsExplorerCacheClearSelection => 'Clear selection';
+
+  @override
+  String get settingsExplorerCacheClearButton => 'Clear cache';
+
+  @override
+  String get settingsExplorerCacheConfirmTitle => 'Clear Explorer cache?';
+
+  @override
+  String settingsExplorerCacheConfirmMessage(
+    String startDate,
+    String endDate,
+    String providers,
+  ) {
+    return 'Remove cached Explorer data from $startDate through $endDate for: $providers.';
+  }
+
+  @override
+  String settingsExplorerCacheSuccess(int count) {
+    return 'Cleared $count cached Explorer entries.';
+  }
+
+  @override
+  String get settingsExplorerCacheFailure => 'Unable to clear Explorer cache.';
+
+  @override
+  String get settingsExplorerCacheNoProviders =>
+      'No active providers are configured.';
+
+  @override
+  String get settingsExplorerCacheSelectProvider =>
+      'Select at least one provider.';
+
+  @override
   String get settingsThemeLight => 'Claro';
 
   @override
@@ -651,6 +701,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get adminFieldWebhookSecret => 'Webhook Secret';
+
+  @override
+  String get adminFieldWebhookEndpointUrl => 'Webhook Endpoint URL';
+
+  @override
+  String adminFieldWebhookEndpointUrlHint(String defaultUrl) {
+    return 'Default: $defaultUrl. Edit to expose a different public URL for this provider.';
+  }
 
   @override
   String get adminFieldRepositoryOwner => 'Repository Owner';

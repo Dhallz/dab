@@ -202,6 +202,56 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSectionAbout => 'Informazioni';
 
   @override
+  String get settingsSectionExplorerCache => 'Explorer cache';
+
+  @override
+  String get settingsExplorerCacheDescription =>
+      'Remove cached Explorer activities for selected providers and dates. The next browse refetches from provider APIs.';
+
+  @override
+  String get settingsExplorerCacheDateRange => 'Date range';
+
+  @override
+  String get settingsExplorerCacheProviders => 'Providers';
+
+  @override
+  String get settingsExplorerCacheSelectAll => 'Select all';
+
+  @override
+  String get settingsExplorerCacheClearSelection => 'Clear selection';
+
+  @override
+  String get settingsExplorerCacheClearButton => 'Clear cache';
+
+  @override
+  String get settingsExplorerCacheConfirmTitle => 'Clear Explorer cache?';
+
+  @override
+  String settingsExplorerCacheConfirmMessage(
+    String startDate,
+    String endDate,
+    String providers,
+  ) {
+    return 'Remove cached Explorer data from $startDate through $endDate for: $providers.';
+  }
+
+  @override
+  String settingsExplorerCacheSuccess(int count) {
+    return 'Cleared $count cached Explorer entries.';
+  }
+
+  @override
+  String get settingsExplorerCacheFailure => 'Unable to clear Explorer cache.';
+
+  @override
+  String get settingsExplorerCacheNoProviders =>
+      'No active providers are configured.';
+
+  @override
+  String get settingsExplorerCacheSelectProvider =>
+      'Select at least one provider.';
+
+  @override
   String get settingsThemeLight => 'Chiaro';
 
   @override
@@ -650,6 +700,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get adminFieldWebhookSecret => 'Secret webhook';
+
+  @override
+  String get adminFieldWebhookEndpointUrl => 'URL endpoint webhook';
+
+  @override
+  String adminFieldWebhookEndpointUrlHint(String defaultUrl) {
+    return 'Predefinito: $defaultUrl. Modifica per un URL pubblico diverso per questo provider.';
+  }
 
   @override
   String get adminFieldRepositoryOwner => 'Proprietario repository';

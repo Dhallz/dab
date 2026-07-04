@@ -1,0 +1,48 @@
+meta {
+  name: 00 Register (bootstrap)
+  type: http
+  seq: 0
+}
+
+docs {
+  Creates the first admin after a **fresh database** reset.
+  Skip this step if users already exist — use **01 Login** instead.
+
+  Uses `adminEmail` / `adminPassword` from the active environment.
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Bootstrap Admin",
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+    bru.setVar("accessToken", res.body.accessToken);
+    if (res.body.userId) {
+      bru.setEnvVar("targetUserId", res.body.userId);
+      bru.setVar("targetUserId", res.body.userId);
+    }
+    console.log("Bootstrap register: tokens captured");
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns accessToken", function() {
+    expect(res.body.accessToken).to.be.a("string");
+  });
+}

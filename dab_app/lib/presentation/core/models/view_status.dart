@@ -10,10 +10,12 @@ enum ViewStatus {
   initial,
   loading,
   success,
+  warning,
   failure;
 
   bool get isInitial => this == ViewStatus.initial;
   bool get isLoading => this == ViewStatus.loading;
   bool get isSuccess => this == ViewStatus.success;
+  bool get isWarning => this == ViewStatus.warning;
   bool get isFailure => this == ViewStatus.failure;
 }

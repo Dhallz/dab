@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/containers/system_usecases.dart';
+import '../../../domain/containers/activity_usecases.dart';
+import '../../../domain/entities/activity/explorer_cache_clear_request.dart';
 import '../../../domain/entities/system/app_settings.dart';
+import '../../../domain/core/failures.dart';
+import 'package:fpdart/fpdart.dart';
 import '../../../domain/entities/system/app_theme_variant.dart';
 import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
@@ -19,6 +23,7 @@ class SettingsNotifier extends AutoDisposeNotifier<SettingsState> {
   bool _initialized = false;
 
   SystemUseCases get _systemUseCases => sl.systemUseCases;
+  ActivityUseCases get _activityUseCases => sl.activityUseCases;
 
   @override
   SettingsState build() {
@@ -72,5 +77,23 @@ class SettingsNotifier extends AutoDisposeNotifier<SettingsState> {
       // Keep AppNotifier focused on app-wide data exposure.
       ref.read(appNotifierProvider.notifier).setAppSettings(settingsToSave);
     });
+  }
+
+  /// Clears Explorer ObjectBox rows for [providerIds] within the org-calendar
+  /// [startDate]–[endDate] window so the next browse refetches from the API.
+  Future<Either<AppFailure, ExplorerCacheClearResult>> clearExplorerCache({
+    required DateTime startDate,
+    required DateTime endDate,
+    required Set<String> providerIds,
+  }) {
+    final orgTimezoneId = ref.read(appNotifierProvider).orgTimezoneId;
+    return _activityUseCases.clearExplorerCache.execute(
+      request: ExplorerCacheClearRequest(
+        startDate: startDate,
+        endDate: endDate,
+        providerIds: providerIds,
+        orgTimezoneId: orgTimezoneId,
+      ),
+    );
   }
 }

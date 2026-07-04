@@ -7,6 +7,8 @@ import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_config_field.dart';
+import 'package:dab_app/presentation/views/admin/models/admin_provider_field_manifest.dart';
+import 'package:dab_app/presentation/views/admin/widgets/provider_config_section_panel.dart';
 import 'package:dab_app/services/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,23 +38,16 @@ class ProviderCard extends ConsumerStatefulWidget {
 class _ProviderCardState extends ConsumerState<ProviderCard> {
   final Map<String, TextEditingController> _controllers = {};
   bool _showDetails = false;
-  String _ingestionMode = 'webhook';
   late final TextEditingController _pollingRateController;
-  late final TextEditingController _webhookUrlController;
-  late final FocusNode _webhookUrlFocusNode;
 
   @override
   void initState() {
     super.initState();
-    _ingestionMode = widget.config.settings['ingestionMode'] ?? widget.config.settings['ingestion_mode'] ?? 'webhook';
     _pollingRateController = TextEditingController(
       text: (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString(),
     );
-    _webhookUrlController = TextEditingController();
-    _webhookUrlFocusNode = FocusNode();
     _syncControllersFromConfig(widget.config, replaceExisting: true);
     _showDetails = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncWebhookUrlController());
   }
 
   @override
@@ -63,21 +58,22 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         oldWidget.config.settings != widget.config.settings ||
         oldWidget.config.baseUrl != widget.config.baseUrl;
     if (configChanged) {
-      _ingestionMode = widget.config.settings['ingestionMode'] ?? widget.config.settings['ingestion_mode'] ?? 'webhook';
       _pollingRateController.text = (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString();
-      _syncControllersFromConfig(widget.config, replaceExisting: true);
+      final systemSettings = ref.read(adminNotifierProvider).systemSettings;
+      _syncControllersFromConfig(
+        widget.config,
+        replaceExisting: true,
+        systemSettings: systemSettings,
+      );
       if (oldWidget.config.id != widget.config.id) {
         _showDetails = false;
       }
     }
-    _syncWebhookUrlController();
   }
 
   @override
   void dispose() {
     _pollingRateController.dispose();
-    _webhookUrlController.dispose();
-    _webhookUrlFocusNode.dispose();
     _disposeControllers();
     super.dispose();
   }
@@ -92,18 +88,29 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
   void _syncControllersFromConfig(
     ProviderConfig config, {
     required bool replaceExisting,
+    Map<String, String> systemSettings = const {},
   }) {
     if (replaceExisting) {
       _disposeControllers();
     }
 
-    final fields = _getFieldsForProvider(
+    final manifest = ProviderFieldManifest.forProvider(
       config.id,
       lookupAppLocalizations(const Locale('en')),
     );
+    final fields = [
+      ...manifest[ProviderConfigSection.core] ?? const [],
+      ...manifest[ProviderConfigSection.live] ?? const [],
+      ...manifest[ProviderConfigSection.polling] ?? const [],
+    ];
     for (final field in fields) {
       final rawValue = config.settings[field.key];
-      final initialValue = _initialValueForField(config, field, rawValue);
+      final initialValue = _initialValueForField(
+        config,
+        field,
+        rawValue,
+        systemSettings: systemSettings,
+      );
       _controllers[field.key] = TextEditingController(text: initialValue);
     }
   }
@@ -111,8 +118,9 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
   String _initialValueForField(
     ProviderConfig config,
     AdminConfigField field,
-    dynamic rawValue,
-  ) {
+    dynamic rawValue, {
+    Map<String, String> systemSettings = const {},
+  }) {
     if ((field.key == 'repos' ||
             field.key == 'channels' ||
             field.key == 'projectKeys') &&
@@ -134,8 +142,31 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       final fallback = config.settings['webhook_secret'];
       return (rawValue ?? fallback)?.toString() ?? '';
     }
+    if (field.key == 'webhookUrl') {
+      final stored =
+          (config.settings['webhookUrl'] ?? config.settings['webhook_url'])
+              ?.toString()
+              .trim() ??
+          '';
+      if (stored.isNotEmpty) return stored;
+      return _buildWebhookUrl(config.id, systemSettings);
+    }
 
     return rawValue?.toString() ?? '';
+  }
+
+  String _defaultWebhookUrlHint(
+    String providerId,
+    Map<String, String> systemSettings,
+    AppLocalizations l10n,
+  ) {
+    final defaultUrl = _buildWebhookUrl(providerId, systemSettings);
+    if (defaultUrl.isEmpty) {
+      return l10n.adminFieldWebhookEndpointUrlHint(
+        'Set Public API URL in Security settings',
+      );
+    }
+    return l10n.adminFieldWebhookEndpointUrlHint(defaultUrl);
   }
 
   String _webhookPathForProvider(String providerId) {
@@ -157,59 +188,91 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return '${_resolvePublicApiBase(systemSettings)}${_webhookPathForProvider(providerId)}';
   }
 
-  String _publicApiBaseFromWebhookUrl(String webhookUrl, String providerId) {
-    final trimmed = webhookUrl.trim();
-    if (trimmed.isEmpty) {
-      return '';
-    }
-    final path = _webhookPathForProvider(providerId);
-    if (trimmed.endsWith(path)) {
-      return trimmed
-          .substring(0, trimmed.length - path.length)
-          .replaceAll(RegExp(r'/+$'), '');
-    }
-    return trimmed.replaceAll(RegExp(r'/+$'), '');
+  List<Widget> _buildFieldWidgets({
+    required BuildContext context,
+    required List<AdminConfigField> fields,
+    required AppLocalizations l10n,
+    required ColorScheme cs,
+    required String providerId,
+    required Map<String, String> systemSettings,
+  }) {
+    return fields.map((field) {
+      final isMultiValueField =
+          field.key == 'repos' ||
+          field.key == 'channels' ||
+          field.key == 'projectKeys' ||
+          field.key == 'projects';
+      final isWebhookUrlField = field.key == 'webhookUrl';
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.m),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              field.label.toUpperCase(),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 1.1,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: AppSpacing.xs),
+            TextField(
+              controller: _controllers[field.key],
+              obscureText: field.isSecret,
+              keyboardType: isMultiValueField || isWebhookUrlField
+                  ? TextInputType.multiline
+                  : TextInputType.text,
+              minLines: isMultiValueField ? 3 : 1,
+              maxLines: isMultiValueField ? 6 : (isWebhookUrlField ? 2 : 1),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: cs.onSurface,
+                fontFamily: isWebhookUrlField ? 'monospace' : null,
+                fontSize: isWebhookUrlField ? 12 : null,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: cs.surfaceContainer.withValues(alpha: 0.65),
+                hintText: l10n.providerCardEnterField(field.label),
+                helperText: isWebhookUrlField
+                    ? _defaultWebhookUrlHint(providerId, systemSettings, l10n)
+                    : (isMultiValueField ? l10n.providerCardMultilineHint : null),
+                hintStyle: AppTextStyles.bodyMedium.copyWith(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.35),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.m,
+                  vertical: AppSpacing.m,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: AppLayout.borderMedium,
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: AppLayout.borderMedium,
+                  borderSide: BorderSide(color: cs.primary, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
   }
 
-  void _syncWebhookUrlController() {
-    if (_webhookUrlFocusNode.hasFocus) {
-      return;
-    }
-    final systemSettings = ref.read(adminNotifierProvider).systemSettings;
-    final nextUrl = _buildWebhookUrl(widget.config.id, systemSettings);
-    if (_webhookUrlController.text != nextUrl) {
-      _webhookUrlController.text = nextUrl;
-    }
-  }
-
-  void _saveProviderAndWebhookBase({
+  void _saveProvider({
     required AdminNotifier notifier,
     required ProviderConfig config,
+    required Map<String, String> systemSettings,
   }) {
-    final newSettings = _buildSettings(config);
+    final newSettings = _buildSettings(config, systemSettings);
     final newBaseUrl = _resolveBaseUrl(config);
     final updatedConfig = config.copyWith(
       settings: newSettings,
       baseUrl: newBaseUrl.trim(),
     );
 
-    final priorSettings = ref.read(adminNotifierProvider).systemSettings;
-    final publicApiBase = _publicApiBaseFromWebhookUrl(
-      _webhookUrlController.text,
-      config.id,
-    );
-    final systemSettings = Map<String, String>.from(priorSettings);
-    if (publicApiBase.isEmpty) {
-      systemSettings.remove('public_api_url');
-    } else {
-      systemSettings['public_api_url'] = publicApiBase;
-    }
-
     notifier.saveProviderConfig(updatedConfig);
-    if ((priorSettings['public_api_url'] ?? '') !=
-        (systemSettings['public_api_url'] ?? '')) {
-      notifier.saveSystemSettings(systemSettings);
-    }
   }
 
   @override
@@ -235,7 +298,13 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     final isExpanded = _showDetails;
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final fields = _getFieldsForProvider(config.id, l10n);
+    final manifest = ProviderFieldManifest.forProvider(config.id, l10n);
+    final systemSettings = ref.watch(
+      adminNotifierProvider.select((s) => s.systemSettings),
+    );
+    if (isExpanded) {
+      _ensureWebhookUrlDefaults(config, systemSettings);
+    }
     final isLight = Theme.of(context).brightness == Brightness.light;
     // Elevation shadow only: do not use [AppLayout.glassBlur] here — that sigma is
     // for backdrop blur; large blur + shadow color reads as muddy stripes between list cards.
@@ -308,7 +377,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                     onPressed: status?.status.isLoading == true
                         ? null
                         : () {
-                            final currentSettings = _buildSettings(config);
+                            final currentSettings = _buildSettings(
+                              config,
+                              systemSettings,
+                            );
                             final newBaseUrl = _resolveBaseUrl(config);
 
                             final configToTest = config.copyWith(
@@ -404,243 +476,58 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                           color: cs.outline.withValues(alpha: 0.4),
                         ),
                         SizedBox(height: AppSpacing.l),
-                        
-                        // Ingestion Mode Configuration
-                        Text(
-                          'INGESTION MODE',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: cs.onSurfaceVariant,
-                            letterSpacing: 1.1,
-                            fontWeight: FontWeight.w700,
+                        ProviderConfigSectionPanel(
+                          title: 'CORE',
+                          sectionStatus: status?.core,
+                          children: _buildFieldWidgets(
+                            context: context,
+                            fields: manifest[ProviderConfigSection.core] ?? const [],
+                            l10n: l10n,
+                            cs: cs,
+                            providerId: config.id,
+                            systemSettings: systemSettings,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cs.onSurface.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: cs.outline.withValues(alpha: 0.1)),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _ingestionMode = 'webhook';
-                                    });
-                                  },
-                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: _ingestionMode == 'webhook'
-                                          ? cs.primary
-                                          : Colors.transparent,
-                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Webhook',
-                                        style: TextStyle(
-                                          color: _ingestionMode == 'webhook' ? Colors.white : cs.onSurfaceVariant,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                        ProviderConfigSectionPanel(
+                          title: 'LIVE',
+                          sectionStatus: status?.live,
+                          children: [
+                            if (config.id.toLowerCase() == 'discord')
+                              Text(
+                                'Live ingestion uses the Discord Gateway WebSocket (no inbound webhook).',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: cs.onSurfaceVariant,
                                 ),
                               ),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _ingestionMode = 'polling';
-                                    });
-                                  },
-                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(11)),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: _ingestionMode == 'polling'
-                                          ? cs.primary
-                                          : Colors.transparent,
-                                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(11)),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Polling',
-                                        style: TextStyle(
-                                          color: _ingestionMode == 'polling' ? Colors.white : cs.onSurfaceVariant,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ..._buildFieldWidgets(
+                              context: context,
+                              fields: manifest[ProviderConfigSection.live] ?? const [],
+                              l10n: l10n,
+                              cs: cs,
+                              providerId: config.id,
+                              systemSettings: systemSettings,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        
-                        if (_ingestionMode == 'polling') ...[
-                          Text(
-                            'POLLING RATE (SECONDS)',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: cs.onSurfaceVariant,
-                              letterSpacing: 1.1,
-                              fontWeight: FontWeight.w700,
+                        ProviderConfigSectionPanel(
+                          title: 'POLLING',
+                          sectionStatus: status?.polling,
+                          children: [
+                            providerPollingRateField(
+                              context: context,
+                              controller: _pollingRateController,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _pollingRateController,
-                            keyboardType: TextInputType.number,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: cs.onSurface,
+                            ..._buildFieldWidgets(
+                              context: context,
+                              fields:
+                                  manifest[ProviderConfigSection.polling] ?? const [],
+                              l10n: l10n,
+                              cs: cs,
+                              providerId: config.id,
+                              systemSettings: systemSettings,
                             ),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: cs.surfaceContainer.withValues(alpha: 0.65),
-                              hintText: 'e.g. 60',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.m,
-                                vertical: AppSpacing.m,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: AppLayout.borderMedium,
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: AppLayout.borderMedium,
-                                borderSide: BorderSide(
-                                  color: cs.primary,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        
-                        if (_ingestionMode == 'webhook') ...[
-                          Text(
-                            'WEBHOOK ENDPOINT URL',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: cs.onSurfaceVariant,
-                              letterSpacing: 1.1,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _webhookUrlController,
-                            focusNode: _webhookUrlFocusNode,
-                            keyboardType: TextInputType.url,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: cs.onSurface,
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: cs.onSurface.withValues(alpha: 0.05),
-                              hintText:
-                                  'https://your-domain.com${_webhookPathForProvider(config.id)}',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.m,
-                                vertical: AppSpacing.m,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: AppLayout.borderMedium,
-                                borderSide: BorderSide(
-                                  color: cs.outline.withValues(alpha: 0.1),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: AppLayout.borderMedium,
-                                borderSide: BorderSide(
-                                  color: cs.primary,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        
-                        ...fields.map((field) {
-                          final isMultiValueField =
-                              field.key == 'repos' ||
-                              field.key == 'channels' ||
-                              field.key == 'projectKeys';
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.m,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  field.label.toUpperCase(),
-                                  style: AppTextStyles.labelSmall.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                    letterSpacing: 1.1,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                SizedBox(height: AppSpacing.xs),
-                                TextField(
-                                  controller: _controllers[field.key],
-                                  obscureText: field.isSecret,
-                                  keyboardType: isMultiValueField
-                                      ? TextInputType.multiline
-                                      : TextInputType.text,
-                                  minLines: isMultiValueField ? 3 : 1,
-                                  maxLines: isMultiValueField ? 6 : 1,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: cs.onSurface,
-                                  ),
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: cs.surfaceContainer
-                                        .withValues(alpha: 0.65),
-                                    hintText: l10n.providerCardEnterField(
-                                      field.label,
-                                    ),
-                                    helperText: isMultiValueField
-                                        ? l10n.providerCardMultilineHint
-                                        : null,
-                                    hintStyle: AppTextStyles.bodyMedium
-                                        .copyWith(
-                                          color: cs.onSurfaceVariant
-                                              .withValues(alpha: 0.35),
-                                        ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.m,
-                                      vertical: AppSpacing.m,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: AppLayout.borderMedium,
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: AppLayout.borderMedium,
-                                      borderSide: BorderSide(
-                                        color: cs.primary,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
+                          ],
+                        ),
                         SizedBox(height: AppSpacing.xs),
                         SizedBox(
                           width: double.infinity,
@@ -657,9 +544,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                               elevation: 0,
                             ),
                             onPressed: () {
-                              _saveProviderAndWebhookBase(
+                              _saveProvider(
                                 notifier: notifier,
                                 config: config,
+                                systemSettings: systemSettings,
                               );
                             },
                             child: Text(
@@ -693,191 +581,39 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return AppIcons.unknownProvider;
   }
 
-  List<AdminConfigField> _getFieldsForProvider(String id, AppLocalizations l10n) {
-    final lowerId = id.toLowerCase();
-    if (lowerId.contains('phorge')) {
-      return [
-        AdminConfigField(
-          key: 'apiToken',
-          label: l10n.adminFieldApiToken,
-          isSecret: true,
-        ),
-        AdminConfigField(key: 'baseUrl', label: l10n.adminFieldBaseUrl),
-        AdminConfigField(
-          key: 'webhookHmacKey',
-          label: 'Herald webhook HMAC key',
-          isSecret: true,
-        ),
-      ];
+  void _ensureWebhookUrlDefaults(
+    ProviderConfig config,
+    Map<String, String> systemSettings,
+  ) {
+    final controller = _controllers['webhookUrl'];
+    if (controller == null) return;
+
+    final stored =
+        (config.settings['webhookUrl'] ?? config.settings['webhook_url'])
+            ?.toString()
+            .trim() ??
+        '';
+    if (stored.isNotEmpty) {
+      if (controller.text != stored) {
+        controller.text = stored;
+      }
+      return;
     }
-    if (lowerId.contains('linear')) {
-      return [
-        AdminConfigField(
-          key: 'apiKey',
-          label: l10n.adminFieldApiKey,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'webhookSecret',
-          label: l10n.adminFieldWebhookSecret,
-          isSecret: true,
-        ),
-      ];
+
+    final defaultUrl = _buildWebhookUrl(config.id, systemSettings);
+    if (defaultUrl.isNotEmpty && controller.text.isEmpty) {
+      controller.text = defaultUrl;
     }
-    if (lowerId.contains('jira')) {
-      return [
-        AdminConfigField(
-          key: 'apiToken',
-          label: l10n.adminFieldApiToken,
-          isSecret: true,
-        ),
-        AdminConfigField(key: 'email', label: l10n.adminFieldAtlassianEmail),
-        AdminConfigField(
-          key: 'instanceUrl',
-          label: l10n.adminFieldJiraInstanceUrl,
-        ),
-        AdminConfigField(
-          key: 'projectKeys',
-          label: 'Project Keys (comma or newline separated)',
-        ),
-        AdminConfigField(
-          key: 'webhookSecret',
-          label: l10n.adminFieldWebhookSecret,
-          isSecret: true,
-        ),
-      ];
-    }
-    if (lowerId.contains('slack')) {
-      return [
-        AdminConfigField(
-          key: 'botToken',
-          label: l10n.adminFieldBotToken,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'signingSecret',
-          label: l10n.adminFieldSigningSecret,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'workspaceId',
-          label: l10n.adminFieldWorkspaceTeamId,
-        ),
-        AdminConfigField(
-          key: 'channels',
-          label: l10n.adminFieldChannelIdsOnePerLine,
-        ),
-        AdminConfigField(
-          key: 'apiBaseUrl',
-          label: l10n.adminFieldSlackApiBaseOptional,
-        ),
-      ];
-    }
-    if (lowerId.contains('discord')) {
-      return [
-        AdminConfigField(
-          key: 'botToken',
-          label: l10n.adminFieldBotToken,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'guildId',
-          label: l10n.adminFieldGuildServerId,
-        ),
-        AdminConfigField(
-          key: 'channels',
-          label: l10n.adminFieldChannelIdsOnePerLine,
-        ),
-      ];
-    }
-    if (lowerId.contains('github')) {
-      return [
-        AdminConfigField(
-          key: 'api.token',
-          label: l10n.adminFieldPersonalAccessToken,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'webhookSecret',
-          label: l10n.adminFieldWebhookSecret,
-          isSecret: true,
-        ),
-        AdminConfigField(key: 'owner', label: l10n.adminFieldRepositoryOwner),
-        AdminConfigField(key: 'repo', label: l10n.adminFieldRepositoryName),
-        AdminConfigField(
-          key: 'branch',
-          label: l10n.adminFieldBranchOptional,
-        ),
-        AdminConfigField(
-          key: 'repos',
-          label: l10n.adminFieldRepositoriesOnePerLine,
-        ),
-        AdminConfigField(
-          key: 'apiBaseUrl',
-          label: l10n.adminFieldGithubApiBaseOptional,
-        ),
-      ];
-    }
-    if (lowerId.contains('gitlab')) {
-      return [
-        AdminConfigField(
-          key: 'apiToken',
-          label: l10n.adminFieldApiToken,
-          isSecret: true,
-        ),
-        AdminConfigField(
-          key: 'instanceUrl',
-          label: l10n.adminFieldGitLabInstanceUrl,
-        ),
-        AdminConfigField(
-          key: 'projects',
-          label: 'Projects (group/project, one per line)',
-        ),
-        AdminConfigField(
-          key: 'branch',
-          label: l10n.adminFieldBranchOptional,
-        ),
-        AdminConfigField(
-          key: 'webhookSecret',
-          label: l10n.adminFieldWebhookSecret,
-          isSecret: true,
-        ),
-      ];
-    }
-    if (lowerId.contains('bitbucket')) {
-      return [
-        AdminConfigField(key: 'username', label: 'Username'),
-        AdminConfigField(
-          key: 'apiToken',
-          label: 'App password / API token',
-          isSecret: true,
-        ),
-        AdminConfigField(key: 'workspace', label: 'Workspace'),
-        AdminConfigField(
-          key: 'repos',
-          label: l10n.adminFieldRepositoriesOnePerLine,
-        ),
-        AdminConfigField(
-          key: 'webhookSecret',
-          label: l10n.adminFieldWebhookSecret,
-          isSecret: true,
-        ),
-      ];
-    }
-    return [
-      AdminConfigField(
-        key: 'token',
-        label: l10n.adminFieldApiTokenOrSecret,
-        isSecret: true,
-      ),
-    ];
   }
 
-  Map<String, dynamic> _buildSettings(ProviderConfig config) {
+  Map<String, dynamic> _buildSettings(
+    ProviderConfig config,
+    Map<String, String> systemSettings,
+  ) {
     final Map<String, dynamic> settings = Map.from(config.settings);
-    settings['ingestionMode'] = _ingestionMode;
-    settings['pollingRateSeconds'] = int.tryParse(_pollingRateController.text) ?? 60;
-    
+    settings['pollingRateSeconds'] =
+        int.tryParse(_pollingRateController.text) ?? 60;
+
     _controllers.forEach((key, controller) {
       final value = controller.text.trim();
       if (key == 'repos' || key == 'channels' || key == 'projects') {
@@ -900,6 +636,14 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       } else if (key == 'webhookHmacKey' && value.isEmpty) {
         settings.remove('webhookHmacKey');
         settings.remove('webhook_hmac_key');
+      } else if (key == 'webhookUrl') {
+        final defaultUrl = _buildWebhookUrl(config.id, systemSettings);
+        if (value.isEmpty || value == defaultUrl) {
+          settings.remove('webhookUrl');
+          settings.remove('webhook_url');
+        } else {
+          settings['webhookUrl'] = value;
+        }
       } else {
         settings[key] = value;
       }

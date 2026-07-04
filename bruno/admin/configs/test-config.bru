@@ -9,7 +9,10 @@ docs {
   
   **Request Body**: Identical to `Save Provider Config`.
   
-  Returns a status message indicating whether the connection was successful.
+  Returns a structured connectivity report with Core, Live, and Polling section results.
+  Live green requires a successful ingest recorded in Redis within the last 7 days (Discord also requires an active Gateway session).
+  When no recent ingest exists, Try runs an internal webhook test delivery (validates Live signing secrets) and records success in Redis.
+  The aggregate status is derived from Live + Polling only: both success → `success`, one success → `warning`, neither → `failure`.
   
   ### Database Mapping
   | Action | DB Table | Role |
@@ -44,7 +47,11 @@ tests {
 
   test("Connectivity report is returned", function() {
     expect(res.body.data).to.be.an("object");
-    expect(res.body.data).to.have.property("status");
-    expect(res.body.data).to.have.property("message");
+    expect(res.body.data).to.have.property("aggregate");
+    expect(res.body.data).to.have.property("summaryMessage");
+    expect(res.body.data).to.have.property("sections");
+    expect(res.body.data.sections).to.have.property("core");
+    expect(res.body.data.sections).to.have.property("live");
+    expect(res.body.data.sections).to.have.property("polling");
   });
 }

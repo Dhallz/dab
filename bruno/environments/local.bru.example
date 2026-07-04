@@ -13,6 +13,9 @@ vars {
   targetProviderId: phorge
   targetProviderUrl: https://phabricator.example.com
   targetProviderToken: cli-YOURTOKEN
+  githubSearchStartDate: 2026-06-01
+  githubSearchEndDate: 2026-06-30
+  githubSearchAuthoredOnly: false
 }
 
 vars:secret [

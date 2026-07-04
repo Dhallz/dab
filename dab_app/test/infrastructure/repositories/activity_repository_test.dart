@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
+import 'package:dab_app/domain/entities/activity/explorer_cache_clear_request.dart';
 import 'package:dab_app/infrastructure/datasources/activity_local_data_source.dart';
 import 'package:dab_app/infrastructure/datasources/activity_remote_data_source.dart';
 import 'package:dab_app/infrastructure/repositories/activity_repository.dart';
@@ -53,6 +54,20 @@ void main() {
         orgTimezoneId: any(named: 'orgTimezoneId'),
       ),
     ).thenAnswer((_) async {});
+    when(
+      () => mockLocalDataSource.clearExplorerCache(request: any(named: 'request')),
+    ).thenAnswer(
+      (_) async => const ExplorerCacheClearResult(
+        removedActivities: 0,
+        removedCoverageRecords: 0,
+      ),
+    );
+    when(() => mockLocalDataSource.clearExplorerCache()).thenAnswer(
+      (_) async => const ExplorerCacheClearResult(
+        removedActivities: 0,
+        removedCoverageRecords: 0,
+      ),
+    );
   });
 
   group('searchActivities', () {
@@ -182,5 +197,120 @@ void main() {
         )).called(1);
       },
     );
+
+    test(
+      'past backfill upserts unfiltered API rows when display filters are narrower',
+      () async {
+        final slackActivity = Activity(
+          id: 'past-slack',
+          userId: 'u1',
+          provider: const SlackMessageProvider(channelId: 'C123'),
+          title: 'Slack',
+          content: 'Message',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 2, 10),
+        );
+        final githubActivity = Activity(
+          id: 'past-github',
+          userId: 'u1',
+          provider: const GitHubCommitProvider(repo: 'dab'),
+          title: 'Commit',
+          content: 'Fix cache',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 2, 11),
+        );
+        final response = Response(
+          requestOptions: RequestOptions(path: '/activities/search'),
+          statusCode: 200,
+          data: {
+            'data': [slackActivity.toMap(), githubActivity.toMap()],
+          },
+        );
+
+        when(
+          () => mockDataSource.searchActivities(any()),
+        ).thenAnswer((_) async => response);
+
+        final capturedUpserts = <List<Activity>>[];
+        when(
+          () => mockLocalDataSource.upsertActivities(
+            any(),
+            orgTimezoneId: any(named: 'orgTimezoneId'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedUpserts.add(
+            List<Activity>.from(invocation.positionalArguments.first as List),
+          );
+        });
+
+        when(() => mockLocalDataSource.searchActivities(any())).thenAnswer(
+          (_) async => [slackActivity],
+        );
+
+        final query = ActivitySearchQuery(
+          startDate: DateTime.utc(2026, 1, 2),
+          endDate: DateTime.utc(2026, 1, 2),
+          users: const ['u1'],
+          providers: const {'slack'},
+          coverageProviders: const {'slack', 'github'},
+        );
+
+        final result = await repository.searchActivities(query);
+
+        result.fold(
+          (failure) => fail('Expected success but got failure: $failure'),
+          (activities) => expect(activities.map((a) => a.id), ['past-slack']),
+        );
+
+        expect(capturedUpserts, hasLength(1));
+        expect(
+          capturedUpserts.single.map((activity) => activity.id).toSet(),
+          {'past-slack', 'past-github'},
+        );
+      },
+    );
+  });
+
+  group('clearExplorerCache', () {
+    test('delegates full clear when request is omitted', () async {
+      when(() => mockLocalDataSource.clearExplorerCache()).thenAnswer(
+        (_) async => const ExplorerCacheClearResult(
+          removedActivities: 4,
+          removedCoverageRecords: 2,
+        ),
+      );
+
+      final result = await repository.clearExplorerCache();
+
+      expect(result.isRight(), isTrue);
+      expect(result.getOrElse((_) => throw StateError('expected right')).totalRemoved, 6);
+      verify(() => mockLocalDataSource.clearExplorerCache()).called(1);
+    });
+
+    test('delegates scoped clear when request is provided', () async {
+      final request = ExplorerCacheClearRequest(
+        startDate: DateTime(2026, 7, 2),
+        endDate: DateTime(2026, 7, 2),
+        providerIds: {'github'},
+        orgTimezoneId: 'America/New_York',
+      );
+      when(
+        () => mockLocalDataSource.clearExplorerCache(request: request),
+      ).thenAnswer(
+        (_) async => const ExplorerCacheClearResult(
+          removedActivities: 1,
+          removedCoverageRecords: 1,
+        ),
+      );
+
+      final result = await repository.clearExplorerCache(request: request);
+
+      expect(result.isRight(), isTrue);
+      verify(
+        () => mockLocalDataSource.clearExplorerCache(request: request),
+      ).called(1);
+    });
   });
 }

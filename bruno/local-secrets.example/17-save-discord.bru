@@ -1,0 +1,44 @@
+meta {
+  name: 17 Save Discord
+  type: http
+  seq: 17
+}
+
+docs {
+  Restores **Discord** provider config.
+
+  Settings:
+  - Core: `botToken`, `guildId`
+  - Polling: newline `channels` (numeric channel IDs)
+
+  **No HTTP webhook** — Discord live ingest uses the Gateway bot (no URL to configure).
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "discord",
+    "name": "Discord",
+    "baseUrl": "https://discord.com",
+    "isActive": true,
+    "settings": {
+      "botToken": "{{discordBotToken}}",
+      "guildId": "{{discordGuildId}}",
+      "channels": "{{discordChannels}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns discord config", function() {
+    expect(res.body.data.id).to.equal("discord");
+  });
+}

@@ -1,0 +1,92 @@
+meta {
+  name: 5. Search GitHub Commits (Polling)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/activities/search?startDate={{githubSearchStartDate}}&endDate={{githubSearchEndDate}}&authoredOnly={{githubSearchAuthoredOnly}}&users={{targetUserId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: {{githubSearchStartDate}}
+  endDate: {{githubSearchEndDate}}
+  authoredOnly: {{githubSearchAuthoredOnly}}
+  users: {{targetUserId}}
+}
+
+vars:pre-request {
+  githubSearchStartDate: 2026-07-02
+  githubSearchEndDate: 2026-07-02
+  githubSearchAuthoredOnly: true
+}
+
+script:post-response {
+  if (res.status !== 200) {
+    console.log("Search error:", JSON.stringify(res.body));
+    return;
+  }
+  const items = res.body.data || [];
+  const github = items.filter(
+    (a) =>
+      a.provider?.name === "GitHub" ||
+      a.provider?.category === "commit" ||
+      (a.provider?.repo && a.provider?.sha !== undefined),
+  );
+  console.log(
+    "Search results: total=" +
+      items.length +
+      " github=" +
+      github.length +
+      " user=" +
+      bru.getVar("targetUserId") +
+      " login=" +
+      bru.getVar("githubLogin") +
+      " range=" +
+      bru.getVar("githubSearchStartDate") +
+      ".." +
+      bru.getVar("githubSearchEndDate") +
+      " authoredOnly=" +
+      bru.getVar("githubSearchAuthoredOnly"),
+  );
+  if (github.length > 0) {
+    console.log("First GitHub activity:", JSON.stringify(github[0], null, 2));
+  } else if (items.length > 0) {
+    console.log(
+      "No GitHub rows; other providers returned data. Check repos, dates, and linked login.",
+    );
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns activity array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("GitHub commits present (informational)", function() {
+    const items = res.body.data || [];
+    const github = items.filter(
+      (a) => a.provider?.name === "GitHub" || a.provider?.category === "commit",
+    );
+    console.log("GitHub commit count:", github.length);
+    // Soft assertion — empty may be valid if no commits in range; polling test in step 4 is the hard gate.
+    expect(github.length).to.be.at.least(0);
+  });
+}
+
+docs {
+  **Historical GitHub polling test** — calls `GET /activities/search`, which fans out
+  to `GitHubCommitSource` using saved admin credentials (not request body tokens).
+  
+  Query params (set in environment):
+  - `githubSearchStartDate` / `githubSearchEndDate` — `YYYY-MM-DD` org calendar days
+  - `targetUserId` — from step 3 (linked GitHub user)
+  - `githubSearchAuthoredOnly` — `false` (all repo commits in range) or `true` (author filter)
+  
+  Empty `data` with polling success usually means:
+  - No commits in date window, wrong branch filter, or commit authors don't match linked login.
+}

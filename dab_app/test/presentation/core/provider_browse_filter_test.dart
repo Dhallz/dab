@@ -35,4 +35,12 @@ void main() {
 
     expect(result.map((config) => config.id), ['slack']);
   });
+
+  test('excludes providers with warning aggregate status', () {
+    final result = browsableProviderConfigs([slack], {
+      'slack': const ProviderConnectionStatus(status: ViewStatus.warning),
+    });
+
+    expect(result, isEmpty);
+  });
 }

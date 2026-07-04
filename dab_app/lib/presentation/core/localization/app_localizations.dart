@@ -490,6 +490,88 @@ abstract class AppLocalizations {
   /// **'About'**
   String get settingsSectionAbout;
 
+  /// settingsSectionExplorerCache: Explorer cache section title
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer cache'**
+  String get settingsSectionExplorerCache;
+
+  /// settingsExplorerCacheDescription: Helper text for Explorer cache controls
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cached Explorer activities for selected providers and dates. The next browse refetches from provider APIs.'**
+  String get settingsExplorerCacheDescription;
+
+  /// settingsExplorerCacheDateRange: Date range label
+  ///
+  /// In en, this message translates to:
+  /// **'Date range'**
+  String get settingsExplorerCacheDateRange;
+
+  /// settingsExplorerCacheProviders: Provider checklist label
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get settingsExplorerCacheProviders;
+
+  /// settingsExplorerCacheSelectAll: Select all providers action
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get settingsExplorerCacheSelectAll;
+
+  /// settingsExplorerCacheClearSelection: Clear provider selection action
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get settingsExplorerCacheClearSelection;
+
+  /// settingsExplorerCacheClearButton: Clear cache button label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cache'**
+  String get settingsExplorerCacheClearButton;
+
+  /// settingsExplorerCacheConfirmTitle: Confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Explorer cache?'**
+  String get settingsExplorerCacheConfirmTitle;
+
+  /// settingsExplorerCacheConfirmMessage: Confirmation dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cached Explorer data from {startDate} through {endDate} for: {providers}.'**
+  String settingsExplorerCacheConfirmMessage(
+    String startDate,
+    String endDate,
+    String providers,
+  );
+
+  /// settingsExplorerCacheSuccess: Snackbar after successful clear
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared {count} cached Explorer entries.'**
+  String settingsExplorerCacheSuccess(int count);
+
+  /// settingsExplorerCacheFailure: Snackbar when clear fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to clear Explorer cache.'**
+  String get settingsExplorerCacheFailure;
+
+  /// settingsExplorerCacheNoProviders: Empty state when no providers
+  ///
+  /// In en, this message translates to:
+  /// **'No active providers are configured.'**
+  String get settingsExplorerCacheNoProviders;
+
+  /// settingsExplorerCacheSelectProvider: Validation when none selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one provider.'**
+  String get settingsExplorerCacheSelectProvider;
+
   /// settingsThemeLight: Light
   ///
   /// In en, this message translates to:
@@ -1347,6 +1429,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Webhook Secret'**
   String get adminFieldWebhookSecret;
+
+  /// adminFieldWebhookEndpointUrl: Webhook Endpoint URL
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook Endpoint URL'**
+  String get adminFieldWebhookEndpointUrl;
+
+  /// adminFieldWebhookEndpointUrlHint: Helper under webhook endpoint field
+  ///
+  /// In en, this message translates to:
+  /// **'Default: {defaultUrl}. Edit to expose a different public URL for this provider.'**
+  String adminFieldWebhookEndpointUrlHint(String defaultUrl);
 
   /// adminFieldRepositoryOwner: Repository Owner
   ///

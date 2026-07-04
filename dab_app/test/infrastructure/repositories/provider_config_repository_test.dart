@@ -17,6 +17,7 @@ void main() {
   setUp(() {
     mockDataSource = MockProviderConfigRemoteDataSource();
     repository = ProviderConfigRepository(mockDataSource);
+    registerFallbackValue(<String, dynamic>{});
   });
 
   group('getProviderConfigs', () {
@@ -95,6 +96,56 @@ void main() {
 
       // assert
       expect(result.isLeft(), true);
+    });
+  });
+
+  group('testProviderConfig', () {
+    test('parses structured connectivity report from API envelope', () async {
+      final response = Response(
+        data: {
+          'data': {
+            'aggregate': 'warning',
+            'summaryMessage': 'Polling verified; live needs attention',
+            'sections': {
+              'core': {
+                'status': 'success',
+                'message': 'Connected as dhallz',
+              },
+              'live': {
+                'status': 'failure',
+                'message': 'No live event received in the last 7 days',
+              },
+              'polling': {
+                'status': 'success',
+                'message': 'Commits API OK',
+              },
+            },
+          },
+        },
+        requestOptions: RequestOptions(path: ''),
+        statusCode: 200,
+      );
+
+      when(() => mockDataSource.testProviderConfig(any())).thenAnswer(
+        (_) async => response,
+      );
+
+      final result = await repository.testProviderConfig(
+        const ProviderConfig(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.com',
+          isActive: true,
+        ),
+      );
+
+      result.fold((failure) => fail('Should not fail: $failure'), (report) {
+        expect(report.aggregate.name, 'warning');
+        expect(report.summaryMessage, contains('live needs attention'));
+        expect(report.core.status.name, 'success');
+        expect(report.live.status.name, 'failure');
+        expect(report.polling.status.name, 'success');
+      });
     });
   });
 }

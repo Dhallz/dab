@@ -9,6 +9,9 @@ import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
 import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
+import 'package:dab_api/src/application/services/provider_config_connectivity_service.dart';
+import 'package:dab_api/src/application/services/provider_live_connectivity_checker.dart';
+import 'package:dab_api/src/application/services/provider_live_webhook_test_service.dart';
 import 'package:dab_api/src/application/services/register_activity_connectors.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 // application / usecases
@@ -49,6 +52,7 @@ import 'package:dab_api/src/application/usecases/metadata/get_provider_configs.d
 import 'package:dab_api/src/application/usecases/metadata/get_provider_metadata.dart';
 import 'package:dab_api/src/application/usecases/metadata/get_system_status.dart';
 import 'package:dab_api/src/application/usecases/metadata/save_provider_config.dart';
+import 'package:dab_api/src/application/usecases/metadata/test_provider_config.dart';
 import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
 import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
@@ -506,6 +510,32 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<SaveSystemSettings>(
     SaveSystemSettings(sl<ISystemSettingsRepository>()),
   );
+  sl.registerSingleton<ProviderLiveConnectivityChecker>(
+    ProviderLiveConnectivityChecker(
+      sl<RedisService>(),
+      sl<DiscordGatewayService>(),
+    ),
+  );
+  sl.registerSingleton<ProviderLiveWebhookTestService>(
+    ProviderLiveWebhookTestService(
+      sl<RedisService>(),
+      sl<DiscordGatewayService>(),
+      sl<GitHubWebhookVerifier>(),
+      sl<SlackRequestVerifier>(),
+      sl<LinearWebhookVerifier>(),
+      sl<PhorgeWebhookVerifier>(),
+      sl<SharedSecretVerifier>(),
+    ),
+  );
+  sl.registerSingleton<ProviderConfigConnectivityService>(
+    ProviderConfigConnectivityService(
+      sl<ProviderLiveConnectivityChecker>(),
+      sl<ProviderLiveWebhookTestService>(),
+    ),
+  );
+  sl.registerSingleton<TestProviderConfig>(
+    TestProviderConfig(sl<ProviderConfigConnectivityService>()),
+  );
 
   // Health
   sl.registerSingleton<CheckDatabaseHealth>(
@@ -581,6 +611,7 @@ Future<void> serviceLocator() async {
       saveProviderConfig: sl<SaveProviderConfig>(),
       getSystemSettings: sl<GetSystemSettings>(),
       saveSystemSettings: sl<SaveSystemSettings>(),
+      testProviderConfig: sl<TestProviderConfig>(),
     ),
   );
 

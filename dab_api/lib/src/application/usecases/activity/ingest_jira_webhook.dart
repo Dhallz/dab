@@ -232,6 +232,7 @@ class IngestJiraWebhook {
         JiraWebhookIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('jira');
     return const Right(JiraWebhookIngestionResult.ingested());
   }
 

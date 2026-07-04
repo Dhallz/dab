@@ -34,6 +34,14 @@ components:
         avatarUrl:
           type: string
           nullable: true
+    ProviderConnectivitySection:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, warning, failure]
+        message:
+          type: string
 
 paths:
   /auth/register:
@@ -1219,6 +1227,16 @@ paths:
       summary: Test provider connectivity.
       description: |
         Verifies connection to a provider without saving the config. Requires admin privileges.
+        Returns a structured report with **Core**, **Live**, and **Polling** section results.
+
+        - **Core**: API credentials and base configuration (auth probe).
+        - **Live**: Strict external signal — last successful webhook/event ingest recorded in Redis within **7 days** (`live:last_ingest:{providerId}`). If none exists, Admin **Try** runs an internal webhook test delivery (validates signing secrets) and records the same key. Discord uses Gateway connection plus recent ingest or gateway test on Try.
+        - **Polling**: Read-only polling probe (commits, channel history, JQL, etc.).
+
+        **Aggregate** (main Admin card light) is derived from Live + Polling only:
+        both success → `success`; exactly one success → `warning`; neither → `failure`.
+        Core has its own section light but does not change the aggregate color.
+
         Slack configs are validated with `auth.test` and support `settings.botToken`
         (plus optional `settings.apiBaseUrl`).
       security:
@@ -1240,12 +1258,22 @@ paths:
                   data:
                     type: object
                     properties:
-                      status:
+                      aggregate:
                         type: string
-                        example: connected
-                      message:
+                        enum: [success, warning, failure]
+                        example: success
+                      summaryMessage:
                         type: string
-                        example: Successfully connected as account-name
+                        example: Live and polling verified
+                      sections:
+                        type: object
+                        properties:
+                          core:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
+                          live:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
+                          polling:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
   /admin/system-settings:
     get:
       summary: Retrieve system configuration settings.

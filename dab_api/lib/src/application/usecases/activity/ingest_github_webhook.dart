@@ -296,6 +296,7 @@ class IngestGitHubWebhook {
         GitHubWebhookIngestionResult.ignored('no_eligible_commits'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('github');
     return const Right(GitHubWebhookIngestionResult.ingested());
   }
 

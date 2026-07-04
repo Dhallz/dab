@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures.dart';
 import '../../../domain/core/org_calendar.dart';
+import '../../../domain/entities/activity/explorer_cache_clear_request.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_category.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
@@ -91,8 +92,10 @@ class ActivityRepository extends Repository implements IActivityRepository {
       final normalizedQuery = _normalizeQuery(query);
 
       if (!_isPastDateWindow(normalizedQuery)) {
-        final remoteActivities = await _fetchRemoteActivities(normalizedQuery);
-        return _filterAndSortByQuery(remoteActivities, normalizedQuery);
+        final mappedActivities = await _fetchRemoteMappedActivities(
+          normalizedQuery,
+        );
+        return _filterAndSortByQuery(mappedActivities, normalizedQuery);
       }
 
       final localActivities = await _localDataSource.searchActivities(
@@ -103,9 +106,12 @@ class ActivityRepository extends Repository implements IActivityRepository {
       );
       if (missingCoverageKeys.isEmpty) return localActivities;
 
-      final remoteActivities = await _fetchRemoteActivities(normalizedQuery);
+      // Store the full API payload; provider/category filters apply on local read.
+      final mappedActivities = await _fetchRemoteMappedActivities(
+        normalizedQuery,
+      );
       await _localDataSource.upsertActivities(
-        remoteActivities,
+        mappedActivities,
         orgTimezoneId: normalizedQuery.orgTimezoneId,
       );
       await _localDataSource.markCoverage(
@@ -198,13 +204,12 @@ class ActivityRepository extends Repository implements IActivityRepository {
     return activities;
   }
 
-  Future<List<Activity>> _fetchRemoteActivities(
+  Future<List<Activity>> _fetchRemoteMappedActivities(
     ActivitySearchQuery query,
   ) async {
     final response = await _remoteDataSource.searchActivities(query);
     final List<dynamic> jsonList = _getEnvelopeData(response);
-    final mapped = _mapAndNormalizeActivities(jsonList);
-    return _filterAndSortByQuery(mapped, query);
+    return _mapAndNormalizeActivities(jsonList);
   }
 
   List<Activity> _filterAndSortByQuery(
@@ -231,9 +236,11 @@ class ActivityRepository extends Repository implements IActivityRepository {
   }
 
   @override
-  Future<Either<AppFailure, void>> clearExplorerCache() {
+  Future<Either<AppFailure, ExplorerCacheClearResult>> clearExplorerCache({
+    ExplorerCacheClearRequest? request,
+  }) {
     return guardedCall(() async {
-      await _localDataSource.clearExplorerCache();
+      return _localDataSource.clearExplorerCache(request: request);
     });
   }
 

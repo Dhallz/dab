@@ -132,10 +132,9 @@ class AppNotifier extends Notifier<AppState> {
               lastCheck: DateTime.now(),
             );
           },
-          (message) {
-            statuses[config.id] = ProviderConnectionStatus(
-              status: ViewStatus.success,
-              message: message,
+          (report) {
+            statuses[config.id] = ProviderConnectionStatus.fromReport(
+              report,
               lastCheck: DateTime.now(),
             );
           },

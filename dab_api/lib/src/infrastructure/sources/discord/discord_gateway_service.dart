@@ -44,6 +44,9 @@ class DiscordGatewayService {
   /// Whether a Gateway session is currently desired (config active + token).
   bool get isRunning => _running;
 
+  /// Whether the Gateway WebSocket is currently connected.
+  bool get isConnected => _channel != null;
+
   /// Starts the Gateway session when the Discord provider is active and has
   /// a bot token; no-op otherwise.
   Future<void> start() async {

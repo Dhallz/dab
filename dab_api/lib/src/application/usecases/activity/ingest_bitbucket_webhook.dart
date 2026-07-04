@@ -177,6 +177,7 @@ class IngestBitbucketWebhook {
         BitbucketWebhookIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('bitbucket');
     return const Right(BitbucketWebhookIngestionResult.ingested());
   }
 

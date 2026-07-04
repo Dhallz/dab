@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
+import '../../../../domain/entities/provider/provider_connectivity_report.dart';
 import '../../../../domain/entities/system/app_settings.dart';
 import '../../../../domain/entities/user/user_identity_status.dart';
 import '../../../../domain/entities/user/user_role.dart';
@@ -135,8 +136,12 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
           ViewStatus.failure,
           message: failure.message,
         ),
-        (message) =>
-            _updateStatus(providerId, ViewStatus.success, message: message),
+        (report) => _updateStatus(
+          providerId,
+          report.aggregate,
+          message: report.summaryMessage,
+          report: report,
+        ),
       );
     } catch (e) {
       _updateStatus(
@@ -152,12 +157,22 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     }
   }
 
-  void _updateStatus(String providerId, ViewStatus status, {String? message}) {
-    final connectionStatus = ProviderConnectionStatus(
-      status: status,
-      message: message,
-      lastCheck: DateTime.now(),
-    );
+  void _updateStatus(
+    String providerId,
+    ViewStatus status, {
+    String? message,
+    ProviderConnectivityReport? report,
+  }) {
+    final connectionStatus = report != null
+        ? ProviderConnectionStatus.fromReport(
+            report,
+            lastCheck: DateTime.now(),
+          )
+        : ProviderConnectionStatus(
+            status: status,
+            message: message,
+            lastCheck: DateTime.now(),
+          );
     final updatedStatuses = Map<String, ProviderConnectionStatus>.from(
       state.connectionStatuses,
     );
@@ -387,8 +402,12 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
             ViewStatus.failure,
             message: failure.message,
           ),
-          (message) =>
-              _updateStatus(config.id, ViewStatus.success, message: message),
+          (report) => _updateStatus(
+            config.id,
+            report.aggregate,
+            message: report.summaryMessage,
+            report: report,
+          ),
         );
       } catch (e) {
         _updateStatus(

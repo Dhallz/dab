@@ -1,0 +1,57 @@
+meta {
+  name: 6. Search GitHub (authoredOnly=true)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/activities/search?startDate={{githubSearchStartDate}}&endDate={{githubSearchEndDate}}&authoredOnly=false&users={{targetUserId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: {{githubSearchStartDate}}
+  endDate: {{githubSearchEndDate}}
+  authoredOnly: false
+  users: {{targetUserId}}
+}
+
+vars:pre-request {
+  githubSearchStartDate: 2026-07-02
+  githubSearchEndDate: 2026-07-02
+}
+
+script:post-response {
+  if (res.status !== 200) return;
+  const items = res.body.data || [];
+  const github = items.filter(
+    (a) => a.provider?.name === "GitHub" || a.provider?.category === "commit",
+  );
+  console.log(
+    "authoredOnly=true: total=" +
+      items.length +
+      " github=" +
+      github.length +
+      " login=" +
+      bru.getVar("githubLogin"),
+  );
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns activity array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}
+
+docs {
+  Same as step 5 but with `authoredOnly=true` (Explorer default).
+  GitHub adds `author=<githubLogin>` per linked identity when polling.
+  
+  Compare results with step 5:
+  - Step 5 empty, step 6 empty → likely no commits or mapping issue
+  - Step 5 has data, step 6 empty → commits exist but not by linked GitHub login
+}

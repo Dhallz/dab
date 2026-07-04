@@ -1,0 +1,36 @@
+meta {
+  name: 20 Link GitHub Identity
+  type: http
+  seq: 20
+}
+
+docs {
+  Links a DAB user to a GitHub account for polling/search attribution.
+
+  Requires:
+  - `targetUserId` — DAB user UUID (set by 03 or register)
+  - `githubExternalUsername` — GitHub login stored as `external_id`
+
+  Skip if you do not use GitHub or identities are discovered another way.
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "github",
+    "externalId": "{{githubExternalUsername}}",
+    "externalUsername": "{{githubExternalUsername}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

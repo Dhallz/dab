@@ -1,0 +1,53 @@
+meta {
+  name: 14 Save Jira
+  type: http
+  seq: 14
+}
+
+docs {
+  Restores **Jira Cloud** provider config.
+
+  Settings:
+  - Core: `apiToken`, `email`, `instanceUrl` (site base URL)
+  - Live: `webhookSecret`
+  - Polling: newline `projectKeys`
+
+  **Webhook URL** (Jira → System → Webhooks):
+  `{{jiraWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "jira",
+    "name": "Jira",
+    "baseUrl": "{{jiraInstanceUrl}}",
+    "isActive": true,
+    "settings": {
+      "apiToken": "{{jiraApiToken}}",
+      "email": "{{jiraEmail}}",
+      "instanceUrl": "{{jiraInstanceUrl}}",
+      "webhookSecret": "{{jiraWebhookSecret}}",
+      "projectKeys": "{{jiraProjectKeys}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("jiraWebhookUrl") || bru.getEnvVar("jiraWebhookUrl");
+  if (url) console.log("Jira webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns jira config", function() {
+    expect(res.body.data.id).to.equal("jira");
+  });
+}

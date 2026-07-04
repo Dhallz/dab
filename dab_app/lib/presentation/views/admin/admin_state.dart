@@ -137,6 +137,9 @@ extension OnAdminState on AdminState {
       case ViewStatus.failure:
         failed++;
         break;
+      case ViewStatus.warning:
+        unknown++;
+        break;
       default:
         unknown++;
         break;

@@ -17,5 +17,7 @@ String? splashDestinationPath(AuthState auth) {
       return auth.isAuthenticated
           ? AppRoute.homeDashboard.path
           : AppRoute.auth.path;
+    case ViewStatus.warning:
+      return null;
   }
 }

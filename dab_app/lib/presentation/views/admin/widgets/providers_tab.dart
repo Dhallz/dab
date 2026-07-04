@@ -17,7 +17,8 @@ List<ProviderConfig> _sortedProviderConfigs(
     if (!c.isActive) return 0;
     final st = state.connectionStatuses[c.id]?.status;
     if (st == ViewStatus.success) return 2;
-    return 1;
+    if (st == ViewStatus.warning) return 1;
+    return 0;
   }
 
   final list = List<ProviderConfig>.from(configs);

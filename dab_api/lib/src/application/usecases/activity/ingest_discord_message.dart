@@ -158,6 +158,7 @@ class IngestDiscordMessage {
         DiscordMessageIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('discord');
     return const Right(DiscordMessageIngestionResult.ingested());
   }
 

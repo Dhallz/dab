@@ -381,6 +381,28 @@ class RedisService {
     return result != null;
   }
 
+  static const Duration liveIngestSuccessTtl = Duration(days: 7);
+
+  /// Records a successful live-ingestion event for [providerId] (webhook or gateway).
+  Future<void> recordLiveIngestSuccess(String providerId) async {
+    final key = 'live:last_ingest:${providerId.trim().toLowerCase()}';
+    await _cmd.send_object([
+      'SET',
+      key,
+      DateTime.now().toUtc().toIso8601String(),
+      'EX',
+      liveIngestSuccessTtl.inSeconds,
+    ]);
+  }
+
+  /// Returns the last successful live-ingestion instant for [providerId], if any.
+  Future<DateTime?> getLiveIngestLastSuccess(String providerId) async {
+    final key = 'live:last_ingest:${providerId.trim().toLowerCase()}';
+    final raw = await _cmd.send_object(['GET', key]);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString())?.toUtc();
+  }
+
   /// --- HELPERS ---
 
   String _encodeActivity(Activity activity) {

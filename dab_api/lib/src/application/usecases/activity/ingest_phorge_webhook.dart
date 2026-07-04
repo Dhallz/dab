@@ -190,6 +190,7 @@ class IngestPhorgeWebhook {
         PhorgeWebhookIngestionResult.ignored('duplicate_activity'),
       );
     }
+    await _redisService.recordLiveIngestSuccess('phorge');
     return const Right(PhorgeWebhookIngestionResult.ingested());
   }
 

@@ -1,0 +1,319 @@
+meta {
+  name: 7. Probe GitHub API Direct
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{githubApiBaseUrl}}/repos/{{githubProbeOwner}}/{{githubProbeRepo}}/commits?sha={{githubProbeBranch}}&since={{githubProbeSince}}&until={{githubProbeUntil}}&author={{githubProbeAuthor}}&per_page=100
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/vnd.github+json
+  Authorization: Bearer {{githubProbeToken}}
+  User-Agent: dab-bruno
+  X-GitHub-Api-Version: 2022-11-28
+}
+
+vars:pre-request {
+  githubSearchStartDate: 2026-07-02
+  githubSearchEndDate: 2026-07-02
+  githubProbeIncludeAuthor: true
+}
+
+script:pre-request {
+  function normalizeApiBase(raw) {
+    const trimmed = String(raw || "https://api.github.com").trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed.replace(/\/+$/, "");
+    }
+    return `https://${trimmed.replace(/\/+$/, "")}`;
+  }
+
+  function isUsableToken(value) {
+    const token = String(value || "").trim();
+    if (!token) return false;
+    if (token === "(set)" || token === "(missing)") return false;
+    return true;
+  }
+
+  function tokenFromConfigPayload() {
+    const raw = bru.getVar("githubConfigPayload");
+    if (!raw) return "";
+    try {
+      const cfg = JSON.parse(raw);
+      const settings = cfg.settings || {};
+      return String(settings["api.token"] || settings.token || "").trim();
+    } catch (_) {
+      return "";
+    }
+  }
+
+  const startDate =
+    bru.getEnvVar("githubSearchStartDate") ||
+    bru.getVar("githubSearchStartDate") ||
+    "2026-07-02";
+  const endDate =
+    bru.getEnvVar("githubSearchEndDate") ||
+    bru.getVar("githubSearchEndDate") ||
+    startDate;
+  const tzId =
+    bru.getEnvVar("systemTimezone") ||
+    bru.getVar("systemTimezone") ||
+    "America/New_York";
+  const includeAuthor =
+    String(
+      bru.getEnvVar("githubProbeIncludeAuthor") ??
+        bru.getVar("githubProbeIncludeAuthor") ??
+        "true",
+    ).toLowerCase() !== "false";
+  
+  function orgDayRangeUtcIso(start, end, timezone) {
+    const directSince = bru.getEnvVar("githubDirectSince");
+    const directUntil = bru.getEnvVar("githubDirectUntil");
+    if (directSince && directUntil) {
+      return { since: directSince, until: directUntil };
+    }
+  
+    const offset =
+      timezone === "America/New_York"
+        ? "-04:00"
+        : timezone === "UTC"
+          ? "Z"
+          : null;
+    if (offset === null) {
+      console.warn(
+        "Unsupported systemTimezone '" +
+          timezone +
+          "'. Set githubDirectSince/githubDirectUntil in env, or use America/New_York / UTC.",
+      );
+    }
+  
+    const suffix = offset === "Z" ? "Z" : offset;
+    const sinceLocal =
+      start.includes("T") || start.includes("Z")
+        ? start
+        : `${start}T00:00:00${suffix}`;
+    const endParts = end.split("-").map((p) => parseInt(p, 10));
+    const nextLocal = new Date(
+      Date.UTC(endParts[0], endParts[1] - 1, endParts[2] + 1),
+    );
+    const untilY = nextLocal.getUTCFullYear();
+    const untilM = String(nextLocal.getUTCMonth() + 1).padStart(2, "0");
+    const untilD = String(nextLocal.getUTCDate()).padStart(2, "0");
+    const untilLocal = `${untilY}-${untilM}-${untilD}T00:00:00${suffix}`;
+  
+    return {
+      since: new Date(sinceLocal).toISOString(),
+      until: new Date(untilLocal).toISOString(),
+    };
+  }
+  
+  let owner = bru.getEnvVar("githubOwner") || bru.getVar("githubOwner") || "";
+  let repo = bru.getEnvVar("githubRepo") || bru.getVar("githubRepo") || "";
+  let branch =
+    bru.getEnvVar("githubBranch") || bru.getVar("githubBranch") || "";
+
+  const envToken = String(
+    bru.getEnvVar("githubApiToken") || bru.getVar("githubApiToken") || "",
+  ).trim();
+  const configToken = tokenFromConfigPayload();
+  let token = "";
+  let tokenSource = "";
+  if (isUsableToken(envToken)) {
+    token = envToken;
+    tokenSource = "githubApiToken (environment)";
+  } else if (isUsableToken(configToken)) {
+    token = configToken;
+    tokenSource = "githubConfigPayload (step 2)";
+  }
+
+  const raw = bru.getVar("githubConfigPayload");
+  if (raw) {
+    try {
+      const cfg = JSON.parse(raw);
+      const settings = cfg.settings || {};
+      if (!owner && settings.owner) {
+        owner = String(settings.owner).trim();
+      }
+      if (!repo && settings.repo) {
+        repo = String(settings.repo).trim();
+      }
+      if (!branch && settings.branch) {
+        branch = String(settings.branch).trim();
+      }
+      const repos = settings.repos;
+      if ((!owner || !repo) && Array.isArray(repos) && repos.length > 0) {
+        const first = String(repos[0]).trim();
+        if (first.includes("/")) {
+          const parts = first.split("/");
+          owner = owner || parts[0];
+          repo = repo || parts[1];
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse githubConfigPayload:", e.message);
+    }
+  }
+
+  const author = String(
+    bru.getVar("githubLogin") ||
+      bru.getEnvVar("githubExternalUsername") ||
+      bru.getVar("githubExternalUsername") ||
+      "",
+  ).trim();
+
+  if (!token) {
+    throw new Error(
+      "GitHub PAT missing or invalid. Set githubApiToken in local-secrets.bru (real ghp_… or github_pat_… token), or run step 2 (Load GitHub Config) after saving GitHub in Admin.",
+    );
+  }
+  if (!owner || !repo) {
+    throw new Error(
+      "GitHub repo missing. Set githubOwner/githubRepo in env or run step 2 (Load GitHub Config).",
+    );
+  }
+  
+  const range = orgDayRangeUtcIso(startDate, endDate, tzId);
+  const apiBase = normalizeApiBase(
+    bru.getEnvVar("githubApiBaseUrl") || bru.getVar("githubApiBaseUrl"),
+  );
+
+  bru.setVar("githubApiBaseUrl", apiBase);
+  bru.setVar("githubProbeOwner", owner);
+  bru.setVar("githubProbeRepo", repo);
+  bru.setVar("githubProbeBranch", branch);
+  bru.setVar("githubProbeToken", token);
+  bru.setVar("githubProbeSince", range.since);
+  bru.setVar("githubProbeUntil", range.until);
+  bru.setVar(
+    "githubProbeAuthor",
+    includeAuthor && author ? author : "",
+  );
+
+  let url =
+    `${apiBase}/repos/${owner}/${repo}/commits` +
+    `?since=${encodeURIComponent(range.since)}` +
+    `&until=${encodeURIComponent(range.until)}` +
+    "&per_page=100";
+  if (branch) {
+    url += `&sha=${encodeURIComponent(branch)}`;
+  }
+  if (includeAuthor && author) {
+    url += `&author=${encodeURIComponent(author)}`;
+  }
+  req.setUrl(url);
+
+  console.log(
+    "GitHub direct probe: " +
+      owner +
+      "/" +
+      repo +
+      (branch ? " @" + branch : "") +
+      " since=" +
+      range.since +
+      " until=" +
+      range.until +
+      (includeAuthor && author ? " author=" + author : " (no author filter)") +
+      " tz=" +
+      tzId +
+      " token=" +
+      tokenSource,
+  );
+}
+
+script:post-response {
+  if (res.status === 401) {
+    console.error(
+      "GitHub 401 Bad credentials — the PAT is missing, revoked, or wrong. " +
+        "Set githubApiToken in local-secrets.bru to your real token (ghp_… or github_pat_…), " +
+        "or re-run 10 Save GitHub then step 2. Admin polling test (step 4) uses the same saved token server-side.",
+    );
+  }
+  if (res.status !== 200) {
+    console.error(
+      "GitHub API error " + res.status + ":",
+      typeof res.body === "string" ? res.body : JSON.stringify(res.body),
+    );
+    return;
+  }
+  
+  const commits = Array.isArray(res.body) ? res.body : [];
+  console.log("GitHub direct probe: commit count=" + commits.length);
+  
+  if (commits.length === 0) {
+    console.log(
+      "Empty array from GitHub. Try githubProbeIncludeAuthor=false, widen githubSearch* dates, or clear githubBranch in Admin.",
+    );
+    return;
+  }
+  
+  const first = commits[0];
+  const commitMeta = first.commit || {};
+  const commitAuthor = commitMeta.author || {};
+  const ghAuthor = first.author || {};
+  console.log(
+    "First commit: sha=" +
+      (first.sha || "?") +
+      " author.login=" +
+      (ghAuthor.login || "(null)") +
+      " author.date=" +
+      (commitAuthor.date || "?") +
+      " message=" +
+      String(commitMeta.message || "").split("\n")[0],
+  );
+  
+  if (commits.length > 1) {
+    console.log("Additional commits in range: " + (commits.length - 1));
+  }
+}
+
+tests {
+  test("GitHub API status 200", function() {
+    if (res.status !== 200) {
+      console.log("Body:", JSON.stringify(res.body));
+    }
+    expect(res.status).to.equal(200);
+  });
+  test("Returns commit array", function() {
+    expect(res.body).to.be.an("array");
+  });
+  test("Commit count logged (informational)", function() {
+    const count = Array.isArray(res.body) ? res.body.length : 0;
+    console.log("Direct GitHub commits in range:", count);
+    expect(count).to.be.at.least(0);
+  });
+}
+
+docs {
+  **Direct GitHub REST probe** — bypasses DAB and calls the same endpoint
+  `GitHubCommitSource` uses:
+  
+  ```text
+  GET /repos/{owner}/{repo}/commits?sha={branch}&since=…&until=…&author=…
+  ```
+  
+  **Prerequisites (run in order):**
+  1. Login (DAB token not used here)
+  2. Load GitHub Config — supplies `githubConfigPayload` (token, repos, branch)
+  3. Pick GitHub User — sets `githubLogin` for the `author` filter
+  
+  **Environment / vars:**
+  - `githubSearchStartDate` / `githubSearchEndDate` — org calendar days (`YYYY-MM-DD`), same as steps 5–6
+  - `systemTimezone` — used to convert calendar days to UTC `since`/`until` (default `America/New_York`; July uses EDT `-04:00`)
+  - Override with `githubDirectSince` / `githubDirectUntil` (full ISO UTC) when using other timezones
+  - `githubApiToken` — **required for this step** unless step 2 ran in the same session (token read from saved config). Must be a real PAT (`ghp_…` or `github_pat_…`), not a placeholder.
+  - `githubProbeIncludeAuthor` — `true` (default, mirrors Explorer) or `false` to drop `author=` param
+
+  **401 Bad credentials:** GitHub rejected the PAT. Update `githubApiToken` in `local-secrets.bru`, confirm step 4 (Test GitHub Polling) passes, then re-run this request.
+  
+  **How to interpret:**
+  | GitHub direct | DAB `/activities/search` | Likely cause |
+  |---|---|---|
+  | `[]` | `[]` | Branch, repo, or date window — not a DAB bug |
+  | data | `[]` | DAB identity / `targetUserId` / mapping |
+  | data with author | `[]` | Same — check linked identity and search `users=` |
+  | `[]` with author, data without | `[]` | Login filter — commits not attributed to linked login |
+}
