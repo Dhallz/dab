@@ -283,6 +283,26 @@ class UserRepository implements IUserRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> deleteIdentity(String identityId) async {
+    try {
+      final trimmed = identityId.trim();
+      if (trimmed.isEmpty) {
+        return left(ValidationFailure('identityId is required'));
+      }
+
+      final deleted = await (_db.delete(_db.userIdentitiesTable)
+            ..where((t) => t.id.equals(trimmed)))
+          .go();
+      if (deleted == 0) {
+        return left(NotFoundFailure('Identity not found: $trimmed'));
+      }
+      return right(null);
+    } catch (e) {
+      return left(DatabaseFailure('Failed to delete identity: $e'));
+    }
+  }
+
   UserIdentity _mapToIdentity(UserIdentitiesTableData row) {
     return UserIdentity(
       id: row.id,

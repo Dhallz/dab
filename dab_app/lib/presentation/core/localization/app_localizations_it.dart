@@ -622,6 +622,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get identityUpdateLink => 'Aggiorna collegamento';
 
   @override
+  String get identityDeleteLink => 'Delete Link';
+
+  @override
+  String get identityDeleteLinkConfirmTitle => 'Delete identity link?';
+
+  @override
+  String get identityDeleteLinkConfirmMessage =>
+      'Remove the link between this DAB user and the provider identity.';
+
+  @override
   String identityLinkAssociateUser(Object externalId) {
     return 'Associa $externalId a un account utente DAB.';
   }

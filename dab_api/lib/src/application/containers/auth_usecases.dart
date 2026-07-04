@@ -1,5 +1,6 @@
 import '../usecases/auth/count_unresolved_identities.dart';
 import '../usecases/auth/create_user_by_admin.dart';
+import '../usecases/auth/delete_user_identity.dart';
 import '../usecases/auth/get_all_identities.dart';
 import '../usecases/auth/authenticate_user.dart';
 import '../usecases/auth/find_all_users.dart';
@@ -26,6 +27,7 @@ class AuthUseCases {
   final FindAllUsers findAllUsers;
   final UpdateUserRole updateUserRole;
   final ResolveUserIdentity resolveUserIdentity;
+  final DeleteUserIdentity deleteUserIdentity;
 
   AuthUseCases({
     required this.authenticateUser,
@@ -41,5 +43,6 @@ class AuthUseCases {
     required this.findAllUsers,
     required this.updateUserRole,
     required this.resolveUserIdentity,
+    required this.deleteUserIdentity,
   });
 }

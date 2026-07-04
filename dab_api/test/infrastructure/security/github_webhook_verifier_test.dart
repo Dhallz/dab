@@ -60,5 +60,20 @@ void main() {
 
       expect(valid, isFalse);
     });
+
+    test('matches Atlassian Jira admin webhook test vector', () {
+      const body = 'Hello World!';
+      const secret = "It's a Secret to Everybody";
+      const signature =
+          'sha256=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9';
+
+      final valid = verifier.isValidSha256Signature(
+        body: body,
+        signature256Header: signature,
+        webhookSecret: secret,
+      );
+
+      expect(valid, isTrue);
+    });
   });
 }

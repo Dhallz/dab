@@ -120,6 +120,7 @@ Future<void> main() async {
     ..get('/admin/identities/summary', AdminController().getIdentitiesSummary)
     ..get('/admin/identities', AdminController().getIdentities)
     ..post('/admin/identities/link', AdminController().linkIdentity)
+    ..delete('/admin/identities/:id', AdminController().deleteIdentity)
     ..post('/admin/identities/resolve', AdminController().resolveIdentity)
     // User Management
     ..get('/admin/users', AdminController().getUsers)

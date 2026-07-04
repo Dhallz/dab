@@ -223,6 +223,16 @@ class _MockUserRepo implements IUserRepository {
   ) async => Right(identity);
 
   @override
+  Future<Either<Failure, void>> deleteIdentity(String identityId) async {
+    final before = identities.length;
+    identities.removeWhere((i) => i.id == identityId);
+    if (identities.length == before) {
+      return Left(NotFoundFailure('Identity not found: $identityId'));
+    }
+    return const Right(null);
+  }
+
+  @override
   Future<Either<DatabaseFailure, void>> deleteGroup(String id) async =>
       const Left(DatabaseFailure('Not implemented in test script'));
 

@@ -691,21 +691,18 @@ class ActivityController {
   }
 
   /// [ARCH: PRESENTATION_ROUTE]
-  /// POST /integrations/jira/webhook — Jira Cloud admin webhooks carry no HMAC
-  /// signature, so access is gated by a shared secret (header
-  /// `X-Webhook-Secret` or `?secret=` query parameter) compared against the
-  /// provider's `webhookSecret` setting.
+  /// POST /integrations/jira/webhook — verifies Jira Cloud admin webhook
+  /// `X-Hub-Signature` (`sha256=` HMAC of the raw body, per Atlassian docs).
+  /// Falls back to plain `X-Webhook-Secret` / `?secret=` for Bruno simulations.
   Future<Response> receiveJiraWebhook(Request request) async {
-    final provided =
-        request.headers['X-Webhook-Secret']?.first ??
-        request.url.queryParameters['secret'] ??
-        '';
+    final body = await request.readAsString();
+    final hubSignature = request.headers['X-Hub-Signature']?.first ?? '';
 
-    final expected = await _resolveProviderSetting('jira', const [
+    final webhookSecret = await _resolveProviderSetting('jira', const [
       'webhookSecret',
       'webhook_secret',
     ]);
-    if (expected.isEmpty) {
+    if (webhookSecret.isEmpty) {
       return Response.internalServerError(
         body: Body.fromString(
           jsonEncode({'error': 'Jira webhook secret is not configured'}),
@@ -714,17 +711,34 @@ class ActivityController {
       );
     }
 
-    final verifier = sl<SharedSecretVerifier>();
-    if (!verifier.isValid(provided: provided, expected: expected)) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid Jira webhook secret'}),
-          mimeType: MimeType.json,
-        ),
+    final hubVerifier = sl<GitHubWebhookVerifier>();
+    final hubValid = hubSignature.trim().isNotEmpty &&
+        hubVerifier.isValidSha256Signature(
+          body: body,
+          signature256Header: hubSignature,
+          webhookSecret: webhookSecret,
+        );
+
+    if (!hubValid) {
+      final providedShared =
+          request.headers['X-Webhook-Secret']?.first ??
+          request.url.queryParameters['secret'] ??
+          '';
+      final sharedVerifier = sl<SharedSecretVerifier>();
+      final sharedValid = sharedVerifier.isValid(
+        provided: providedShared,
+        expected: webhookSecret,
       );
+      if (!sharedValid) {
+        return Response.unauthorized(
+          body: Body.fromString(
+            jsonEncode({'error': 'Invalid Jira webhook signature or secret'}),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
     }
 
-    final body = await request.readAsString();
     final dynamic decoded;
     try {
       decoded = jsonDecode(body);

@@ -506,22 +506,32 @@ paths:
     post:
       summary: Jira Cloud webhook receiver (issue created/updated).
       description: |
-        Receives Jira admin-registered webhooks. Jira sends no HMAC signature,
-        so the endpoint is secured with a shared secret provided via the
-        `X-Webhook-Secret` header or a `secret` query parameter. Supported
-        events are `jira:issue_created` and `jira:issue_updated`; processing
-        is asynchronous.
+        Receives Jira admin-registered webhooks. When a **Secret** is configured
+        on the Jira webhook, payloads are signed with HMAC-SHA256 in the
+        `X-Hub-Signature` header (`sha256=<hex>`, WebSub format). DAB verifies
+        that signature against `webhookSecret`. Plain `X-Webhook-Secret` or
+        `secret` query parameter are accepted as a Bruno simulation fallback only.
+        Supported events are `jira:issue_created` and `jira:issue_updated`;
+        processing is asynchronous.
       parameters:
+        - name: X-Hub-Signature
+          in: header
+          required: false
+          schema:
+            type: string
+          description: HMAC-SHA256 signature from Jira (`sha256=<hex>`)
         - name: X-Webhook-Secret
           in: header
           required: false
           schema:
             type: string
+          description: Bruno simulation fallback only
         - name: secret
           in: query
           required: false
           schema:
             type: string
+          description: Bruno simulation fallback only
       requestBody:
         required: true
         content:
@@ -1438,6 +1448,24 @@ paths:
       responses:
         '200':
           description: Identity linked
+  /admin/identities/{id}:
+    delete:
+      summary: Delete a user identity link.
+      description: |
+        Permanently removes a provider identity row from `user_identities` by primary key.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Identity deleted
+        '404':
+          description: Identity not found
   /admin/identities/resolve:
     post:
       summary: Resolve identity status.

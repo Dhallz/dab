@@ -1286,6 +1286,24 @@ abstract class AppLocalizations {
   /// **'Update Link'**
   String get identityUpdateLink;
 
+  /// identityDeleteLink: Delete Link
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Link'**
+  String get identityDeleteLink;
+
+  /// identityDeleteLinkConfirmTitle: Delete identity link?
+  ///
+  /// In en, this message translates to:
+  /// **'Delete identity link?'**
+  String get identityDeleteLinkConfirmTitle;
+
+  /// identityDeleteLinkConfirmMessage: Remove the link between this DAB user and the provider identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the link between this DAB user and the provider identity.'**
+  String get identityDeleteLinkConfirmMessage;
+
   /// identityLinkAssociateUser: Associate {externalId} with a DAB user account.
   ///
   /// In en, this message translates to:

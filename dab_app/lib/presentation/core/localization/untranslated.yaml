@@ -17,6 +17,9 @@
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
     "adminTimezoneSavedSnack",
+    "identityDeleteLink",
+    "identityDeleteLinkConfirmTitle",
+    "identityDeleteLinkConfirmMessage",
     "explorerClearCacheRefreshTooltip"
   ],
 
@@ -38,6 +41,9 @@
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
     "adminTimezoneSavedSnack",
+    "identityDeleteLink",
+    "identityDeleteLinkConfirmTitle",
+    "identityDeleteLinkConfirmMessage",
     "explorerClearCacheRefreshTooltip"
   ],
 
@@ -59,6 +65,9 @@
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
     "adminTimezoneSavedSnack",
+    "identityDeleteLink",
+    "identityDeleteLinkConfirmTitle",
+    "identityDeleteLinkConfirmMessage",
     "explorerClearCacheRefreshTooltip"
   ],
 
@@ -80,6 +89,9 @@
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
     "adminTimezoneSavedSnack",
+    "identityDeleteLink",
+    "identityDeleteLinkConfirmTitle",
+    "identityDeleteLinkConfirmMessage",
     "explorerClearCacheRefreshTooltip"
   ],
 
@@ -101,6 +113,9 @@
     "adminOrgTimezoneSubtitle",
     "adminOrgTimezoneLabel",
     "adminTimezoneSavedSnack",
+    "identityDeleteLink",
+    "identityDeleteLinkConfirmTitle",
+    "identityDeleteLinkConfirmMessage",
     "explorerClearCacheRefreshTooltip"
   ]
 }

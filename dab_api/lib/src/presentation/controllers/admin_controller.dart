@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:relic/relic.dart';
 
 import '../../application/containers/auth_usecases.dart';
+import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_role.dart';
 import '../../service_locator.dart';
@@ -120,6 +121,62 @@ class AdminController {
         (identity) => Response.ok(
           body: Body.fromString(
             jsonEncode({'data': identity.toMap()}),
+            mimeType: MimeType.json,
+          ),
+        ),
+      );
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': e.toString()}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
+  Future<Response> deleteIdentity(Request request) async {
+    try {
+      final id = request.pathParameters.raw[#id];
+      if (id == null || id.trim().isEmpty) {
+        return Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({'error': 'identity id is required'}),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
+
+      final result = await _auth.deleteUserIdentity.execute(
+        identityId: id.trim(),
+      );
+
+      return result.fold(
+        (failure) {
+          if (failure is NotFoundFailure) {
+            return Response.notFound(
+              body: Body.fromString(
+                jsonEncode({'error': failure.message}),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+          return Response.internalServerError(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        },
+        (_) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({
+              'data': {'deleted': true},
+              'meta': {
+                'dataType': 'identity_deletion',
+                'timestamp': DateTime.now().toIso8601String(),
+              },
+            }),
             mimeType: MimeType.json,
           ),
         ),

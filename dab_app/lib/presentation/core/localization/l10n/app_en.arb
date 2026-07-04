@@ -800,6 +800,18 @@
   "@identityUpdateLink": {
     "description": "identityUpdateLink: Update Link"
   },
+  "identityDeleteLink": "Delete Link",
+  "@identityDeleteLink": {
+    "description": "identityDeleteLink: Delete Link"
+  },
+  "identityDeleteLinkConfirmTitle": "Delete identity link?",
+  "@identityDeleteLinkConfirmTitle": {
+    "description": "identityDeleteLinkConfirmTitle: Delete identity link?"
+  },
+  "identityDeleteLinkConfirmMessage": "Remove the link between this DAB user and the provider identity.",
+  "@identityDeleteLinkConfirmMessage": {
+    "description": "identityDeleteLinkConfirmMessage: Remove the link between this DAB user and the provider identity."
+  },
   "identityLinkAssociateUser": "Associate {externalId} with a DAB user account.",
   "@identityLinkAssociateUser": {
     "description": "identityLinkAssociateUser: Associate {externalId} with a DAB user account.",

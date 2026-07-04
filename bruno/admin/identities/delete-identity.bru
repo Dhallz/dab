@@ -1,0 +1,23 @@
+meta {
+  name: Delete Identity
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/admin/identities/{{identityId}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  Permanently removes a provider identity link from `user_identities`.
+  
+  Requires `identityId` (primary key from `GET /admin/identities`).
+}
+
+tests {
+  test("Status 200 or 404", function() {
+    expect(res.status).to.be.oneOf([200, 404]);
+  });
+}

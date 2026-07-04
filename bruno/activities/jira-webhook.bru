@@ -11,7 +11,7 @@ post {
 }
 
 headers {
-  X-Webhook-Secret: {{jiraWebhookSecret}}
+  X-Hub-Signature: {{jiraHubSignature}}
 }
 
 body:json {
@@ -40,22 +40,41 @@ body:json {
   }
 }
 
+vars:pre-request {
+  jiraWebhookSecret:
+}
+
 script:pre-request {
+  const CryptoJS = require("crypto-js");
+
   const webhookSecret =
     bru.getEnvVar("jiraWebhookSecret") ||
     bru.getEnvVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getRequestVar("jiraWebhookSecret") ||
+    bru.getRequestVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getCollectionVar("jiraWebhookSecret") ||
     bru.getVar("jiraWebhookSecret") ||
     bru.getVar("JIRA_WEBHOOK_SECRET");
-  
+
   if (!webhookSecret) {
     throw new Error(
-      "Missing Jira webhook secret. Set jiraWebhookSecret or JIRA_WEBHOOK_SECRET.",
+      "Missing Jira webhook secret. Set jiraWebhookSecret in the active " +
+        "environment (local-secrets.bru), this request's Pre Request vars, or " +
+        "collection vars. Must match Admin → Jira → webhookSecret and Jira " +
+        "webhook Secret field.",
     );
   }
-  
-  req.setHeader("X-Webhook-Secret", webhookSecret);
+
+  const rawBody = req.getBody({ raw: true });
+  const digest = CryptoJS.HmacSHA256(rawBody, webhookSecret).toString(
+    CryptoJS.enc.Hex,
+  );
+  const signature = `sha256=${digest}`;
+
+  req.setHeader("X-Hub-Signature", signature);
   req.setHeader("Content-Type", "application/json");
-  
+
+  bru.setVar("jiraHubSignature", signature);
   bru.setVar("jiraWebhookSecret", webhookSecret);
 }
 
@@ -66,15 +85,19 @@ tests {
 }
 
 docs {
-  Simulates a Jira Cloud webhook delivery to `POST /integrations/jira/webhook`.
-  
-  Jira admin-registered webhooks carry no HMAC signature, so the endpoint is
-  secured with a shared secret sent via the `X-Webhook-Secret` header or a
-  `?secret=` query parameter. Set `webhookSecret` on the Jira provider config
-  to match.
-  
+  Simulates a Jira Cloud admin webhook delivery to `POST /integrations/jira/webhook`.
+
+  Jira signs the raw JSON body with HMAC-SHA256 and sends
+  `X-Hub-Signature: sha256=<hex>` when a Secret is configured on the webhook
+  (Atlassian "Secure admin webhooks"). The secret itself is **not** in the URL.
+
+  Set the same secret in:
+  - Admin → Jira → `webhookSecret`
+  - Jira → System → Webhooks → **Secret** field
+  - Bruno env / Pre Request var `jiraWebhookSecret`
+
   Supported events: `jira:issue_created`, `jira:issue_updated`.
-  
-  Environment variables:
-  - `jiraWebhookSecret` (or `JIRA_WEBHOOK_SECRET`)
+
+  Webhook URL in Jira (no secret query param):
+  `https://<public-api>/integrations/jira/webhook`
 }

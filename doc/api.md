@@ -115,7 +115,7 @@ Thin entry points only. No business logic.
 | Controller | Path | Key Responsibilities |
 |---|---|---|
 | `ActivityController` | `/activities*`, `/ws`, `/integrations/*` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; no Postgres). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. |
-| `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, admin user creation (`POST /admin/users`) and role management |
+| `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
@@ -167,7 +167,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Phorge | ✅ Active | Conduit REST API | Herald webhook (HMAC-SHA256) |
 | GitHub | ✅ Active (Commits v1) | REST | Push webhook (`X-Hub-Signature-256`) |
 | Slack | ✅ Active (Messages v1) | Slack Web API | Events API webhook |
-| Jira | ✅ Active (issues v1) | REST + discovery | Webhook (shared secret) |
+| Jira | ✅ Active (issues v1) | REST + discovery | Webhook (`X-Hub-Signature` HMAC) |
 | Linear | ✅ Active (issues v1) | GraphQL + discovery | Webhook (`linear-signature` HMAC) |
 | Discord | ✅ Active (messages v1) | REST + discovery | Gateway WebSocket client (`MESSAGE_CREATE`) |
 | GitLab | ✅ Active (commits v1) | REST + discovery | Push Hook webhook (`X-Gitlab-Token`) |
@@ -233,11 +233,13 @@ HMAC-SHA256 of the raw body in `X-Phabricator-Webhook-Signature`, keyed by the
 provider setting **`webhookHmacKey`**; dedup is per transaction PHID via Redis.
 
 Jira live ingestion (`POST /integrations/jira/webhook`) handles
-`jira:issue_created` / `jira:issue_updated`. Jira Cloud admin webhooks carry no
-HMAC, so the endpoint compares a shared secret from the `X-Webhook-Secret`
-header (or `?secret=` query parameter) against the provider setting
-**`webhookSecret`**. Events map through the same `JiraIssueDto.toActivities`
-path as polling and dedup on event id + issue updated timestamp.
+`jira:issue_created` / `jira:issue_updated`. Jira Cloud admin webhooks sign the
+raw body with HMAC-SHA256 in the `X-Hub-Signature` header (`sha256=<hex>`) when
+a **Secret** is configured on the webhook (Atlassian “Secure admin webhooks”).
+DAB verifies that signature against **`webhookSecret`**. Plain
+`X-Webhook-Secret` / `?secret=` are accepted only as a Bruno simulation
+fallback. Events map through the same `JiraIssueDto.toActivities` path as
+polling and dedup on event id + issue updated timestamp.
 
 Linear ingestion is issue-oriented: `LinearIssueSource` queries the GraphQL API
 (`issues` filtered by an `updatedAt` window and, with `authoredOnly`, by linked

@@ -60,4 +60,7 @@ abstract class IUserRepository {
 
   /// Fetches all identities (for admin overview).
   Future<Either<DatabaseFailure, List<UserIdentity>>> getAllIdentities();
+
+  /// Permanently removes an identity row by its primary key.
+  Future<Either<Failure, void>> deleteIdentity(String identityId);
 }

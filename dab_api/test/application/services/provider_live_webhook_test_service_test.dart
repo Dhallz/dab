@@ -51,6 +51,21 @@ void main() {
     verify(() => redis.recordLiveIngestSuccess('github')).called(1);
   });
 
+  test('Jira records test delivery when webhook secret validates HMAC', () async {
+    const config = ProviderConfig(
+      id: 'jira',
+      name: 'Jira',
+      baseUrl: 'https://dhallz.atlassian.net',
+      isActive: true,
+      settings: {'webhookSecret': 'jira-secret'},
+    );
+
+    final result = await service.testDelivery(config);
+
+    expect(result.status, ConnectivitySectionStatus.success);
+    verify(() => redis.recordLiveIngestSuccess('jira')).called(1);
+  });
+
   test('GitHub fails when webhook secret is missing', () async {
     const config = ProviderConfig(
       id: 'github',

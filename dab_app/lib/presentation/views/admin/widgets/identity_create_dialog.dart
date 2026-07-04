@@ -15,6 +15,7 @@ class IdentityCreateDialog extends ConsumerStatefulWidget {
   final String? initialExternalUsername;
   final IdentityCreateFocusField? initialFocusField;
   final bool isUpdateMode;
+  final String? identityId;
 
   const IdentityCreateDialog({
     super.key,
@@ -26,6 +27,7 @@ class IdentityCreateDialog extends ConsumerStatefulWidget {
     this.initialExternalUsername,
     this.initialFocusField,
     this.isUpdateMode = false,
+    this.identityId,
   });
 
   @override
@@ -170,15 +172,29 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
         horizontal: 16,
         vertical: 16,
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            l10n.commonCancel,
-            style: TextStyle(color: cs.onSurfaceVariant),
-          ),
-        ),
-        ElevatedButton(
+        if (widget.isUpdateMode && widget.identityId != null)
+          TextButton(
+            onPressed: () => _confirmDelete(context),
+            child: Text(
+              l10n.identityDeleteLink,
+              style: TextStyle(color: cs.error),
+            ),
+          )
+        else
+          const SizedBox.shrink(),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                l10n.commonCancel,
+                style: TextStyle(color: cs.onSurfaceVariant),
+              ),
+            ),
+            ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
@@ -210,8 +226,55 @@ class _IdentityCreateDialogState extends ConsumerState<IdentityCreateDialog> {
             ),
           ),
         ),
+          ],
+        ),
       ],
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final identityId = widget.identityId;
+    if (identityId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          l10n.identityDeleteLinkConfirmTitle,
+          style: TextStyle(fontWeight: FontWeight.w900, color: cs.onSurface),
+        ),
+        content: Text(
+          l10n.identityDeleteLinkConfirmMessage,
+          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              l10n.commonCancel,
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              l10n.identityDeleteLink,
+              style: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await ref
+        .read(adminNotifierProvider.notifier)
+        .deleteIdentity(identityId: identityId);
+    if (context.mounted) Navigator.pop(context);
   }
 
   InputDecoration _fieldDecoration(BuildContext context, String label) {

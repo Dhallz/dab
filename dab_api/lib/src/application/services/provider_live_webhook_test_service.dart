@@ -58,11 +58,13 @@ class ProviderLiveWebhookTestService {
         label: 'Bitbucket webhook secret',
         body: '{"test":true}',
       ),
-      'jira' => _testSharedSecretProvider(
+      'jira' => _testHmacProvider(
         providerId: 'jira',
         config: config,
         keys: const ['webhookSecret', 'webhook_secret'],
         label: 'Jira webhook secret',
+        body:
+            '{"webhookEvent":"jira:issue_updated","issue":{"key":"DAB-LIVE-TEST"}}',
       ),
       'linear' => _testLinear(config),
       'phorge' => _testPhorge(config),

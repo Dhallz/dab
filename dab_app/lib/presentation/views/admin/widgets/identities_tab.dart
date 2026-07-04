@@ -251,6 +251,7 @@ class IdentitiesTab extends StatelessWidget {
       builder: (_) => IdentityCreateDialog(
         users: users,
         providerIds: providerIds,
+        identityId: identity.id,
         initialUserId: identity.userId,
         initialProviderId: identity.providerId,
         initialExternalId: identity.externalId,
@@ -267,6 +268,7 @@ class IdentitiesTab extends StatelessWidget {
       builder: (_) => IdentityCreateDialog(
         users: users,
         providerIds: providerIds,
+        identityId: identity.id,
         initialUserId: identity.userId,
         initialProviderId: identity.providerId,
         initialExternalId: identity.externalId,

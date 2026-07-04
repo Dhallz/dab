@@ -41,6 +41,7 @@ import 'package:dab_api/src/application/usecases/auth/logout_user.dart';
 import 'package:dab_api/src/application/usecases/auth/refresh_token.dart';
 import 'package:dab_api/src/application/usecases/auth/register_new_user.dart';
 import 'package:dab_api/src/application/usecases/auth/register_user.dart';
+import 'package:dab_api/src/application/usecases/auth/delete_user_identity.dart';
 import 'package:dab_api/src/application/usecases/auth/resolve_user_identity.dart';
 import 'package:dab_api/src/application/usecases/auth/update_user_role.dart';
 import 'package:dab_api/src/application/usecases/group/delete_group.dart';
@@ -347,6 +348,9 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<ResolveUserIdentity>(
     ResolveUserIdentity(sl<IUserRepository>()),
   );
+  sl.registerSingleton<DeleteUserIdentity>(
+    DeleteUserIdentity(sl<IUserRepository>()),
+  );
 
   // Activity
   sl.registerSingleton<FetchRemoteActivities>(
@@ -563,6 +567,7 @@ Future<void> serviceLocator() async {
       findAllUsers: sl<FindAllUsers>(),
       updateUserRole: sl<UpdateUserRole>(),
       resolveUserIdentity: sl<ResolveUserIdentity>(),
+      deleteUserIdentity: sl<DeleteUserIdentity>(),
     ),
   );
 

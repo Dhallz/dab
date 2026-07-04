@@ -35,6 +35,9 @@ abstract class IUserRepository {
     required UserIdentityStatus status,
   });
 
+  /// Admin: Permanently remove a provider identity link.
+  Future<Either<AppFailure, void>> deleteIdentity({required String identityId});
+
   /// Admin: Update a user's globally defined role.
   Future<Either<AppFailure, void>> updateUserRole({
     required String userId,

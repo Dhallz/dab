@@ -179,6 +179,15 @@ class UserRepository extends Repository implements IUserRepository {
     });
   }
 
+  @override
+  Future<Either<AppFailure, void>> deleteIdentity({
+    required String identityId,
+  }) async {
+    return guardedCall(() async {
+      await _client.dio.delete('/admin/identities/$identityId');
+    });
+  }
+
   dynamic _getEnvelopeData(Response response) {
     if (response.statusCode == 304 || response.data == null) return null;
 

@@ -370,6 +370,32 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     );
   }
 
+  Future<void> deleteIdentity({required String identityId}) async {
+    state = state.copyWith(status: ViewStatus.loading);
+
+    final result = await _userRepo.deleteIdentity(identityId: identityId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (_) {
+        final newIdentities = state.identities
+            .where((i) => i.id != identityId)
+            .toList();
+
+        state = state.copyWith(
+          status: ViewStatus.success,
+          identities: newIdentities,
+          errorMessage: null,
+        );
+      },
+    );
+  }
+
   void setIdentitySort(IdentitySortField sortField, bool ascending) {
     state = state.copyWith(
       identitySortField: sortField,
