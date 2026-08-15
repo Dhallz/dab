@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:fpdart/fpdart.dart';
 import 'package:relic/relic.dart';
 
 import '../../application/containers/user_usecases.dart';
@@ -180,16 +181,95 @@ class UserController {
 
   Future<Response> getMyJiraProjects(Request request) async {
     final userId = userIdProperty.get(request);
-    final provider = (request.pathParameters.raw[#provider] ?? '').toString();
-    if (provider.trim().toLowerCase() != 'jira') {
+    final provider = (request.pathParameters.raw[#provider] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+    if (provider == 'jira') {
+      return _watchListResponse(
+        await _user.getJiraProjectWatchList.execute(userId),
+        'jira_project_watch_list',
+      );
+    }
+    if (provider == 'linear') {
+      return _watchListResponse(
+        await _user.getLinearTeamWatchList.execute(userId),
+        'linear_team_watch_list',
+      );
+    }
+    return Response.badRequest(
+      body: Body.fromString(
+        jsonEncode({
+          'error': 'Watch list picker is only available for Jira and Linear',
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  Future<Response> saveMyJiraProjects(Request request) async {
+    final userId = userIdProperty.get(request);
+    final provider = (request.pathParameters.raw[#provider] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+    if (provider != 'jira' && provider != 'linear') {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Project picker is only available for Jira'}),
+          jsonEncode({
+            'error': 'Watch list picker is only available for Jira and Linear',
+          }),
           mimeType: MimeType.json,
         ),
       );
     }
-    final result = await _user.getJiraProjectWatchList.execute(userId);
+    try {
+      final bodyStr = await request.readAsString();
+      final data = bodyStr.trim().isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(bodyStr);
+      final rawKeys = data is Map
+          ? (data['teamKeys'] ?? data['projectKeys'])
+          : null;
+      final keys = <String>[];
+      if (rawKeys is List) {
+        for (final item in rawKeys) {
+          keys.add(item.toString());
+        }
+      }
+      if (provider == 'linear') {
+        return _watchListResponse(
+          await _user.saveLinearTeamWatchList.execute(
+            userId: userId,
+            teamKeys: keys,
+          ),
+          'linear_team_watch_list',
+        );
+      }
+      return _watchListResponse(
+        await _user.saveJiraProjectWatchList.execute(
+          userId: userId,
+          projectKeys: keys,
+        ),
+        'jira_project_watch_list',
+      );
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Invalid request body',
+            'details': e.toString(),
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+  }
+
+  Response _watchListResponse(
+    Either<Failure, dynamic> result,
+    String dataType,
+  ) {
     return result.fold(
       (failure) {
         if (failure is ValidationFailure) {
@@ -212,7 +292,7 @@ class UserController {
           jsonEncode({
             'data': watchList.toMap(),
             'meta': {
-              'dataType': 'jira_project_watch_list',
+              'dataType': dataType,
               'timestamp': DateTime.now().toIso8601String(),
             },
           }),
@@ -220,76 +300,6 @@ class UserController {
         ),
       ),
     );
-  }
-
-  Future<Response> saveMyJiraProjects(Request request) async {
-    final userId = userIdProperty.get(request);
-    final provider = (request.pathParameters.raw[#provider] ?? '').toString();
-    if (provider.trim().toLowerCase() != 'jira') {
-      return Response.badRequest(
-        body: Body.fromString(
-          jsonEncode({'error': 'Project picker is only available for Jira'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-    try {
-      final bodyStr = await request.readAsString();
-      final data = bodyStr.trim().isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(bodyStr);
-      final rawKeys = data is Map ? data['projectKeys'] : null;
-      final projectKeys = <String>[];
-      if (rawKeys is List) {
-        for (final item in rawKeys) {
-          projectKeys.add(item.toString());
-        }
-      }
-      final result = await _user.saveJiraProjectWatchList.execute(
-        userId: userId,
-        projectKeys: projectKeys,
-      );
-      return result.fold(
-        (failure) {
-          if (failure is ValidationFailure) {
-            return Response.badRequest(
-              body: Body.fromString(
-                jsonEncode({'error': failure.message}),
-                mimeType: MimeType.json,
-              ),
-            );
-          }
-          return Response.internalServerError(
-            body: Body.fromString(
-              jsonEncode({'error': failure.message}),
-              mimeType: MimeType.json,
-            ),
-          );
-        },
-        (watchList) => Response.ok(
-          body: Body.fromString(
-            jsonEncode({
-              'data': watchList.toMap(),
-              'meta': {
-                'dataType': 'jira_project_watch_list',
-                'timestamp': DateTime.now().toIso8601String(),
-              },
-            }),
-            mimeType: MimeType.json,
-          ),
-        ),
-      );
-    } catch (e) {
-      return Response.badRequest(
-        body: Body.fromString(
-          jsonEncode({
-            'error': 'Invalid request body',
-            'details': e.toString(),
-          }),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
   }
 
   Future<Response> saveMyCredential(Request request) async {
@@ -300,9 +310,7 @@ class UserController {
       final data = jsonDecode(bodyStr);
       final settings = data is Map<String, dynamic>
           ? Map<String, dynamic>.from(
-              data['settings'] is Map
-                  ? data['settings'] as Map
-                  : data,
+              data['settings'] is Map ? data['settings'] as Map : data,
             )
           : <String, dynamic>{};
       final result = await _user.saveUserProviderCredential.execute(
@@ -350,7 +358,10 @@ class UserController {
     } catch (e) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Invalid request body', 'details': e.toString()}),
+          jsonEncode({
+            'error': 'Invalid request body',
+            'details': e.toString(),
+          }),
           mimeType: MimeType.json,
         ),
       );

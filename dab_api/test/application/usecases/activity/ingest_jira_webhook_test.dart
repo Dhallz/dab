@@ -77,10 +77,7 @@ void main() {
           'updated': '2026-06-30T10:00:00.000+0000',
           'status': {'name': 'In Progress'},
           'project': {'key': 'DAB'},
-          'assignee': {
-            'accountId': assigneeAccountId,
-            'displayName': 'Ada L.',
-          },
+          'assignee': {'accountId': assigneeAccountId, 'displayName': 'Ada L.'},
         },
       },
       'comment': ?comment,
@@ -147,9 +144,10 @@ void main() {
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
     final captured =
-        verify(() => activityRepository.createActivity(captureAny()))
-            .captured
-            .single as Activity;
+        verify(
+              () => activityRepository.createActivity(captureAny()),
+            ).captured.single
+            as Activity;
     expect(captured.userId, 'u-jira');
     expect(captured.title, '[DAB-7] Fix login bug');
     expect(captured.provider, isA<JiraIssueProvider>());
@@ -175,33 +173,120 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
-    final captured =
-        verify(() => activityRepository.createActivity(captureAny())).captured;
-    // Issue snapshot + comment activity.
-    expect(captured, hasLength(2));
-    final comment = captured
-        .cast<Activity>()
-        .firstWhere((a) => a.commentCount == 1);
+    final captured = verify(
+      () => activityRepository.createActivity(captureAny()),
+    ).captured;
+    // Comment webhooks omit the issue snapshot so Dashboard gets one ping.
+    expect(captured, hasLength(1));
+    final comment = captured.cast<Activity>().single;
+    expect(comment.commentCount, 1);
     expect(comment.content, 'Ship it');
     expect(comment.userId, 'u-jira');
   });
 
-  test('drops comments from unmapped authors on the live path', () async {
+  test('ingests comment_created without issue.fields.updated', () async {
     final out = await useCase.execute(
-      payload: issuePayload(
-        assigneeAccountId: 'acct-stranger',
-        comment: {
-          'id': 'c-2',
-          'body': 'Who am I?',
-          'created': '2026-06-30T10:00:00.000+0000',
-          'author': {'accountId': 'acct-stranger'},
+      payload: {
+        'webhookEvent': 'comment_created',
+        'timestamp': 1719741600000,
+        'comment': {
+          'id': 'c-live',
+          'body': 'Ping the board',
+          'created': '2026-06-30T10:05:00.000+0000',
+          'author': {'accountId': 'acct-ada', 'displayName': 'Ada L.'},
         },
-      ),
+        'issue': {
+          'id': '10001',
+          'key': 'DAB-7',
+          'self': 'https://acme.atlassian.net/rest/api/2/issue/10001',
+          'fields': {
+            'summary': 'Fix login bug',
+            'status': {'name': 'In Progress'},
+            'project': {'key': 'DAB'},
+            'assignee': {'accountId': 'acct-ada', 'displayName': 'Ada L.'},
+          },
+        },
+      },
     );
 
     final result = out.getOrElse((_) => throw StateError('left'));
-    expect(result.ingested, isFalse);
-    expect(result.reason, 'no_attributable_users');
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(
+              () => activityRepository.createActivity(captureAny()),
+            ).captured.single
+            as Activity;
+    expect(captured.commentCount, 1);
+    expect(captured.content, 'Ping the board');
+    verify(
+      () =>
+          presenceService.broadcastToUser('u-jira', 'ACTIVITY_RECEIVED', any()),
+    ).called(1);
+  });
+
+  test(
+    'attributes unmapped comment authors to the linked issue owner',
+    () async {
+      final out = await useCase.execute(
+        payload: issuePayload(
+          event: 'comment_created',
+          comment: {
+            'id': 'c-2',
+            'body': 'Who am I?',
+            'created': '2026-06-30T10:00:00.000+0000',
+            'author': {'accountId': 'acct-stranger', 'displayName': 'Guest'},
+          },
+        ),
+      );
+
+      final result = out.getOrElse((_) => throw StateError('left'));
+      expect(result.ingested, isTrue);
+      final captured =
+          verify(
+                () => activityRepository.createActivity(captureAny()),
+              ).captured.single
+              as Activity;
+      expect(captured.commentCount, 1);
+      expect(captured.userId, 'u-jira');
+      expect(captured.authorName, contains('Guest'));
+    },
+  );
+
+  test(
+    'drops comments when neither author nor issue owner is linked',
+    () async {
+      final out = await useCase.execute(
+        payload: issuePayload(
+          assigneeAccountId: 'acct-stranger',
+          comment: {
+            'id': 'c-2',
+            'body': 'Who am I?',
+            'created': '2026-06-30T10:00:00.000+0000',
+            'author': {'accountId': 'acct-stranger'},
+          },
+        ),
+      );
+
+      final result = out.getOrElse((_) => throw StateError('left'));
+      expect(result.ingested, isFalse);
+      expect(result.reason, 'no_attributable_users');
+      verifyNever(() => activityRepository.createActivity(any()));
+    },
+  );
+
+  test('ignores issues outside the watched project list', () async {
+    when(() => providerConfigRepository.getConfigs()).thenAnswer(
+      (_) async => Right([
+        config.copyWith(
+          settings: const {'webhookSecret': 's3cret', 'projectKeys': 'OPS'},
+        ),
+      ]),
+    );
+
+    final out = await useCase.execute(payload: issuePayload());
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.reason, 'project_not_watched');
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
@@ -229,9 +314,9 @@ void main() {
   });
 
   test('ignores payloads when jira provider is inactive', () async {
-    when(() => providerConfigRepository.getConfigs()).thenAnswer(
-      (_) async => Right([config.copyWith(isActive: false)]),
-    );
+    when(
+      () => providerConfigRepository.getConfigs(),
+    ).thenAnswer((_) async => Right([config.copyWith(isActive: false)]));
 
     final out = await useCase.execute(payload: issuePayload());
 
@@ -239,19 +324,21 @@ void main() {
     expect(result.reason, 'jira_not_configured');
   });
 
-  test('reports duplicate_activity when persistence hits unique rows',
-      () async {
-    when(() => activityRepository.createActivity(any())).thenAnswer(
-      (_) async => const Left(
-        DatabaseFailure('duplicate key value violates unique constraint'),
-      ),
-    );
+  test(
+    'reports duplicate_activity when persistence hits unique rows',
+    () async {
+      when(() => activityRepository.createActivity(any())).thenAnswer(
+        (_) async => const Left(
+          DatabaseFailure('duplicate key value violates unique constraint'),
+        ),
+      );
 
-    final out = await useCase.execute(payload: issuePayload());
+      final out = await useCase.execute(payload: issuePayload());
 
-    final result = out.getOrElse((_) => throw StateError('left'));
-    expect(result.ingested, isFalse);
-    expect(result.reason, 'duplicate_activity');
-    verifyNever(() => redisService.fanOutActivity(any()));
-  });
+      final result = out.getOrElse((_) => throw StateError('left'));
+      expect(result.ingested, isFalse);
+      expect(result.reason, 'duplicate_activity');
+      verifyNever(() => redisService.fanOutActivity(any()));
+    },
+  );
 }

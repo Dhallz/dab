@@ -81,6 +81,36 @@ void main() {
     };
   }
 
+  Map<String, dynamic> commentPayload({
+    String action = 'create',
+    String userId = 'linear-user-ada',
+    String? body = 'Can you take a look?',
+  }) {
+    return <String, dynamic>{
+      'type': 'Comment',
+      'action': action,
+      'createdAt': '2026-06-30T10:05:00.000Z',
+      'url': 'https://linear.app/acme/issue/ENG-42#comment-1',
+      'actor': {'id': userId, 'name': 'Ada L.'},
+      'data': {
+        'id': 'comment-1',
+        'body': body,
+        'createdAt': '2026-06-30T10:05:00.000Z',
+        'userId': userId,
+        'issue': {
+          'id': 'issue-uuid',
+          'identifier': 'ENG-42',
+          'title': 'Fix login',
+          'url': 'https://linear.app/acme/issue/ENG-42/fix-login',
+          'updatedAt': '2026-06-30T10:05:00.000Z',
+          'assigneeId': 'linear-user-ada',
+          'state': {'name': 'In Progress'},
+          'team': {'key': 'ENG'},
+        },
+      },
+    };
+  }
+
   setUpAll(() {
     registerFallbackValue(
       Activity(
@@ -144,17 +174,19 @@ void main() {
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
     final captured =
-        verify(() => activityRepository.createActivity(captureAny()))
-            .captured
-            .single as Activity;
+        verify(
+              () => activityRepository.createActivity(captureAny()),
+            ).captured.single
+            as Activity;
     expect(captured.userId, 'u-linear');
     expect(captured.title, '[ENG-42] Fix login');
     final provider = captured.provider as LinearIssueProvider;
     expect(provider.identifier, 'ENG-42');
     expect(provider.teamKey, 'ENG');
     expect(provider.statusName, 'In Progress');
-    verify(() => redisService.reserveIngestionEventId('linear', 'delivery-1'))
-        .called(1);
+    verify(
+      () => redisService.reserveIngestionEventId('linear', 'delivery-1'),
+    ).called(1);
     verify(
       () => presenceService.broadcastToUser(
         'u-linear',
@@ -164,14 +196,59 @@ void main() {
     ).called(1);
   });
 
-  test('ignores non-Issue payloads', () async {
-    final out = await useCase.execute(payload: issuePayload(type: 'Comment'));
+  test('ignores Project payloads', () async {
+    final out = await useCase.execute(payload: issuePayload(type: 'Project'));
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isFalse);
-    expect(result.reason, 'unsupported_type:Comment');
+    expect(result.reason, 'unsupported_type:Project');
     verifyNever(() => redisService.reserveIngestionEventId(any(), any()));
   });
+
+  test('ingests a Comment as a distinct live activity', () async {
+    final out = await useCase.execute(
+      payload: commentPayload(),
+      deliveryId: 'delivery-comment-1',
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(
+              () => activityRepository.createActivity(captureAny()),
+            ).captured.single
+            as Activity;
+    expect(captured.commentCount, 1);
+    expect(captured.content, 'Can you take a look?');
+    expect(captured.userId, 'u-linear');
+    expect((captured.provider as LinearIssueProvider).identifier, 'ENG-42');
+    verify(
+      () => presenceService.broadcastToUser(
+        'u-linear',
+        'ACTIVITY_RECEIVED',
+        any(),
+      ),
+    ).called(1);
+  });
+
+  test(
+    'comment from an unmapped author still notifies the issue owner',
+    () async {
+      final out = await useCase.execute(
+        payload: commentPayload(userId: 'linear-user-stranger'),
+      );
+
+      final result = out.getOrElse((_) => throw StateError('left'));
+      expect(result.ingested, isTrue);
+      final captured =
+          verify(
+                () => activityRepository.createActivity(captureAny()),
+              ).captured.single
+              as Activity;
+      expect(captured.commentCount, 1);
+      expect(captured.userId, 'u-linear');
+    },
+  );
 
   test('ignores unsupported actions', () async {
     final out = await useCase.execute(payload: issuePayload(action: 'remove'));
@@ -203,10 +280,26 @@ void main() {
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
-  test('ignores payloads when linear provider is inactive', () async {
+  test('ignores issues whose team is not on the instance watch list', () async {
     when(() => providerConfigRepository.getConfigs()).thenAnswer(
-      (_) async => Right([config.copyWith(isActive: false)]),
+      (_) async => Right([
+        config.copyWith(
+          settings: {'apiKey': 'k', 'webhookSecret': 's', 'teamKeys': 'OPS'},
+        ),
+      ]),
     );
+
+    final out = await useCase.execute(payload: issuePayload());
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.reason, 'team_not_watched');
+    verifyNever(() => activityRepository.createActivity(any()));
+  });
+
+  test('ignores payloads when linear provider is inactive', () async {
+    when(
+      () => providerConfigRepository.getConfigs(),
+    ).thenAnswer((_) async => Right([config.copyWith(isActive: false)]));
 
     final out = await useCase.execute(payload: issuePayload());
 

@@ -9,6 +9,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
+import '../../domain/entities/user/linear_team_watch_list.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../core/remote/rest_api_client.dart';
 import './core/repository.dart';
@@ -32,9 +33,7 @@ class UserRepository extends Repository implements IUserRepository {
         for (final entry in data) {
           if (entry is! Map) continue;
           try {
-            users.add(
-              UserMapper.fromMap(Map<String, dynamic>.from(entry)),
-            );
+            users.add(UserMapper.fromMap(Map<String, dynamic>.from(entry)));
           } catch (_) {
             continue;
           }
@@ -297,6 +296,35 @@ class UserRepository extends Repository implements IUserRepository {
       );
       final data = _getEnvelopeData(response);
       return JiraProjectWatchList.fromMap(
+        Map<String, dynamic>.from(data as Map),
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, LinearTeamWatchList>> listMyLinearTeams() {
+    return guardedCall(() async {
+      final response = await _client.get(
+        '/users/me/credentials/linear/projects',
+      );
+      final data = _getEnvelopeData(response);
+      return LinearTeamWatchList.fromMap(
+        Map<String, dynamic>.from(data as Map),
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, LinearTeamWatchList>> saveMyLinearTeams({
+    required List<String> teamKeys,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.put(
+        '/users/me/credentials/linear/projects',
+        data: {'teamKeys': teamKeys},
+      );
+      final data = _getEnvelopeData(response);
+      return LinearTeamWatchList.fromMap(
         Map<String, dynamic>.from(data as Map),
       );
     });

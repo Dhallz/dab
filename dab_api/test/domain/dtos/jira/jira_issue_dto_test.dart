@@ -156,6 +156,82 @@ void main() {
       },
     );
 
+    test('omits the issue snapshot when includeIssueSnapshot is false', () {
+      final user = User(
+        id: 'u1',
+        name: 'Pat',
+        email: 'pat@test',
+        role: UserRole.standard,
+        passwordHash: '',
+        createdAt: DateTime.utc(2020),
+      );
+
+      final dto = JiraIssueDto(
+        issueKey: 'FOO-14',
+        projectKey: 'FOO',
+        summary: 'Discuss scope',
+        statusName: 'Open',
+        browseUrl: 'https://acme.atlassian.net/browse/FOO-14',
+        updatedAt: DateTime.utc(2026, 5, 1, 12),
+        siteHost: 'acme.atlassian.net',
+        dabUserId: 'u1',
+        includeIssueSnapshot: false,
+        comments: [
+          JiraIssueCommentDto(
+            id: 'c-4',
+            body: 'Just the comment',
+            createdAt: DateTime.utc(2026, 5, 1, 13),
+            dabUserId: 'u1',
+          ),
+        ],
+      );
+
+      final activities = dto.toActivities([user]);
+      expect(activities, hasLength(1));
+      expect(activities.single.commentCount, 1);
+      expect(activities.single.content, 'Just the comment');
+    });
+
+    test('keeps comment activity ids stable across issue updatedAt', () {
+      final user = User(
+        id: 'u1',
+        name: 'Pat',
+        email: 'pat@test',
+        role: UserRole.standard,
+        passwordHash: '',
+        createdAt: DateTime.utc(2020),
+      );
+
+      JiraIssueDto commentedAt(DateTime updatedAt) {
+        return JiraIssueDto(
+          issueKey: 'FOO-15',
+          projectKey: 'FOO',
+          summary: 'Stable id',
+          statusName: 'Open',
+          browseUrl: 'https://acme.atlassian.net/browse/FOO-15',
+          updatedAt: updatedAt,
+          siteHost: 'acme.atlassian.net',
+          includeIssueSnapshot: false,
+          comments: [
+            JiraIssueCommentDto(
+              id: 'c-stable',
+              body: 'Same comment',
+              createdAt: DateTime.utc(2026, 5, 1, 13),
+              dabUserId: 'u1',
+            ),
+          ],
+        );
+      }
+
+      final first = commentedAt(
+        DateTime.utc(2026, 5, 1, 12),
+      ).toActivities([user]).single;
+      final later = commentedAt(
+        DateTime.utc(2026, 5, 1, 12, 5),
+      ).toActivities([user]).single;
+      expect(first.id, later.id);
+    });
+
     test(
       'status moves mint a new activity id so Dashboard can live-publish',
       () {

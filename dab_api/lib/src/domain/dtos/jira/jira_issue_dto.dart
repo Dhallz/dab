@@ -38,6 +38,11 @@ class JiraIssueDto with JiraIssueDtoMappable {
   /// Comment events attached to this issue for the queried window.
   final List<JiraIssueCommentDto> comments;
 
+  /// When false (`comment_created` / `comment_updated` webhooks), only comment
+  /// rows are emitted so Dashboard gets one ping. Issue owner still used as
+  /// comment fallback.
+  final bool includeIssueSnapshot;
+
   const JiraIssueDto({
     required this.issueKey,
     required this.projectKey,
@@ -49,6 +54,7 @@ class JiraIssueDto with JiraIssueDtoMappable {
     this.dabUserId,
     this.authorDisplayName,
     this.comments = const [],
+    this.includeIssueSnapshot = true,
   });
 }
 
@@ -87,8 +93,8 @@ extension OnJiraIssueDto on JiraIssueDto {
     final issueOwner = issueOwnerId == null || issueOwnerId.isEmpty
         ? null
         : userById[issueOwnerId];
-    final fallbackUser = issueOwner ?? users.firstOrNull;
-    if (issueOwner != null) {
+    final fallbackUser = issueOwner;
+    if (includeIssueSnapshot && issueOwner != null) {
       final id = _jiraIssueActivityUuid.v5(Namespace.url.value, fingerprint);
       final bodyParts = <String>[];
       if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
@@ -123,7 +129,7 @@ extension OnJiraIssueDto on JiraIssueDto {
 
       final cid = _jiraIssueActivityUuid.v5(
         Namespace.url.value,
-        '$fingerprint|comment|${comment.id}',
+        'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}',
       );
       final commentBody = comment.body.trim();
       events.add(

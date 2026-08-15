@@ -59,11 +59,13 @@ import 'package:dab_api/src/application/usecases/metadata/test_provider_config.d
 import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.dart';
 import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
 import 'package:dab_api/src/application/usecases/user/get_jira_project_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/get_linear_team_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
 import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
 import 'package:dab_api/src/application/usecases/user/list_user_provider_credentials.dart';
 import 'package:dab_api/src/application/usecases/user/save_jira_project_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/save_linear_team_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/save_user_provider_credential.dart';
 import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart';
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
@@ -72,6 +74,7 @@ import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
 import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
+import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_client_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_pkce.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_state_store.dart';
@@ -133,6 +136,7 @@ import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.d
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_project_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/linear/linear_team_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_gateway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
@@ -537,10 +541,7 @@ Future<void> serviceLocator() async {
     UnarchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
   );
   sl.registerSingleton<ActivityPurgeScheduler>(
-    ActivityPurgeScheduler(
-      sl<RedisService>(),
-      sl<ISystemSettingsRepository>(),
-    ),
+    ActivityPurgeScheduler(sl<RedisService>(), sl<ISystemSettingsRepository>()),
   );
   sl.registerSingleton<ActivityLivePollScheduler>(
     ActivityLivePollScheduler(
@@ -624,6 +625,21 @@ Future<void> serviceLocator() async {
     SaveJiraProjectWatchList(
       sl<ICredentialResolver>(),
       sl<IJiraProjectCatalog>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<ILinearTeamCatalog>(LinearTeamCatalog(graphqlProtocol));
+  sl.registerSingleton<GetLinearTeamWatchList>(
+    GetLinearTeamWatchList(
+      sl<ICredentialResolver>(),
+      sl<ILinearTeamCatalog>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<SaveLinearTeamWatchList>(
+    SaveLinearTeamWatchList(
+      sl<ICredentialResolver>(),
+      sl<ILinearTeamCatalog>(),
       sl<AbsIProviderConfigRepository>(),
     ),
   );
@@ -753,6 +769,8 @@ Future<void> serviceLocator() async {
       startProviderOauth: sl<StartProviderOauth>(),
       getJiraProjectWatchList: sl<GetJiraProjectWatchList>(),
       saveJiraProjectWatchList: sl<SaveJiraProjectWatchList>(),
+      getLinearTeamWatchList: sl<GetLinearTeamWatchList>(),
+      saveLinearTeamWatchList: sl<SaveLinearTeamWatchList>(),
     ),
   );
 

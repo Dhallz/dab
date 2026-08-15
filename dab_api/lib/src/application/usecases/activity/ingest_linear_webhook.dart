@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/linear/linear_issue_dto.dart';
+import '../../../domain/entities/user/linear_team_watch_list.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
@@ -14,11 +15,13 @@ import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Linear webhooks into the DAB live pipeline.
-/// CONTRACT: Handles `Issue` create/update events; payloads carry the full
-/// model, so no API callback is needed. Rows are shaped identically to
-/// polling via [mapLinearIssueNode] + [OnLinearIssueDto.toActivities].
+/// CONTRACT: Handles `Issue` and `Comment` create/update events. Issue
+/// snapshots and comments are distinct activity rows that share
+/// [LinearIssueProvider.identifier] so Explorer groups them like Phorge,
+/// while Dashboard live-publishes each new id. Payloads carry the model;
+/// no API callback is needed.
 /// CONSTRAINTS: Read-only toward Linear; dedupe on delivery id (fallback:
-/// identifier + updatedAt).
+/// identifier + updatedAt / comment id).
 class IngestLinearWebhook {
   final IUserRepository _userRepository;
   final AbsIActivityRepository _activityRepository;
@@ -36,6 +39,7 @@ class IngestLinearWebhook {
     ActivityLivePublisher? livePublisher,
   }) : _livePublisher = livePublisher;
 
+  static const _supportedTypes = {'Issue', 'Comment'};
   static const _supportedActions = {'create', 'update'};
 
   Future<Either<Failure, LinearWebhookIngestionResult>> execute({
@@ -43,7 +47,7 @@ class IngestLinearWebhook {
     String? deliveryId,
   }) async {
     final type = (payload['type'] ?? '').toString().trim();
-    if (type != 'Issue') {
+    if (!_supportedTypes.contains(type)) {
       return Right(
         LinearWebhookIngestionResult.ignored('unsupported_type:$type'),
       );
@@ -60,10 +64,23 @@ class IngestLinearWebhook {
       return const Right(LinearWebhookIngestionResult.ignored('missing_data'));
     }
 
-    final identifier = (data['identifier'] ?? '').toString().trim();
-    final updatedRaw = data['updatedAt']?.toString() ?? '';
+    final isComment = type == 'Comment';
+    final issueNode = isComment
+        ? _issueNodeFromComment(payload, data)
+        : _issueNodeFromIssue(payload, data);
+    if (issueNode == null) {
+      return const Right(
+        LinearWebhookIngestionResult.ignored('invalid_issue_payload'),
+      );
+    }
+
+    final identifier = (issueNode['identifier'] ?? '').toString().trim();
+    final updatedRaw = issueNode['updatedAt']?.toString() ?? '';
+    final commentId = isComment ? (data['id'] ?? '').toString().trim() : '';
     final fingerprint = (deliveryId ?? '').trim().isNotEmpty
         ? deliveryId!.trim()
+        : isComment
+        ? '$action|comment|$commentId|$updatedRaw'
         : '$action|$identifier|$updatedRaw';
     final reserved = await _redisService.reserveIngestionEventId(
       'linear',
@@ -112,34 +129,54 @@ class IngestLinearWebhook {
       );
     }
 
-    // Webhook `data` sometimes carries plain `assigneeId`/`creatorId` instead
-    // of expanded person nodes; normalize before mapping.
-    final node = Map<String, dynamic>.from(data);
-    if (node['assignee'] is! Map<String, dynamic> &&
-        node['assigneeId'] != null) {
-      node['assignee'] = {'id': node['assigneeId']};
-    }
-    if (node['creator'] is! Map<String, dynamic> && node['creatorId'] != null) {
-      node['creator'] = {'id': node['creatorId']};
-    }
-    if ((node['url'] ?? '').toString().trim().isEmpty &&
-        payload['url'] != null) {
-      node['url'] = payload['url'];
+    var comments = const <LinearIssueCommentDto>[];
+    if (isComment) {
+      final commentNode = Map<String, dynamic>.from(data);
+      if (commentNode['user'] is! Map<String, dynamic>) {
+        final actor = payload['actor'];
+        if (actor is Map<String, dynamic>) {
+          commentNode['user'] = actor;
+        } else if (commentNode['userId'] != null) {
+          commentNode['user'] = {'id': commentNode['userId']};
+        }
+      }
+      final mapped = mapLinearCommentNode(commentNode, externalToUser);
+      if (mapped == null || commentId.isEmpty) {
+        return const Right(
+          LinearWebhookIngestionResult.ignored('invalid_comment_payload'),
+        );
+      }
+      comments = [mapped];
     }
 
-    final dto = mapLinearIssueNode(node, externalToUser);
+    final dto = mapLinearIssueNode(issueNode, externalToUser);
     if (dto == null) {
       return const Right(
         LinearWebhookIngestionResult.ignored('invalid_issue_payload'),
       );
     }
-    if (dto.dabUserId == null) {
+
+    final watchedTeams = parseLinearTeamKeys(linearConfig.settings['teamKeys']);
+    if (watchedTeams.isNotEmpty && !watchedTeams.contains(dto.teamKey)) {
+      return const Right(
+        LinearWebhookIngestionResult.ignored('team_not_watched'),
+      );
+    }
+
+    // Comment webhooks omit the issue snapshot so Dashboard gets one ping
+    // (the comment). Unmapped authors fall back to the issue owner.
+    final hydrated = isComment
+        ? dto.copyWith(includeIssueSnapshot: false, comments: comments)
+        : dto.copyWith(comments: comments);
+
+    if (hydrated.dabUserId == null &&
+        hydrated.comments.every((c) => (c.dabUserId ?? '').isEmpty)) {
       return const Right(
         LinearWebhookIngestionResult.ignored('no_attributable_users'),
       );
     }
 
-    final activities = dto.toActivities(users);
+    final activities = hydrated.toActivities(users);
     if (activities.isEmpty) {
       return const Right(
         LinearWebhookIngestionResult.ignored('no_eligible_activities'),
@@ -179,6 +216,49 @@ class IngestLinearWebhook {
     }
     await _redisService.recordLiveIngestSuccess('linear');
     return const Right(LinearWebhookIngestionResult.ingested());
+  }
+
+  Map<String, dynamic>? _issueNodeFromIssue(
+    Map<String, dynamic> payload,
+    Map<String, dynamic> data,
+  ) {
+    final node = Map<String, dynamic>.from(data);
+    _normalizePerson(node, 'assignee', 'assigneeId');
+    _normalizePerson(node, 'creator', 'creatorId');
+    if ((node['url'] ?? '').toString().trim().isEmpty &&
+        payload['url'] != null) {
+      node['url'] = payload['url'];
+    }
+    return node;
+  }
+
+  Map<String, dynamic>? _issueNodeFromComment(
+    Map<String, dynamic> payload,
+    Map<String, dynamic> data,
+  ) {
+    final issueRaw = data['issue'];
+    if (issueRaw is! Map<String, dynamic>) return null;
+    final node = Map<String, dynamic>.from(issueRaw);
+    _normalizePerson(node, 'assignee', 'assigneeId');
+    _normalizePerson(node, 'creator', 'creatorId');
+    if ((node['url'] ?? '').toString().trim().isEmpty) {
+      node['url'] = data['url'] ?? payload['url'];
+    }
+    if (node['updatedAt'] == null) {
+      node['updatedAt'] =
+          data['createdAt'] ?? data['updatedAt'] ?? payload['createdAt'];
+    }
+    return node;
+  }
+
+  void _normalizePerson(
+    Map<String, dynamic> node,
+    String objectKey,
+    String idKey,
+  ) {
+    if (node[objectKey] is! Map<String, dynamic> && node[idKey] != null) {
+      node[objectKey] = {'id': node[idKey]};
+    }
   }
 
   bool _isDuplicateViolation(String message) {

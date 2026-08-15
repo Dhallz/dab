@@ -9,6 +9,7 @@ import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_config_field.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_provider_field_manifest.dart';
+import 'package:dab_app/presentation/views/admin/models/admin_webhook_url.dart';
 import 'package:dab_app/presentation/views/admin/widgets/provider_config_section_panel.dart';
 import 'package:dab_app/services/service_locator.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                   '60')
               .toString(),
     );
-    _syncControllersFromConfig(widget.config, replaceExisting: true);
+    _syncControllersFromConfig(
+      widget.config,
+      replaceExisting: true,
+      systemSettings: ref.read(adminNotifierProvider).systemSettings,
+    );
     _showDetails = false;
   }
 
@@ -145,7 +150,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
   }) {
     if ((field.key == 'repos' ||
             field.key == 'channels' ||
-            field.key == 'projectKeys') &&
+            field.key == 'projectKeys' ||
+            field.key == 'teamKeys') &&
         rawValue is List) {
       return rawValue.map((e) => e.toString()).join('\n');
     }
@@ -165,13 +171,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       return (rawValue ?? fallback)?.toString() ?? '';
     }
     if (field.key == 'webhookUrl') {
-      final stored =
-          (config.settings['webhookUrl'] ?? config.settings['webhook_url'])
-              ?.toString()
-              .trim() ??
-          '';
-      if (stored.isNotEmpty) return stored;
-      return _buildWebhookUrl(config.id, systemSettings);
+      return _displayWebhookUrl(config, systemSettings);
     }
 
     return rawValue?.toString() ?? '';
@@ -202,7 +202,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     Map<String, String> systemSettings,
     AppLocalizations l10n,
   ) {
-    final base = _resolvePublicApiBase(systemSettings);
+    final base = normalizePublicApiBase(systemSettings['public_api_url']);
     if (base.isEmpty) {
       return l10n.adminOauthCallbackMustMatch(
         'Set Public API URL in Security first',
@@ -218,7 +218,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     Map<String, String> systemSettings,
     AppLocalizations l10n,
   ) {
-    final defaultUrl = _buildWebhookUrl(providerId, systemSettings);
+    final defaultUrl = derivedWebhookUrl(
+      providerId: providerId,
+      systemSettings: systemSettings,
+    );
     if (defaultUrl.isEmpty) {
       return l10n.adminFieldWebhookEndpointUrlHint(
         'Set Public API URL in Security settings',
@@ -227,26 +230,63 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return l10n.adminFieldWebhookEndpointUrlHint(defaultUrl);
   }
 
-  String _webhookPathForProvider(String providerId) {
-    if (providerId == 'slack') {
-      return '/integrations/slack/events';
-    }
-    return '/integrations/$providerId/webhook';
+  String _storedWebhookUrl(ProviderConfig config) {
+    return (config.settings['webhookUrl'] ?? config.settings['webhook_url'])
+            ?.toString()
+            .trim() ??
+        '';
   }
 
-  String _resolvePublicApiBase(Map<String, String> systemSettings) {
-    final configured = systemSettings['public_api_url']?.trim();
-    if (configured != null && configured.isNotEmpty) {
-      return configured.replaceAll(RegExp(r'/+$'), '');
-    }
-    return sl.restApiClient.baseUrl.replaceAll(RegExp(r'/+$'), '');
-  }
-
-  String _buildWebhookUrl(
-    String providerId,
+  String _displayWebhookUrl(
+    ProviderConfig config,
     Map<String, String> systemSettings,
   ) {
-    return '${_resolvePublicApiBase(systemSettings)}${_webhookPathForProvider(providerId)}';
+    return displayWebhookUrl(
+      stored: _storedWebhookUrl(config),
+      publicApiDerived: derivedWebhookUrl(
+        providerId: config.id,
+        systemSettings: systemSettings,
+      ),
+      clientDerived: clientFallbackWebhookUrl(
+        providerId: config.id,
+        restClientBaseUrl: sl.restApiClient.baseUrl,
+      ),
+    );
+  }
+
+  void _ensureWebhookUrlDefaults(
+    ProviderConfig config,
+    Map<String, String> systemSettings,
+  ) {
+    final controller = _controllers['webhookUrl'];
+    if (controller == null) return;
+
+    final publicDerived = derivedWebhookUrl(
+      providerId: config.id,
+      systemSettings: systemSettings,
+    );
+    final clientDerived = clientFallbackWebhookUrl(
+      providerId: config.id,
+      restClientBaseUrl: sl.restApiClient.baseUrl,
+    );
+    final stored = _storedWebhookUrl(config);
+    final current = controller.text.trim();
+    final userIsEditingCustom =
+        !isStaleOrDefaultWebhookUrl(
+          url: current,
+          publicApiDerived: publicDerived,
+          clientDerived: clientDerived,
+        ) &&
+        current != stored;
+    if (userIsEditingCustom) return;
+
+    final next = displayWebhookUrl(
+      stored: stored,
+      publicApiDerived: publicDerived,
+      clientDerived: clientDerived,
+    );
+    if (controller.text == next) return;
+    controller.text = next;
   }
 
   List<Widget> _buildFieldWidgets({
@@ -262,6 +302,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
           field.key == 'repos' ||
           field.key == 'channels' ||
           field.key == 'projectKeys' ||
+          field.key == 'teamKeys' ||
           field.key == 'projects';
       final isWebhookUrlField = field.key == 'webhookUrl';
       return Padding(
@@ -295,7 +336,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                 filled: true,
                 fillColor: cs.surfaceContainer.withValues(alpha: 0.65),
                 hintText: l10n.providerCardEnterField(field.label),
-                helperMaxLines: 4,
+                helperMaxLines: 6,
                 helperText: _fieldHelperText(
                   field: field,
                   l10n: l10n,
@@ -444,7 +485,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                     ],
                   ),
                 ),
-                LivePulsingIcon(status: status),
+                LivePulsingIcon(status: config.isActive ? status : null),
                 if (isExpanded && !isPersonal) ...[
                   SizedBox(width: AppSpacing.xs),
                   TextButton.icon(
@@ -565,12 +606,15 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                             systemSettings: systemSettings,
                           ),
                         ),
-                        if (!isPersonal)
+                        if (!isPersonal ||
+                            (manifest[ProviderConfigSection.live] ?? const [])
+                                .isNotEmpty)
                           ProviderConfigSectionPanel(
                             title: 'LIVE',
-                            sectionStatus: status?.live,
+                            sectionStatus: isPersonal ? null : status?.live,
                             children: [
-                              if (config.id.toLowerCase() == 'discord')
+                              if (!isPersonal &&
+                                  config.id.toLowerCase() == 'discord')
                                 Text(
                                   'Live ingestion uses the Discord Gateway WebSocket (no inbound webhook).',
                                   style: AppTextStyles.labelSmall.copyWith(
@@ -667,31 +711,6 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return AppIcons.unknownProvider;
   }
 
-  void _ensureWebhookUrlDefaults(
-    ProviderConfig config,
-    Map<String, String> systemSettings,
-  ) {
-    final controller = _controllers['webhookUrl'];
-    if (controller == null) return;
-
-    final stored =
-        (config.settings['webhookUrl'] ?? config.settings['webhook_url'])
-            ?.toString()
-            .trim() ??
-        '';
-    if (stored.isNotEmpty) {
-      if (controller.text != stored) {
-        controller.text = stored;
-      }
-      return;
-    }
-
-    final defaultUrl = _buildWebhookUrl(config.id, systemSettings);
-    if (defaultUrl.isNotEmpty && controller.text.isEmpty) {
-      controller.text = defaultUrl;
-    }
-  }
-
   Map<String, dynamic> _buildSettings(
     ProviderConfig config,
     Map<String, String> systemSettings,
@@ -716,6 +735,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         settings.remove('apiBaseUrl');
       } else if (key == 'projectKeys' && value.isEmpty) {
         settings.remove('projectKeys');
+      } else if (key == 'teamKeys' && value.isEmpty) {
+        settings.remove('teamKeys');
       } else if (key == 'webhookSecret' && value.isEmpty) {
         settings.remove('webhookSecret');
         settings.remove('webhook_secret');
@@ -723,8 +744,19 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         settings.remove('webhookHmacKey');
         settings.remove('webhook_hmac_key');
       } else if (key == 'webhookUrl') {
-        final defaultUrl = _buildWebhookUrl(config.id, systemSettings);
-        if (value.isEmpty || value == defaultUrl) {
+        final publicDerived = derivedWebhookUrl(
+          providerId: config.id,
+          systemSettings: systemSettings,
+        );
+        final clientDerived = clientFallbackWebhookUrl(
+          providerId: config.id,
+          restClientBaseUrl: sl.restApiClient.baseUrl,
+        );
+        if (!shouldPersistWebhookUrl(
+          value: value,
+          publicApiDerived: publicDerived,
+          clientDerived: clientDerived,
+        )) {
           settings.remove('webhookUrl');
           settings.remove('webhook_url');
         } else {

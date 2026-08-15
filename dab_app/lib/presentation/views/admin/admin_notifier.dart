@@ -18,6 +18,7 @@ import '../../core/models/view_status.dart';
 import '../../features/app/app_notifier.dart';
 import 'admin_state.dart';
 import 'models/admin_section.dart';
+import 'models/personal_provider_readiness.dart';
 import 'models/provider_connection_status.dart';
 
 /// **Former `AdminEvent` types → methods:** `AdminStarted` → [start];
@@ -143,10 +144,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     ProviderConnectivityReport? report,
   }) {
     final connectionStatus = report != null
-        ? ProviderConnectionStatus.fromReport(
-            report,
-            lastCheck: DateTime.now(),
-          )
+        ? ProviderConnectionStatus.fromReport(report, lastCheck: DateTime.now())
         : ProviderConnectionStatus(
             status: status,
             message: message,
@@ -160,6 +158,18 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     ref
         .read(appNotifierProvider.notifier)
         .setProviderConnectionStatus(providerId, connectionStatus);
+  }
+
+  void _applyPersonalReadiness(ProviderConfig config) {
+    if (!config.isActive) {
+      final updated = Map<String, ProviderConnectionStatus>.from(
+        state.connectionStatuses,
+      )..remove(config.id);
+      state = state.copyWith(connectionStatuses: updated);
+      return;
+    }
+    final ready = personalProviderReadiness(config);
+    _updateStatus(config.id, ready.status, message: ready.message);
   }
 
   Future<void> setSection(AdminSection section) async {
@@ -231,14 +241,16 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
             .map((c) => c.id == config.id ? config : c)
             .toList();
         state = state.copyWith(configs: newConfigs, errorMessage: null);
+        if (ref.read(appNotifierProvider).isPersonalDeployment) {
+          _applyPersonalReadiness(config);
+        }
         await ref.read(appNotifierProvider.notifier).init();
       },
     );
   }
 
   Future<bool> saveSystemSettings(Map<String, String> settings) async {
-    final previousTimezone =
-        state.systemSettings[kSystemTimezoneSettingKey];
+    final previousTimezone = state.systemSettings[kSystemTimezoneSettingKey];
     final nextTimezone = settings[kSystemTimezoneSettingKey];
     final timezoneChanged =
         nextTimezone != null && previousTimezone != nextTimezone;
@@ -253,10 +265,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
         if (timezoneChanged) {
           unawaited(_activityRepo.clearExplorerCache());
         }
-        state = state.copyWith(
-          systemSettings: settings,
-          errorMessage: null,
-        );
+        state = state.copyWith(systemSettings: settings, errorMessage: null);
         final app = ref.read(appNotifierProvider.notifier);
         final mode = settings['deployment_mode'];
         if (mode != null) {
@@ -401,6 +410,13 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   Future<void> refreshProviderStatuses() async {
     final activeConfigs = state.configs.where((c) => c.isActive).toList();
     if (activeConfigs.isEmpty) {
+      return;
+    }
+
+    if (ref.read(appNotifierProvider).isPersonalDeployment) {
+      for (final config in activeConfigs) {
+        _applyPersonalReadiness(config);
+      }
       return;
     }
 

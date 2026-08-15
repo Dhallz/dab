@@ -720,6 +720,10 @@
   "@adminIslandLinksOkTooltip": {
     "description": "adminIslandLinksOkTooltip: Active providers with successful connection test"
   },
+  "adminIslandLinksOkTooltipPersonal": "Active providers with OAuth app or bot credentials saved",
+  "@adminIslandLinksOkTooltipPersonal": {
+    "description": "Island OK count in personal mode — OAuth/bot config, not org PAT tests"
+  },
   "adminIslandFailedTitle": "Failed",
   "@adminIslandFailedTitle": {
     "description": "adminIslandFailedTitle: Failed"
@@ -727,6 +731,10 @@
   "adminIslandFailedTooltip": "Connection failures",
   "@adminIslandFailedTooltip": {
     "description": "adminIslandFailedTooltip: Connection failures"
+  },
+  "adminIslandFailedTooltipPersonal": "Active providers missing OAuth client credentials or bot token",
+  "@adminIslandFailedTooltipPersonal": {
+    "description": "Island failed count in personal mode"
   },
   "adminIslandPendingTitle": "Pending",
   "@adminIslandPendingTitle": {
@@ -1371,6 +1379,7 @@
   "adminFieldOauthClientSecret": "OAuth client secret",
   "adminFieldInstanceUrl": "Instance URL",
   "adminPersonalProvidersHint": "Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.",
+  "adminPersonalLiveWebhookHint": "Instant Dashboard uses this webhook; otherwise the poller runs about every 45s.",
   "settingsConnectedAccountsSubtitle": "Connect the providers you use. DAB never asks for your password — you sign in at the provider.",
   "settingsConnectWithProvider": "Connect with {provider}",
   "@settingsConnectWithProvider": {
@@ -1387,6 +1396,10 @@
   "settingsJiraProjectsSubtitle": "Choose which Jira projects DAB should watch for tasks. This list is shared with your team.",
   "settingsJiraProjectsEmpty": "No projects were visible for this account.",
   "settingsJiraProjectsSave": "Save projects",
+  "settingsLinearTeamsTitle": "Teams",
+  "settingsLinearTeamsSubtitle": "Choose which Linear teams DAB should watch for issues. This list is shared with your team.",
+  "settingsLinearTeamsEmpty": "No teams were visible for this account.",
+  "settingsLinearTeamsSave": "Save teams",
   "adminPublicApiUrlTitle": "Public API URL",
   "adminPublicApiUrlSubtitle": "Reachable base URL for OAuth callbacks and webhook defaults (no trailing slash).",
   "adminPublicApiUrlLabel": "https://your-dab-api.example",

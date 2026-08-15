@@ -72,6 +72,13 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
   static List<JiraIssueCommentDto> _$comments(JiraIssueDto v) => v.comments;
   static const Field<JiraIssueDto, List<JiraIssueCommentDto>> _f$comments =
       Field('comments', _$comments, opt: true, def: const []);
+  static bool _$includeIssueSnapshot(JiraIssueDto v) => v.includeIssueSnapshot;
+  static const Field<JiraIssueDto, bool> _f$includeIssueSnapshot = Field(
+    'includeIssueSnapshot',
+    _$includeIssueSnapshot,
+    opt: true,
+    def: true,
+  );
 
   @override
   final MappableFields<JiraIssueDto> fields = const {
@@ -85,6 +92,7 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
     #dabUserId: _f$dabUserId,
     #authorDisplayName: _f$authorDisplayName,
     #comments: _f$comments,
+    #includeIssueSnapshot: _f$includeIssueSnapshot,
   };
 
   static JiraIssueDto _instantiate(DecodingData data) {
@@ -99,6 +107,7 @@ class JiraIssueDtoMapper extends ClassMapperBase<JiraIssueDto> {
       dabUserId: data.dec(_f$dabUserId),
       authorDisplayName: data.dec(_f$authorDisplayName),
       comments: data.dec(_f$comments),
+      includeIssueSnapshot: data.dec(_f$includeIssueSnapshot),
     );
   }
 
@@ -181,6 +190,7 @@ abstract class JiraIssueDtoCopyWith<$R, $In extends JiraIssueDto, $Out>
     String? dabUserId,
     String? authorDisplayName,
     List<JiraIssueCommentDto>? comments,
+    bool? includeIssueSnapshot,
   });
   JiraIssueDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -216,6 +226,7 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
     Object? dabUserId = $none,
     Object? authorDisplayName = $none,
     List<JiraIssueCommentDto>? comments,
+    bool? includeIssueSnapshot,
   }) => $apply(
     FieldCopyWithData({
       if (issueKey != null) #issueKey: issueKey,
@@ -228,6 +239,8 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
       if (dabUserId != $none) #dabUserId: dabUserId,
       if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
       if (comments != null) #comments: comments,
+      if (includeIssueSnapshot != null)
+        #includeIssueSnapshot: includeIssueSnapshot,
     }),
   );
   @override
@@ -245,6 +258,10 @@ class _JiraIssueDtoCopyWithImpl<$R, $Out>
       or: $value.authorDisplayName,
     ),
     comments: data.get(#comments, or: $value.comments),
+    includeIssueSnapshot: data.get(
+      #includeIssueSnapshot,
+      or: $value.includeIssueSnapshot,
+    ),
   );
 
   @override

@@ -121,7 +121,7 @@ Thin entry points only. No business logic.
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
 | `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs (includes `deploymentMode`), provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test (`POST /admin/configs/test` returns Core/Live/Polling section report; Live green = Redis `live:last_ingest:{providerId}` within 7 days), system settings (domain validation toggle + allowed domain + `public_api_url` for OAuth callbacks and webhooks + `deployment_mode`) |
-| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/jira/projects` for the instance Jira watch list). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
+| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear}/projects` for the instance Jira `projectKeys` / Linear `teamKeys` watch lists). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
 
 #### Middleware
 
@@ -170,7 +170,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | GitHub | ✅ Active (Commits v1) | REST | Push webhook (`X-Hub-Signature-256`) |
 | Slack | ✅ Active (Messages v1) | Slack Web API | Events API webhook |
 | Jira | ✅ Active (issues v1) | REST + discovery | Webhook (`X-Hub-Signature` HMAC) |
-| Linear | ✅ Active (issues v1) | GraphQL + discovery | Webhook (`linear-signature` HMAC) |
+| Linear | ✅ Active (issues + comments v1) | GraphQL + discovery | Webhook (`linear-signature` HMAC) |
 | Discord | ✅ Active (messages v1) | REST + discovery | Gateway WebSocket client (`MESSAGE_CREATE`) |
 | GitLab | ✅ Active (commits v1) | REST + discovery | Push Hook webhook (`X-Gitlab-Token`) |
 | Bitbucket | ✅ Active (commits v1) | REST + discovery | `repo:push` webhook (`X-Hub-Signature` HMAC) |
@@ -235,21 +235,33 @@ HMAC-SHA256 of the raw body in `X-Phabricator-Webhook-Signature`, keyed by the
 provider setting **`webhookHmacKey`**; dedup is per transaction PHID via Redis.
 
 Jira live ingestion (`POST /integrations/jira/webhook`) handles
-`jira:issue_created` / `jira:issue_updated`. Jira Cloud admin webhooks sign the
+`jira:issue_created` / `jira:issue_updated` and `comment_created` /
+`comment_updated`. Jira Cloud admin webhooks sign the
 raw body with HMAC-SHA256 in the `X-Hub-Signature` header (`sha256=<hex>`) when
 a **Secret** is configured on the webhook (Atlassian “Secure admin webhooks”).
 DAB verifies that signature against **`webhookSecret`**. Plain
 `X-Webhook-Secret` / `?secret=` are accepted only as a Bruno simulation
-fallback. Events map through the same `JiraIssueDto.toActivities` path as
-polling and dedup on event id + issue updated timestamp.
+fallback. Comment events are distinct activity ids
+(`jira|{host}|{issueKey}|comment|{commentId}`) so Dashboard live-publishes them;
+Explorer still groups by issue key. Unmapped comment authors fall back to the
+linked issue owner. When instance **`projectKeys`** is set (Settings project
+picker after Connect, seeded from whoami), both polling and live webhooks skip
+other projects. Events map through the same `JiraIssueDto.toActivities` path as
+polling.
 
 Linear ingestion is issue-oriented: `LinearIssueSource` queries the GraphQL API
 (`issues` filtered by an `updatedAt` window and, with `authoredOnly`, by linked
-assignee/creator identities) using the provider **`apiKey`** setting; discovery
-resolves Linear user ids by email. Live ingestion
-(`POST /integrations/linear/webhook`) handles `Issue` create/update payloads,
-verifying the `linear-signature` HMAC-SHA256 header against **`webhookSecret`**
-and deduping on the `linear-delivery` id.
+assignee/creator identities) using the provider **`apiKey`** setting; comments
+in the same window are merged onto those issues. When instance **`teamKeys`**
+is set (Settings team picker after Connect, shared with the team), both polling
+and live webhooks skip other Linear teams. Discovery resolves Linear user
+ids by email. Live ingestion (`POST /integrations/linear/webhook`) handles
+`Issue` and `Comment` create/update payloads, verifying the `linear-signature`
+HMAC-SHA256 header against **`webhookSecret`** and deduping on the
+`linear-delivery` id. Each comment is a distinct activity id
+(`linear|{issue}|comment|{commentId}`) so Dashboard live-publishes it; Explorer
+still groups by issue identifier like Phorge. Issue snapshots include
+`updatedAt` in the activity id so status moves also notify Dashboard.
 
 Discord has no outbound webhooks for messages, so live ingestion uses
 `DiscordGatewayService` — an outbound Gateway WebSocket client (IDENTIFY with

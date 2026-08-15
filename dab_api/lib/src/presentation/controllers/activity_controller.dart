@@ -608,7 +608,8 @@ class ActivityController {
 
   /// [ARCH: PRESENTATION_ROUTE]
   /// POST /integrations/linear/webhook — verifies the `linear-signature`
-  /// HMAC against the provider's `webhookSecret` and ingests Issue events.
+  /// HMAC against the provider's `webhookSecret` and ingests Issue and
+  /// Comment events.
   Future<Response> receiveLinearWebhook(Request request) async {
     final body = await request.readAsString();
     final signature = request.headers['linear-signature']?.first ?? '';
@@ -712,7 +713,8 @@ class ActivityController {
     }
 
     final hubVerifier = sl<GitHubWebhookVerifier>();
-    final hubValid = hubSignature.trim().isNotEmpty &&
+    final hubValid =
+        hubSignature.trim().isNotEmpty &&
         hubVerifier.isValidSha256Signature(
           body: body,
           signature256Header: hubSignature,

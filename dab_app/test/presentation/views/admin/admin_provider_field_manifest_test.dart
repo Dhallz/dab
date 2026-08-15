@@ -25,7 +25,7 @@ void main() {
     expect(liveKeys, isNot(contains('owner')));
   });
 
-  test('personal GitHub fields are OAuth client id/secret only', () {
+  test('personal GitHub keeps OAuth core and Live webhook fields', () {
     final manifest = ProviderFieldManifest.forProvider(
       'github',
       l10n,
@@ -35,9 +35,17 @@ void main() {
     final coreKeys = manifest[ProviderConfigSection.core]!
         .map((f) => f.key)
         .toList();
+    final live = manifest[ProviderConfigSection.live]!;
     expect(coreKeys, containsAll(['clientId', 'clientSecret']));
     expect(coreKeys, isNot(contains('api.token')));
-    expect(manifest[ProviderConfigSection.live], isEmpty);
+    expect(
+      live.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookSecret']),
+    );
+    expect(
+      live.firstWhere((f) => f.key == 'webhookUrl').hint,
+      l10n.adminPersonalLiveWebhookHint,
+    );
     expect(manifest[ProviderConfigSection.polling], isEmpty);
   });
 
@@ -50,6 +58,10 @@ void main() {
     expect(
       gitlab[ProviderConfigSection.core]!.map((f) => f.key),
       containsAll(['clientId', 'clientSecret', 'instanceUrl']),
+    );
+    expect(
+      gitlab[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookSecret']),
     );
 
     final slack = ProviderFieldManifest.forProvider(
@@ -65,6 +77,16 @@ void main() {
       slack[ProviderConfigSection.polling]!.map((f) => f.key),
       contains('channels'),
     );
+    expect(
+      slack[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'signingSecret']),
+    );
+    expect(
+      slack[ProviderConfigSection.live]!
+          .firstWhere((f) => f.key == 'webhookUrl')
+          .hint,
+      l10n.adminPersonalLiveWebhookHint,
+    );
   });
 
   test('personal Jira client ID explains 3LO vs App ID', () {
@@ -77,5 +99,9 @@ void main() {
       (f) => f.key == 'clientId',
     );
     expect(clientId.hint, l10n.adminFieldOauthClientIdJiraHint);
+    expect(
+      jira[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookSecret']),
+    );
   });
 }

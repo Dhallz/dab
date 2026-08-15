@@ -1166,6 +1166,12 @@ abstract class AppLocalizations {
   /// **'Active providers with successful connection test'**
   String get adminIslandLinksOkTooltip;
 
+  /// Island OK count in personal mode — OAuth/bot config, not org PAT tests
+  ///
+  /// In en, this message translates to:
+  /// **'Active providers with OAuth app or bot credentials saved'**
+  String get adminIslandLinksOkTooltipPersonal;
+
   /// adminIslandFailedTitle: Failed
   ///
   /// In en, this message translates to:
@@ -1177,6 +1183,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection failures'**
   String get adminIslandFailedTooltip;
+
+  /// Island failed count in personal mode
+  ///
+  /// In en, this message translates to:
+  /// **'Active providers missing OAuth client credentials or bot token'**
+  String get adminIslandFailedTooltipPersonal;
 
   /// adminIslandPendingTitle: Pending
   ///
@@ -2108,6 +2120,12 @@ abstract class AppLocalizations {
   /// **'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.'**
   String get adminPersonalProvidersHint;
 
+  /// No description provided for @adminPersonalLiveWebhookHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Dashboard uses this webhook; otherwise the poller runs about every 45s.'**
+  String get adminPersonalLiveWebhookHint;
+
   /// No description provided for @settingsConnectWithProvider.
   ///
   /// In en, this message translates to:
@@ -2155,6 +2173,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save projects'**
   String get settingsJiraProjectsSave;
+
+  /// No description provided for @settingsLinearTeamsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get settingsLinearTeamsTitle;
+
+  /// No description provided for @settingsLinearTeamsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which Linear teams DAB should watch for issues. This list is shared with your team.'**
+  String get settingsLinearTeamsSubtitle;
+
+  /// No description provided for @settingsLinearTeamsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No teams were visible for this account.'**
+  String get settingsLinearTeamsEmpty;
+
+  /// No description provided for @settingsLinearTeamsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save teams'**
+  String get settingsLinearTeamsSave;
 
   /// No description provided for @adminPublicApiUrlTitle.
   ///

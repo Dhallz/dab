@@ -1,7 +1,7 @@
 meta {
-  name: Linear Webhook
+  name: Linear Webhook Comment
   type: http
-  seq: 13
+  seq: 14
 }
 
 post {
@@ -13,30 +13,40 @@ post {
 headers {
   linear-signature: {{linearSignature}}
   linear-delivery: {{linearDelivery}}
-  linear-event: Issue
+  linear-event: Comment
 }
 
 body:json {
   {
-    "action": "update",
-    "type": "Issue",
-    "createdAt": "2026-03-01T15:30:00.000Z",
+    "action": "create",
+    "type": "Comment",
+    "createdAt": "2026-03-01T15:35:00.000Z",
+    "url": "https://linear.app/acme/issue/DAB-42#comment-uuid-example",
     "data": {
-      "id": "issue-uuid-example",
-      "identifier": "DAB-42",
-      "title": "Example issue from webhook",
-      "url": "https://linear.app/acme/issue/DAB-42",
-      "updatedAt": "2026-03-01T15:30:00.000Z",
-      "state": {
-        "name": "In Progress"
-      },
-      "team": {
-        "key": "DAB"
-      },
-      "assignee": {
+      "id": "comment-uuid-example",
+      "body": "Can you take a look at this?",
+      "createdAt": "2026-03-01T15:35:00.000Z",
+      "userId": "user-uuid-example",
+      "user": {
         "id": "user-uuid-example",
-        "name": "Dev User",
-        "email": "dev@example.com"
+        "name": "Dev User"
+      },
+      "issue": {
+        "id": "issue-uuid-example",
+        "identifier": "DAB-42",
+        "title": "Example issue from webhook",
+        "url": "https://linear.app/acme/issue/DAB-42",
+        "updatedAt": "2026-03-01T15:35:00.000Z",
+        "state": {
+          "name": "In Progress"
+        },
+        "team": {
+          "key": "DAB"
+        },
+        "assignee": {
+          "id": "user-uuid-example",
+          "name": "Dev User"
+        }
       }
     }
   }
@@ -82,18 +92,8 @@ tests {
 }
 
 docs {
-  Simulates a Linear webhook delivery to `POST /integrations/linear/webhook`.
-  
-  Linear signs the raw body with HMAC-SHA256 and sends the hex digest in the
-  `linear-signature` header. Set `webhookSecret` on the Linear provider config
-  to match the signing secret used below.
-  
-  Supported events: `Issue` and `Comment` create/update.
+  Simulates a Linear `Comment` webhook to `POST /integrations/linear/webhook`.
 
-  Comment payloads must nest the parent issue (`data.issue.identifier`) and
-  include the comment `id` / `body`. Each comment is a distinct live activity;
-  Explorer groups it with other events on the same issue key.
-  
-  Environment variables:
-  - `linearWebhookSecret` (or `LINEAR_WEBHOOK_SECRET`)
+  Same HMAC signing as the Issue webhook. The comment is ingested as its own
+  live activity (Dashboard notify) grouped in Explorer by `DAB-42`.
 }

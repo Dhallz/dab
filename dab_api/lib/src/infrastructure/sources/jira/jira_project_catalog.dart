@@ -9,7 +9,8 @@ import '../../protocols/rest/json_rest_protocol.dart';
 import 'jira_jql.dart';
 
 /// [ARCH: INFRASTRUCTURE]
-/// ROLE: GET /rest/api/3/project for the Jira project picker. Read-only.
+/// ROLE: Lists Jira Cloud projects for the Settings picker. Read-only.
+/// CONTRACT: Prefers `/rest/api/3/project/search`, falls back to `/project`.
 class JiraProjectCatalog implements IJiraProjectCatalog {
   JiraProjectCatalog(this._jsonRest);
 
@@ -22,15 +23,10 @@ class JiraProjectCatalog implements IJiraProjectCatalog {
   }) async {
     final auth = jiraRequestAuth(settings, orgConfig: orgConfig);
     if (auth == null) {
-      return const Left(
-        ValidationFailure('Jira credentials are incomplete'),
-      );
+      return const Left(ValidationFailure('Jira credentials are incomplete'));
     }
     try {
-      final list = await _jsonRest.getJsonList(
-        Uri.parse('${auth.apiBase}/rest/api/3/project'),
-        headers: auth.headers,
-      );
+      final list = await listJiraProjectRows(_jsonRest, auth);
       final projects = <JiraProject>[];
       final seen = <String>{};
       for (final raw in list) {
@@ -48,4 +44,27 @@ class JiraProjectCatalog implements IJiraProjectCatalog {
       return const Left(ValidationFailure('Could not list Jira projects'));
     }
   }
+}
+
+/// Fetches raw Jira project rows for the picker and whoami discovery.
+Future<List<dynamic>> listJiraProjectRows(
+  JsonRestProtocol jsonRest,
+  JiraRequestAuth auth,
+) async {
+  try {
+    final body = await jsonRest.getJsonMap(
+      Uri.parse(
+        '${auth.apiBase}/rest/api/3/project/search',
+      ).replace(queryParameters: const {'maxResults': '100'}),
+      headers: auth.headers,
+    );
+    final values = body['values'];
+    if (values is List) return values;
+  } on JsonRestProtocolException {
+    // Classic `/project` remains valid on some Cloud sites.
+  }
+  return jsonRest.getJsonList(
+    Uri.parse('${auth.apiBase}/rest/api/3/project'),
+    headers: auth.headers,
+  );
 }

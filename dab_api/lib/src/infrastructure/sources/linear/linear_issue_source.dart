@@ -1,6 +1,7 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/linear/linear_issue_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
+import 'package:dab_api/src/domain/entities/user/linear_team_watch_list.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -47,6 +48,30 @@ query DabIssues(\$filter: IssueFilter, \$first: Int!, \$after: String) {
       team { key }
       assignee { id name displayName }
       creator { id name displayName }
+    }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+''';
+
+  static const _commentsQuery = '''
+query DabComments(\$filter: CommentFilter, \$first: Int!, \$after: String) {
+  comments(filter: \$filter, first: \$first, after: \$after) {
+    nodes {
+      id
+      body
+      createdAt
+      user { id name displayName }
+      issue {
+        identifier
+        title
+        url
+        updatedAt
+        state { name }
+        team { key }
+        assignee { id name displayName }
+        creator { id name displayName }
+      }
     }
     pageInfo { hasNextPage endCursor }
   }
@@ -163,12 +188,17 @@ query DabUserLookup(\$filter: UserFilter) {
               },
             ],
           };
-    final filter = {
+    final teamKeys = parseLinearTeamKeys(cfg.settings['teamKeys']);
+    final filter = <String, dynamic>{
       'updatedAt': {
         'gte': start.toUtc().toIso8601String(),
         'lte': end.toUtc().toIso8601String(),
       },
       ...attributionFilter,
+      if (teamKeys.isNotEmpty)
+        'team': {
+          'key': {'in': teamKeys},
+        },
     };
 
     final endpoint = _endpoint(cfg.settings);
@@ -211,7 +241,137 @@ query DabUserLookup(\$filter: UserFilter) {
       if (after == null || after.isEmpty) break;
     }
 
-    return results;
+    final commentsByIssue = await _fetchComments(
+      endpoint: endpoint,
+      apiKey: apiKey,
+      start: start,
+      end: end,
+      externalToUser: externalToUser,
+      teamKeys: teamKeys,
+    );
+    return _mergeComments(results, commentsByIssue, externalToUser);
+  }
+
+  /// Comments in [start]–[end] whose author or parent issue maps to a linked
+  /// Linear identity. Failures are swallowed so issue polling still returns.
+  Future<Map<String, _LinearIssueComments>> _fetchComments({
+    required Uri endpoint,
+    required String apiKey,
+    required DateTime start,
+    required DateTime end,
+    required Map<String, String> externalToUser,
+    required List<String> teamKeys,
+  }) async {
+    final externalIds = externalToUser.keys.toList();
+    final filter = {
+      'updatedAt': {
+        'gte': start.toUtc().toIso8601String(),
+        'lte': end.toUtc().toIso8601String(),
+      },
+      'or': [
+        {
+          'user': {
+            'id': {'in': externalIds},
+          },
+        },
+        {
+          'issue': {
+            'assignee': {
+              'id': {'in': externalIds},
+            },
+          },
+        },
+        {
+          'issue': {
+            'creator': {
+              'id': {'in': externalIds},
+            },
+          },
+        },
+      ],
+    };
+
+    final byIssue = <String, _LinearIssueComments>{};
+    String? after;
+    for (var page = 0; page < 20; page++) {
+      Map<String, dynamic> data;
+      try {
+        data = await _graphql.execute(
+          endpoint,
+          bearerToken: apiKey,
+          document: _commentsQuery,
+          variables: {'filter': filter, 'first': 50, 'after': ?after},
+        );
+      } catch (_) {
+        break;
+      }
+
+      final comments = data['comments'];
+      if (comments is! Map<String, dynamic>) break;
+      final nodes = comments['nodes'];
+      if (nodes is! List) break;
+
+      for (final node in nodes) {
+        if (node is! Map<String, dynamic>) continue;
+        final issueRaw = node['issue'];
+        if (issueRaw is! Map<String, dynamic>) continue;
+        final identifier = (issueRaw['identifier'] ?? '').toString().trim();
+        if (identifier.isEmpty) continue;
+        if (teamKeys.isNotEmpty) {
+          final team = issueRaw['team'];
+          var teamKey = team is Map<String, dynamic>
+              ? (team['key'] ?? '').toString().trim()
+              : '';
+          if (teamKey.isEmpty && identifier.contains('-')) {
+            teamKey = identifier.split('-').first;
+          }
+          if (!teamKeys.contains(teamKey)) continue;
+        }
+        final comment = mapLinearCommentNode(node, externalToUser);
+        if (comment == null) continue;
+        final bucket = byIssue.putIfAbsent(
+          identifier,
+          () => _LinearIssueComments(issue: issueRaw, comments: []),
+        );
+        bucket.comments.add(comment);
+      }
+
+      final pageInfo = comments['pageInfo'];
+      if (pageInfo is! Map<String, dynamic> ||
+          pageInfo['hasNextPage'] != true) {
+        break;
+      }
+      after = pageInfo['endCursor']?.toString();
+      if (after == null || after.isEmpty) break;
+    }
+    return byIssue;
+  }
+
+  List<LinearIssueDto> _mergeComments(
+    List<LinearIssueDto> issues,
+    Map<String, _LinearIssueComments> commentsByIssue,
+    Map<String, String> externalToUser,
+  ) {
+    if (commentsByIssue.isEmpty) return issues;
+
+    final merged = <LinearIssueDto>[];
+    final seen = <String>{};
+    for (final issue in issues) {
+      seen.add(issue.identifier);
+      final extra = commentsByIssue[issue.identifier];
+      if (extra == null || extra.comments.isEmpty) {
+        merged.add(issue);
+        continue;
+      }
+      merged.add(issue.copyWith(comments: extra.comments));
+    }
+    for (final entry in commentsByIssue.entries) {
+      if (seen.contains(entry.key)) continue;
+      final dto = mapLinearIssueNode(entry.value.issue, externalToUser);
+      if (dto == null) continue;
+      merged.add(dto.copyWith(comments: entry.value.comments));
+    }
+    return merged;
   }
 
   @override
@@ -332,6 +492,37 @@ LinearIssueDto? mapLinearIssueNode(
   );
 }
 
+/// Maps one GraphQL/webhook comment node. Returns null without id or timestamp.
+LinearIssueCommentDto? mapLinearCommentNode(
+  Map<String, dynamic> node,
+  Map<String, String> externalToUser,
+) {
+  final id = (node['id'] ?? '').toString().trim();
+  if (id.isEmpty) return null;
+
+  final createdRaw =
+      node['createdAt']?.toString() ?? node['updatedAt']?.toString();
+  final createdAt = createdRaw != null
+      ? DateTime.tryParse(createdRaw)?.toUtc()
+      : null;
+  if (createdAt == null) return null;
+
+  var user = node['user'];
+  if (user is! Map<String, dynamic> && node['userId'] != null) {
+    user = {'id': node['userId']};
+  }
+  final userId = linearPersonId(user);
+  final mapped = userId == null ? null : externalToUser[userId];
+
+  return LinearIssueCommentDto(
+    id: id,
+    body: (node['body'] ?? '').toString(),
+    createdAt: createdAt,
+    dabUserId: mapped,
+    authorDisplayName: linearPersonDisplay(user),
+  );
+}
+
 /// Extracts a Linear user UUID from an embedded person node.
 String? linearPersonId(Object? person) {
   if (person is! Map<String, dynamic>) return null;
@@ -343,8 +534,14 @@ String? linearPersonId(Object? person) {
 /// Extracts a display label from an embedded person node.
 String? linearPersonDisplay(Object? person) {
   if (person is! Map<String, dynamic>) return null;
-  final display =
-      (person['displayName'] ?? person['name'])?.toString().trim();
+  final display = (person['displayName'] ?? person['name'])?.toString().trim();
   if (display == null || display.isEmpty) return null;
   return display;
+}
+
+class _LinearIssueComments {
+  _LinearIssueComments({required this.issue, required this.comments});
+
+  final Map<String, dynamic> issue;
+  final List<LinearIssueCommentDto> comments;
 }

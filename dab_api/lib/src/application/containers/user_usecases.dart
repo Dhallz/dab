@@ -1,10 +1,12 @@
 import '../usecases/user/delete_user_provider_credential.dart';
 import '../usecases/user/get_jira_project_watch_list.dart';
+import '../usecases/user/get_linear_team_watch_list.dart';
 import '../usecases/user/get_user_by_id.dart';
 import '../usecases/user/get_users.dart';
 import '../usecases/user/get_users_by_group.dart';
 import '../usecases/user/list_user_provider_credentials.dart';
 import '../usecases/user/save_jira_project_watch_list.dart';
+import '../usecases/user/save_linear_team_watch_list.dart';
 import '../usecases/user/save_user_provider_credential.dart';
 import '../usecases/user/start_provider_oauth.dart';
 import '../usecases/user/sync_phorge_users.dart';
@@ -22,6 +24,8 @@ class UserUseCases {
   final StartProviderOauth startProviderOauth;
   final GetJiraProjectWatchList getJiraProjectWatchList;
   final SaveJiraProjectWatchList saveJiraProjectWatchList;
+  final GetLinearTeamWatchList getLinearTeamWatchList;
+  final SaveLinearTeamWatchList saveLinearTeamWatchList;
 
   UserUseCases({
     required this.getUserById,
@@ -35,5 +39,7 @@ class UserUseCases {
     required this.startProviderOauth,
     required this.getJiraProjectWatchList,
     required this.saveJiraProjectWatchList,
+    required this.getLinearTeamWatchList,
+    required this.saveLinearTeamWatchList,
   });
 }

@@ -61,6 +61,7 @@ class SaveUserProviderCredential {
       if (key == 'instanceUrl' ||
           key == 'apiBaseUrl' ||
           key == 'projectKeys' ||
+          key == 'teamKeys' ||
           key == 'workspace' ||
           key == 'guildId' ||
           key == 'channels' ||
@@ -79,9 +80,7 @@ class SaveUserProviderCredential {
     if (probeResult.isLeft()) {
       return Left(probeResult.getLeft().toNullable()!);
     }
-    final whoami = probeResult.getOrElse(
-      (l) => throw StateError(l.message),
-    );
+    final whoami = probeResult.getOrElse((l) => throw StateError(l.message));
 
     if (isBotSharedProvider(id)) {
       return _saveSharedBot(
@@ -169,7 +168,8 @@ class SaveUserProviderCredential {
     required ProviderWhoamiResult whoami,
   }) async {
     final now = DateTime.now().toUtc();
-    final base = orgConfig ??
+    final base =
+        orgConfig ??
         ProviderConfig(
           id: providerId,
           name: providerId,
@@ -178,11 +178,20 @@ class SaveUserProviderCredential {
               : 'https://discord.com',
           isActive: true,
         );
-    final nextSettings = Map<String, dynamic>.from(base.settings)..addAll({
-      for (final key in ['botToken', 'api.token', 'token', 'signingSecret',
-        'workspaceId', 'guildId', 'channels', 'apiBaseUrl'])
-        if (merged[key] != null) key: merged[key],
-    });
+    final nextSettings = Map<String, dynamic>.from(base.settings)
+      ..addAll({
+        for (final key in [
+          'botToken',
+          'api.token',
+          'token',
+          'signingSecret',
+          'workspaceId',
+          'guildId',
+          'channels',
+          'apiBaseUrl',
+        ])
+          if (merged[key] != null) key: merged[key],
+      });
     final savedConfig = await _configs.saveConfig(
       base.copyWith(settings: nextSettings, isActive: true),
     );
@@ -220,7 +229,8 @@ class SaveUserProviderCredential {
     required Map<String, dynamic> merged,
     required List<String> discovered,
   }) async {
-    final base = orgConfig ??
+    final base =
+        orgConfig ??
         ProviderConfig(
           id: providerId,
           name: providerId,
@@ -263,6 +273,11 @@ class SaveUserProviderCredential {
             next['workspace'] = first.split('/').first;
           }
         }
+      } else if (providerId == 'linear') {
+        final existing = (next['teamKeys'] ?? '').toString().trim();
+        if (existing.isEmpty) {
+          next['teamKeys'] = discovered.take(25).join('\n');
+        }
       } else if (providerId == 'jira') {
         final existing = (next['projectKeys'] ?? '').toString().trim();
         if (existing.isEmpty) {
@@ -297,6 +312,7 @@ class SaveUserProviderCredential {
       if (key == 'instanceUrl' ||
           key == 'apiBaseUrl' ||
           key == 'projectKeys' ||
+          key == 'teamKeys' ||
           key == 'workspace' ||
           key == 'guildId' ||
           key == 'channels' ||

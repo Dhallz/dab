@@ -63,14 +63,18 @@ class AdminIslandBarContent extends ConsumerWidget {
       icon: AppIcons.success,
       title: l10n.adminIslandLinksOkTitle,
       value: '${m.connectionOk}',
-      tooltip: l10n.adminIslandLinksOkTooltip,
+      tooltip: isPersonal
+          ? l10n.adminIslandLinksOkTooltipPersonal
+          : l10n.adminIslandLinksOkTooltip,
       iconColor: Theme.of(context).colorScheme.tertiary,
     );
     final failedTile = AdminIslandStatTile(
       icon: AppIcons.error,
       title: l10n.adminIslandFailedTitle,
       value: '${m.connectionFailed}',
-      tooltip: l10n.adminIslandFailedTooltip,
+      tooltip: isPersonal
+          ? l10n.adminIslandFailedTooltipPersonal
+          : l10n.adminIslandFailedTooltip,
       iconColor: m.connectionFailed > 0
           ? Theme.of(context).colorScheme.error
           : Theme.of(context).colorScheme.onSurfaceVariant,

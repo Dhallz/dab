@@ -7,6 +7,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
+import '../../domain/entities/user/linear_team_watch_list.dart';
 import '../core/failures.dart';
 
 abstract class IUserRepository {
@@ -78,9 +79,7 @@ abstract class IUserRepository {
   });
 
   /// Self-serve: start browser OAuth for a provider. Returns the authorize URL.
-  Future<Either<AppFailure, String>> startMyOauth({
-    required String providerId,
-  });
+  Future<Either<AppFailure, String>> startMyOauth({required String providerId});
 
   /// Self-serve: Jira projects visible to the caller plus instance watch keys.
   Future<Either<AppFailure, JiraProjectWatchList>> listMyJiraProjects();
@@ -88,5 +87,13 @@ abstract class IUserRepository {
   /// Self-serve: replace instance Jira `projectKeys`.
   Future<Either<AppFailure, JiraProjectWatchList>> saveMyJiraProjects({
     required List<String> projectKeys,
+  });
+
+  /// Self-serve: Linear teams visible to the caller plus instance watch keys.
+  Future<Either<AppFailure, LinearTeamWatchList>> listMyLinearTeams();
+
+  /// Self-serve: replace instance Linear `teamKeys`.
+  Future<Either<AppFailure, LinearTeamWatchList>> saveMyLinearTeams({
+    required List<String> teamKeys,
   });
 }

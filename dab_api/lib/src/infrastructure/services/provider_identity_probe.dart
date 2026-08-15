@@ -11,6 +11,7 @@ import '../protocols/slack/slack_web_protocol.dart';
 import '../sources/gitlab/gitlab_commit_source.dart';
 import '../sources/bitbucket/bitbucket_commit_source.dart';
 import '../sources/jira/jira_jql.dart';
+import '../sources/jira/jira_project_catalog.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Validates provider credentials via whoami and optional watch-list discovery.
@@ -165,8 +166,9 @@ class ProviderIdentityProbe {
       Uri.parse('https://api.bitbucket.org/2.0/user'),
       headers: headers,
     );
-    final accountId =
-        (user['account_id'] ?? user['uuid'] ?? '').toString().trim();
+    final accountId = (user['account_id'] ?? user['uuid'] ?? '')
+        .toString()
+        .trim();
     final display = (user['display_name'] ?? user['username'] ?? '')
         .toString()
         .trim();
@@ -215,10 +217,7 @@ class ProviderIdentityProbe {
     }
     final projects = <String>[];
     try {
-      final list = await _jsonRest.getJsonList(
-        Uri.parse('${auth.apiBase}/rest/api/3/project'),
-        headers: auth.headers,
-      );
+      final list = await listJiraProjectRows(_jsonRest, auth);
       for (final raw in list) {
         if (raw is! Map<String, dynamic>) continue;
         final key = (raw['key'] ?? '').toString().trim();
@@ -310,10 +309,7 @@ class ProviderIdentityProbe {
     final token = extractProviderToken('discord', settings);
     final me = await _jsonRest.getJsonMap(
       Uri.parse('https://discord.com/api/v10/users/@me'),
-      headers: {
-        'Authorization': 'Bot $token',
-        'Accept': 'application/json',
-      },
+      headers: {'Authorization': 'Bot $token', 'Accept': 'application/json'},
     );
     final id = (me['id'] ?? '').toString().trim();
     if (id.isEmpty) throw StateError('Discord @me returned no id');

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/containers/user_usecases.dart';
 import '../../../domain/entities/user/jira_project_watch_list.dart';
+import '../../../domain/entities/user/linear_team_watch_list.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
@@ -27,6 +28,12 @@ class ConnectedAccountsState {
   final List<String> jiraDraftKeys;
   final bool jiraProjectsLoading;
   final bool jiraProjectsSaving;
+  final LinearTeamWatchList? linearTeams;
+  final List<String> linearDraftKeys;
+  final bool linearTeamsLoading;
+  final bool linearTeamsSaving;
+  final String? jiraError;
+  final String? linearError;
 
   const ConnectedAccountsState({
     this.status = ViewStatus.initial,
@@ -37,6 +44,12 @@ class ConnectedAccountsState {
     this.jiraDraftKeys = const [],
     this.jiraProjectsLoading = false,
     this.jiraProjectsSaving = false,
+    this.linearTeams,
+    this.linearDraftKeys = const [],
+    this.linearTeamsLoading = false,
+    this.linearTeamsSaving = false,
+    this.jiraError,
+    this.linearError,
   });
 
   UserProviderCredentialSummary? forProvider(String providerId) {
@@ -52,6 +65,12 @@ class ConnectedAccountsState {
     return saved.length != draft.length || !saved.containsAll(draft);
   }
 
+  bool get linearDraftDirty {
+    final saved = {...(linearTeams?.selected ?? const <String>[])};
+    final draft = {...linearDraftKeys};
+    return saved.length != draft.length || !saved.containsAll(draft);
+  }
+
   ConnectedAccountsState copyWith({
     ViewStatus? status,
     List<UserProviderCredentialSummary>? credentials,
@@ -61,14 +80,25 @@ class ConnectedAccountsState {
     List<String>? jiraDraftKeys,
     bool? jiraProjectsLoading,
     bool? jiraProjectsSaving,
+    LinearTeamWatchList? linearTeams,
+    List<String>? linearDraftKeys,
+    bool? linearTeamsLoading,
+    bool? linearTeamsSaving,
+    String? jiraError,
+    String? linearError,
     bool clearBusy = false,
     bool clearJiraProjects = false,
+    bool clearLinearTeams = false,
+    bool clearJiraError = false,
+    bool clearLinearError = false,
   }) {
     return ConnectedAccountsState(
       status: status ?? this.status,
       credentials: credentials ?? this.credentials,
       errorMessage: errorMessage,
-      busyProviderId: clearBusy ? null : (busyProviderId ?? this.busyProviderId),
+      busyProviderId: clearBusy
+          ? null
+          : (busyProviderId ?? this.busyProviderId),
       jiraProjects: clearJiraProjects
           ? null
           : (jiraProjects ?? this.jiraProjects),
@@ -77,11 +107,24 @@ class ConnectedAccountsState {
           : (jiraDraftKeys ?? this.jiraDraftKeys),
       jiraProjectsLoading: jiraProjectsLoading ?? this.jiraProjectsLoading,
       jiraProjectsSaving: jiraProjectsSaving ?? this.jiraProjectsSaving,
+      linearTeams: clearLinearTeams ? null : (linearTeams ?? this.linearTeams),
+      linearDraftKeys: clearLinearTeams
+          ? const []
+          : (linearDraftKeys ?? this.linearDraftKeys),
+      linearTeamsLoading: linearTeamsLoading ?? this.linearTeamsLoading,
+      linearTeamsSaving: linearTeamsSaving ?? this.linearTeamsSaving,
+      jiraError: clearJiraProjects || clearJiraError
+          ? null
+          : (jiraError ?? this.jiraError),
+      linearError: clearLinearTeams || clearLinearError
+          ? null
+          : (linearError ?? this.linearError),
     );
   }
 }
 
-class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsState> {
+class ConnectedAccountsNotifier
+    extends AutoDisposeNotifier<ConnectedAccountsState> {
   UserUseCases get _users => sl.userUseCases;
 
   @override
@@ -107,6 +150,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
           errorMessage: null,
         );
         unawaited(_maybeLoadJiraProjects(list));
+        unawaited(_maybeLoadLinearTeams(list));
       },
     );
   }
@@ -122,10 +166,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     );
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          clearBusy: true,
-          errorMessage: failure.message,
-        );
+        state = state.copyWith(clearBusy: true, errorMessage: failure.message);
         return failure.message;
       },
       (summary) {
@@ -151,10 +192,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     final result = await _users.startMyOauth.execute(providerId: providerId);
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          clearBusy: true,
-          errorMessage: failure.message,
-        );
+        state = state.copyWith(clearBusy: true, errorMessage: failure.message);
         return failure.message;
       },
       (url) async {
@@ -205,6 +243,9 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
         if (providerId == 'jira') {
           await loadJiraProjects();
         }
+        if (providerId == 'linear') {
+          await loadLinearTeams();
+        }
         return;
       }
     }
@@ -222,14 +263,25 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     await loadJiraProjects();
   }
 
+  Future<void> _maybeLoadLinearTeams(
+    List<UserProviderCredentialSummary> list,
+  ) async {
+    final linear = list.where((c) => c.providerId == 'linear').firstOrNull;
+    if (linear?.isConnected != true) {
+      state = state.copyWith(clearLinearTeams: true);
+      return;
+    }
+    await loadLinearTeams();
+  }
+
   Future<void> loadJiraProjects() async {
-    state = state.copyWith(jiraProjectsLoading: true);
+    state = state.copyWith(jiraProjectsLoading: true, clearJiraError: true);
     final result = await _users.listMyJiraProjects.execute();
     result.fold(
       (failure) {
         state = state.copyWith(
           jiraProjectsLoading: false,
-          errorMessage: failure.message,
+          jiraError: failure.message,
         );
       },
       (watch) {
@@ -237,7 +289,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
           jiraProjectsLoading: false,
           jiraProjects: watch,
           jiraDraftKeys: List<String>.from(watch.selected),
-          errorMessage: null,
+          clearJiraError: true,
         );
       },
     );
@@ -278,6 +330,62 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     );
   }
 
+  Future<void> loadLinearTeams() async {
+    state = state.copyWith(linearTeamsLoading: true, clearLinearError: true);
+    final result = await _users.listMyLinearTeams.execute();
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          linearTeamsLoading: false,
+          linearError: failure.message,
+        );
+      },
+      (watch) {
+        state = state.copyWith(
+          linearTeamsLoading: false,
+          linearTeams: watch,
+          linearDraftKeys: List<String>.from(watch.selected),
+          clearLinearError: true,
+        );
+      },
+    );
+  }
+
+  void toggleLinearTeam(String key) {
+    final next = [...state.linearDraftKeys];
+    if (next.contains(key)) {
+      next.remove(key);
+    } else {
+      next.add(key);
+    }
+    state = state.copyWith(linearDraftKeys: next);
+  }
+
+  Future<String?> saveLinearTeams() async {
+    state = state.copyWith(linearTeamsSaving: true, errorMessage: null);
+    final result = await _users.saveMyLinearTeams.execute(
+      teamKeys: state.linearDraftKeys,
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          linearTeamsSaving: false,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (watch) {
+        state = state.copyWith(
+          linearTeamsSaving: false,
+          linearTeams: watch,
+          linearDraftKeys: List<String>.from(watch.selected),
+        );
+        unawaitedRefreshHealth();
+        return null;
+      },
+    );
+  }
+
   Future<String?> test(
     String providerId, {
     Map<String, dynamic>? settings,
@@ -289,10 +397,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     );
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          clearBusy: true,
-          errorMessage: failure.message,
-        );
+        state = state.copyWith(clearBusy: true, errorMessage: failure.message);
         return failure.message;
       },
       (_) {
@@ -309,10 +414,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
     );
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          clearBusy: true,
-          errorMessage: failure.message,
-        );
+        state = state.copyWith(clearBusy: true, errorMessage: failure.message);
         return failure.message;
       },
       (_) {
@@ -323,6 +425,7 @@ class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsSta
           ],
           clearBusy: true,
           clearJiraProjects: providerId == 'jira',
+          clearLinearTeams: providerId == 'linear',
         );
         unawaitedRefreshHealth();
         return null;

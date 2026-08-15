@@ -5,7 +5,6 @@ import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
-import '../../../../domain/entities/user/jira_project_watch_list.dart';
 import '../../../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../../features/app/app_notifier.dart';
 import '../connected_accounts_notifier.dart';
@@ -32,9 +31,7 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
     final configs = ref.watch(appNotifierProvider.select((s) => s.configs));
     final l10n = context.l10n;
 
-    final names = {
-      for (final config in configs) config.id: config.name,
-    };
+    final names = {for (final config in configs) config.id: config.name};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,9 +40,7 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           l10n.settingsConnectedAccountsSubtitle,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.secondary,
-          ),
+          style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
         ),
         const SizedBox(height: 16),
         if (state.status == ViewStatus.loading)
@@ -62,15 +57,46 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
               busy: state.busyProviderId == id,
               onConnect: () => notifier.startOauth(id),
               onDisconnect: () => notifier.disconnect(id),
-              jiraPicker: id == 'jira' && state.forProvider(id)?.isConnected == true
-                  ? _JiraProjectsPicker(
-                      watch: state.jiraProjects,
+              jiraPicker:
+                  id == 'jira' && state.forProvider(id)?.isConnected == true
+                  ? _WatchListPicker(
+                      title: l10n.settingsJiraProjectsTitle,
+                      subtitle: l10n.settingsJiraProjectsSubtitle,
+                      empty: l10n.settingsJiraProjectsEmpty,
+                      saveLabel: l10n.settingsJiraProjectsSave,
+                      items: [
+                        for (final p
+                            in state.jiraProjects?.available ?? const [])
+                          (key: p.key, name: p.name),
+                      ],
                       draftKeys: state.jiraDraftKeys,
                       loading: state.jiraProjectsLoading,
                       saving: state.jiraProjectsSaving,
                       dirty: state.jiraDraftDirty,
+                      hasLoaded: state.jiraProjects != null,
+                      errorMessage: state.jiraError,
                       onToggle: notifier.toggleJiraProject,
                       onSave: notifier.saveJiraProjects,
+                    )
+                  : id == 'linear' && state.forProvider(id)?.isConnected == true
+                  ? _WatchListPicker(
+                      title: l10n.settingsLinearTeamsTitle,
+                      subtitle: l10n.settingsLinearTeamsSubtitle,
+                      empty: l10n.settingsLinearTeamsEmpty,
+                      saveLabel: l10n.settingsLinearTeamsSave,
+                      items: [
+                        for (final t
+                            in state.linearTeams?.available ?? const [])
+                          (key: t.key, name: t.name),
+                      ],
+                      draftKeys: state.linearDraftKeys,
+                      loading: state.linearTeamsLoading,
+                      saving: state.linearTeamsSaving,
+                      dirty: state.linearDraftDirty,
+                      hasLoaded: state.linearTeams != null,
+                      errorMessage: state.linearError,
+                      onToggle: notifier.toggleLinearTeam,
+                      onSave: notifier.saveLinearTeams,
                     )
                   : null,
             ),
@@ -119,8 +145,8 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final connected = widget.summary?.isConnected == true;
-    final identity = widget.summary?.externalUsername ??
-        widget.summary?.externalId;
+    final identity =
+        widget.summary?.externalUsername ?? widget.summary?.externalId;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -173,9 +199,7 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
                             _message = error ?? l10n.settingsOauthOpened;
                           });
                         },
-                  child: Text(
-                    l10n.settingsConnectWithProvider(widget.title),
-                  ),
+                  child: Text(l10n.settingsConnectWithProvider(widget.title)),
                 ),
                 if (connected)
                   TextButton(
@@ -186,8 +210,8 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
                             if (!mounted) return;
                             setState(() {
                               _ok = error == null;
-                              _message = error ??
-                                  l10n.settingsCredentialDisconnected;
+                              _message =
+                                  error ?? l10n.settingsCredentialDisconnected;
                             });
                           },
                     child: Text(l10n.settingsCredentialDisconnect),
@@ -245,8 +269,8 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final connected = widget.summary?.isConnected == true;
-    final identity = widget.summary?.externalUsername ??
-        widget.summary?.externalId;
+    final identity =
+        widget.summary?.externalUsername ?? widget.summary?.externalId;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -314,7 +338,8 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
                           if (!mounted) return;
                           setState(() {
                             _ok = error == null;
-                            _message = error ?? l10n.settingsCredentialConnected;
+                            _message =
+                                error ?? l10n.settingsCredentialConnected;
                           });
                         },
                   child: Text(l10n.settingsCredentialConnect),
@@ -328,8 +353,8 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
                             if (!mounted) return;
                             setState(() {
                               _ok = error == null;
-                              _message = error ??
-                                  l10n.settingsCredentialDisconnected;
+                              _message =
+                                  error ?? l10n.settingsCredentialDisconnected;
                               if (error == null) _token.clear();
                             });
                           },
@@ -350,73 +375,87 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
   }
 }
 
-class _JiraProjectsPicker extends StatelessWidget {
-  final JiraProjectWatchList? watch;
+class _WatchListPicker extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String empty;
+  final String saveLabel;
+  final List<({String key, String name})> items;
   final List<String> draftKeys;
   final bool loading;
   final bool saving;
   final bool dirty;
+  final bool hasLoaded;
+  final String? errorMessage;
   final void Function(String key) onToggle;
   final Future<String?> Function() onSave;
 
-  const _JiraProjectsPicker({
-    required this.watch,
+  const _WatchListPicker({
+    required this.title,
+    required this.subtitle,
+    required this.empty,
+    required this.saveLabel,
+    required this.items,
     required this.draftKeys,
     required this.loading,
     required this.saving,
     required this.dirty,
+    required this.hasLoaded,
+    this.errorMessage,
     required this.onToggle,
     required this.onSave,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    if (loading && watch == null) {
+    if (loading && !hasLoaded) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: LinearProgressIndicator(),
       );
     }
-    final projects = watch?.available ?? const [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.settingsJiraProjectsTitle,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.secondary,
-          ),
+          title,
+          style: AppTextStyles.labelSmall.copyWith(color: AppColors.secondary),
         ),
         const SizedBox(height: 4),
         Text(
-          l10n.settingsJiraProjectsSubtitle,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.secondary,
-          ),
+          subtitle,
+          style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
         ),
         const SizedBox(height: 8),
-        if (projects.isEmpty)
-          Text(
-            l10n.settingsJiraProjectsEmpty,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.secondary,
+        if (errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              errorMessage!,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
+          )
+        else if (items.isEmpty)
+          Text(
+            empty,
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
           )
         else
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final project in projects)
+              for (final item in items)
                 FilterChip(
                   label: Text(
-                    project.name == project.key
-                        ? project.key
-                        : '${project.key} · ${project.name}',
+                    item.name == item.key
+                        ? item.key
+                        : '${item.key} · ${item.name}',
                   ),
-                  selected: draftKeys.contains(project.key),
-                  onSelected: saving ? null : (_) => onToggle(project.key),
+                  selected: draftKeys.contains(item.key),
+                  onSelected: saving ? null : (_) => onToggle(item.key),
                 ),
             ],
           ),
@@ -426,7 +465,7 @@ class _JiraProjectsPicker extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: FilledButton(
               onPressed: saving ? null : onSave,
-              child: Text(l10n.settingsJiraProjectsSave),
+              child: Text(saveLabel),
             ),
           ),
         ],

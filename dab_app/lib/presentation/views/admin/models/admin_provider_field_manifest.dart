@@ -8,10 +8,14 @@ enum ProviderConfigSection { core, live, polling }
 /// [ARCH: PRESENTATION_MODEL]
 /// ROLE: Field manifest per provider id for sectioned Admin cards.
 class ProviderFieldManifest {
-  static AdminConfigField webhookEndpointField(AppLocalizations l10n) {
+  static AdminConfigField webhookEndpointField(
+    AppLocalizations l10n, {
+    String? hint,
+  }) {
     return AdminConfigField(
       key: 'webhookUrl',
       label: l10n.adminFieldWebhookEndpointUrl,
+      hint: hint,
     );
   }
 
@@ -228,7 +232,9 @@ class ProviderFieldManifest {
             isSecret: true,
           ),
         ],
-        ProviderConfigSection.polling: const [],
+        ProviderConfigSection.polling: [
+          AdminConfigField(key: 'teamKeys', label: 'Team keys (one per line)'),
+        ],
       };
     }
 
@@ -280,6 +286,15 @@ class ProviderFieldManifest {
       ProviderConfigSection.polling: [],
     };
 
+    final liveWebhook = [
+      webhookEndpointField(l10n, hint: l10n.adminPersonalLiveWebhookHint),
+      AdminConfigField(
+        key: 'webhookSecret',
+        label: l10n.adminFieldWebhookSecret,
+        isSecret: true,
+      ),
+    ];
+
     if (lowerId.contains('slack')) {
       return {
         ProviderConfigSection.core: [
@@ -293,7 +308,14 @@ class ProviderFieldManifest {
             label: l10n.adminFieldWorkspaceTeamId,
           ),
         ],
-        ProviderConfigSection.live: const [],
+        ProviderConfigSection.live: [
+          webhookEndpointField(l10n, hint: l10n.adminPersonalLiveWebhookHint),
+          AdminConfigField(
+            key: 'signingSecret',
+            label: l10n.adminFieldSigningSecret,
+            isSecret: true,
+          ),
+        ],
         ProviderConfigSection.polling: [
           AdminConfigField(
             key: 'channels',
@@ -326,7 +348,7 @@ class ProviderFieldManifest {
         lowerId.contains('bitbucket')) {
       return {
         ProviderConfigSection.core: oauthCore(),
-        ProviderConfigSection.live: const [],
+        ProviderConfigSection.live: liveWebhook,
         ProviderConfigSection.polling: const [],
       };
     }
@@ -338,7 +360,7 @@ class ProviderFieldManifest {
               ? l10n.adminFieldOauthClientIdJiraHint
               : null,
         ),
-        ProviderConfigSection.live: const [],
+        ProviderConfigSection.live: liveWebhook,
         ProviderConfigSection.polling: const [],
       };
     }

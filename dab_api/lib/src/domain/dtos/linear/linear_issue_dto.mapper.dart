@@ -14,6 +14,7 @@ class LinearIssueDtoMapper extends ClassMapperBase<LinearIssueDto> {
   static LinearIssueDtoMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = LinearIssueDtoMapper._());
+      LinearIssueCommentDtoMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -57,6 +58,17 @@ class LinearIssueDtoMapper extends ClassMapperBase<LinearIssueDto> {
     _$authorDisplayName,
     opt: true,
   );
+  static List<LinearIssueCommentDto> _$comments(LinearIssueDto v) => v.comments;
+  static const Field<LinearIssueDto, List<LinearIssueCommentDto>> _f$comments =
+      Field('comments', _$comments, opt: true, def: const []);
+  static bool _$includeIssueSnapshot(LinearIssueDto v) =>
+      v.includeIssueSnapshot;
+  static const Field<LinearIssueDto, bool> _f$includeIssueSnapshot = Field(
+    'includeIssueSnapshot',
+    _$includeIssueSnapshot,
+    opt: true,
+    def: true,
+  );
 
   @override
   final MappableFields<LinearIssueDto> fields = const {
@@ -68,6 +80,8 @@ class LinearIssueDtoMapper extends ClassMapperBase<LinearIssueDto> {
     #updatedAt: _f$updatedAt,
     #dabUserId: _f$dabUserId,
     #authorDisplayName: _f$authorDisplayName,
+    #comments: _f$comments,
+    #includeIssueSnapshot: _f$includeIssueSnapshot,
   };
 
   static LinearIssueDto _instantiate(DecodingData data) {
@@ -80,6 +94,8 @@ class LinearIssueDtoMapper extends ClassMapperBase<LinearIssueDto> {
       updatedAt: data.dec(_f$updatedAt),
       dabUserId: data.dec(_f$dabUserId),
       authorDisplayName: data.dec(_f$authorDisplayName),
+      comments: data.dec(_f$comments),
+      includeIssueSnapshot: data.dec(_f$includeIssueSnapshot),
     );
   }
 
@@ -145,6 +161,16 @@ extension LinearIssueDtoValueCopy<$R, $Out>
 
 abstract class LinearIssueDtoCopyWith<$R, $In extends LinearIssueDto, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
+  ListCopyWith<
+    $R,
+    LinearIssueCommentDto,
+    LinearIssueCommentDtoCopyWith<
+      $R,
+      LinearIssueCommentDto,
+      LinearIssueCommentDto
+    >
+  >
+  get comments;
   $R call({
     String? identifier,
     String? teamKey,
@@ -154,6 +180,8 @@ abstract class LinearIssueDtoCopyWith<$R, $In extends LinearIssueDto, $Out>
     DateTime? updatedAt,
     String? dabUserId,
     String? authorDisplayName,
+    List<LinearIssueCommentDto>? comments,
+    bool? includeIssueSnapshot,
   });
   LinearIssueDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -169,6 +197,21 @@ class _LinearIssueDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<LinearIssueDto> $mapper =
       LinearIssueDtoMapper.ensureInitialized();
   @override
+  ListCopyWith<
+    $R,
+    LinearIssueCommentDto,
+    LinearIssueCommentDtoCopyWith<
+      $R,
+      LinearIssueCommentDto,
+      LinearIssueCommentDto
+    >
+  >
+  get comments => ListCopyWith(
+    $value.comments,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(comments: v),
+  );
+  @override
   $R call({
     String? identifier,
     String? teamKey,
@@ -178,6 +221,8 @@ class _LinearIssueDtoCopyWithImpl<$R, $Out>
     DateTime? updatedAt,
     Object? dabUserId = $none,
     Object? authorDisplayName = $none,
+    List<LinearIssueCommentDto>? comments,
+    bool? includeIssueSnapshot,
   }) => $apply(
     FieldCopyWithData({
       if (identifier != null) #identifier: identifier,
@@ -188,6 +233,9 @@ class _LinearIssueDtoCopyWithImpl<$R, $Out>
       if (updatedAt != null) #updatedAt: updatedAt,
       if (dabUserId != $none) #dabUserId: dabUserId,
       if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
+      if (comments != null) #comments: comments,
+      if (includeIssueSnapshot != null)
+        #includeIssueSnapshot: includeIssueSnapshot,
     }),
   );
   @override
@@ -203,11 +251,197 @@ class _LinearIssueDtoCopyWithImpl<$R, $Out>
       #authorDisplayName,
       or: $value.authorDisplayName,
     ),
+    comments: data.get(#comments, or: $value.comments),
+    includeIssueSnapshot: data.get(
+      #includeIssueSnapshot,
+      or: $value.includeIssueSnapshot,
+    ),
   );
 
   @override
   LinearIssueDtoCopyWith<$R2, LinearIssueDto, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _LinearIssueDtoCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class LinearIssueCommentDtoMapper
+    extends ClassMapperBase<LinearIssueCommentDto> {
+  LinearIssueCommentDtoMapper._();
+
+  static LinearIssueCommentDtoMapper? _instance;
+  static LinearIssueCommentDtoMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = LinearIssueCommentDtoMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'LinearIssueCommentDto';
+
+  static String _$id(LinearIssueCommentDto v) => v.id;
+  static const Field<LinearIssueCommentDto, String> _f$id = Field('id', _$id);
+  static String _$body(LinearIssueCommentDto v) => v.body;
+  static const Field<LinearIssueCommentDto, String> _f$body = Field(
+    'body',
+    _$body,
+  );
+  static DateTime _$createdAt(LinearIssueCommentDto v) => v.createdAt;
+  static const Field<LinearIssueCommentDto, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+  );
+  static String? _$dabUserId(LinearIssueCommentDto v) => v.dabUserId;
+  static const Field<LinearIssueCommentDto, String> _f$dabUserId = Field(
+    'dabUserId',
+    _$dabUserId,
+    opt: true,
+  );
+  static String? _$authorDisplayName(LinearIssueCommentDto v) =>
+      v.authorDisplayName;
+  static const Field<LinearIssueCommentDto, String> _f$authorDisplayName =
+      Field('authorDisplayName', _$authorDisplayName, opt: true);
+
+  @override
+  final MappableFields<LinearIssueCommentDto> fields = const {
+    #id: _f$id,
+    #body: _f$body,
+    #createdAt: _f$createdAt,
+    #dabUserId: _f$dabUserId,
+    #authorDisplayName: _f$authorDisplayName,
+  };
+
+  static LinearIssueCommentDto _instantiate(DecodingData data) {
+    return LinearIssueCommentDto(
+      id: data.dec(_f$id),
+      body: data.dec(_f$body),
+      createdAt: data.dec(_f$createdAt),
+      dabUserId: data.dec(_f$dabUserId),
+      authorDisplayName: data.dec(_f$authorDisplayName),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static LinearIssueCommentDto fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<LinearIssueCommentDto>(map);
+  }
+
+  static LinearIssueCommentDto fromJson(String json) {
+    return ensureInitialized().decodeJson<LinearIssueCommentDto>(json);
+  }
+}
+
+mixin LinearIssueCommentDtoMappable {
+  String toJson() {
+    return LinearIssueCommentDtoMapper.ensureInitialized()
+        .encodeJson<LinearIssueCommentDto>(this as LinearIssueCommentDto);
+  }
+
+  Map<String, dynamic> toMap() {
+    return LinearIssueCommentDtoMapper.ensureInitialized()
+        .encodeMap<LinearIssueCommentDto>(this as LinearIssueCommentDto);
+  }
+
+  LinearIssueCommentDtoCopyWith<
+    LinearIssueCommentDto,
+    LinearIssueCommentDto,
+    LinearIssueCommentDto
+  >
+  get copyWith =>
+      _LinearIssueCommentDtoCopyWithImpl<
+        LinearIssueCommentDto,
+        LinearIssueCommentDto
+      >(this as LinearIssueCommentDto, $identity, $identity);
+  @override
+  String toString() {
+    return LinearIssueCommentDtoMapper.ensureInitialized().stringifyValue(
+      this as LinearIssueCommentDto,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return LinearIssueCommentDtoMapper.ensureInitialized().equalsValue(
+      this as LinearIssueCommentDto,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return LinearIssueCommentDtoMapper.ensureInitialized().hashValue(
+      this as LinearIssueCommentDto,
+    );
+  }
+}
+
+extension LinearIssueCommentDtoValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, LinearIssueCommentDto, $Out> {
+  LinearIssueCommentDtoCopyWith<$R, LinearIssueCommentDto, $Out>
+  get $asLinearIssueCommentDto => $base.as(
+    (v, t, t2) => _LinearIssueCommentDtoCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class LinearIssueCommentDtoCopyWith<
+  $R,
+  $In extends LinearIssueCommentDto,
+  $Out
+>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({
+    String? id,
+    String? body,
+    DateTime? createdAt,
+    String? dabUserId,
+    String? authorDisplayName,
+  });
+  LinearIssueCommentDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _LinearIssueCommentDtoCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, LinearIssueCommentDto, $Out>
+    implements LinearIssueCommentDtoCopyWith<$R, LinearIssueCommentDto, $Out> {
+  _LinearIssueCommentDtoCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<LinearIssueCommentDto> $mapper =
+      LinearIssueCommentDtoMapper.ensureInitialized();
+  @override
+  $R call({
+    String? id,
+    String? body,
+    DateTime? createdAt,
+    Object? dabUserId = $none,
+    Object? authorDisplayName = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (id != null) #id: id,
+      if (body != null) #body: body,
+      if (createdAt != null) #createdAt: createdAt,
+      if (dabUserId != $none) #dabUserId: dabUserId,
+      if (authorDisplayName != $none) #authorDisplayName: authorDisplayName,
+    }),
+  );
+  @override
+  LinearIssueCommentDto $make(CopyWithData data) => LinearIssueCommentDto(
+    id: data.get(#id, or: $value.id),
+    body: data.get(#body, or: $value.body),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
+    dabUserId: data.get(#dabUserId, or: $value.dabUserId),
+    authorDisplayName: data.get(
+      #authorDisplayName,
+      or: $value.authorDisplayName,
+    ),
+  );
+
+  @override
+  LinearIssueCommentDtoCopyWith<$R2, LinearIssueCommentDto, $Out2>
+  $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
+      _LinearIssueCommentDtoCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/jira/jira_issue_dto.dart';
+import '../../../domain/entities/user/jira_project_watch_list.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
@@ -15,10 +16,12 @@ import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Jira Cloud webhooks into the DAB live pipeline.
-/// CONTRACT: Handles `jira:issue_created` / `jira:issue_updated` (including
-/// comment events); persisted rows match polling ([OnJiraIssueDto.toActivities])
-/// shaping. Attribution is identity-based (`provider_id: jira` linked rows).
-/// CONSTRAINTS: Read-only toward Jira; dedupe on event + issue + updated stamp.
+/// CONTRACT: Handles `jira:issue_created` / `jira:issue_updated` and
+/// `comment_created` / `comment_updated`. Persisted rows match polling
+/// ([OnJiraIssueDto.toActivities]) shaping. Attribution is identity-based
+/// (`provider_id: jira` linked rows); unmapped comment authors fall back to
+/// the issue owner.
+/// CONSTRAINTS: Read-only toward Jira; dedupe on event + issue + comment id.
 class IngestJiraWebhook {
   final IUserRepository _userRepository;
   final AbsIActivityRepository _activityRepository;
@@ -36,16 +39,15 @@ class IngestJiraWebhook {
     ActivityLivePublisher? livePublisher,
   }) : _livePublisher = livePublisher;
 
-  static const _supportedEvents = {
-    'jira:issue_created',
-    'jira:issue_updated',
-  };
+  static const _issueEvents = {'jira:issue_created', 'jira:issue_updated'};
+  static const _commentEvents = {'comment_created', 'comment_updated'};
 
   Future<Either<Failure, JiraWebhookIngestionResult>> execute({
     required Map<String, dynamic> payload,
   }) async {
     final event = (payload['webhookEvent'] ?? '').toString().trim();
-    if (!_supportedEvents.contains(event)) {
+    final isCommentEvent = _commentEvents.contains(event);
+    if (!_issueEvents.contains(event) && !isCommentEvent) {
       return Right(
         JiraWebhookIngestionResult.ignored('unsupported_event:$event'),
       );
@@ -56,27 +58,41 @@ class IngestJiraWebhook {
       return const Right(JiraWebhookIngestionResult.ignored('missing_issue'));
     }
     final issueKey = (issue['key'] ?? '').toString().trim();
-    final fields = issue['fields'];
-    if (issueKey.isEmpty || fields is! Map<String, dynamic>) {
+    if (issueKey.isEmpty) {
+      return const Right(
+        JiraWebhookIngestionResult.ignored('invalid_issue_payload'),
+      );
+    }
+    final fieldsRaw = issue['fields'];
+    final fields = fieldsRaw is Map<String, dynamic>
+        ? fieldsRaw
+        : <String, dynamic>{};
+    if (fields.isEmpty && !isCommentEvent) {
       return const Right(
         JiraWebhookIngestionResult.ignored('invalid_issue_payload'),
       );
     }
 
-    final updatedRaw = fields['updated']?.toString();
-    final updatedAt = updatedRaw != null
-        ? DateTime.tryParse(updatedRaw)?.toUtc()
-        : null;
+    final commentRaw = payload['comment'];
+    final hasComment = commentRaw is Map<String, dynamic>;
+    final commentId = hasComment
+        ? (commentRaw['id'] ?? '').toString().trim()
+        : '';
+    final commentOnly = isCommentEvent || (hasComment && commentId.isNotEmpty);
+
+    final updatedAt =
+        _parseJiraDateTime(fields['updated']) ??
+        (hasComment
+            ? _parseJiraDateTime(commentRaw['updated']) ??
+                  _parseJiraDateTime(commentRaw['created'])
+            : null) ??
+        _parseJiraDateTime(payload['timestamp']);
     if (updatedAt == null) {
       return const Right(
         JiraWebhookIngestionResult.ignored('missing_updated_timestamp'),
       );
     }
 
-    final commentRaw = payload['comment'];
-    final commentId = commentRaw is Map<String, dynamic>
-        ? (commentRaw['id'] ?? '').toString().trim()
-        : '';
     final fingerprint =
         '$event|$issueKey|${updatedAt.millisecondsSinceEpoch}'
         '${commentId.isEmpty ? '' : '|comment|$commentId'}';
@@ -143,33 +159,30 @@ class IngestJiraWebhook {
       jiraPersonAccountId(creator),
     ]);
 
-    // Live path attribution is strict: comments are only ingested when their
-    // author resolves to a linked identity (no fallback attribution).
     final comments = <JiraIssueCommentDto>[];
-    if (commentRaw is Map<String, dynamic> && commentId.isNotEmpty) {
+    if (hasComment && commentId.isNotEmpty) {
       final author = commentRaw['author'];
       final authorAccountId = jiraPersonAccountId(author);
       final commentUserId = authorAccountId == null
           ? null
           : accountToUser[authorAccountId];
-      final createdRaw = commentRaw['created']?.toString();
-      final createdAt = createdRaw != null
-          ? DateTime.tryParse(createdRaw)?.toUtc()
-          : null;
-      if (commentUserId != null && createdAt != null) {
-        comments.add(
-          JiraIssueCommentDto(
-            id: commentId,
-            body: _extractCommentBody(commentRaw['body']),
-            createdAt: createdAt,
-            dabUserId: commentUserId,
-            authorDisplayName: pickJiraPersonDisplay(author),
-          ),
-        );
-      }
+      final createdAt =
+          _parseJiraDateTime(commentRaw['created']) ??
+          _parseJiraDateTime(commentRaw['updated']) ??
+          updatedAt;
+      comments.add(
+        JiraIssueCommentDto(
+          id: commentId,
+          body: _extractCommentBody(commentRaw['body']),
+          createdAt: createdAt,
+          dabUserId: commentUserId,
+          authorDisplayName: pickJiraPersonDisplay(author),
+        ),
+      );
     }
 
-    if (dabUserId == null && comments.isEmpty) {
+    if (dabUserId == null &&
+        comments.every((c) => (c.dabUserId ?? '').isEmpty)) {
       return const Right(
         JiraWebhookIngestionResult.ignored('no_attributable_users'),
       );
@@ -179,6 +192,17 @@ class IngestJiraWebhook {
     final projectKey = project is Map<String, dynamic>
         ? (project['key'] ?? '').toString().trim()
         : '';
+
+    final watchedProjects = parseJiraProjectKeys(
+      jiraConfig.settings['projectKeys'],
+    );
+    if (watchedProjects.isNotEmpty &&
+        projectKey.isNotEmpty &&
+        !watchedProjects.contains(projectKey)) {
+      return const Right(
+        JiraWebhookIngestionResult.ignored('project_not_watched'),
+      );
+    }
 
     final dto = JiraIssueDto(
       issueKey: issueKey,
@@ -194,6 +218,7 @@ class IngestJiraWebhook {
           pickJiraPersonDisplay(reporter) ??
           pickJiraPersonDisplay(creator),
       comments: comments,
+      includeIssueSnapshot: !commentOnly,
     );
 
     final activities = dto.toActivities(users);
@@ -243,6 +268,28 @@ class IngestJiraWebhook {
   String _extractCommentBody(Object? body) {
     if (body is String) return body.trim();
     return extractJiraCommentText(body);
+  }
+
+  /// Accepts ISO-8601 (`…+0000` or `…+00:00`) and unix-ms webhook timestamps.
+  DateTime? _parseJiraDateTime(Object? raw) {
+    if (raw == null) return null;
+    if (raw is int) {
+      return DateTime.fromMillisecondsSinceEpoch(raw, isUtc: true);
+    }
+    if (raw is num) {
+      return DateTime.fromMillisecondsSinceEpoch(raw.toInt(), isUtc: true);
+    }
+    var text = raw.toString().trim();
+    if (text.isEmpty) return null;
+    final asInt = int.tryParse(text);
+    if (asInt != null && text.length >= 12) {
+      return DateTime.fromMillisecondsSinceEpoch(asInt, isUtc: true);
+    }
+    text = text.replaceFirstMapped(
+      RegExp(r'([+-]\d{2})(\d{2})$'),
+      (m) => '${m[1]}:${m[2]}',
+    );
+    return DateTime.tryParse(text)?.toUtc();
   }
 
   static String? _firstMatchedUserId(

@@ -504,15 +504,15 @@ paths:
           description: Webhook HMAC key not configured for active phorge provider
   /integrations/jira/webhook:
     post:
-      summary: Jira Cloud webhook receiver (issue created/updated).
+      summary: Jira Cloud webhook receiver (issue and comment events).
       description: |
         Receives Jira admin-registered webhooks. When a **Secret** is configured
         on the Jira webhook, payloads are signed with HMAC-SHA256 in the
         `X-Hub-Signature` header (`sha256=<hex>`, WebSub format). DAB verifies
         that signature against `webhookSecret`. Plain `X-Webhook-Secret` or
         `secret` query parameter are accepted as a Bruno simulation fallback only.
-        Supported events are `jira:issue_created` and `jira:issue_updated`;
-        processing is asynchronous.
+        Supported events are `jira:issue_created`, `jira:issue_updated`,
+        `comment_created`, and `comment_updated`; processing is asynchronous.
       parameters:
         - name: X-Hub-Signature
           in: header
@@ -577,11 +577,13 @@ paths:
           description: Webhook secret not configured for active jira provider
   /integrations/linear/webhook:
     post:
-      summary: Linear webhook receiver (Issue create/update).
+      summary: Linear webhook receiver (Issue and Comment create/update).
       description: |
         Receives Linear webhooks signed with HMAC-SHA256 of the raw body
         (`linear-signature` header, hex digest). `linear-delivery` is used for
-        deduplication when present. Processing is asynchronous.
+        deduplication when present. Processing is asynchronous. `Issue` and
+        `Comment` create/update events are ingested; comments mint a distinct
+        activity id so Dashboard notifies while Explorer groups by issue key.
       parameters:
         - name: linear-signature
           in: header
@@ -1085,11 +1087,12 @@ paths:
           description: Provider not OAuth-capable or OAuth app not configured
   /users/me/credentials/{provider}/projects:
     get:
-      summary: List Jira projects for the watch-list picker
+      summary: List Jira projects or Linear teams for the watch-list picker
       description: |
-        Jira only. Returns `{ available: [{ key, name }], selected: [keys] }` from
-        the caller's OAuth token and instance `provider_configs.settings.projectKeys`.
-        Requires a connected Jira credential. Never returns tokens.
+        Jira or Linear. Returns `{ available: [{ key, name }], selected: [keys] }`
+        from the caller's OAuth token and instance
+        `provider_configs.settings.projectKeys` (Jira) or `teamKeys` (Linear).
+        Requires a connected credential. Never returns tokens.
       security:
         - bearerAuth: []
       parameters:
@@ -1098,17 +1101,18 @@ paths:
           required: true
           schema:
             type: string
-            enum: [jira]
+            enum: [jira, linear]
       responses:
         '200':
-          description: Available and selected project keys
+          description: Available and selected keys
         '400':
-          description: Not Jira, or Jira is not connected
+          description: Unsupported provider, or the account is not connected
     put:
-      summary: Save Jira projects DAB should watch
+      summary: Save Jira projects or Linear teams DAB should watch
       description: |
-        Jira only. Replaces instance `projectKeys` with keys the caller can still
-        see. Shared with the team. Body `{ "projectKeys": ["DAB", "OPS"] }`.
+        Jira or Linear. Replaces instance `projectKeys` (Jira) or `teamKeys`
+        (Linear) with keys the caller can still see. Shared with the team.
+        Body `{ "projectKeys": ["DAB"] }` or `{ "teamKeys": ["ENG"] }`.
       security:
         - bearerAuth: []
       parameters:
@@ -1117,7 +1121,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [jira]
+            enum: [jira, linear]
       requestBody:
         required: true
         content:
@@ -1129,13 +1133,17 @@ paths:
                   type: array
                   items:
                     type: string
+                teamKeys:
+                  type: array
+                  items:
+                    type: string
             example:
-              projectKeys: [DAB, OPS]
+              teamKeys: [ENG, OPS]
       responses:
         '200':
           description: Updated watch list
         '400':
-          description: Not Jira, or Jira is not connected
+          description: Unsupported provider, or the account is not connected
   /integrations/{provider}/oauth/callback:
     get:
       summary: Public OAuth callback

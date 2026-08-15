@@ -95,6 +95,7 @@ dab_app/lib/
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
 | `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. |
 | `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer watch list. |
+| `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer/Dashboard watch list. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -161,7 +162,8 @@ External Provider (Phorge, GitHub, Slack, …)
 The polling flow above powers Explorer (historical backfill). Dashboard live
 data arrives through provider push **or** `ActivityLivePollScheduler` (first
 tick on API start, then ~45s) when webhooks are absent. Jira issue activities
-include `updatedAt` in their id so a status move is a new live event. In `deployment_mode=personal`, ingest broadcasts
+include `updatedAt` in their id so a status move is a new live event; Jira
+comments use a stable `jira|{host}|{issueKey}|comment|{commentId}` id. In `deployment_mode=personal`, ingest broadcasts
 `ACTIVITY_RECEIVED` to every session and the app hydrates `GET /activities/live?scope=global`. Archive flags stay a per-viewer overlay on `activities:user:{id}` and never rewrite `activities:global`.
 
 ```

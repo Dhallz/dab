@@ -88,8 +88,55 @@ void main() {
   });
 
   group('fetchRawData', () {
-    test('maps GraphQL issue nodes to DTOs with identity attribution',
-        () async {
+    test(
+      'maps GraphQL issue nodes to DTOs with identity attribution',
+      () async {
+        when(
+          () => graphql.execute(
+            any(),
+            bearerToken: any(named: 'bearerToken'),
+            document: any(named: 'document'),
+            variables: any(named: 'variables'),
+          ),
+        ).thenAnswer(
+          (_) async => {
+            'issues': {
+              'nodes': [issueNode],
+              'pageInfo': {'hasNextPage': false, 'endCursor': null},
+            },
+          },
+        );
+
+        final dtos = await source.fetchRawData(
+          [user],
+          DateTime.utc(2026, 6, 1),
+          DateTime.utc(2026, 7, 1),
+          false,
+        );
+
+        expect(dtos, hasLength(1));
+        final dto = dtos.single;
+        expect(dto.identifier, 'ENG-42');
+        expect(dto.teamKey, 'ENG');
+        expect(dto.statusName, 'In Progress');
+        expect(dto.dabUserId, 'u-linear');
+        expect(dto.authorDisplayName, 'Ada L.');
+
+        final activities = dto.toActivities([user]);
+        expect(activities, hasLength(1));
+        expect(activities.single.userId, 'u-linear');
+        expect(activities.single.title, '[ENG-42] Fix login');
+      },
+    );
+
+    test('passes teamKeys into the GraphQL issue filter', () async {
+      when(() => configRepository.getConfigs()).thenAnswer(
+        (_) async => Right([
+          config.copyWith(
+            settings: const {'apiKey': 'lin_api_key', 'teamKeys': 'ENG'},
+          ),
+        ]),
+      );
       when(
         () => graphql.execute(
           any(),
@@ -97,14 +144,86 @@ void main() {
           document: any(named: 'document'),
           variables: any(named: 'variables'),
         ),
-      ).thenAnswer(
-        (_) async => {
+      ).thenAnswer((invocation) async {
+        final document = invocation.namedArguments[#document] as String? ?? '';
+        if (document.contains('DabComments')) {
+          return {
+            'comments': {
+              'nodes': <dynamic>[],
+              'pageInfo': {'hasNextPage': false},
+            },
+          };
+        }
+        return {
+          'issues': {
+            'nodes': [issueNode],
+            'pageInfo': {'hasNextPage': false},
+          },
+        };
+      });
+
+      await source.fetchRawData(
+        [user],
+        DateTime.utc(2026, 6, 1),
+        DateTime.utc(2026, 7, 1),
+        false,
+      );
+
+      final captured = verify(
+        () => graphql.execute(
+          any(),
+          bearerToken: any(named: 'bearerToken'),
+          document: any(named: 'document'),
+          variables: captureAny(named: 'variables'),
+        ),
+      ).captured;
+      final issueVars = captured.cast<Map<String, dynamic>>().firstWhere(
+        (vars) => (vars['filter'] as Map?)?.containsKey('team') == true,
+        orElse: () => const <String, dynamic>{},
+      );
+      expect(
+        issueVars['filter'],
+        containsPair('team', {
+          'key': {
+            'in': ['ENG'],
+          },
+        }),
+      );
+    });
+
+    test('merges GraphQL comments onto the parent issue DTO', () async {
+      when(
+        () => graphql.execute(
+          any(),
+          bearerToken: any(named: 'bearerToken'),
+          document: any(named: 'document'),
+          variables: any(named: 'variables'),
+        ),
+      ).thenAnswer((invocation) async {
+        final document = invocation.namedArguments[#document] as String? ?? '';
+        if (document.contains('DabComments')) {
+          return {
+            'comments': {
+              'nodes': [
+                {
+                  'id': 'comment-1',
+                  'body': 'Please review',
+                  'createdAt': '2026-06-30T10:05:00.000Z',
+                  'user': {'id': 'linear-user-ada', 'name': 'Ada L.'},
+                  'issue': issueNode,
+                },
+              ],
+              'pageInfo': {'hasNextPage': false, 'endCursor': null},
+            },
+          };
+        }
+        return {
           'issues': {
             'nodes': [issueNode],
             'pageInfo': {'hasNextPage': false, 'endCursor': null},
           },
-        },
-      );
+        };
+      });
 
       final dtos = await source.fetchRawData(
         [user],
@@ -114,60 +233,55 @@ void main() {
       );
 
       expect(dtos, hasLength(1));
-      final dto = dtos.single;
-      expect(dto.identifier, 'ENG-42');
-      expect(dto.teamKey, 'ENG');
-      expect(dto.statusName, 'In Progress');
-      expect(dto.dabUserId, 'u-linear');
-      expect(dto.authorDisplayName, 'Ada L.');
-
-      final activities = dto.toActivities([user]);
-      expect(activities, hasLength(1));
-      expect(activities.single.userId, 'u-linear');
-      expect(activities.single.title, '[ENG-42] Fix login');
+      expect(dtos.single.comments, hasLength(1));
+      expect(dtos.single.comments.single.body, 'Please review');
+      final activities = dtos.single.toActivities([user]);
+      expect(activities.where((a) => a.commentCount == 1), hasLength(1));
     });
 
-    test('returns empty without an active config or linked identities',
-        () async {
-      when(
-        () => configRepository.getConfigs(),
-      ).thenAnswer((_) async => const Right([]));
+    test(
+      'returns empty without an active config or linked identities',
+      () async {
+        when(
+          () => configRepository.getConfigs(),
+        ).thenAnswer((_) async => const Right([]));
 
-      expect(
-        await source.fetchRawData(
-          [user],
-          DateTime.utc(2026, 6, 1),
-          DateTime.utc(2026, 7, 1),
-          false,
-        ),
-        isEmpty,
-      );
+        expect(
+          await source.fetchRawData(
+            [user],
+            DateTime.utc(2026, 6, 1),
+            DateTime.utc(2026, 7, 1),
+            false,
+          ),
+          isEmpty,
+        );
 
-      when(
-        () => configRepository.getConfigs(),
-      ).thenAnswer((_) async => Right([config]));
-      when(
-        () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
-      ).thenAnswer((_) async => const Right([]));
+        when(
+          () => configRepository.getConfigs(),
+        ).thenAnswer((_) async => Right([config]));
+        when(
+          () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
+        ).thenAnswer((_) async => const Right([]));
 
-      expect(
-        await source.fetchRawData(
-          [user],
-          DateTime.utc(2026, 6, 1),
-          DateTime.utc(2026, 7, 1),
-          false,
-        ),
-        isEmpty,
-      );
-      verifyNever(
-        () => graphql.execute(
-          any(),
-          bearerToken: any(named: 'bearerToken'),
-          document: any(named: 'document'),
-          variables: any(named: 'variables'),
-        ),
-      );
-    });
+        expect(
+          await source.fetchRawData(
+            [user],
+            DateTime.utc(2026, 6, 1),
+            DateTime.utc(2026, 7, 1),
+            false,
+          ),
+          isEmpty,
+        );
+        verifyNever(
+          () => graphql.execute(
+            any(),
+            bearerToken: any(named: 'bearerToken'),
+            document: any(named: 'document'),
+            variables: any(named: 'variables'),
+          ),
+        );
+      },
+    );
 
     test('returns empty when the GraphQL call fails', () async {
       when(
@@ -222,7 +336,11 @@ void main() {
           document: any(named: 'document'),
           variables: any(named: 'variables'),
         ),
-      ).thenAnswer((_) async => {'users': {'nodes': <dynamic>[]}});
+      ).thenAnswer(
+        (_) async => {
+          'users': {'nodes': <dynamic>[]},
+        },
+      );
 
       final result = await source.lookupExternalId('Ada', 'ada@example.com');
       expect(result.getOrElse((_) => 'x'), isNull);

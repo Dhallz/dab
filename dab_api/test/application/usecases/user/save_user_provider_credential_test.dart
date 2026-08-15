@@ -14,8 +14,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class _MockCreds extends Mock
-    implements AbsIUserProviderCredentialRepository {}
+class _MockCreds extends Mock implements AbsIUserProviderCredentialRepository {}
 
 class _MockUsers extends Mock implements IUserRepository {}
 
@@ -70,62 +69,72 @@ void main() {
     useCase = SaveUserProviderCredential(creds, users, configs, probe);
   });
 
-  test('whoami links identity immediately and discovers an empty watch list', () async {
-    when(() => configs.getConfigs()).thenAnswer(
-      (_) async => Right([existingConfig]),
-    );
-    when(
-      () => probe.probe(
-        providerId: any(named: 'providerId'),
-        settings: any(named: 'settings'),
-        orgConfig: any(named: 'orgConfig'),
-      ),
-    ).thenAnswer(
-      (_) async => const Right(
-        ProviderWhoamiResult(
-          externalId: 'adal',
-          externalUsername: 'adal',
-          discoveredWatchList: ['acme/app'],
+  test(
+    'whoami links identity immediately and discovers an empty watch list',
+    () async {
+      when(
+        () => configs.getConfigs(),
+      ).thenAnswer((_) async => Right([existingConfig]));
+      when(
+        () => probe.probe(
+          providerId: any(named: 'providerId'),
+          settings: any(named: 'settings'),
+          orgConfig: any(named: 'orgConfig'),
         ),
-      ),
-    );
-    when(() => creds.get(userId: any(named: 'userId'), providerId: any(named: 'providerId')))
-        .thenAnswer((_) async => const Right(null));
-    when(() => creds.save(any())).thenAnswer((inv) async => Right(inv.positionalArguments.first as UserProviderCredential));
-    when(() => users.linkIdentity(any())).thenAnswer(
-      (inv) async => Right(inv.positionalArguments.first as UserIdentity),
-    );
-    when(() => configs.saveConfig(any())).thenAnswer(
-      (inv) async => Right(inv.positionalArguments.first as ProviderConfig),
-    );
+      ).thenAnswer(
+        (_) async => const Right(
+          ProviderWhoamiResult(
+            externalId: 'adal',
+            externalUsername: 'adal',
+            discoveredWatchList: ['acme/app'],
+          ),
+        ),
+      );
+      when(
+        () => creds.get(
+          userId: any(named: 'userId'),
+          providerId: any(named: 'providerId'),
+        ),
+      ).thenAnswer((_) async => const Right(null));
+      when(() => creds.save(any())).thenAnswer(
+        (inv) async =>
+            Right(inv.positionalArguments.first as UserProviderCredential),
+      );
+      when(() => users.linkIdentity(any())).thenAnswer(
+        (inv) async => Right(inv.positionalArguments.first as UserIdentity),
+      );
+      when(() => configs.saveConfig(any())).thenAnswer(
+        (inv) async => Right(inv.positionalArguments.first as ProviderConfig),
+      );
 
-    final result = await useCase.execute(
-      userId: 'u-1',
-      providerId: 'github',
-      settings: const {'api.token': 'ghp_test'},
-    );
-    expect(result.isRight(), isTrue);
-    final summary = result.getOrElse((l) => throw StateError(l.message));
-    expect(summary.externalUsername, 'adal');
-    expect(summary.hasSecret, isTrue);
+      final result = await useCase.execute(
+        userId: 'u-1',
+        providerId: 'github',
+        settings: const {'api.token': 'ghp_test'},
+      );
+      expect(result.isRight(), isTrue);
+      final summary = result.getOrElse((l) => throw StateError(l.message));
+      expect(summary.externalUsername, 'adal');
+      expect(summary.hasSecret, isTrue);
 
-    final savedIdentity = verify(() => users.linkIdentity(captureAny()))
-        .captured
-        .single as UserIdentity;
-    expect(savedIdentity.status, UserIdentityStatus.linked);
-    expect(savedIdentity.externalId, 'adal');
+      final savedIdentity =
+          verify(() => users.linkIdentity(captureAny())).captured.single
+              as UserIdentity;
+      expect(savedIdentity.status, UserIdentityStatus.linked);
+      expect(savedIdentity.externalId, 'adal');
 
-    final savedConfig = verify(() => configs.saveConfig(captureAny()))
-        .captured
-        .single as ProviderConfig;
-    expect(savedConfig.isActive, isTrue);
-    expect(savedConfig.settings['repos'], ['acme/app']);
-  });
+      final savedConfig =
+          verify(() => configs.saveConfig(captureAny())).captured.single
+              as ProviderConfig;
+      expect(savedConfig.isActive, isTrue);
+      expect(savedConfig.settings['repos'], ['acme/app']);
+    },
+  );
 
   test('rejects an empty token', () async {
-    when(() => configs.getConfigs()).thenAnswer(
-      (_) async => Right([existingConfig]),
-    );
+    when(
+      () => configs.getConfigs(),
+    ).thenAnswer((_) async => Right([existingConfig]));
     when(
       () => probe.probe(
         providerId: any(named: 'providerId'),
@@ -167,14 +176,12 @@ void main() {
       ),
     ).thenAnswer(
       (_) async => const Right(
-        ProviderWhoamiResult(
-          externalId: 'T123',
-          externalUsername: 'acme',
-        ),
+        ProviderWhoamiResult(externalId: 'T123', externalUsername: 'acme'),
       ),
     );
     when(() => creds.save(any())).thenAnswer(
-      (inv) async => Right(inv.positionalArguments.first as UserProviderCredential),
+      (inv) async =>
+          Right(inv.positionalArguments.first as UserProviderCredential),
     );
     when(() => configs.saveConfig(any())).thenAnswer(
       (inv) async => Right(inv.positionalArguments.first as ProviderConfig),
@@ -192,13 +199,74 @@ void main() {
     final summary = result.getOrElse((l) => throw StateError(l.message));
     expect(summary.isSharedBot, isTrue);
 
-    final savedConfig = verify(() => configs.saveConfig(captureAny()))
-        .captured
-        .single as ProviderConfig;
+    final savedConfig =
+        verify(() => configs.saveConfig(captureAny())).captured.single
+            as ProviderConfig;
     expect(savedConfig.isActive, isTrue);
     expect(savedConfig.settings['botToken'], 'xoxb-test');
     expect(savedConfig.settings['channels'], ['C1']);
     verify(() => creds.save(any())).called(1);
     verifyNever(() => users.linkIdentity(any()));
+  });
+
+  test('seeds instance projectKeys from Jira whoami discovery', () async {
+    when(() => configs.getConfigs()).thenAnswer(
+      (_) async => Right([
+        ProviderConfig(
+          id: 'jira',
+          name: 'Jira',
+          baseUrl: 'https://acme.atlassian.net',
+          isActive: true,
+          settings: const {},
+        ),
+      ]),
+    );
+    when(
+      () => probe.probe(
+        providerId: any(named: 'providerId'),
+        settings: any(named: 'settings'),
+        orgConfig: any(named: 'orgConfig'),
+      ),
+    ).thenAnswer(
+      (_) async => const Right(
+        ProviderWhoamiResult(
+          externalId: 'acct-ada',
+          externalUsername: 'Ada',
+          discoveredWatchList: ['DAB', 'OPS'],
+        ),
+      ),
+    );
+    when(
+      () => creds.get(
+        userId: any(named: 'userId'),
+        providerId: any(named: 'providerId'),
+      ),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => creds.save(any())).thenAnswer(
+      (inv) async =>
+          Right(inv.positionalArguments.first as UserProviderCredential),
+    );
+    when(() => users.linkIdentity(any())).thenAnswer(
+      (inv) async => Right(inv.positionalArguments.first as UserIdentity),
+    );
+    when(() => configs.saveConfig(any())).thenAnswer(
+      (inv) async => Right(inv.positionalArguments.first as ProviderConfig),
+    );
+
+    final result = await useCase.execute(
+      userId: 'u-1',
+      providerId: 'jira',
+      settings: const {
+        'apiToken': 'atlassian_token',
+        'tokenType': 'oauth',
+        'cloudId': 'cloud-1',
+      },
+    );
+    expect(result.isRight(), isTrue);
+
+    final savedConfig =
+        verify(() => configs.saveConfig(captureAny())).captured.single
+            as ProviderConfig;
+    expect(savedConfig.settings['projectKeys'], 'DAB\nOPS');
   });
 }

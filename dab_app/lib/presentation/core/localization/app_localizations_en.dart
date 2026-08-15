@@ -557,10 +557,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Active providers with successful connection test';
 
   @override
+  String get adminIslandLinksOkTooltipPersonal =>
+      'Active providers with OAuth app or bot credentials saved';
+
+  @override
   String get adminIslandFailedTitle => 'Failed';
 
   @override
   String get adminIslandFailedTooltip => 'Connection failures';
+
+  @override
+  String get adminIslandFailedTooltipPersonal =>
+      'Active providers missing OAuth client credentials or bot token';
 
   @override
   String get adminIslandPendingTitle => 'Pending';
@@ -1105,6 +1113,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.';
 
   @override
+  String get adminPersonalLiveWebhookHint =>
+      'Instant Dashboard uses this webhook; otherwise the poller runs about every 45s.';
+
+  @override
   String settingsConnectWithProvider(String provider) {
     return 'Connect with $provider';
   }
@@ -1134,6 +1146,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsJiraProjectsSave => 'Save projects';
+
+  @override
+  String get settingsLinearTeamsTitle => 'Teams';
+
+  @override
+  String get settingsLinearTeamsSubtitle =>
+      'Choose which Linear teams DAB should watch for issues. This list is shared with your team.';
+
+  @override
+  String get settingsLinearTeamsEmpty =>
+      'No teams were visible for this account.';
+
+  @override
+  String get settingsLinearTeamsSave => 'Save teams';
 
   @override
   String get adminPublicApiUrlTitle => 'Public API URL';

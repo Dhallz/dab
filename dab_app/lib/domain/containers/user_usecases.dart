@@ -7,9 +7,11 @@ import '../usecases/user/get_user.dart';
 import '../usecases/user/get_users.dart';
 import '../usecases/user/list_my_credentials.dart';
 import '../usecases/user/list_my_jira_projects.dart';
+import '../usecases/user/list_my_linear_teams.dart';
 import '../usecases/user/save_group.dart';
 import '../usecases/user/save_my_credential.dart';
 import '../usecases/user/save_my_jira_projects.dart';
+import '../usecases/user/save_my_linear_teams.dart';
 import '../usecases/user/start_my_oauth.dart';
 import '../usecases/user/test_my_credential.dart';
 
@@ -27,6 +29,8 @@ class UserUseCases {
   final StartMyOauth startMyOauth;
   final ListMyJiraProjects listMyJiraProjects;
   final SaveMyJiraProjects saveMyJiraProjects;
+  final ListMyLinearTeams listMyLinearTeams;
+  final SaveMyLinearTeams saveMyLinearTeams;
 
   UserUseCases(IUserRepository repository)
     : createUser = CreateUser(repository),
@@ -41,5 +45,7 @@ class UserUseCases {
       deleteMyCredential = DeleteMyCredential(repository),
       startMyOauth = StartMyOauth(repository),
       listMyJiraProjects = ListMyJiraProjects(repository),
-      saveMyJiraProjects = SaveMyJiraProjects(repository);
+      saveMyJiraProjects = SaveMyJiraProjects(repository),
+      listMyLinearTeams = ListMyLinearTeams(repository),
+      saveMyLinearTeams = SaveMyLinearTeams(repository);
 }
