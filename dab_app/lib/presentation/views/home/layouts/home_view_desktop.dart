@@ -24,11 +24,7 @@ class HomeViewDesktop extends ConsumerWidget {
     final adminBadgeCount = ref.watch(
       appNotifierProvider.select((s) => s.unresolvedIdentityCount),
     );
-    final isPersonal = ref.watch(
-      appNotifierProvider.select((s) => s.isPersonalDeployment),
-    );
-    final showAdminTab =
-        authState.user?.role == UserRole.admin || !isPersonal;
+    final showAdminTab = authState.user?.role == UserRole.admin;
 
     return Scaffold(
       backgroundColor: Colors.transparent,

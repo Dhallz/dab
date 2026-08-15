@@ -9,7 +9,6 @@ import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_island_bar_content.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_section_body.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_section_header.dart';
-import 'package:dab_app/presentation/views/admin/widgets/admin_section_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -91,9 +90,6 @@ class AdminViewMobile extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
-                    AdminSectionSelector(selectedSection: section),
-                    const SizedBox(height: 16),
                     AdminSectionHeader(
                       title: section.localizedTitle(context.l10n),
                       subtitle: section.localizedSubtitle(context.l10n),

@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/views/home/home_view.dart';
 import 'package:dab_app/presentation/views/splash/splash_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,28 @@ import 'fade_transition_page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Resolves auth/home redirects. Returns a path to go to, or `null` to stay.
+String? resolveHomeRedirect({
+  required bool isLoggedIn,
+  required String location,
+  UserRole? role,
+}) {
+  final isPublicRoute =
+      location == AppRoute.splash.path || location == AppRoute.auth.path;
+  if (!isLoggedIn && !isPublicRoute) {
+    return AppRoute.auth.path;
+  }
+  if (isLoggedIn && location == AppRoute.auth.path) {
+    return AppRoute.homeDashboard.path;
+  }
+  if (isLoggedIn &&
+      location == AppRoute.homeAdmin.path &&
+      role != UserRole.admin) {
+    return AppRoute.homeDashboard.path;
+  }
+  return null;
+}
+
 class AppRouter {
   late final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -19,28 +42,11 @@ class AppRouter {
       final authState = ProviderScope.containerOf(
         context,
       ).read(authNotifierProvider);
-      final isLoggedIn = authState.isAuthenticated;
-      final location = state.matchedLocation;
-      final isPublicRoute =
-          location == AppRoute.splash.path || location == AppRoute.auth.path;
-
-      // Splash stays on `/` for cold start; splash_view routes to auth/home after hold.
-      if (!isLoggedIn && !isPublicRoute) {
-        return AppRoute.auth.path;
-      }
-
-      if (isLoggedIn && location == AppRoute.auth.path) {
-        return AppRoute.homeDashboard.path;
-      }
-
-      final redirectLog =
-          '[${DateTime.timestamp()}] | [NAV] => ${state.matchedLocation}';
-
-      debugPrint(
-        '$redirectLog <===============================================================',
+      return resolveHomeRedirect(
+        isLoggedIn: authState.isAuthenticated,
+        location: state.matchedLocation,
+        role: authState.user?.role,
       );
-
-      return null;
     },
     routes: [
       GoRoute(

@@ -55,9 +55,6 @@ class _DashboardSidebarPane extends ConsumerWidget {
       dashboardNotifierProvider.select(
         (s) => (
           providerHealth: s.providerHealth,
-          snoozedCount: s.snoozedCount,
-          reviewQueueCount: s.reviewQueueCount,
-          lastSyncedAt: s.lastSyncedAt,
         ),
       ),
     );

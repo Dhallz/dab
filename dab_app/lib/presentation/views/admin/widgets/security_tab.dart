@@ -2,6 +2,7 @@ import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -222,7 +223,7 @@ class _SecurityTabState extends State<SecurityTab> {
                 context: context,
                 builder: (_) => const UserCreateDialog(),
               ),
-              icon: const Icon(Icons.person_add_outlined, size: 18),
+              icon: Icon(AppIcons.personAdd, size: 18),
               label: Text(
                 l10n.adminAddUser,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -327,7 +328,7 @@ class _DomainValidationPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.verified_user_outlined,
+                  AppIcons.admin,
                   color: cs.primary,
                   size: 20,
                 ),
@@ -437,7 +438,7 @@ class _DomainValidationPanel extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.warning_amber_outlined,
+                        AppIcons.warning,
                         color: cs.error,
                         size: 18,
                       ),
@@ -509,7 +510,7 @@ class _OrganizationTimezonePanel extends StatelessWidget {
                   color: cs.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.schedule_outlined, color: cs.primary, size: 20),
+                child: Icon(AppIcons.calendar, color: cs.primary, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(

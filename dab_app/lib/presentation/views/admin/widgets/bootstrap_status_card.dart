@@ -1,4 +1,5 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class BootstrapStatusCard extends StatelessWidget {
@@ -22,12 +23,12 @@ class BootstrapStatusCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: cs.tertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.verified_user_outlined,
-                  color: Colors.green,
+                child: Icon(
+                  AppIcons.success,
+                  color: cs.tertiary,
                   size: 20,
                 ),
               ),

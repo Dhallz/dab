@@ -5,8 +5,8 @@ import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/provider_styles.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../core/widgets/dab_glass_surface.dart';
 import '../insights_state.dart';
-import 'insights_glass_card.dart';
 
 class InsightsTrendChart extends StatelessWidget {
   final InsightsState state;
@@ -59,7 +59,8 @@ class InsightsTrendChart extends StatelessWidget {
               .expand((item) => item.spots)
               .map((spot) => spot.y)
               .fold<double>(1, (max, value) => value > max ? value : max);
-    return InsightsGlassCard(
+    return DabGlassSurface(
+      padding: const EdgeInsets.all(AppSpacing.m),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

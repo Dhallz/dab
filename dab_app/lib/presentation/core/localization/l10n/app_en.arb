@@ -4,13 +4,13 @@
   "@dashboardTitle": {
     "description": "dashboardTitle: Dashboard"
   },
-  "dashboardOverview": "Overview",
-  "@dashboardOverview": {
-    "description": "dashboardOverview: Overview"
+  "dashboardIslandLive": "Live",
+  "@dashboardIslandLive": {
+    "description": "Island Bar label for visible live activity count."
   },
-  "dashboardSubtitle": "Coming soon: Live activity feed.",
-  "@dashboardSubtitle": {
-    "description": "dashboardSubtitle: Coming soon: Live activity feed."
+  "dashboardIslandArchived": "Archived",
+  "@dashboardIslandArchived": {
+    "description": "Island Bar label for archived activity count."
   },
   "navExplorer": "Explorer",
   "@navExplorer": {
@@ -248,10 +248,6 @@
   "@settingsSectionLanguage": {
     "description": "settingsSectionLanguage: Language"
   },
-  "settingsSectionIslandBar": "Island Bar",
-  "@settingsSectionIslandBar": {
-    "description": "settingsSectionIslandBar: Island Bar"
-  },
   "settingsSectionAbout": "About",
   "@settingsSectionAbout": {
     "description": "settingsSectionAbout: About"
@@ -367,54 +363,6 @@
   "settingsVersionLabel": "Version",
   "@settingsVersionLabel": {
     "description": "settingsVersionLabel: Version"
-  },
-  "settingsIslandBarDashboard": "Dashboard",
-  "@settingsIslandBarDashboard": {
-    "description": "settingsIslandBarDashboard: Dashboard"
-  },
-  "settingsIslandBarExplorer": "Explorer",
-  "@settingsIslandBarExplorer": {
-    "description": "settingsIslandBarExplorer: Explorer"
-  },
-  "settingsIslandBarInsights": "Insights",
-  "@settingsIslandBarInsights": {
-    "description": "settingsIslandBarInsights: Insights"
-  },
-  "settingsIslandBarItemTitle": "Title",
-  "@settingsIslandBarItemTitle": {
-    "description": "settingsIslandBarItemTitle: Title"
-  },
-  "settingsIslandBarItemSubtitle": "Subtitle",
-  "@settingsIslandBarItemSubtitle": {
-    "description": "settingsIslandBarItemSubtitle: Subtitle"
-  },
-  "settingsIslandBarItemDateControls": "Date controls",
-  "@settingsIslandBarItemDateControls": {
-    "description": "settingsIslandBarItemDateControls: Date controls"
-  },
-  "settingsIslandBarItemQuickPreset": "Quick preset",
-  "@settingsIslandBarItemQuickPreset": {
-    "description": "settingsIslandBarItemQuickPreset: Quick preset"
-  },
-  "settingsIslandBarItemDateModeToggle": "Date mode toggle",
-  "@settingsIslandBarItemDateModeToggle": {
-    "description": "settingsIslandBarItemDateModeToggle: Date mode toggle"
-  },
-  "settingsIslandBarItemActivitySummary": "Activity summary",
-  "@settingsIslandBarItemActivitySummary": {
-    "description": "settingsIslandBarItemActivitySummary: Activity summary"
-  },
-  "settingsIslandBarItemHeatBar": "Heat bar",
-  "@settingsIslandBarItemHeatBar": {
-    "description": "settingsIslandBarItemHeatBar: Heat bar"
-  },
-  "settingsIslandBarItemDateRange": "Date range",
-  "@settingsIslandBarItemDateRange": {
-    "description": "settingsIslandBarItemDateRange: Date range"
-  },
-  "settingsIslandBarItemPresets": "Presets",
-  "@settingsIslandBarItemPresets": {
-    "description": "settingsIslandBarItemPresets: Presets"
   },
   "settingsSave": "Save",
   "@settingsSave": {
@@ -963,29 +911,9 @@
   "@adminFieldApiTokenOrSecret": {
     "description": "adminFieldApiTokenOrSecret: API Token / Secret"
   },
-  "dashboardAwaitingReplyTitle": "Awaiting Your Reply",
-  "@dashboardAwaitingReplyTitle": {
-    "description": "dashboardAwaitingReplyTitle: Awaiting Your Reply"
-  },
-  "dashboardAwaitingReplySubtitle": "Thread follow-ups that likely expect a response.",
-  "@dashboardAwaitingReplySubtitle": {
-    "description": "dashboardAwaitingReplySubtitle: Thread follow-ups that likely expect a response."
-  },
-  "dashboardNoReplyThreads": "No active reply threads right now.",
-  "@dashboardNoReplyThreads": {
-    "description": "dashboardNoReplyThreads: No active reply threads right now."
-  },
   "dashboardLiveNowTitle": "Live Now",
   "@dashboardLiveNowTitle": {
     "description": "dashboardLiveNowTitle: Live Now"
-  },
-  "dashboardSnoozed": "Snoozed",
-  "@dashboardSnoozed": {
-    "description": "dashboardSnoozed: Snoozed"
-  },
-  "dashboardReviewQueue": "Review queue",
-  "@dashboardReviewQueue": {
-    "description": "dashboardReviewQueue: Review queue"
   },
   "dashboardLiveUpdated": "Live · updated {relativeTime}",
   "@dashboardLiveUpdated": {
@@ -1133,10 +1061,6 @@
   "@dashboardProviderHealthOffline": {
     "description": "dashboardProviderHealthOffline: Sidebar chip — provider offline."
   },
-  "dashboardUpcomingSourceCalendar": "Calendar",
-  "@dashboardUpcomingSourceCalendar": {
-    "description": "dashboardUpcomingSourceCalendar: Source label for calendar-derived upcoming events."
-  },
   "dashboardNoProviderActivity": "No provider activity yet",
   "@dashboardNoProviderActivity": {
     "description": "dashboardNoProviderActivity: No provider activity yet"
@@ -1150,43 +1074,6 @@
     "description": "dashboardLastSync: Last sync {time}",
     "placeholders": {
       "time": {}
-    }
-  },
-  "dashboardUpcomingSoonTitle": "Upcoming Soon",
-  "@dashboardUpcomingSoonTitle": {
-    "description": "dashboardUpcomingSoonTitle: Upcoming Soon"
-  },
-  "dashboardUpcomingNoEvents": "No upcoming events",
-  "@dashboardUpcomingNoEvents": {
-    "description": "dashboardUpcomingNoEvents: No upcoming events"
-  },
-  "upcomingRelativeInProgress": "in progress",
-  "@upcomingRelativeInProgress": {
-    "description": "upcomingRelativeInProgress: in progress"
-  },
-  "upcomingRelativeNow": "now",
-  "@upcomingRelativeNow": {
-    "description": "upcomingRelativeNow: now"
-  },
-  "upcomingRelativeInMinutes": "in {count}m",
-  "@upcomingRelativeInMinutes": {
-    "description": "upcomingRelativeInMinutes: in {count}m",
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "upcomingRelativeInHours": "in {count}h",
-  "@upcomingRelativeInHours": {
-    "description": "upcomingRelativeInHours: in {count}h",
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "upcomingRelativeInDays": "in {count}d",
-  "@upcomingRelativeInDays": {
-    "description": "upcomingRelativeInDays: in {count}d",
-    "placeholders": {
-      "count": {}
     }
   },
   "authErrorFailed": "Auth failed",
@@ -1226,32 +1113,6 @@
   "@dashboardRelativeJustNow": {
     "description": "dashboardRelativeJustNow: just now"
   },
-  "bannerStartingNow": "Starting now",
-  "@bannerStartingNow": {
-    "description": "bannerStartingNow: Starting now"
-  },
-  "bannerStartsInOneMinute": "Starts in 1 minute",
-  "@bannerStartsInOneMinute": {
-    "description": "bannerStartsInOneMinute: Starts in 1 minute"
-  },
-  "bannerStartsInMinutes": "Starts in {count} minutes",
-  "@bannerStartsInMinutes": {
-    "description": "bannerStartsInMinutes: Starts in {count} minutes",
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "bannerStartsInOneHour": "Starts in 1 hour",
-  "@bannerStartsInOneHour": {
-    "description": "bannerStartsInOneHour: Starts in 1 hour"
-  },
-  "bannerStartsInHours": "Starts in {count} hours",
-  "@bannerStartsInHours": {
-    "description": "bannerStartsInHours: Starts in {count} hours",
-    "placeholders": {
-      "count": {}
-    }
-  },
   "explorerNoActivitiesFound": "No activities found.",
   "@explorerNoActivitiesFound": {
     "description": "explorerNoActivitiesFound: No activities found."
@@ -1285,10 +1146,6 @@
   "explorerSectionActivityProviders": "ACTIVITY PROVIDERS",
   "@explorerSectionActivityProviders": {
     "description": "explorerSectionActivityProviders: ACTIVITY PROVIDERS"
-  },
-  "homeSearchArchivesPlaceholder": "Search archives…",
-  "@homeSearchArchivesPlaceholder": {
-    "description": "homeSearchArchivesPlaceholder: Search archives…"
   },
   "adminConnectionConnected": "Connected",
   "@adminConnectionConnected": {
@@ -1343,7 +1200,7 @@
     }
   },
   "settingsConnectedAccountsTitle": "Connected accounts",
-  "settingsConnectedAccountsSubtitle": "Each teammate connects their own GitHub, Linear, or Jira token. DAB merges the team feed.",
+  "settingsConnectedAccountsSubtitle": "Connect the providers you use. DAB never asks for your password — you sign in at the provider.",
   "settingsBotTokenHint": "Paste a bot token (one per workspace), not your user token.",
   "settingsCredentialConnect": "Connect",
   "settingsCredentialTest": "Test",
@@ -1380,7 +1237,6 @@
   "adminFieldInstanceUrl": "Instance URL",
   "adminPersonalProvidersHint": "Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.",
   "adminPersonalLiveWebhookHint": "Instant Dashboard uses this webhook; otherwise the poller runs about every 45s.",
-  "settingsConnectedAccountsSubtitle": "Connect the providers you use. DAB never asks for your password — you sign in at the provider.",
   "settingsConnectWithProvider": "Connect with {provider}",
   "@settingsConnectWithProvider": {
     "placeholders": {

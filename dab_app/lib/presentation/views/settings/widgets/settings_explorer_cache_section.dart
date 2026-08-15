@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
+import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../core/styles/provider_icon_resolver.dart';
 import '../../../features/app/app_notifier.dart';
@@ -169,7 +169,9 @@ class _SettingsExplorerCacheSectionState
     if (providerIds.isEmpty) {
       return Text(
         l10n.settingsExplorerCacheNoProviders,
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTextStyles.bodySmall.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       );
     }
 
@@ -180,7 +182,9 @@ class _SettingsExplorerCacheSectionState
       children: [
         Text(
           l10n.settingsExplorerCacheDescription,
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTextStyles.bodySmall.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         ),
         const SizedBox(height: 12),
         Card(
@@ -196,7 +200,7 @@ class _SettingsExplorerCacheSectionState
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _isClearing ? null : _pickDateRange,
-                  icon: const Icon(Icons.date_range, size: 18),
+                  icon: Icon(AppIcons.calendar, size: 18),
                   label: Text(
                     '${_formatDay(_startDate)} — ${_formatDay(_endDate)}',
                   ),
@@ -254,7 +258,7 @@ class _SettingsExplorerCacheSectionState
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.delete_outline, size: 18),
+              : Icon(AppIcons.delete, size: 18),
           label: Text(l10n.settingsExplorerCacheClearButton),
         ),
       ],

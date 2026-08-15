@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../../domain/containers/activity_usecases.dart';
 import '../../../domain/entities/activity/explorer_cache_clear_request.dart';
-import '../../../domain/entities/system/app_settings.dart';
 import '../../../domain/core/failures.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/entities/system/app_theme_variant.dart';
@@ -53,16 +52,6 @@ class SettingsNotifier extends AutoDisposeNotifier<SettingsState> {
   void setLocaleCode(String? localeCode) {
     final next = state.draftSettings.copyWith(localeCode: localeCode);
     ref.read(appNotifierProvider.notifier).setAppSettings(next);
-    state = state.copyWith(draftSettings: next, isDirty: next != state.persistedSettings);
-  }
-
-  void setIslandBarItems(String viewId, List<String> selectedItems) {
-    final next = state.draftSettings.copyWith(
-      islandBarSelections: state.draftSettings.updatedIslandBarSelection(
-        viewId,
-        selectedItems,
-      ),
-    );
     state = state.copyWith(draftSettings: next, isDirty: next != state.persistedSettings);
   }
 

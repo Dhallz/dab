@@ -100,15 +100,13 @@ dab_app/lib/
 ### App Entities (`dab_app/lib/domain/entities/`)
 
 Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`).
-`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`), optional `localeCode`, and fixed-catalog per-view Island Bar item selections for `Dashboard`, `Explorer`, and `Insights`.
+`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`) and optional `localeCode`. An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but Island Bars always show their real controls rather than those stored checkboxes.
 
 The Dashboard additionally introduces:
 
 | Entity | Description |
 |---|---|
 | `ActivityLiveEvent` | Sealed discriminated union over the WS live stream — `ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`. |
-| `UpcomingEvent` | Time-anchored item surfaced by the Dashboard "Upcoming Soon" section. Carries `id`, `title`, `startsAt`, optional `url`, `source`, and `priority` (`UpcomingEventPriority`). |
-| `UpcomingEventPriority` | Ordered enum (`low`, `normal`, `high`, `critical`) with a `weight` getter for deterministic banner selection. |
 
 ObjectBox records for cache/storage remain in the Infrastructure layer.
 

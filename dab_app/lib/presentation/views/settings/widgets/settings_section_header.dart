@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -16,7 +15,7 @@ class SettingsSectionHeader extends StatelessWidget {
       style: AppTextStyles.labelSmall.copyWith(
         fontWeight: FontWeight.bold,
         letterSpacing: 1.2,
-        color: AppColors.secondary,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }

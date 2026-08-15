@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../domain/entities/system/app_settings.dart';
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../core/widgets/dab_toggle_chip.dart';
 import '../../../core/widgets/island_bar.dart';
-import '../../../features/app/app_notifier.dart';
 import '../insights_notifier.dart';
 import '../insights_state.dart';
 import '../models/insights_date_preset.dart';
@@ -19,15 +17,6 @@ class InsightsIslandBarContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final settings = ref.watch(appNotifierProvider.select((s) => s.settings));
-    final showDateRange = settings.isIslandBarItemSelected(
-      appSettingsIslandBarViewInsights,
-      'dateRange',
-    );
-    final showPresets = settings.isIslandBarItemSelected(
-      appSettingsIslandBarViewInsights,
-      'presets',
-    );
 
     ref.watch(
       insightsNotifierProvider.select(
@@ -47,60 +36,55 @@ class InsightsIslandBarContent extends ConsumerWidget {
     return IslandBar(
       content: Row(
         children: [
-          Icon(AppIcons.insights, color: scheme.primary),
-          const SizedBox(width: AppSpacing.s),
           Expanded(
-            child: showDateRange
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        context.l10n.insightsTitle,
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        dateText,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
+            child: InkWell(
+              onTap: () => _pickCustomRange(context, notifier, state),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  dateText,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
           ),
-          if (showPresets)
-            Wrap(
+          const SizedBox(width: AppSpacing.s),
+          Flexible(
+            child: Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
+              alignment: WrapAlignment.end,
               children: [
-                _PresetButton(
+                DabToggleChip(
                   label: context.l10n.insightsPresetToday,
                   isSelected: state.datePreset == InsightsDatePreset.today,
                   onTap: () => notifier.setDatePreset(InsightsDatePreset.today),
                 ),
-                _PresetButton(
+                DabToggleChip(
                   label: context.l10n.insightsPresetLast7Days,
                   isSelected: state.datePreset == InsightsDatePreset.last7Days,
                   onTap: () =>
                       notifier.setDatePreset(InsightsDatePreset.last7Days),
                 ),
-                _PresetButton(
+                DabToggleChip(
                   label: context.l10n.insightsPresetLast30Days,
                   isSelected: state.datePreset == InsightsDatePreset.last30Days,
                   onTap: () =>
                       notifier.setDatePreset(InsightsDatePreset.last30Days),
                 ),
-                _PresetButton(
+                DabToggleChip(
                   label: context.l10n.insightsPresetCustom,
                   isSelected: state.datePreset == InsightsDatePreset.custom,
                   onTap: () => _pickCustomRange(context, notifier, state),
                 ),
               ],
             ),
+          ),
         ],
       ),
     );
@@ -111,63 +95,18 @@ class InsightsIslandBarContent extends ConsumerWidget {
     InsightsNotifier notifier,
     InsightsState state,
   ) async {
-    final pickedStart = await showDatePicker(
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: state.startDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-    );
-    if (pickedStart == null || !context.mounted) {
-      return;
-    }
-    final pickedEnd = await showDatePicker(
-      context: context,
-      initialDate: state.endDate,
-      firstDate: pickedStart,
-      lastDate: DateTime.now(),
-    );
-    if (pickedEnd == null) {
-      return;
-    }
-    await notifier.setDateRange(pickedStart, pickedEnd);
-  }
-}
-
-class _PresetButton extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _PresetButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: isSelected
-          ? scheme.primary.withValues(alpha: 0.2)
-          : scheme.surfaceContainerLow.withValues(alpha: 0.7),
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s,
-            vertical: AppSpacing.xs,
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: isSelected ? scheme.primary : scheme.onSurface,
-            ),
-          ),
-        ),
+      initialDateRange: DateTimeRange(
+        start: state.startDate,
+        end: state.endDate,
       ),
     );
+    if (picked == null) {
+      return;
+    }
+    await notifier.setDateRange(picked.start, picked.end);
   }
 }

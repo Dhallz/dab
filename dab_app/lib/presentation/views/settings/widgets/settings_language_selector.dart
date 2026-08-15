@@ -19,10 +19,7 @@ class SettingsLanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String?>(
       initialValue: currentLocaleCode,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        enabledBorder: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(),
       items: [
         DropdownMenuItem<String?>(
           value: null,

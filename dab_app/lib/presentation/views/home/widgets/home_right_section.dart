@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/styles/app_spacing.dart';
 import 'home_profile.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Right-side section of the top navigation bar, containing search and profile.
+/// ROLE: Right-side section of the top navigation bar, containing the profile control.
 class HomeRightSection extends StatelessWidget {
   final String userName;
   final String userInitials;
@@ -22,8 +20,6 @@ class HomeRightSection extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // const HomeSearchBar(),
-        const SizedBox(width: AppSpacing.l),
         HomeProfile(
           showName: true,
           userName: userName,

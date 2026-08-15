@@ -5,13 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/navigation/app_route.dart';
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../settings_notifier.dart';
 import '../widgets/settings_connected_accounts_section.dart';
 import '../widgets/settings_explorer_cache_section.dart';
-import '../widgets/settings_island_bar_visibility_section.dart';
 import '../widgets/settings_language_selector.dart';
 import '../widgets/settings_section_header.dart';
 import '../widgets/settings_theme_selector.dart';
@@ -35,6 +33,7 @@ class _SettingsViewMobileState extends ConsumerState<SettingsViewMobile> {
       return const Center(child: CircularProgressIndicator());
     }
     final draft = state.draftSettings;
+    final scheme = Theme.of(context).colorScheme;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -71,31 +70,24 @@ class _SettingsViewMobileState extends ConsumerState<SettingsViewMobile> {
           currentVariant: draft.appThemeVariant,
           onChanged: notifier.setThemeVariant,
         ),
-        const Divider(height: 32, color: AppColors.outline),
+        const Divider(height: 32),
         SettingsSectionHeader(title: context.l10n.settingsSectionLanguage),
         const SizedBox(height: 16),
         SettingsLanguageSelector(
           currentLocaleCode: draft.localeCode,
           onChanged: notifier.setLocaleCode,
         ),
-        const Divider(height: 32, color: AppColors.outline),
-        SettingsSectionHeader(title: context.l10n.settingsSectionIslandBar),
-        const SizedBox(height: 8),
-        SettingsIslandBarVisibilitySection(
-          settings: draft,
-          onSelectionChanged: notifier.setIslandBarItems,
-        ),
-        const Divider(height: 32, color: AppColors.outline),
+        const Divider(height: 32),
         SettingsSectionHeader(title: context.l10n.settingsSectionExplorerCache),
         const SizedBox(height: 8),
         const SettingsExplorerCacheSection(),
-        const Divider(height: 32, color: AppColors.outline),
+        const Divider(height: 32),
         const SettingsConnectedAccountsSection(),
-        const Divider(height: 32, color: AppColors.outline),
+        const Divider(height: 32),
         SettingsSectionHeader(title: context.l10n.settingsSectionAbout),
         const SizedBox(height: 8),
         ListTile(
-          leading: Icon(AppIcons.info, color: AppColors.secondary),
+          leading: Icon(AppIcons.info, color: scheme.onSurfaceVariant),
           title: Text(
             context.l10n.settingsVersionLabel,
             style: AppTextStyles.bodyMedium,

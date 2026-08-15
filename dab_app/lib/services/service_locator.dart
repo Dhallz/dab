@@ -6,7 +6,6 @@ import '../domain/containers/metadata_usecases.dart';
 import '../domain/containers/monitoring_usecases.dart';
 import '../domain/containers/presence_usecases.dart';
 import '../domain/containers/system_usecases.dart';
-import '../domain/containers/upcoming_event_usecases.dart';
 import '../domain/containers/user_usecases.dart';
 import '../domain/repositories/abs_i_user_repository.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
@@ -23,7 +22,6 @@ import '../infrastructure/datasources/presence_remote_data_source.dart';
 import '../infrastructure/datasources/provider_config_remote_data_source.dart';
 import '../infrastructure/datasources/system_local_data_source.dart';
 import '../infrastructure/repositories/activity_repository.dart';
-import '../infrastructure/repositories/placeholder_upcoming_events_repository.dart';
 import '../infrastructure/repositories/auth_repository.dart';
 import '../infrastructure/repositories/monitoring_repository.dart';
 import '../infrastructure/repositories/presence_repository.dart';
@@ -65,7 +63,6 @@ class ServiceLocator {
   late final PresenceUseCases presenceUseCases;
   late final MetadataUseCases metadataUseCases;
   late final UserUseCases userUseCases;
-  late final UpcomingEventUseCases upcomingEventUseCases;
 
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
@@ -142,10 +139,5 @@ class ServiceLocator {
     // 8. User Context
     userRepository = UserRepository(restApiClient);
     userUseCases = UserUseCases(userRepository);
-
-    // 9. Upcoming Events (placeholder until a real provider is wired in)
-    upcomingEventUseCases = UpcomingEventUseCases(
-      PlaceholderUpcomingEventsRepository(),
-    );
   }
 }

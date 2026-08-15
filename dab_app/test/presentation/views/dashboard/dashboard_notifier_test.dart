@@ -1,9 +1,7 @@
 import 'package:dab_app/domain/containers/activity_usecases.dart';
-import 'package:dab_app/domain/containers/upcoming_event_usecases.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
-import 'package:dab_app/domain/repositories/abs_i_upcoming_events_repository.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_notifier.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
@@ -14,12 +12,8 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockActivityRepository extends Mock implements IActivityRepository {}
 
-class _MockUpcomingRepository extends Mock
-    implements IUpcomingEventsRepository {}
-
 void main() {
   late _MockActivityRepository repository;
-  late _MockUpcomingRepository upcomingRepository;
 
   setUpAll(() {
     registerFallbackValue(const ActivitySearchQuery());
@@ -27,16 +21,9 @@ void main() {
 
   setUp(() {
     repository = _MockActivityRepository();
-    upcomingRepository = _MockUpcomingRepository();
     when(
       () => repository.watchActivities(),
     ).thenAnswer((_) => const Stream.empty());
-    when(
-      () => upcomingRepository.getUpcomingEvents(
-        from: any(named: 'from'),
-        to: any(named: 'to'),
-      ),
-    ).thenAnswer((_) async => const Right([]));
   });
 
   ProviderContainer containerWithOverrides(
@@ -72,7 +59,6 @@ void main() {
     final container = containerWithOverrides(
       () => DashboardNotifier(
         ActivityUseCases(repository),
-        UpcomingEventUseCases(upcomingRepository),
         isPersonalDeployment: () => false,
       ),
     );
@@ -128,7 +114,6 @@ void main() {
       final container = containerWithOverrides(
         () => DashboardNotifier(
           ActivityUseCases(repository),
-          UpcomingEventUseCases(upcomingRepository),
           isPersonalDeployment: () => false,
         ),
       );
@@ -198,7 +183,6 @@ void main() {
     final container = containerWithOverrides(
       () => DashboardNotifier(
         ActivityUseCases(repository),
-        UpcomingEventUseCases(upcomingRepository),
         isPersonalDeployment: () => true,
       ),
     );

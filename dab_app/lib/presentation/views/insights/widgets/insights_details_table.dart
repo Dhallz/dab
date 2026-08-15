@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../core/widgets/dab_glass_surface.dart';
 import '../models/insights_detail_row.dart';
-import 'insights_glass_card.dart';
 
 class InsightsDetailsTable extends StatelessWidget {
   final List<InsightsDetailRow> rows;
@@ -14,7 +14,8 @@ class InsightsDetailsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return InsightsGlassCard(
+    return DabGlassSurface(
+      padding: const EdgeInsets.all(AppSpacing.m),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

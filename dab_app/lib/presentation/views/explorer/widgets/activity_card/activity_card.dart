@@ -13,11 +13,11 @@ import '../../../../../presentation/core/extensions/activity_category_l10n.dart'
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../../presentation/core/localization/app_localizations.dart';
 import '../../../../../presentation/core/localization/l10n_extension.dart';
+import '../../../../../presentation/core/widgets/activity_provider_icon.dart';
 import '../../../../../presentation/features/app/app_notifier.dart';
 import 'activity_content.dart';
 import 'activity_footer.dart';
 import 'activity_link_button.dart';
-import 'activity_provider_icon.dart';
 
 class ActivityCard extends ConsumerStatefulWidget {
   final Activity activity;

@@ -1,4 +1,5 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
@@ -49,8 +50,8 @@ class AdminSidebar extends ConsumerWidget {
   }
 
   IconData _iconFor(AdminSection section) => switch (section) {
-    AdminSection.providers => Icons.vibration_outlined,
-    AdminSection.identities => Icons.fingerprint_outlined,
-    AdminSection.security => Icons.shield_outlined,
+    AdminSection.providers => AppIcons.providers,
+    AdminSection.identities => AppIcons.users,
+    AdminSection.security => AppIcons.admin,
   };
 }

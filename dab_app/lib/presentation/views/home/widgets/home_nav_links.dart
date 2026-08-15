@@ -90,8 +90,8 @@ class HomeNavLinks extends StatelessWidget {
                                 ? '99+'
                                 : '$adminTabBadgeCount',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: scheme.onError,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),

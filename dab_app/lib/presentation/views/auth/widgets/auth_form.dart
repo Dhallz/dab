@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/localization/l10n_extension.dart';
+import '../../../core/styles/app_icons.dart';
 import '../auth_state.dart';
 import 'auth_text_field.dart';
 
@@ -70,6 +71,7 @@ class _AuthFormState extends State<AuthForm> {
   Widget build(BuildContext context) {
     final isLoading = widget.state.status.isLoading;
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -77,103 +79,75 @@ class _AuthFormState extends State<AuthForm> {
       children: [
         Text(
           widget.state.isLogin ? l10n.authWelcomeBack : l10n.authCreateAccount,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
-            color: Color(0xFFF8FAFC),
+            color: scheme.onSurface,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-
-        // SSO Button
         OutlinedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.business_outlined, size: 20),
+          icon: Icon(AppIcons.building, size: 20),
           label: Text(l10n.authSignInWithSso),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
         ),
         const SizedBox(height: 24),
-
         Row(
           children: [
-            Expanded(
-              child: Divider(color: Colors.white.withValues(alpha: 0.1)),
-            ),
+            const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 l10n.commonOr,
                 style: TextStyle(
-                  color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            Expanded(
-              child: Divider(color: Colors.white.withValues(alpha: 0.1)),
-            ),
+            const Expanded(child: Divider()),
           ],
         ),
         const SizedBox(height: 24),
-
         if (!widget.state.isLogin) ...[
           AuthTextField(
             label: l10n.authLabelName,
             hint: l10n.authHintName,
-            icon: Icons.person_outline,
+            icon: AppIcons.profile,
             controller: _nameController,
             onChanged: widget.onNameChanged,
           ),
           const SizedBox(height: 16),
         ],
-
         AuthTextField(
           label: l10n.authLabelEmail,
           hint: l10n.authHintEmail,
-          icon: Icons.email_outlined,
+          icon: AppIcons.email,
           controller: _emailController,
           onChanged: widget.onEmailChanged,
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 16),
-
         AuthTextField(
           label: l10n.authLabelPassword,
           hint: l10n.commonPasswordMaskHint,
-          icon: Icons.lock_outline,
+          icon: AppIcons.lock,
           obscureText: true,
           controller: _passwordController,
           onChanged: widget.onPasswordChanged,
         ),
         const SizedBox(height: 32),
-
-        ElevatedButton(
+        FilledButton(
           onPressed: isLoading ? null : widget.onSubmitted,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6366F1),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 0,
-          ),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: scheme.onPrimary,
                   ),
                 )
               : Text(
@@ -192,9 +166,6 @@ class _AuthFormState extends State<AuthForm> {
               widget.state.isLogin
                   ? l10n.authToggleRegister
                   : l10n.authToggleSignIn,
-              style: TextStyle(
-                color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
-              ),
             ),
           ),
         ],

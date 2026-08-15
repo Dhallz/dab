@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,7 +72,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
                 borderSide: BorderSide.none,
               ),
               prefixIcon: Icon(
-                Icons.person_outline,
+                AppIcons.user,
                 color: cs.onSurfaceVariant,
               ),
             ),
@@ -92,7 +93,7 @@ class _IdentityLinkDialogState extends ConsumerState<IdentityLinkDialog> {
                 borderSide: BorderSide.none,
               ),
               prefixIcon: Icon(
-                Icons.alternate_email,
+                AppIcons.at,
                 color: cs.onSurfaceVariant,
               ),
             ),

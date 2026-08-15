@@ -535,8 +535,8 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                   onPressed: () => setState(() => _showDetails = !_showDetails),
                   icon: Icon(
                     _showDetails
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
+                        ? AppIcons.chevronUp
+                        : AppIcons.chevronDown,
                     size: AppLayout.iconSmall,
                   ),
                   label: Text(

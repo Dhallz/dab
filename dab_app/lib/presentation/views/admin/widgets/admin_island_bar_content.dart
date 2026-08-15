@@ -1,18 +1,20 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
+import 'package:dab_app/presentation/core/styles/app_spacing.dart';
+import 'package:dab_app/presentation/core/widgets/dab_island_stat.dart';
+import 'package:dab_app/presentation/core/widgets/dab_toggle_chip.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_island_bar_model.dart';
+import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_island_refresh_tile.dart';
-import 'package:dab_app/presentation/views/admin/widgets/admin_island_section_divider.dart';
-import 'package:dab_app/presentation/views/admin/widgets/admin_island_stat_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Admin body for [IslandBar] — system snapshot, provider connection health, refresh.
+/// ROLE: Admin Island Bar — system snapshot + refresh; section chips on compact widths.
 class AdminIslandBarContent extends ConsumerWidget {
   const AdminIslandBarContent({super.key});
 
@@ -26,193 +28,102 @@ class AdminIslandBarContent extends ConsumerWidget {
           identities: s.identities,
           users: s.users,
           connectionStatuses: s.connectionStatuses,
+          selectedSection: s.selectedSection,
         ),
       ),
     );
     final state = ref.read(adminNotifierProvider);
     final notifier = ref.read(adminNotifierProvider.notifier);
     final l10n = context.l10n;
-
     final m = state.islandBarModel;
-
     final isPersonal = ref.watch(
       appNotifierProvider.select((s) => s.isPersonalDeployment),
     );
-    final providersTile = AdminIslandStatTile(
-      icon: Icons.dns_outlined,
+    final cs = Theme.of(context).colorScheme;
+
+    final providersStat = DabIslandStat(
+      icon: AppIcons.providers,
       title: l10n.adminIslandProvidersTitle,
       value: '${m.activeProviders} / ${m.totalProviders}',
       tooltip: l10n.adminIslandProvidersTooltip,
     );
-    final unresolvedTile = AdminIslandStatTile(
-      icon: AppIcons.warning,
-      title: l10n.adminIslandUnresolvedTitle,
-      value: '${m.unresolvedIdentities}',
-      tooltip: l10n.adminIslandUnresolvedTooltip,
-      iconColor: m.unresolvedIdentities > 0
-          ? Theme.of(context).colorScheme.error
-          : Theme.of(context).colorScheme.onSurfaceVariant,
-    );
-    final usersTile = AdminIslandStatTile(
+    final usersStat = DabIslandStat(
       icon: AppIcons.profile,
       title: l10n.adminIslandUsersTitle,
       value: '${m.usersCount}',
       tooltip: l10n.adminIslandUsersTooltip,
     );
-    final okTile = AdminIslandStatTile(
-      icon: AppIcons.success,
-      title: l10n.adminIslandLinksOkTitle,
-      value: '${m.connectionOk}',
-      tooltip: isPersonal
-          ? l10n.adminIslandLinksOkTooltipPersonal
-          : l10n.adminIslandLinksOkTooltip,
-      iconColor: Theme.of(context).colorScheme.tertiary,
-    );
-    final failedTile = AdminIslandStatTile(
+    final failedStat = DabIslandStat(
       icon: AppIcons.error,
       title: l10n.adminIslandFailedTitle,
       value: '${m.connectionFailed}',
       tooltip: isPersonal
           ? l10n.adminIslandFailedTooltipPersonal
           : l10n.adminIslandFailedTooltip,
-      iconColor: m.connectionFailed > 0
-          ? Theme.of(context).colorScheme.error
-          : Theme.of(context).colorScheme.onSurfaceVariant,
+      iconColor: m.connectionFailed > 0 ? cs.error : cs.onSurfaceVariant,
     );
-    final pendingTile = AdminIslandStatTile(
-      icon: AppIcons.info,
-      title: l10n.adminIslandPendingTitle,
-      value: '${m.connectionUnknown}',
-      tooltip: l10n.adminIslandPendingTooltip,
+    final unresolvedStat = DabIslandStat(
+      icon: AppIcons.warning,
+      title: l10n.adminIslandUnresolvedTitle,
+      value: '${m.unresolvedIdentities}',
+      tooltip: l10n.adminIslandUnresolvedTooltip,
+      iconColor: m.unresolvedIdentities > 0 ? cs.error : cs.onSurfaceVariant,
     );
     final refreshTile = AdminIslandRefreshTile(
       loading: state.status == ViewStatus.loading,
       onPressed: state.status == ViewStatus.loading ? null : notifier.start,
     );
 
-    const divider = AdminIslandSectionDivider();
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= AdminIslandBarModel.expandBreakpointWidth) {
+        final compact =
+            constraints.maxWidth < AdminIslandBarModel.expandBreakpointWidth;
+        if (compact) {
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: providersTile,
-                ),
-              ),
-              if (!isPersonal)
-                _DesktopIslandSlot(
-                  child: SizedBox(
-                    width: AdminIslandBarModel.scrollTileWidth,
-                    child: unresolvedTile,
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final section in adminSectionsFor(
+                        isPersonal: isPersonal,
+                      )) ...[
+                        DabToggleChip(
+                          label: section.localizedTitle(l10n),
+                          isSelected: section == state.selectedSection,
+                          onTap: () => notifier.setSection(section),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                      ],
+                    ],
                   ),
                 ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: usersTile,
-                ),
               ),
-              const _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: divider,
-                ),
-              ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: okTile,
-                ),
-              ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: failedTile,
-                ),
-              ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: pendingTile,
-                ),
-              ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.refreshTileWidth,
-                  child: refreshTile,
-                ),
+              SizedBox(
+                width: AdminIslandBarModel.refreshTileWidth,
+                child: refreshTile,
               ),
             ],
           );
         }
 
-        const gap = SizedBox(width: 10);
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: providersTile,
-                ),
-                if (!isPersonal) ...[
-                  gap,
-                  SizedBox(
-                    width: AdminIslandBarModel.scrollTileWidth,
-                    child: unresolvedTile,
-                  ),
-                ],
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: usersTile,
-                ),
-                gap,
-                divider,
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: okTile,
-                ),
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: failedTile,
-                ),
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: pendingTile,
-                ),
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.refreshTileWidth,
-                  child: refreshTile,
-                ),
-              ],
-            ),
-          ),
+        return Row(
+          children: [
+            providersStat,
+            const SizedBox(width: AppSpacing.m),
+            usersStat,
+            const SizedBox(width: AppSpacing.m),
+            failedStat,
+            if (!isPersonal && m.unresolvedIdentities > 0) ...[
+              const SizedBox(width: AppSpacing.m),
+              unresolvedStat,
+            ],
+            const Spacer(),
+            refreshTile,
+          ],
         );
       },
     );
-  }
-}
-
-class _DesktopIslandSlot extends StatelessWidget {
-  final Widget child;
-
-  const _DesktopIslandSlot({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(child: Center(child: child));
   }
 }

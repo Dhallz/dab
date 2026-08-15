@@ -1,3 +1,4 @@
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class AdminProfileCard extends StatelessWidget {
@@ -19,7 +20,7 @@ class AdminProfileCard extends StatelessWidget {
             radius: 18,
             backgroundColor: cs.primary,
             child: Icon(
-              Icons.admin_panel_settings,
+              AppIcons.admin,
               color: cs.onPrimary,
               size: 20,
             ),

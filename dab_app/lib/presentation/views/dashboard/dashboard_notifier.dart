@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/containers/activity_usecases.dart';
-import '../../../domain/containers/upcoming_event_usecases.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../services/service_locator.dart';
@@ -11,22 +10,13 @@ import '../../core/models/view_status.dart';
 import '../../features/app/app_notifier.dart';
 import 'dashboard_state.dart';
 import 'models/dashboard_provider_health.dart';
-import 'services/banner_evaluator.dart';
 
 /// [ARCH: PRESENTATION]
-/// ROLE: Dashboard screen state — live feed, upcoming events, banner, triage.
+/// ROLE: Dashboard screen state — live feed and archive triage.
 /// CONTRACT: Subscribes to the activity WS stream; delegates I/O to use cases.
-///
-/// **Former `DashboardEvent` types → methods:** `DashboardStarted` → [start];
-/// `DashboardActivityReceived` → [onActivityReceived]; archived/unarchive remote
-/// → [onActivityArchivedRemotely] / [onActivityUnarchivedRemotely]; archive/unarchive
-/// UI → [requestArchive] / [requestUnarchive]; `DashboardArchivedVisibilityToggled`
-/// → [toggleArchivedVisibility]; `DashboardBannerTick` → [onBannerTick];
-/// `DashboardBannerDismissed` → [dismissBanner]; `DashboardReconnectNoticeCleared`
-/// → [onReconnectNoticeCleared].
 final dashboardNotifierProvider =
     NotifierProvider.autoDispose<DashboardNotifier, DashboardState>(
-      () => DashboardNotifier(sl.activityUseCases, sl.upcomingEventUseCases),
+      () => DashboardNotifier(sl.activityUseCases),
     );
 
 /// [ARCH: PRESENTATION]
@@ -34,26 +24,17 @@ final dashboardNotifierProvider =
 /// data sources directly.
 class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   DashboardNotifier(
-    this._activityUseCases,
-    this._upcomingEventUseCases, {
-    BannerEvaluator? bannerEvaluator,
+    this._activityUseCases, {
     DateTime Function()? now,
-    Duration bannerTickInterval = const Duration(seconds: 30),
     bool Function()? isPersonalDeployment,
-  }) : _bannerEvaluator = bannerEvaluator ?? const BannerEvaluator(),
-       _now = now ?? DateTime.now,
-       _bannerTickInterval = bannerTickInterval,
+  }) : _now = now ?? DateTime.now,
        _isPersonalDeployment = isPersonalDeployment;
 
   final ActivityUseCases _activityUseCases;
-  final UpcomingEventUseCases _upcomingEventUseCases;
-  final BannerEvaluator _bannerEvaluator;
   final DateTime Function() _now;
-  final Duration _bannerTickInterval;
   final bool Function()? _isPersonalDeployment;
 
   StreamSubscription<ActivityLiveEvent>? _activitySubscription;
-  Timer? _bannerTimer;
   Timer? _streamHealthTimer;
   Timer? _reconnectNoticeTimer;
   DateTime? _lastLivePulseAt;
@@ -63,7 +44,6 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   DashboardState build() {
     ref.onDispose(() {
       _activitySubscription?.cancel();
-      _bannerTimer?.cancel();
       _streamHealthTimer?.cancel();
       _reconnectNoticeTimer?.cancel();
     });
@@ -87,17 +67,12 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
       includeArchived: true,
       global: isPersonal,
     );
-    final upcomingResult = await _upcomingEventUseCases.getUpcomingEvents
-        .execute();
-
-    final upcomingEvents = upcomingResult.getOrElse((_) => const []);
 
     liveResult.fold(
       (failure) {
         state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-          upcomingEvents: upcomingEvents,
           lastSyncedAt: now,
           reconnectNoticeAt: null,
         );
@@ -107,7 +82,6 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
           status: ViewStatus.success,
           errorMessage: null,
           activities: activities,
-          upcomingEvents: upcomingEvents,
           providerHealth: _deriveProviderHealth(activities, now),
           lastSyncedAt: now,
           reconnectNoticeAt: null,
@@ -136,12 +110,6 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
         _awaitingReconnectNotice = true;
       }
     });
-
-    _bannerTimer?.cancel();
-    _bannerTimer = Timer.periodic(_bannerTickInterval, (_) {
-      onBannerTick();
-    });
-    onBannerTick();
   }
 
   void onActivityReceived(Activity activity) {
@@ -221,27 +189,6 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     state = state.copyWith(
       showArchivedActivities: !state.showArchivedActivities,
     );
-  }
-
-  void onBannerTick() {
-    if (state.upcomingEvents.isEmpty) return;
-    final banner = _bannerEvaluator.evaluate(
-      events: state.upcomingEvents,
-      now: _now(),
-      alreadyNotified: state.lastNotifiedEventIds.toSet(),
-    );
-    if (banner == null) return;
-    if (state.activeBanner?.dedupeKey == banner.dedupeKey) return;
-
-    state = state.copyWith(
-      activeBanner: banner,
-      lastNotifiedEventIds: [...state.lastNotifiedEventIds, banner.dedupeKey],
-    );
-  }
-
-  void dismissBanner() {
-    if (state.activeBanner == null) return;
-    state = state.copyWith(activeBanner: null);
   }
 
   void onReconnectNoticeCleared() {

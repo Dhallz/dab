@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../models/dashboard_provider_health.dart';
 
@@ -13,10 +12,11 @@ class DashboardProviderHealthChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final (label, color) = switch (health.status) {
       DashboardProviderHealthStatus.live => (
         l10n.dashboardProviderHealthLive,
-        const Color(0xFF22C55E),
+        scheme.tertiary,
       ),
       DashboardProviderHealthStatus.degraded => (
         l10n.dashboardProviderHealthDegraded,
@@ -24,16 +24,16 @@ class DashboardProviderHealthChip extends StatelessWidget {
       ),
       DashboardProviderHealthStatus.offline => (
         l10n.dashboardProviderHealthOffline,
-        AppColors.error,
+        scheme.error,
       ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.onSurface.withValues(alpha: 0.06),
+        color: scheme.onSurface.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -47,7 +47,7 @@ class DashboardProviderHealthChip extends StatelessWidget {
             child: Text(
               health.providerName,
               style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.onSurface,
+                color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -55,7 +55,7 @@ class DashboardProviderHealthChip extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.onSurface,
+              color: scheme.onSurface,
             ),
           ),
         ],

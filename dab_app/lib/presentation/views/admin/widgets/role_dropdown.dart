@@ -1,6 +1,7 @@
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +32,7 @@ class RoleDropdown extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
           icon: Icon(
-            Icons.keyboard_arrow_down,
+            AppIcons.chevronDown,
             color: cs.onSurfaceVariant,
             size: 18,
           ),

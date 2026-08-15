@@ -31,6 +31,17 @@ class AppIcons {
   static final IconData logout = HeroIcons.arrowLeftOnRectangle.outline;
   static final IconData visibility = HeroIcons.eye.outline;
   static final IconData visibilityOff = HeroIcons.eyeSlash.outline;
+  static final IconData close = HeroIcons.xMark.outline;
+  static final IconData personAdd = HeroIcons.userPlus.outline;
+  static final IconData link = HeroIcons.link.outline;
+  static final IconData chevronDown = HeroIcons.chevronDown.outline;
+  static final IconData chevronUp = HeroIcons.chevronUp.outline;
+  static final IconData back = HeroIcons.arrowLeft.outline;
+  static final IconData providers = HeroIcons.server.outline;
+  static final IconData at = HeroIcons.atSymbol.outline;
+  static final IconData email = HeroIcons.envelope.outline;
+  static final IconData lock = HeroIcons.lockClosed.outline;
+  static final IconData building = HeroIcons.buildingOffice.outline;
 
   // Activity Types
   static final IconData commit = HeroIcons.commandLine.outline;

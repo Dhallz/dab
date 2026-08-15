@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
-import '../../../core/styles/app_colors.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../../features/app/app_notifier.dart';
@@ -40,7 +39,9 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           l10n.settingsConnectedAccountsSubtitle,
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
+          style: AppTextStyles.bodySmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 16),
         if (state.status == ViewStatus.loading)
@@ -166,7 +167,7 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
                         ? l10n.settingsCredentialConnected
                         : '@$identity',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.secondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -179,7 +180,7 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
                   _message!,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: _ok
-                        ? Colors.green
+                        ? Theme.of(context).colorScheme.tertiary
                         : Theme.of(context).colorScheme.error,
                   ),
                 ),
@@ -294,7 +295,7 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
                         ? l10n.settingsCredentialConnected
                         : '@$identity',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.secondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -303,7 +304,7 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
             Text(
               l10n.settingsPhorgeTokenHint,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.secondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
@@ -323,7 +324,7 @@ class _PhorgeTokenCardState extends State<_PhorgeTokenCard> {
                   _message!,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: _ok
-                        ? Colors.green
+                        ? Theme.of(context).colorScheme.tertiary
                         : Theme.of(context).colorScheme.error,
                   ),
                 ),
@@ -423,12 +424,16 @@ class _WatchListPicker extends StatelessWidget {
       children: [
         Text(
           title,
-          style: AppTextStyles.labelSmall.copyWith(color: AppColors.secondary),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
+          style: AppTextStyles.bodySmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         if (errorMessage != null)
@@ -444,7 +449,9 @@ class _WatchListPicker extends StatelessWidget {
         else if (items.isEmpty)
           Text(
             empty,
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.secondary),
+            style: AppTextStyles.bodySmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           )
         else
           Wrap(

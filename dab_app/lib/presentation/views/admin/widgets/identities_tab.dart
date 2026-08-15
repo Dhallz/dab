@@ -1,6 +1,7 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +54,7 @@ class IdentitiesTab extends StatelessWidget {
             hintText: l10n.adminIdentitiesSearchHint,
             hintStyle: TextStyle(color: cs.onSurfaceVariant),
             prefixIcon: Icon(
-              Icons.search,
+              AppIcons.search,
               color: cs.onSurfaceVariant,
             ),
             filled: true,
@@ -73,7 +74,7 @@ class IdentitiesTab extends StatelessWidget {
               builder: (_) =>
                   IdentityCreateDialog(users: users, providerIds: providerIds),
             ),
-            icon: const Icon(Icons.add_link, size: 18),
+            icon: Icon(AppIcons.link, size: 18),
             label: Text(l10n.adminIdentitiesCreateLink),
           ),
         ),
@@ -197,7 +198,7 @@ class IdentitiesTab extends StatelessWidget {
                                   onPressed: () =>
                                       _openQuickLink(context, identity),
                                   icon: Icon(
-                                    Icons.add_circle_outline,
+                                    AppIcons.add,
                                     color: cs.primary,
                                     size: 18,
                                   ),
@@ -213,7 +214,7 @@ class IdentitiesTab extends StatelessWidget {
                       DataCell(
                         IconButton(
                           icon: Icon(
-                            Icons.link,
+                            AppIcons.link,
                             size: 20,
                             color: cs.primary,
                           ),

@@ -21,10 +21,7 @@ class SettingsThemeSelector extends StatelessWidget {
     return DropdownButtonFormField<AppThemeVariant>(
       key: ValueKey(currentVariant),
       initialValue: currentVariant,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        enabledBorder: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(),
       items: [
         DropdownMenuItem(
           value: AppThemeVariant.light,

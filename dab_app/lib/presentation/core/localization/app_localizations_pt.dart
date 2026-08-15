@@ -12,10 +12,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dashboardTitle => 'Painel';
 
   @override
-  String get dashboardOverview => 'Visão geral';
+  String get dashboardIslandLive => 'Ao vivo';
 
   @override
-  String get dashboardSubtitle => 'Feed ao vivo em breve.';
+  String get dashboardIslandArchived => 'Arquivado';
 
   @override
   String get navExplorer => 'Explorador';
@@ -196,9 +196,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSectionLanguage => 'Idioma';
 
   @override
-  String get settingsSectionIslandBar => 'Barra Island';
-
-  @override
   String get settingsSectionAbout => 'Sobre';
 
   @override
@@ -283,42 +280,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsVersionLabel => 'Versão';
-
-  @override
-  String get settingsIslandBarDashboard => 'Painel';
-
-  @override
-  String get settingsIslandBarExplorer => 'Explor.';
-
-  @override
-  String get settingsIslandBarInsights => 'Análises';
-
-  @override
-  String get settingsIslandBarItemTitle => 'Título';
-
-  @override
-  String get settingsIslandBarItemSubtitle => 'Subtítulo';
-
-  @override
-  String get settingsIslandBarItemDateControls => 'Datas';
-
-  @override
-  String get settingsIslandBarItemQuickPreset => 'Preset';
-
-  @override
-  String get settingsIslandBarItemDateModeToggle => 'Modo data';
-
-  @override
-  String get settingsIslandBarItemActivitySummary => 'Resum. ativ.';
-
-  @override
-  String get settingsIslandBarItemHeatBar => 'Calor';
-
-  @override
-  String get settingsIslandBarItemDateRange => 'Intervalo';
-
-  @override
-  String get settingsIslandBarItemPresets => 'Presets';
 
   @override
   String get settingsSave => 'Salvar';
@@ -754,22 +715,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get adminFieldApiTokenOrSecret => 'API Token / Secret';
 
   @override
-  String get dashboardAwaitingReplyTitle => 'Sua resposta';
-
-  @override
-  String get dashboardAwaitingReplySubtitle => 'Threads pendentes.';
-
-  @override
-  String get dashboardNoReplyThreads => 'Sem threads.';
-
-  @override
   String get dashboardLiveNowTitle => 'Ao vivo';
-
-  @override
-  String get dashboardSnoozed => 'Adiado';
-
-  @override
-  String get dashboardReviewQueue => 'Fila rev.';
 
   @override
   String dashboardLiveUpdated(Object relativeTime) {
@@ -879,9 +825,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dashboardProviderHealthOffline => 'Offline';
 
   @override
-  String get dashboardUpcomingSourceCalendar => 'Calendário';
-
-  @override
   String get dashboardNoProviderActivity => 'Sem atividade.';
 
   @override
@@ -890,33 +833,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String dashboardLastSync(Object time) {
     return 'Últ. sync $time';
-  }
-
-  @override
-  String get dashboardUpcomingSoonTitle => 'Em breve';
-
-  @override
-  String get dashboardUpcomingNoEvents => 'Sem eventos';
-
-  @override
-  String get upcomingRelativeInProgress => 'in progress';
-
-  @override
-  String get upcomingRelativeNow => 'now';
-
-  @override
-  String upcomingRelativeInMinutes(Object count) {
-    return 'in ${count}m';
-  }
-
-  @override
-  String upcomingRelativeInHours(Object count) {
-    return 'in ${count}h';
-  }
-
-  @override
-  String upcomingRelativeInDays(Object count) {
-    return 'in ${count}d';
   }
 
   @override
@@ -947,25 +863,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dashboardRelativeJustNow => 'just now';
 
   @override
-  String get bannerStartingNow => 'Starting now';
-
-  @override
-  String get bannerStartsInOneMinute => 'Starts in 1 minute';
-
-  @override
-  String bannerStartsInMinutes(Object count) {
-    return 'Starts in $count minutes';
-  }
-
-  @override
-  String get bannerStartsInOneHour => 'Starts in 1 hour';
-
-  @override
-  String bannerStartsInHours(Object count) {
-    return 'Starts in $count hours';
-  }
-
-  @override
   String get explorerNoActivitiesFound => 'No activities found.';
 
   @override
@@ -990,9 +887,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get explorerSectionActivityProviders => 'ACTIVITY PROVIDERS';
-
-  @override
-  String get homeSearchArchivesPlaceholder => 'Search archives…';
 
   @override
   String get adminConnectionConnected => 'Connected';

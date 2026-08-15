@@ -6,15 +6,14 @@ import '../../../../presentation/core/extensions/activity_category_l10n.dart';
 import '../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../presentation/core/localization/app_localizations.dart';
 import '../../../../presentation/core/localization/l10n_extension.dart';
-import '../../../../presentation/core/styles/app_colors.dart';
 import '../../../../presentation/core/styles/app_icons.dart';
-import '../../auth/widgets/auth_glass_card.dart';
-import 'activity_provider_icon.dart';
+import '../../../../presentation/core/widgets/activity_provider_icon.dart';
+import '../../../../presentation/core/widgets/dab_glass_surface.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Visual card displaying a single activity with provider info and
 /// content. Exposes archive/unarchive triage via an optional trailing action.
-class DabActivityCard extends StatefulWidget {
+class DashboardActivityCard extends StatefulWidget {
   final Activity activity;
 
   /// Callback fired when the user requests to archive this activity. When
@@ -24,7 +23,7 @@ class DabActivityCard extends StatefulWidget {
   /// Callback fired when the user requests to un-archive this activity.
   final VoidCallback? onUnarchive;
 
-  const DabActivityCard({
+  const DashboardActivityCard({
     super.key,
     required this.activity,
     this.onArchive,
@@ -32,16 +31,17 @@ class DabActivityCard extends StatefulWidget {
   });
 
   @override
-  State<DabActivityCard> createState() => _DabActivityCardState();
+  State<DashboardActivityCard> createState() => _DashboardActivityCardState();
 }
 
-class _DabActivityCardState extends State<DabActivityCard> {
+class _DashboardActivityCardState extends State<DashboardActivityCard> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final style = widget.activity.style(context);
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final showsTriage = widget.onArchive != null || widget.onUnarchive != null;
     final trimmedContent = widget.activity.content.trim();
     final showSenderLine =
@@ -74,7 +74,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
           ),
           child: Opacity(
             opacity: widget.activity.archived ? 0.55 : 1,
-            child: AuthGlassCard(
+            child: DabGlassSurface(
               child: InkWell(
                 onTap: _launchUrl,
                 borderRadius: BorderRadius.circular(16),
@@ -87,6 +87,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                         ActivityProviderIcon(
                           activity: widget.activity,
                           color: style.color,
+                          padded: true,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -115,7 +116,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                   Text(
                                     _formatDate(l10n),
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: AppColors.onSurfaceVariantLow,
+                                      color: scheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -126,7 +127,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   height: 1.2,
-                                  color: AppColors.onSurface,
+                                  color: scheme.onSurface,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -138,7 +139,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                     Icon(
                                       AppIcons.user,
                                       size: 14,
-                                      color: AppColors.onSurfaceVariantLow,
+                                      color: scheme.onSurfaceVariant,
                                     ),
                                     const SizedBox(width: 6),
                                     Expanded(
@@ -146,7 +147,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                         'From ${widget.activity.authorName}',
                                         style: theme.textTheme.labelSmall
                                             ?.copyWith(
-                                              color: AppColors.onSurfaceVariant,
+                                              color: scheme.onSurfaceVariant,
                                               fontWeight: FontWeight.w600,
                                             ),
                                         maxLines: 1,
@@ -161,7 +162,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
                                 Text(
                                   widget.activity.content,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.onSurfaceVariant,
+                                    color: scheme.onSurfaceVariant,
                                   ),
                                   maxLines: 4,
                                   overflow: TextOverflow.ellipsis,
@@ -191,11 +192,12 @@ class _DabActivityCardState extends State<DabActivityCard> {
 
   Widget _buildTriageAction(BuildContext context) {
     final l10n = context.l10n;
+    final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
     if (widget.activity.archived && widget.onUnarchive != null) {
       return IconButton(
         tooltip: l10n.activityTooltipUnarchive,
         icon: Icon(AppIcons.refresh),
-        color: AppColors.onSurfaceVariant,
+        color: iconColor,
         onPressed: widget.onUnarchive,
       );
     }
@@ -203,7 +205,7 @@ class _DabActivityCardState extends State<DabActivityCard> {
       return IconButton(
         tooltip: l10n.activityTooltipArchive,
         icon: Icon(AppIcons.delete),
-        color: AppColors.onSurfaceVariant,
+        color: iconColor,
         onPressed: widget.onArchive,
       );
     }

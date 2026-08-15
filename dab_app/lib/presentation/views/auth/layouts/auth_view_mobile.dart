@@ -6,11 +6,11 @@ import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/navigation/app_route.dart';
 import '../../../core/widgets/dab_mesh_background.dart';
+import '../../../core/widgets/dab_glass_surface.dart';
 import '../../../features/app/app_notifier.dart';
 import '../auth_form_notifier.dart';
 import '../auth_state.dart';
 import '../widgets/auth_form.dart';
-import '../widgets/auth_glass_card.dart';
 
 /// Mobile auth screen — static chrome is a [StatelessWidget]; only the form
 /// subtree watches [authFormNotifierProvider].
@@ -34,7 +34,7 @@ class AuthViewMobile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFF8FAFC),
+                    color: Theme.of(context).colorScheme.onSurface,
                     letterSpacing: 4,
                   ),
                 ),
@@ -43,13 +43,14 @@ class AuthViewMobile extends StatelessWidget {
                   l10n.brandTagline,
                   style: TextStyle(
                     fontSize: 16,
-                    color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 48),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
-                  child: AuthGlassCard(
+                  child: DabGlassSurface(
                     padding: const EdgeInsets.all(32),
                     child: _AuthFormPanel(),
                   ),

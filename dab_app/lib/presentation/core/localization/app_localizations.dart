@@ -112,17 +112,17 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboardTitle;
 
-  /// dashboardOverview: Overview
+  /// Island Bar label for visible live activity count.
   ///
   /// In en, this message translates to:
-  /// **'Overview'**
-  String get dashboardOverview;
+  /// **'Live'**
+  String get dashboardIslandLive;
 
-  /// dashboardSubtitle: Coming soon: Live activity feed.
+  /// Island Bar label for archived activity count.
   ///
   /// In en, this message translates to:
-  /// **'Coming soon: Live activity feed.'**
-  String get dashboardSubtitle;
+  /// **'Archived'**
+  String get dashboardIslandArchived;
 
   /// navExplorer: Explorer
   ///
@@ -478,12 +478,6 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get settingsSectionLanguage;
 
-  /// settingsSectionIslandBar: Island Bar
-  ///
-  /// In en, this message translates to:
-  /// **'Island Bar'**
-  String get settingsSectionIslandBar;
-
   /// settingsSectionAbout: About
   ///
   /// In en, this message translates to:
@@ -637,78 +631,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get settingsVersionLabel;
-
-  /// settingsIslandBarDashboard: Dashboard
-  ///
-  /// In en, this message translates to:
-  /// **'Dashboard'**
-  String get settingsIslandBarDashboard;
-
-  /// settingsIslandBarExplorer: Explorer
-  ///
-  /// In en, this message translates to:
-  /// **'Explorer'**
-  String get settingsIslandBarExplorer;
-
-  /// settingsIslandBarInsights: Insights
-  ///
-  /// In en, this message translates to:
-  /// **'Insights'**
-  String get settingsIslandBarInsights;
-
-  /// settingsIslandBarItemTitle: Title
-  ///
-  /// In en, this message translates to:
-  /// **'Title'**
-  String get settingsIslandBarItemTitle;
-
-  /// settingsIslandBarItemSubtitle: Subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Subtitle'**
-  String get settingsIslandBarItemSubtitle;
-
-  /// settingsIslandBarItemDateControls: Date controls
-  ///
-  /// In en, this message translates to:
-  /// **'Date controls'**
-  String get settingsIslandBarItemDateControls;
-
-  /// settingsIslandBarItemQuickPreset: Quick preset
-  ///
-  /// In en, this message translates to:
-  /// **'Quick preset'**
-  String get settingsIslandBarItemQuickPreset;
-
-  /// settingsIslandBarItemDateModeToggle: Date mode toggle
-  ///
-  /// In en, this message translates to:
-  /// **'Date mode toggle'**
-  String get settingsIslandBarItemDateModeToggle;
-
-  /// settingsIslandBarItemActivitySummary: Activity summary
-  ///
-  /// In en, this message translates to:
-  /// **'Activity summary'**
-  String get settingsIslandBarItemActivitySummary;
-
-  /// settingsIslandBarItemHeatBar: Heat bar
-  ///
-  /// In en, this message translates to:
-  /// **'Heat bar'**
-  String get settingsIslandBarItemHeatBar;
-
-  /// settingsIslandBarItemDateRange: Date range
-  ///
-  /// In en, this message translates to:
-  /// **'Date range'**
-  String get settingsIslandBarItemDateRange;
-
-  /// settingsIslandBarItemPresets: Presets
-  ///
-  /// In en, this message translates to:
-  /// **'Presets'**
-  String get settingsIslandBarItemPresets;
 
   /// settingsSave: Save
   ///
@@ -1514,41 +1436,11 @@ abstract class AppLocalizations {
   /// **'API Token / Secret'**
   String get adminFieldApiTokenOrSecret;
 
-  /// dashboardAwaitingReplyTitle: Awaiting Your Reply
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting Your Reply'**
-  String get dashboardAwaitingReplyTitle;
-
-  /// dashboardAwaitingReplySubtitle: Thread follow-ups that likely expect a response.
-  ///
-  /// In en, this message translates to:
-  /// **'Thread follow-ups that likely expect a response.'**
-  String get dashboardAwaitingReplySubtitle;
-
-  /// dashboardNoReplyThreads: No active reply threads right now.
-  ///
-  /// In en, this message translates to:
-  /// **'No active reply threads right now.'**
-  String get dashboardNoReplyThreads;
-
   /// dashboardLiveNowTitle: Live Now
   ///
   /// In en, this message translates to:
   /// **'Live Now'**
   String get dashboardLiveNowTitle;
-
-  /// dashboardSnoozed: Snoozed
-  ///
-  /// In en, this message translates to:
-  /// **'Snoozed'**
-  String get dashboardSnoozed;
-
-  /// dashboardReviewQueue: Review queue
-  ///
-  /// In en, this message translates to:
-  /// **'Review queue'**
-  String get dashboardReviewQueue;
 
   /// dashboardLiveUpdated: Live · updated {relativeTime}
   ///
@@ -1724,12 +1616,6 @@ abstract class AppLocalizations {
   /// **'Offline'**
   String get dashboardProviderHealthOffline;
 
-  /// dashboardUpcomingSourceCalendar: Source label for calendar-derived upcoming events.
-  ///
-  /// In en, this message translates to:
-  /// **'Calendar'**
-  String get dashboardUpcomingSourceCalendar;
-
   /// dashboardNoProviderActivity: No provider activity yet
   ///
   /// In en, this message translates to:
@@ -1747,48 +1633,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last sync {time}'**
   String dashboardLastSync(Object time);
-
-  /// dashboardUpcomingSoonTitle: Upcoming Soon
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming Soon'**
-  String get dashboardUpcomingSoonTitle;
-
-  /// dashboardUpcomingNoEvents: No upcoming events
-  ///
-  /// In en, this message translates to:
-  /// **'No upcoming events'**
-  String get dashboardUpcomingNoEvents;
-
-  /// upcomingRelativeInProgress: in progress
-  ///
-  /// In en, this message translates to:
-  /// **'in progress'**
-  String get upcomingRelativeInProgress;
-
-  /// upcomingRelativeNow: now
-  ///
-  /// In en, this message translates to:
-  /// **'now'**
-  String get upcomingRelativeNow;
-
-  /// upcomingRelativeInMinutes: in {count}m
-  ///
-  /// In en, this message translates to:
-  /// **'in {count}m'**
-  String upcomingRelativeInMinutes(Object count);
-
-  /// upcomingRelativeInHours: in {count}h
-  ///
-  /// In en, this message translates to:
-  /// **'in {count}h'**
-  String upcomingRelativeInHours(Object count);
-
-  /// upcomingRelativeInDays: in {count}d
-  ///
-  /// In en, this message translates to:
-  /// **'in {count}d'**
-  String upcomingRelativeInDays(Object count);
 
   /// authErrorFailed: Auth failed
   ///
@@ -1832,36 +1676,6 @@ abstract class AppLocalizations {
   /// **'just now'**
   String get dashboardRelativeJustNow;
 
-  /// bannerStartingNow: Starting now
-  ///
-  /// In en, this message translates to:
-  /// **'Starting now'**
-  String get bannerStartingNow;
-
-  /// bannerStartsInOneMinute: Starts in 1 minute
-  ///
-  /// In en, this message translates to:
-  /// **'Starts in 1 minute'**
-  String get bannerStartsInOneMinute;
-
-  /// bannerStartsInMinutes: Starts in {count} minutes
-  ///
-  /// In en, this message translates to:
-  /// **'Starts in {count} minutes'**
-  String bannerStartsInMinutes(Object count);
-
-  /// bannerStartsInOneHour: Starts in 1 hour
-  ///
-  /// In en, this message translates to:
-  /// **'Starts in 1 hour'**
-  String get bannerStartsInOneHour;
-
-  /// bannerStartsInHours: Starts in {count} hours
-  ///
-  /// In en, this message translates to:
-  /// **'Starts in {count} hours'**
-  String bannerStartsInHours(Object count);
-
   /// explorerNoActivitiesFound: No activities found.
   ///
   /// In en, this message translates to:
@@ -1903,12 +1717,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ACTIVITY PROVIDERS'**
   String get explorerSectionActivityProviders;
-
-  /// homeSearchArchivesPlaceholder: Search archives…
-  ///
-  /// In en, this message translates to:
-  /// **'Search archives…'**
-  String get homeSearchArchivesPlaceholder;
 
   /// adminConnectionConnected: Connected
   ///
