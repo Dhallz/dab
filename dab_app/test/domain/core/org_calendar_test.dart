@@ -6,9 +6,16 @@ void main() {
 
   test('orgDayKeyFromUtc uses org timezone for coverage keys', () {
     final instant = DateTime.utc(2026, 7, 3, 0, 42);
-    expect(
-      orgDayKeyFromUtc('America/New_York', instant),
-      '2026-07-02',
-    );
+    expect(orgDayKeyFromUtc('America/New_York', instant), '2026-07-02');
+  });
+
+  test('orgLocalFromUtc converts the clock into the org timezone', () {
+    final instant = DateTime.utc(2026, 7, 3, 0, 42);
+    final local = orgLocalFromUtc('America/New_York', instant);
+    expect(local.year, 2026);
+    expect(local.month, 7);
+    expect(local.day, 2);
+    expect(local.hour, 20);
+    expect(local.minute, 42);
   });
 }

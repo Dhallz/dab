@@ -9,8 +9,8 @@ import '../dashboard_notifier.dart';
 import '../dashboard_state.dart';
 import '../models/dashboard_feed_group.dart';
 import '../models/dashboard_feed_mode.dart';
-import 'dashboard_activity_card.dart';
 import 'dashboard_grouped_feed.dart';
+import 'dashboard_timeline_feed.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Renders the dashboard Live Now feed with archive triage.
@@ -67,21 +67,10 @@ class DashboardLiveFeed extends ConsumerWidget {
         l10n: l10n,
       );
     } else {
-      body = ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          ...visibleActivities.map(
-            (activity) => DashboardActivityCard(
-              activity: activity,
-              onArchive: activity.archived
-                  ? null
-                  : () => notifier.requestArchive(activity.id),
-              onUnarchive: activity.archived
-                  ? () => notifier.requestUnarchive(activity.id)
-                  : null,
-            ),
-          ),
-        ],
+      body = DashboardTimelineFeed(
+        activities: visibleActivities,
+        onArchive: (activity) => notifier.requestArchive(activity.id),
+        onUnarchive: (activity) => notifier.requestUnarchive(activity.id),
       );
     }
 
@@ -91,10 +80,7 @@ class DashboardLiveFeed extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (state.reconnectNoticeAt != null) ...[
-            _ReconnectNoticeBanner(
-              at: state.reconnectNoticeAt!,
-              l10n: l10n,
-            ),
+            _ReconnectNoticeBanner(at: state.reconnectNoticeAt!, l10n: l10n),
             const SizedBox(height: 10),
           ],
           Text(
@@ -148,10 +134,7 @@ class _FailurePlaceholder extends StatelessWidget {
   final String? message;
   final String fallbackMessage;
 
-  const _FailurePlaceholder({
-    this.message,
-    required this.fallbackMessage,
-  });
+  const _FailurePlaceholder({this.message, required this.fallbackMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -160,9 +143,7 @@ class _FailurePlaceholder extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
           message ?? fallbackMessage,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,

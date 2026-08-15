@@ -46,11 +46,16 @@ String orgCalendarDayString(String orgTimezoneId, DateTime calendarDay) {
 
 /// `YYYY-MM-DD` for an instant interpreted in the org timezone.
 String orgDayKeyFromUtc(String orgTimezoneId, DateTime utcInstant) {
-  final loc = _location(orgTimezoneId);
-  final local = tz.TZDateTime.from(utcInstant.toUtc(), loc);
+  final local = orgLocalFromUtc(orgTimezoneId, utcInstant);
   final month = local.month.toString().padLeft(2, '0');
   final day = local.day.toString().padLeft(2, '0');
   return '${local.year}-$month-$day';
+}
+
+/// [utcInstant] converted to the organization IANA timezone.
+DateTime orgLocalFromUtc(String orgTimezoneId, DateTime utcInstant) {
+  final loc = _location(orgTimezoneId);
+  return tz.TZDateTime.from(utcInstant.toUtc(), loc);
 }
 
 /// Whether [utcInstant] falls on the org-calendar day of [pickerDay].
@@ -96,12 +101,7 @@ int orgDayEpochMsFromDayKey(String orgTimezoneId, String dayKey) {
   DateTime endDay,
 ) {
   final loc = _location(orgTimezoneId);
-  final start = tz.TZDateTime(
-    loc,
-    startDay.year,
-    startDay.month,
-    startDay.day,
-  );
+  final start = tz.TZDateTime(loc, startDay.year, startDay.month, startDay.day);
   final end = tz.TZDateTime(
     loc,
     endDay.year,
