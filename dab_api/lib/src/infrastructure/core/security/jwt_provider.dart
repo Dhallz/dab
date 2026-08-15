@@ -1,6 +1,6 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
-import '../../../domain/ports/i_access_token_issuer.dart';
+import '../../../domain/contracts/ports/i_access_token_issuer.dart';
 import '../config/config.dart';
 
 /// [ARCH: INFRASTRUCTURE_SECURITY]

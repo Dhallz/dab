@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../entities/provider/provider_config.dart';
-import '../entities/user/linear_team.dart';
+import '../../core/failures/failure.dart';
+import '../../entities/provider/provider_config.dart';
+import '../../entities/user/linear_team.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Lists Linear teams visible to merged user/org credentials.

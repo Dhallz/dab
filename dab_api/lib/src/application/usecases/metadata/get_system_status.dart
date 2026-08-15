@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Determines if the DAB platform is fully configured.

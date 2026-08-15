@@ -60,12 +60,9 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 - **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
-- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups, `ILiveFeedStore` / `IPresenceBroadcaster` / `IAccessTokenIssuer` for live ingest and auth, `IWebhookRequestAuthenticator` for inbound webhook HMAC, `IDiscordLiveIngestor` so Discord Gateway never imports application use cases).
-- **`gateways/`:** Phorge-only Conduit facade (`AbsIPhorgeGateway`) for directory sync and metadata. GitHub, Slack, and every other provider poll through `IActivitySource`, not a gateway.
+- **`contracts/`:** All outbound seams. **`ports/`** — I/O that is not our Postgres (`IActivitySource<T>`, `IDiscoverySource`, catalogs, `ILiveFeedStore` / `IPresenceBroadcaster` / `IAccessTokenIssuer`, `IWebhookRequestAuthenticator`, `IDiscordLiveIngestor`, plus `AbsIPhorgeGateway` for Phorge directory/sprint/task/revision facade). Other providers poll through `IActivitySource`, not a dedicated gateway. **`repositories/`** — abstract Postgres contracts (`AbsI*` / `I*`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
-
-- **Repository Interfaces:** Abstract contracts prefixed with `I` (e.g., `IActivityRepository`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
 ---
 
@@ -73,17 +70,13 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions).
+- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, Discord Gateway) also lives here.
 
 - **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `IActivitySource`.
 
-- **`repositories/`:** Concrete SQL implementations using Drift + PostgreSQL. Implement Table-Per-Type polymorphism via `leftOuterJoin`.
+- **`persistence/`:** All durable/cache stores. **`postgres/`** — Drift schema, DAOs, `MigrationStrategy` (never hand-edit `*.g.dart`). **`redis/`** — live feed, Vegas clock, ingest dedup. **`repositories/`** — AbsI* implementations (TBT `leftOuterJoin` hydration, including `PostgresHealthRepository`).
 
-- **`database/`:** Drift schema definitions, DAOs, and `MigrationStrategy`. Never hand-edit generated `*.g.dart` files.
-
-- **`security/`:** JWT signing/verification (via `dart_jsonwebtoken`), bcrypt password hashing. All secrets come from `Config`.
-
-- **`config/`:** `Config` — loads env vars at startup. Single source for all configuration.
+- **`core/`:** Cross-cutting leftovers. **`config/`** — env loading. **`security/`** — JWT, bcrypt, HMAC primitives, `SettingsCipher`. **`http/`** — inbound payload helpers. **`adapters/`** — OAuth, credential overlay, identity probe, webhook authenticator. **`realtime/`** — `PresenceService`. **`logging/`** — structured logging plus the unused push-notification stub.
 
 - **Relative URL Strategy:** Providers generate relative paths (e.g., `/T123`). The DAB app resolves full URLs using `baseUrl` from `ProviderConfig`.
 

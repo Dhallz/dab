@@ -3,9 +3,9 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/ports/i_provider_identity_probe.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../../../domain/repositories/abs_i_user_provider_credential_repository.dart';
+import '../../../domain/contracts/ports/i_provider_identity_probe.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Verifies stored or posted credentials without requiring a save.

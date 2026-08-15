@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../entities/user/user_provider_credential.dart';
+import '../../core/failures/failure.dart';
+import '../../entities/user/user_provider_credential.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Persistence for per-user provider credentials.

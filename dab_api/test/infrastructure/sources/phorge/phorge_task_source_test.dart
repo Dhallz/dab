@@ -1,4 +1,4 @@
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:fpdart/fpdart.dart';

@@ -1,4 +1,4 @@
-import '../entities/activity/activity.dart';
+import '../../entities/activity/activity.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Redis-backed live feed, Vegas clock, and ingest dedup keys.

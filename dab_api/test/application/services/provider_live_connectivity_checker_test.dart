@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/services/provider_live_connectivity_checker.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_connectivity_report.dart';
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

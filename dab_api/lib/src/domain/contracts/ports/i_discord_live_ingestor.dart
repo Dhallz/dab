@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
+import '../../core/failures/failure.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Hands Discord Gateway `MESSAGE_CREATE` payloads to live ingest.

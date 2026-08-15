@@ -12,10 +12,10 @@ import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_provider_credential.dart';
 import '../../../domain/entities/user/user_provider_credential_status.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
-import '../../../domain/ports/i_provider_identity_probe.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../../../domain/repositories/abs_i_user_provider_credential_repository.dart';
-import '../../../domain/repositories/abs_i_user_repository.dart';
+import '../../../domain/contracts/ports/i_provider_identity_probe.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Saves a self-serve provider credential, verifies whoami, links identity.

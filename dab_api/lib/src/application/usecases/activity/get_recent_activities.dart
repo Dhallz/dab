@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/repositories/abs_i_activity_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Retrieves a paginated list of recent activities from local persistence.

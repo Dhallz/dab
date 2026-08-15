@@ -1,8 +1,8 @@
 import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/activity/activity.dart';
-import '../../domain/ports/i_live_feed_store.dart';
-import '../../domain/ports/i_presence_broadcaster.dart';
-import '../../domain/repositories/abs_i_system_settings_repository.dart';
+import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Persists live-feed fan-out and chooses personal vs org WebSocket delivery.

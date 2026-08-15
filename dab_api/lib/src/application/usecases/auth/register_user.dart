@@ -7,8 +7,8 @@ import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_role.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../domain/repositories/abs_i_user_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/core/config/config.dart';
 import '../../../infrastructure/sources/phorge/phorge_user_source.dart';
 

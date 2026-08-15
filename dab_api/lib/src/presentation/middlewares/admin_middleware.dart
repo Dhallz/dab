@@ -2,7 +2,7 @@ import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:relic/relic.dart';
 
 import '../../domain/entities/user/user_role.dart';
-import '../../domain/repositories/abs_i_auth_repository.dart';
+import '../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../../infrastructure/core/config/config.dart';
 import '../../service_locator.dart';
 

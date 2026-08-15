@@ -2,6 +2,15 @@
 
 The Infrastructure layer is responsible for the **How** and the **Where**. it handles all raw protocol interactions, database persistence, and external API clients.
 
+Top-level folders:
+
+| Folder | Contents |
+|---|---|
+| `sources/` | Provider I/O (`IActivitySource`, catalogs, Discord Gateway) |
+| `protocols/` | Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API) |
+| `persistence/` | `postgres/` (Drift), `redis/`, `repositories/` (AbsI* impls) |
+| `core/` | `config/`, `security/`, `http/`, `adapters/`, `realtime/`, `logging/` |
+
 ---
 
 ## 🏗️ Core Responsibilities

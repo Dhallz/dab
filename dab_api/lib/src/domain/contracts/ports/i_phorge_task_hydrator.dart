@@ -1,4 +1,4 @@
-import '../dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
+import '../../dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Hydrates a Phorge Herald webhook into a task bundle for ingest.

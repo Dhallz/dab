@@ -4,6 +4,6 @@
 library;
 
 export 'src/infrastructure/core/config/config.dart';
-export 'src/infrastructure/database/postgres_client.dart';
-export 'src/infrastructure/repositories/activity_repository.dart';
-export 'src/infrastructure/repositories/auth_repository.dart';
+export 'src/infrastructure/persistence/postgres/postgres_client.dart';
+export 'src/infrastructure/persistence/repositories/activity_repository.dart';
+export 'src/infrastructure/persistence/repositories/auth_repository.dart';

@@ -1,8 +1,8 @@
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/entities/user/user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/user/user_provider_credential_status.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_provider_credential_repository.dart';
-import 'package:dab_api/src/infrastructure/services/credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
+import 'package:dab_api/src/infrastructure/core/adapters/credential_resolver.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

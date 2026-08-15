@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:relic/relic.dart';
 
-import '../../domain/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Tracks Relic WebSocket sessions and fans out live events.

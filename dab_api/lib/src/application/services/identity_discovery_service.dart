@@ -3,9 +3,9 @@ import 'package:uuid/uuid.dart';
 import '../../domain/entities/user/user.dart';
 import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../../domain/repositories/abs_i_user_repository.dart';
-import '../../domain/ports/i_discovery_source.dart';
+import '../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../../domain/contracts/repositories/abs_i_user_repository.dart';
+import '../../domain/contracts/ports/i_discovery_source.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Orchestrator for automated identity resolution across providers.

@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/core/failures/failure.dart';
-import '../../../domain/repositories/abs_i_system_settings_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Updates global system settings in the database.

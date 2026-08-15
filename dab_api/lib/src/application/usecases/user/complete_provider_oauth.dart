@@ -4,10 +4,10 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/oauth_providers.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
-import '../../../domain/ports/i_oauth_client_credential_resolver.dart';
-import '../../../domain/ports/i_oauth_state_store.dart';
-import '../../../domain/ports/i_oauth_token_client.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/i_oauth_state_store.dart';
+import '../../../domain/contracts/ports/i_oauth_token_client.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'save_user_provider_credential.dart';
 
 /// [ARCH: APPLICATION_USECASE]

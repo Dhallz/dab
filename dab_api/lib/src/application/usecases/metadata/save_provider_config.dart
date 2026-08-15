@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Saves or updates a platform provider configuration.

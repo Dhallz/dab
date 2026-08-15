@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/entities/session.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
-import 'package:dab_api/src/infrastructure/database/app_database.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/app_database.dart';
 import 'package:drift_postgres/drift_postgres.dart';
 
 User userFromUsersRow(UsersTableData row) {

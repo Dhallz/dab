@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/entities/provider/provider_config.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../database/app_database.dart';
-import '../database/drift_row_mappers.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../postgres/app_database.dart';
+import '../postgres/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Implementation of Platform Configuration retrieval in the API.

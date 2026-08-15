@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/usecases/auth/delete_user_identity.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

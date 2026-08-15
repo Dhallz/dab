@@ -1,10 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
-import '../../domain/entities/provider/provider_metadata.dart';
-import '../../domain/gateways/abs_i_phorge_gateway.dart';
-import '../../domain/repositories/abs_i_provider_metadata_repository.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
+import '../../../domain/entities/provider/provider_metadata.dart';
+import '../../../domain/contracts/ports/abs_i_phorge_gateway.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_metadata_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence and Retrieval of dynamic provider metadata (Tags, Projects).

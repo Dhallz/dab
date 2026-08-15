@@ -3,8 +3,8 @@ import 'package:dab_api/src/application/usecases/user/save_linear_team_watch_lis
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/linear_team.dart';
-import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_linear_team_catalog.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../fakes/fake_credential_resolver.dart';
 import '../../../fakes/fake_oauth_credential_refresher.dart';
 import 'package:fpdart/fpdart.dart';

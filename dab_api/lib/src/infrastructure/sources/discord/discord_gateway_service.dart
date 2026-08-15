@@ -6,8 +6,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/ports/i_discord_live_ingestor.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/ports/i_discord_live_ingestor.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Outbound WebSocket client for the Discord Gateway (v10).

@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/usecases/metadata/save_system_settings.dart';
 import 'package:dab_api/src/domain/core/deployment_mode.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_system_settings_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

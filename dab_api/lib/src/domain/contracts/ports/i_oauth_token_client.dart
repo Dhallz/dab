@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../core/oauth_providers.dart';
-import '../entities/user/oauth_token_response.dart';
+import '../../core/failures/failure.dart';
+import '../../core/oauth_providers.dart';
+import '../../entities/user/oauth_token_response.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Exchanges an authorization code for tokens. Never logs secrets.

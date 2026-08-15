@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/ports/i_oauth_pkce.dart';
+import '../../../domain/contracts/ports/i_oauth_pkce.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: PKCE S256 verifier/challenge and OAuth state ids.

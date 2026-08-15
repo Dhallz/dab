@@ -1,13 +1,13 @@
-import '../../domain/entities/provider/provider_config.dart';
-import '../../domain/ports/i_webhook_request_authenticator.dart';
-import '../../domain/ports/webhook_auth_input.dart';
-import '../../domain/ports/webhook_auth_status.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../core/security/github_webhook_verifier.dart';
-import '../core/security/linear_webhook_verifier.dart';
-import '../core/security/phorge_webhook_verifier.dart';
-import '../core/security/shared_secret_verifier.dart';
-import '../core/security/slack_request_verifier.dart';
+import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/contracts/ports/i_webhook_request_authenticator.dart';
+import '../../../domain/contracts/ports/webhook_auth_input.dart';
+import '../../../domain/contracts/ports/webhook_auth_status.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../security/github_webhook_verifier.dart';
+import '../security/linear_webhook_verifier.dart';
+import '../security/phorge_webhook_verifier.dart';
+import '../security/shared_secret_verifier.dart';
+import '../security/slack_request_verifier.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Authenticates inbound provider webhooks using Live secrets.

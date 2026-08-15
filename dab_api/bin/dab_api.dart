@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dab_api/dab_api.dart';
 import 'package:dab_api/src/domain/core/org_calendar.dart';
-import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
+import 'package:dab_api/src/infrastructure/core/logging/logging_service.dart';
 import 'package:dab_api/src/presentation/controllers/activity_controller.dart';
 import 'package:dab_api/src/presentation/controllers/admin_controller.dart';
 import 'package:dab_api/src/presentation/controllers/auth_controller.dart';

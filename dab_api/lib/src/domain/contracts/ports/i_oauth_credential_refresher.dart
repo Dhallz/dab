@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
+import '../../core/failures/failure.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Refreshes expired per-user OAuth access tokens and persists the result.

@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/service_locator.dart';
 import 'package:relic/relic.dart';
 

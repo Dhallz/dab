@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/entities/session.dart';
-import '../../domain/entities/user/user.dart';
-import '../../domain/entities/user/user_role.dart';
-import '../../domain/repositories/abs_i_auth_repository.dart';
-import '../database/app_database.dart';
-import '../database/drift_row_mappers.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/entities/session.dart';
+import '../../../domain/entities/user/user.dart';
+import '../../../domain/entities/user/user_role.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
+import '../postgres/app_database.dart';
+import '../postgres/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence implementation for Authentication and User identity.

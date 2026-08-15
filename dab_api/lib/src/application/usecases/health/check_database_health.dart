@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
-import '../../../domain/repositories/abs_i_health_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_health_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Verifies the operational status of the primary data store.

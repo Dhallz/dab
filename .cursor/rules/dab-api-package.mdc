@@ -17,19 +17,16 @@ alwaysApply: false
 
 ```
 dab_api/lib/src/
-├── domain/            ← Entities, dtos/ (`extension On*` → `toActivities`), ports/, gateways/, AbsI* — ZERO infra imports
+├── domain/            ← Entities, dtos/ (`extension On*` → `toActivities`), contracts/ (ports + repositories), core/ — ZERO infra imports
 ├── application/       ← Use cases, services, ConnectorRegistry
 │   ├── services/
 │   ├── usecases/
 │   └── containers/
 ├── infrastructure/    ← DB, HTTP, protocols, security
+│   ├── sources/       ← Provider I/O (IActivitySource, catalogs, Discord Gateway)
 │   ├── protocols/     ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
-│   ├── database/      ← Drift schemas and DAOs
-│   ├── repositories/  ← Implements domain IRepository interfaces
-│   ├── sources/       ← IActivitySource raw data fetchers (one per provider/data type)
-│   ├── http/          ← HTTP client helpers
-│   ├── security/      ← JWT, bcrypt helpers
-│   └── config/        ← AppConfig, env loading
+│   ├── persistence/   ← postgres/ (Drift), redis/, repositories/ (AbsI* impls)
+│   └── core/          ← config/, security/, http/, adapters/, realtime/, logging/
 ├── presentation/      ← Relic controllers and middleware — thin delegation only
 └── service_locator.dart  ← Single registration file for all GetIt bindings
 ```

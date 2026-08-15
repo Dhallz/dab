@@ -7,11 +7,11 @@ import 'package:dab_api/src/domain/entities/user/linear_team_watch_list.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
 import 'package:fpdart/fpdart.dart';
 

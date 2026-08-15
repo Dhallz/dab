@@ -1,15 +1,15 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/core/oauth_providers.dart';
-import '../../domain/core/provider_credential_keys.dart';
-import '../../domain/entities/provider/provider_config.dart';
-import '../../domain/entities/user/user_provider_credential.dart';
-import '../../domain/ports/i_oauth_client_credential_resolver.dart';
-import '../../domain/ports/i_oauth_credential_refresher.dart';
-import '../../domain/ports/i_oauth_token_client.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
-import '../../domain/repositories/abs_i_user_provider_credential_repository.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/oauth_providers.dart';
+import '../../../domain/core/provider_credential_keys.dart';
+import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/entities/user/user_provider_credential.dart';
+import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/i_oauth_credential_refresher.dart';
+import '../../../domain/contracts/ports/i_oauth_token_client.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Refreshes expired OAuth access tokens and writes the new secrets back.

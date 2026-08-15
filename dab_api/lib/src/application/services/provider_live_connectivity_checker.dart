@@ -1,5 +1,5 @@
 import '../../domain/entities/provider/provider_connectivity_report.dart';
-import '../../domain/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 
 /// [ARCH: APPLICATION_SERVICE]

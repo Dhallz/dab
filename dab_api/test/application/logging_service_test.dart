@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
+import 'package:dab_api/src/infrastructure/core/logging/logging_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:relic/relic.dart';
 import 'package:test/test.dart';

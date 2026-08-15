@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/notifications/push_notification_service.dart';
+import 'package:dab_api/src/infrastructure/core/logging/push_notification_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 

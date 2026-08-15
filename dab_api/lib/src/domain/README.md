@@ -8,7 +8,8 @@ The Domain layer is the heart of the system. It contains the business rules and 
 
 1. **Entities**: Define the core data models (`Activity`, `User`, `ProviderMetadata`).
 2. **Provider DTOs + extensions**: **`dtos/`** hold provider-native shapes, JSON→DTO factories, and co-located **`extension OnXDto on XDto`** entries that implement **`toActivities(List<User>)`**. Watch-list parsers live next to the entity or under **`core/{id}_scope.dart`**.
-3. **Failures**: Define systematic failure cases (e.g., `DatabaseFailure`, `AuthFailure`).
+3. **Contracts (`contracts/`)**: Outbound seams. **`ports/`** for I/O that is not our database (`IActivitySource`, live ingest, OAuth, catalogs, `AbsIPhorgeGateway`). **`repositories/`** for Postgres `AbsI*` / `I*` interfaces.
+4. **Failures**: Define systematic failure cases (e.g., `DatabaseFailure`, `AuthFailure`) under **`core/failures/`**.
 
 ---
 

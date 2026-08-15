@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/repositories/abs_i_system_settings_repository.dart';
-import '../database/app_database.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
+import '../postgres/app_database.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Implementation of global system settings storage in the API.

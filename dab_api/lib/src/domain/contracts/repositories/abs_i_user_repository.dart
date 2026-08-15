@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart' hide Group;
 
-import '../core/failures/failure.dart';
-import '../entities/group/group.dart';
-import '../entities/user/user.dart';
-import '../entities/user/user_identity.dart';
+import '../../core/failures/failure.dart';
+import '../../entities/group/group.dart';
+import '../../entities/user/user.dart';
+import '../../entities/user/user_identity.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for User and Group persistence.

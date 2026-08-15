@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
+import '../../core/failures/failure.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Heuristic identity discovery against an external provider.

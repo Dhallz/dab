@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_provider.dart';
-import '../../../domain/ports/i_live_feed_store.dart';
-import '../../../domain/ports/i_presence_broadcaster.dart';
-import '../../../domain/repositories/abs_i_activity_repository.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]

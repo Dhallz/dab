@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
-import '../../../domain/repositories/abs_i_user_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 
 /// [ARCH: APPLICATION_USE_CASE]
 /// ROLE: Permanently removes a provider identity link from `user_identities`.

@@ -1,6 +1,6 @@
 import 'package:postgres/postgres.dart' as pg hide Session;
 
-import '../core/config/config.dart';
+import '../../core/config/config.dart';
 import 'app_database.dart';
 
 class PostgresClient {

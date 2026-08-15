@@ -4,8 +4,8 @@ import 'package:redis/redis.dart';
 
 import '../../../domain/core/org_calendar.dart' as org_calendar;
 import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/ports/i_live_feed_store.dart';
-import '../../../domain/repositories/abs_i_system_settings_repository.dart';
+import '../../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'redis_client.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]

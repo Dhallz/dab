@@ -1,6 +1,6 @@
-import '../../domain/core/provider_credential_keys.dart';
-import '../../domain/ports/i_credential_resolver.dart';
-import '../../domain/repositories/abs_i_user_provider_credential_repository.dart';
+import '../../../domain/core/provider_credential_keys.dart';
+import '../../../domain/contracts/ports/i_credential_resolver.dart';
+import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Loads per-user credentials and overlays secrets onto org settings.

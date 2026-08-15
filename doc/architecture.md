@@ -37,24 +37,19 @@ dab_api/lib/src/
 ├── domain/
 │   ├── entities/        ← Core model
 │   ├── dtos/            ← Provider DTO shapes + extension OnDto → `toActivities`
-│   ├── gateways/        ← Phorge Conduit facade (`AbsIPhorgeGateway`); poll still uses `IActivitySource`
-│   ├── ports/           ← Cross-cutting I/O seams: `IActivitySource<T>`, `IDiscoverySource`, `ILiveFeedStore`, `IWebhookRequestAuthenticator`, … (infra implements)
-│   └── repositories/    ← Abstract Postgres persistence interfaces (`AbsI*Repository`)
+│   ├── contracts/
+│   │   ├── ports/       ← I/O seams: `IActivitySource`, `ILiveFeedStore`, `AbsIPhorgeGateway`, …
+│   │   └── repositories/← Abstract Postgres persistence interfaces (`AbsI*`)
+│   └── core/            ← Failures, org calendar, watch-list parsers, OAuth catalogs
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
-│   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, register_activity_connectors, PresenceService, …
+│   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, register_activity_connectors, LiveIngestPersister, …
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
+│   ├── sources/         ← Provider I/O (IActivitySource, catalogs, Discord Gateway)
 │   ├── protocols/       ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
-│   ├── sources/         ← IActivitySource<T> implementations (domain port)
-│   ├── repositories/    ← SQL repository implementations (Drift + PostgreSQL)
-│   ├── database/        ← Drift schema, DAOs, migrations
-│   ├── dtos/            ← Optional infra-local serde helpers; provider ingestion DTOs live under domain/dtos/
-│   ├── http/            ← HTTP client helpers
-│   ├── security/        ← JWT, bcrypt, SettingsCipher (user credential AES)
-│   ├── config/          ← Config, env loading
-│   ├── logging/         ← Structured logging
-│   └── notifications/   ← WebSocket push logic
+│   ├── persistence/     ← postgres/ (Drift), redis/, repositories/ (AbsI* impls)
+│   └── core/            ← config/, security/, http/, adapters/, realtime/, logging/
 └── presentation/
     ├── controllers/     ← Relic HTTP controllers (8 controllers: activity, oauth, admin, auth, group, health, metadata, user)
     └── middlewares/     ← Vegas Middleware, JWT Middleware

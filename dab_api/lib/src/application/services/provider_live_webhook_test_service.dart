@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
-import '../../domain/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../infrastructure/core/security/github_webhook_verifier.dart';
 import '../../infrastructure/core/security/linear_webhook_verifier.dart';
 import '../../infrastructure/core/security/phorge_webhook_verifier.dart';

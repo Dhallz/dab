@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../entities/session.dart';
-import '../entities/user/user.dart';
-import '../entities/user/user_role.dart';
+import '../../core/failures/failure.dart';
+import '../../entities/session.dart';
+import '../../entities/user/user.dart';
+import '../../entities/user/user_role.dart';
 
 /// [ARCH: DOMAIN_INTERFACE]
 /// ROLE: Abstract contract for Authentication and User persistence.

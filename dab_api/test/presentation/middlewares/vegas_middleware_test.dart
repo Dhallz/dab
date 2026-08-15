@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:relic/relic.dart';

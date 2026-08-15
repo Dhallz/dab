@@ -1,9 +1,9 @@
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]

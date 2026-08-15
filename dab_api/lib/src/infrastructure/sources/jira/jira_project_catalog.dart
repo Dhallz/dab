@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/jira_project.dart';
-import '../../../domain/ports/i_jira_project_catalog.dart';
+import '../../../domain/contracts/ports/i_jira_project_catalog.dart';
 import '../../protocols/protocol_exceptions.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 import 'jira_jql.dart';

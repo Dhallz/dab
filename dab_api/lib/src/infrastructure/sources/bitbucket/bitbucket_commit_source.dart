@@ -8,11 +8,11 @@ import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_mapping.dart'
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
 import 'package:fpdart/fpdart.dart';
 

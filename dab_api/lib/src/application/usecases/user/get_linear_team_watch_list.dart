@@ -5,10 +5,10 @@ import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/linear_team.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
-import '../../../domain/ports/i_credential_resolver.dart';
-import '../../../domain/ports/i_linear_team_catalog.dart';
-import '../../../domain/ports/i_oauth_credential_refresher.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/ports/i_credential_resolver.dart';
+import '../../../domain/contracts/ports/i_linear_team_catalog.dart';
+import '../../../domain/contracts/ports/i_oauth_credential_refresher.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Lists Linear teams the caller can see plus instance `teamKeys`.

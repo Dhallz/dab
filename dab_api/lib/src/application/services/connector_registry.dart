@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
 
 /// [ARCH: APPLICATION]
 /// ROLE: Converts one raw connector payload row into normalized [Activity]s.

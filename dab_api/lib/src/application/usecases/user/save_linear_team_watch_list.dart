@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'get_linear_team_watch_list.dart';
 
 /// [ARCH: APPLICATION_USECASE]

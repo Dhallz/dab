@@ -1,5 +1,5 @@
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 

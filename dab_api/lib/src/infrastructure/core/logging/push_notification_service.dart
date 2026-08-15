@@ -1,4 +1,4 @@
-import '../logging/logging_service.dart';
+import 'logging_service.dart';
 
 abstract class NotificationProvider {
   Future<void> send(

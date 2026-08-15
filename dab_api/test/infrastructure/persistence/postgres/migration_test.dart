@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
-import 'package:dab_api/src/infrastructure/database/app_database.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/app_database.dart';
 
 class MockMigrator extends Mock implements Migrator {}
 

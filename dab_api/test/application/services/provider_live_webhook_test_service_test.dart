@@ -6,7 +6,7 @@ import 'package:dab_api/src/infrastructure/core/security/linear_webhook_verifier
 import 'package:dab_api/src/infrastructure/core/security/phorge_webhook_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/shared_secret_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/slack_request_verifier.dart';
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

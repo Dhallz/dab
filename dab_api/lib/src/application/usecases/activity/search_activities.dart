@@ -1,6 +1,6 @@
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import 'fetch_remote_activities.dart';
 
 /// [ARCH: APPLICATION_USECASE]

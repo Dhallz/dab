@@ -3,8 +3,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
-import '../../../domain/ports/i_access_token_issuer.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/ports/i_access_token_issuer.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Refreshes a short-lived Access Token using a long-lived Refresh Token.

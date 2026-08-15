@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/repositories/abs_i_user_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 
 /// [ARCH: APPLICATION_USE_CASE]
 /// ROLE: Resolves a pending identity discovery (Approve/Reject).

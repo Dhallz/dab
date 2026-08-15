@@ -1,6 +1,6 @@
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_system_settings_repository.dart';
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

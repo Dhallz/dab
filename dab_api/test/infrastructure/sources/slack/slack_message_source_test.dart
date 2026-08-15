@@ -1,8 +1,8 @@
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
 import 'package:fpdart/fpdart.dart';

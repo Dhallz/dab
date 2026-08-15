@@ -2,15 +2,15 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:uuid/uuid.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/entities/group/group.dart';
-import '../../domain/entities/group/group_type.dart';
-import '../../domain/entities/user/user.dart';
-import '../../domain/entities/user/user_identity.dart';
-import '../../domain/entities/user/user_identity_status.dart';
-import '../../domain/repositories/abs_i_user_repository.dart';
-import '../database/app_database.dart';
-import '../database/drift_row_mappers.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/entities/group/group.dart';
+import '../../../domain/entities/group/group_type.dart';
+import '../../../domain/entities/user/user.dart';
+import '../../../domain/entities/user/user_identity.dart';
+import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
+import '../postgres/app_database.dart';
+import '../postgres/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persistence implementation for User directory and Team Groupings.

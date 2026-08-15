@@ -2,8 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/ports/i_live_feed_store.dart';
-import '../../../domain/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Marks a live-feed activity as archived for the requesting user.

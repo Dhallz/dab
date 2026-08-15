@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/core/oauth_providers.dart';
-import '../../domain/entities/user/oauth_token_response.dart';
-import '../../domain/ports/i_oauth_token_client.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/oauth_providers.dart';
+import '../../../domain/entities/user/oauth_token_response.dart';
+import '../../../domain/contracts/ports/i_oauth_token_client.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: OAuth token exchange over HTTP. Never logs tokens or client secrets.

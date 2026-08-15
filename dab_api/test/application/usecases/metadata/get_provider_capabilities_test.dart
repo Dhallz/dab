@@ -1,7 +1,7 @@
 import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
 import 'package:dab_api/src/application/usecases/metadata/get_provider_capabilities.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

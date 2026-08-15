@@ -1,4 +1,4 @@
-import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
+import 'package:dab_api/src/infrastructure/core/realtime/presence_service.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:relic/relic.dart';
 import 'package:test/test.dart';

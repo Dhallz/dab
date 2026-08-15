@@ -10,9 +10,10 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 
 ### 1. Domain Layer (`lib/src/domain`)
 - **Role**: Defines the absolute business logic and data contracts of the system.
+- **Folders**: `entities/`, `dtos/`, `contracts/` (`ports/` + `repositories/`), `core/`.
 - **Components**:
     - **Entities & provider DTOs**: Pure data models (Activity, User, ProviderMetadata). `dtos/` carry remote row shapes plus co-located **`extension OnDto`** mappings — **business interpretation only**, no infrastructure dependencies.
-    - **Interfaces**: Abstract contracts (`AbsI*`, domain ports) that define what the system needs without specifying how to fetch it.
+    - **Interfaces**: Abstract contracts (`AbsI*`, domain ports) under `contracts/` that define what the system needs without specifying how to fetch it.
 - **STRICT CONSTRAINT**: **ZERO IMPORTS** from Infrastructure or Application layers. This layer is isolated and pure.
 
 ### 2. Application Layer (`lib/src/application`)
@@ -24,6 +25,7 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 
 ### 3. Infrastructure Layer (`lib/src/infrastructure`)
 - **Role**: Implements the contracts defined in Domain using specific technologies (PostgreSQL, Conduit, HTTP).
+- **Folders**: `sources/` (provider I/O), `protocols/` (outbound wire adapters), `persistence/` (postgres, redis, AbsI* repositories), `core/` (config, security, http, adapters, realtime, logging).
 - **Components**:
     - **Sources**: Specialized fetchers (e.g., `PhorgeTaskSource`) that handle raw I/O and protocol management for a specific data type.
     - **Repositories**: Handle SQL persistence and polymorphic data hydration (Table-Per-Type).

@@ -2,11 +2,11 @@ import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart'
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/oauth_state_payload.dart';
-import 'package:dab_api/src/domain/ports/i_oauth_client_credential_resolver.dart';
-import 'package:dab_api/src/domain/ports/i_oauth_pkce.dart';
-import 'package:dab_api/src/domain/ports/i_oauth_state_store.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_system_settings_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_oauth_pkce.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_oauth_state_store.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

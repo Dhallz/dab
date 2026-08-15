@@ -1,7 +1,7 @@
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

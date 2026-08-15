@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
-import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/entities/user/user_provider_credential.dart';
-import '../../domain/entities/user/user_provider_credential_status.dart';
-import '../../domain/repositories/abs_i_user_provider_credential_repository.dart';
-import '../core/security/settings_cipher.dart';
-import '../database/app_database.dart';
-import '../database/drift_row_mappers.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/entities/user/user_provider_credential.dart';
+import '../../../domain/entities/user/user_provider_credential_status.dart';
+import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
+import '../../core/security/settings_cipher.dart';
+import '../postgres/app_database.dart';
+import '../postgres/drift_row_mappers.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Persists per-user provider credentials with encrypted settings JSON.

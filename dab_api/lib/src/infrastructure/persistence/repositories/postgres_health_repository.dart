@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/core/failures/failure.dart';
-import '../../domain/repositories/abs_i_health_repository.dart';
-import 'postgres_client.dart';
+import '../../../domain/core/failures/failure.dart';
+import '../../../domain/contracts/repositories/abs_i_health_repository.dart';
+import '../postgres/postgres_client.dart';
 
 class PostgresHealthRepository implements AbsIHealthRepository {
   final PostgresClient _client;

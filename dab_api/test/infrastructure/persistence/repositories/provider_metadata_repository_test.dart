@@ -1,8 +1,8 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields_dto.dart';
-import 'package:dab_api/src/domain/gateways/abs_i_phorge_gateway.dart';
-import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_gateway.dart';
+import 'package:dab_api/src/infrastructure/persistence/repositories/provider_metadata_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

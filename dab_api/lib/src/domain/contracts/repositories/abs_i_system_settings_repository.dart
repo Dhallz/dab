@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../core/org_calendar.dart';
+import '../../core/failures/failure.dart';
+import '../../core/org_calendar.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Abstract contract for storing and retrieving global system settings.

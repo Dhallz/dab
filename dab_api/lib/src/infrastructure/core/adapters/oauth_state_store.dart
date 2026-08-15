@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import '../../domain/entities/user/oauth_state_payload.dart';
-import '../../domain/ports/i_oauth_state_store.dart';
-import '../database/redis/redis_service.dart';
+import '../../../domain/entities/user/oauth_state_payload.dart';
+import '../../../domain/contracts/ports/i_oauth_state_store.dart';
+import '../../persistence/redis/redis_service.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Redis-backed one-time OAuth state (`oauth:state:{id}`).

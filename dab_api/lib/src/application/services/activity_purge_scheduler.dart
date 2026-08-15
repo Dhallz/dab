@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import '../../domain/core/org_calendar.dart' as org_calendar;
-import '../../domain/ports/i_live_feed_store.dart';
-import '../../domain/repositories/abs_i_system_settings_repository.dart';
+import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Runs a daily purge at **org-timezone midnight**: removes archived live-feed

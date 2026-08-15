@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dab_api/src/infrastructure/logging/logging_service.dart';
+import 'package:dab_api/src/infrastructure/core/logging/logging_service.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:http/http.dart' as http;

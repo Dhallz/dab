@@ -2,7 +2,7 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/user.dart';
-import '../../../domain/repositories/abs_i_auth_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Authenticates a user using email and password.

@@ -1,5 +1,5 @@
-import '../../domain/ports/i_oauth_client_credential_resolver.dart';
-import '../core/config/config.dart';
+import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
+import '../config/config.dart';
 
 /// Reads a usable OAuth setting, skipping JSON null and the string `null`.
 String? readOauthSetting(Map<String, dynamic> settings, List<String> keys) {

@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../core/failures/failure.dart';
-import '../entities/provider/provider_config.dart';
-import '../entities/user/provider_whoami_result.dart';
+import '../../core/failures/failure.dart';
+import '../../entities/provider/provider_config.dart';
+import '../../entities/user/provider_whoami_result.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Validates provider credentials via whoami and optional watch-list

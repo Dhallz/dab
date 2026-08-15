@@ -1,4 +1,4 @@
-import '../entities/user/oauth_state_payload.dart';
+import '../../entities/user/oauth_state_payload.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: One-time OAuth state (PKCE verifier + user binding) with TTL.

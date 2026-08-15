@@ -2,9 +2,9 @@ import 'dart:async';
 
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/user/user.dart';
-import '../../domain/ports/i_live_feed_store.dart';
-import '../../domain/repositories/abs_i_activity_repository.dart';
-import '../../domain/repositories/abs_i_user_repository.dart';
+import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/repositories/abs_i_activity_repository.dart';
+import '../../domain/contracts/repositories/abs_i_user_repository.dart';
 import 'activity_live_publisher.dart';
 import 'unified_activity_fetcher.dart';
 

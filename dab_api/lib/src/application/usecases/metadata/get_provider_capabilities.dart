@@ -1,5 +1,5 @@
 import '../../../application/services/provider_capability_catalog.dart';
-import '../../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Exposes provider live-ingestion capabilities for dashboard strategy.

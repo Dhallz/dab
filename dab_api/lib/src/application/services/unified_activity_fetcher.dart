@@ -1,8 +1,8 @@
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
-import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 
 /// [ARCH: APPLICATION_SERVICE]

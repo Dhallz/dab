@@ -4,7 +4,7 @@ import '../../application/services/activity_purge_scheduler.dart';
 import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
-import '../../domain/repositories/abs_i_system_settings_repository.dart';
+import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';

@@ -1,5 +1,5 @@
 import 'package:dab_api/src/infrastructure/core/config/config.dart';
-import 'package:dab_api/src/infrastructure/services/oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/infrastructure/core/adapters/oauth_client_credential_resolver.dart';
 import 'package:test/test.dart';
 
 void main() {
