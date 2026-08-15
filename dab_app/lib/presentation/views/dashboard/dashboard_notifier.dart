@@ -9,6 +9,7 @@ import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
 import '../../features/app/app_notifier.dart';
 import 'dashboard_state.dart';
+import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
 
 /// [ARCH: PRESENTATION]
@@ -47,6 +48,20 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
       _streamHealthTimer?.cancel();
       _reconnectNoticeTimer?.cancel();
     });
+    ref.listen(
+      appNotifierProvider.select(
+        (s) => (configs: s.configs, statuses: s.providerConnectionStatuses),
+      ),
+      (previous, next) {
+        state = state.copyWith(
+          providerHealth: deriveDashboardProviderHealth(
+            configs: next.configs,
+            connectionStatuses: next.statuses,
+            activities: state.activities,
+          ),
+        );
+      },
+    );
     Future.microtask(start);
     return const DashboardState();
   }
@@ -75,6 +90,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
           errorMessage: failure.message,
           lastSyncedAt: now,
           reconnectNoticeAt: null,
+          providerHealth: _providerHealthFor(state.activities),
         );
       },
       (activities) {
@@ -82,7 +98,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
           status: ViewStatus.success,
           errorMessage: null,
           activities: activities,
-          providerHealth: _deriveProviderHealth(activities, now),
+          providerHealth: _providerHealthFor(activities),
           lastSyncedAt: now,
           reconnectNoticeAt: null,
         );
@@ -135,7 +151,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     _awaitingReconnectNotice = false;
     state = state.copyWith(
       activities: updatedList,
-      providerHealth: _deriveProviderHealth(updatedList, now),
+      providerHealth: _providerHealthFor(updatedList),
       lastSyncedAt: now,
       reconnectNoticeAt: shouldShowReconnectNotice ? now : null,
     );
@@ -191,6 +207,12 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     );
   }
 
+  /// Switches Live Now layout. Does not refetch.
+  void setFeedMode(DashboardFeedMode mode) {
+    if (state.feedMode == mode) return;
+    state = state.copyWith(feedMode: mode);
+  }
+
   void onReconnectNoticeCleared() {
     if (state.reconnectNoticeAt == null) return;
     state = state.copyWith(reconnectNoticeAt: null);
@@ -212,35 +234,12 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     state = state.copyWith(activities: updated);
   }
 
-  List<DashboardProviderHealth> _deriveProviderHealth(
-    List<Activity> activities,
-    DateTime now,
-  ) {
-    if (activities.isEmpty) return const [];
-
-    final byProvider = <String, DateTime>{};
-    for (final activity in activities) {
-      final current = byProvider[activity.provider.name];
-      if (current == null || activity.createdAt.isAfter(current)) {
-        byProvider[activity.provider.name] = activity.createdAt;
-      }
-    }
-
-    final health = byProvider.entries.map((entry) {
-      final elapsed = now.difference(entry.value);
-      final status = elapsed <= const Duration(minutes: 5)
-          ? DashboardProviderHealthStatus.live
-          : elapsed <= const Duration(minutes: 30)
-          ? DashboardProviderHealthStatus.degraded
-          : DashboardProviderHealthStatus.offline;
-      return DashboardProviderHealth(
-        providerName: entry.key,
-        status: status,
-        lastEventAt: entry.value,
-      );
-    }).toList();
-
-    health.sort((a, b) => a.providerName.compareTo(b.providerName));
-    return health;
+  List<DashboardProviderHealth> _providerHealthFor(List<Activity> activities) {
+    final app = ref.read(appNotifierProvider);
+    return deriveDashboardProviderHealth(
+      configs: app.configs,
+      connectionStatuses: app.providerConnectionStatuses,
+      activities: activities,
+    );
   }
 }

@@ -124,6 +124,30 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get dashboardIslandArchived;
 
+  /// Dashboard toolbar chip — chronological Live Now list.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get dashboardFeedModeTimeline;
+
+  /// Dashboard toolbar chip — group Live Now by activity category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get dashboardFeedModeCategory;
+
+  /// Dashboard toolbar chip — group Live Now by provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get dashboardFeedModeProvider;
+
+  /// Empty-state hint inside a Dashboard provider/category container with no visible activities.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet — no live activities'**
+  String get dashboardGroupEmptyQuiet;
+
   /// navExplorer: Explorer
   ///
   /// In en, this message translates to:

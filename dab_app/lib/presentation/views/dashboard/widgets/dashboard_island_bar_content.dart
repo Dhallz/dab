@@ -7,9 +7,11 @@ import '../../../core/widgets/dab_island_stat.dart';
 import '../../../core/widgets/dab_toggle_chip.dart';
 import '../../../core/widgets/view_toolbar.dart';
 import '../dashboard_notifier.dart';
+import '../models/dashboard_feed_mode.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Dashboard toolbar — last sync and archive toggle; counts on compact widths.
+/// ROLE: Dashboard toolbar — feed mode chips, last sync, and archive toggle;
+/// counts on compact widths.
 class DashboardIslandBarContent extends ConsumerWidget {
   /// When true (mobile), live/archived counts sit in this toolbar.
   final bool showCounts;
@@ -24,6 +26,7 @@ class DashboardIslandBarContent extends ConsumerWidget {
           activities: s.activities,
           showArchived: s.showArchivedActivities,
           lastSyncedAt: s.lastSyncedAt,
+          feedMode: s.feedMode,
         ),
       ),
     );
@@ -40,6 +43,24 @@ class DashboardIslandBarContent extends ConsumerWidget {
 
     return ViewToolbar(
       children: [
+        DabToggleChip(
+          label: l10n.dashboardFeedModeTimeline,
+          isSelected: state.feedMode == DashboardFeedMode.timeline,
+          icon: AppIcons.history,
+          onTap: () => notifier.setFeedMode(DashboardFeedMode.timeline),
+        ),
+        DabToggleChip(
+          label: l10n.dashboardFeedModeCategory,
+          isSelected: state.feedMode == DashboardFeedMode.category,
+          icon: AppIcons.filter,
+          onTap: () => notifier.setFeedMode(DashboardFeedMode.category),
+        ),
+        DabToggleChip(
+          label: l10n.dashboardFeedModeProvider,
+          isSelected: state.feedMode == DashboardFeedMode.provider,
+          icon: AppIcons.providers,
+          onTap: () => notifier.setFeedMode(DashboardFeedMode.provider),
+        ),
         if (showCounts) ...[
           DabIslandStat(
             compact: true,

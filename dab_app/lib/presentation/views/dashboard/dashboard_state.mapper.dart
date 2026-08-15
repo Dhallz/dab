@@ -16,6 +16,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       MapperContainer.globals.use(_instance = DashboardStateMapper._());
       ViewStatusMapper.ensureInitialized();
       ActivityMapper.ensureInitialized();
+      DashboardFeedModeMapper.ensureInitialized();
       DashboardProviderHealthMapper.ensureInitialized();
     }
     return _instance!;
@@ -45,6 +46,13 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     _$showArchivedActivities,
     opt: true,
     def: false,
+  );
+  static DashboardFeedMode _$feedMode(DashboardState v) => v.feedMode;
+  static const Field<DashboardState, DashboardFeedMode> _f$feedMode = Field(
+    'feedMode',
+    _$feedMode,
+    opt: true,
+    def: DashboardFeedMode.timeline,
   );
   static List<DashboardProviderHealth> _$providerHealth(DashboardState v) =>
       v.providerHealth;
@@ -89,6 +97,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     #status: _f$status,
     #activities: _f$activities,
     #showArchivedActivities: _f$showArchivedActivities,
+    #feedMode: _f$feedMode,
     #providerHealth: _f$providerHealth,
     #lastSyncedAt: _f$lastSyncedAt,
     #reconnectNoticeAt: _f$reconnectNoticeAt,
@@ -102,6 +111,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       status: data.dec(_f$status),
       activities: data.dec(_f$activities),
       showArchivedActivities: data.dec(_f$showArchivedActivities),
+      feedMode: data.dec(_f$feedMode),
       providerHealth: data.dec(_f$providerHealth),
       lastSyncedAt: data.dec(_f$lastSyncedAt),
       reconnectNoticeAt: data.dec(_f$reconnectNoticeAt),
@@ -187,6 +197,7 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     ViewStatus? status,
     List<Activity>? activities,
     bool? showArchivedActivities,
+    DashboardFeedMode? feedMode,
     List<DashboardProviderHealth>? providerHealth,
     DateTime? lastSyncedAt,
     DateTime? reconnectNoticeAt,
@@ -232,6 +243,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     ViewStatus? status,
     List<Activity>? activities,
     bool? showArchivedActivities,
+    DashboardFeedMode? feedMode,
     List<DashboardProviderHealth>? providerHealth,
     Object? lastSyncedAt = $none,
     Object? reconnectNoticeAt = $none,
@@ -242,6 +254,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       if (activities != null) #activities: activities,
       if (showArchivedActivities != null)
         #showArchivedActivities: showArchivedActivities,
+      if (feedMode != null) #feedMode: feedMode,
       if (providerHealth != null) #providerHealth: providerHealth,
       if (lastSyncedAt != $none) #lastSyncedAt: lastSyncedAt,
       if (reconnectNoticeAt != $none) #reconnectNoticeAt: reconnectNoticeAt,
@@ -256,6 +269,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       #showArchivedActivities,
       or: $value.showArchivedActivities,
     ),
+    feedMode: data.get(#feedMode, or: $value.feedMode),
     providerHealth: data.get(#providerHealth, or: $value.providerHealth),
     lastSyncedAt: data.get(#lastSyncedAt, or: $value.lastSyncedAt),
     reconnectNoticeAt: data.get(

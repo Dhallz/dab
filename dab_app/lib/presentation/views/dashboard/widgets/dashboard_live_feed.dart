@@ -7,7 +7,10 @@ import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_icons.dart';
 import '../dashboard_notifier.dart';
 import '../dashboard_state.dart';
+import '../models/dashboard_feed_group.dart';
+import '../models/dashboard_feed_mode.dart';
 import 'dashboard_activity_card.dart';
+import 'dashboard_grouped_feed.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Renders the dashboard Live Now feed with archive triage.
@@ -33,38 +36,40 @@ class DashboardLiveFeed extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final visibleActivities = state.visibleActivities;
+    final groups = switch (state.feedMode) {
+      DashboardFeedMode.category => state.categoryGroups,
+      DashboardFeedMode.provider => state.providerGroups,
+      DashboardFeedMode.timeline => const <DashboardFeedGroup>[],
+    };
+    final showGrouped =
+        state.feedMode != DashboardFeedMode.timeline && groups.isNotEmpty;
+    final showEmpty =
+        !showGrouped &&
+        visibleActivities.isEmpty &&
+        (state.status != ViewStatus.failure || state.activities.isNotEmpty);
 
-    return ListView(
-      padding: padding,
-      children: [
-        if (state.reconnectNoticeAt != null) ...[
-          _ReconnectNoticeBanner(
-            at: state.reconnectNoticeAt!,
-            l10n: l10n,
-          ),
-          const SizedBox(height: 10),
-        ],
-        Text(
-          l10n.dashboardLiveNowTitle,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.6,
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (state.status == ViewStatus.failure && state.activities.isEmpty)
-          _FailurePlaceholder(
-            message: state.errorMessage,
-            fallbackMessage: l10n.dashboardFailedLoadLive,
-          )
-        else if (visibleActivities.isEmpty)
-          _EmptyLivePlaceholder(
-            showingArchived: state.showArchivedActivities,
-            hasAnyActivities: state.activities.isNotEmpty,
-            l10n: l10n,
-          )
-        else
+    Widget body;
+    if (state.status == ViewStatus.failure && state.activities.isEmpty) {
+      body = _FailurePlaceholder(
+        message: state.errorMessage,
+        fallbackMessage: l10n.dashboardFailedLoadLive,
+      );
+    } else if (showGrouped) {
+      body = DashboardGroupedFeed(
+        groups: groups,
+        onArchive: (activity) => notifier.requestArchive(activity.id),
+        onUnarchive: (activity) => notifier.requestUnarchive(activity.id),
+      );
+    } else if (showEmpty) {
+      body = _EmptyLivePlaceholder(
+        showingArchived: state.showArchivedActivities,
+        hasAnyActivities: state.activities.isNotEmpty,
+        l10n: l10n,
+      );
+    } else {
+      body = ListView(
+        padding: EdgeInsets.zero,
+        children: [
           ...visibleActivities.map(
             (activity) => DashboardActivityCard(
               activity: activity,
@@ -76,7 +81,34 @@ class DashboardLiveFeed extends ConsumerWidget {
                   : null,
             ),
           ),
-      ],
+        ],
+      );
+    }
+
+    return Padding(
+      padding: padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (state.reconnectNoticeAt != null) ...[
+            _ReconnectNoticeBanner(
+              at: state.reconnectNoticeAt!,
+              l10n: l10n,
+            ),
+            const SizedBox(height: 10),
+          ],
+          Text(
+            l10n.dashboardLiveNowTitle,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.6,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(child: body),
+        ],
+      ),
     );
   }
 }

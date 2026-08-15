@@ -18,6 +18,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dashboardIslandArchived => 'Arquivado';
 
   @override
+  String get dashboardFeedModeTimeline => 'Linha do tempo';
+
+  @override
+  String get dashboardFeedModeCategory => 'Categoria';
+
+  @override
+  String get dashboardFeedModeProvider => 'Provedor';
+
+  @override
+  String get dashboardGroupEmptyQuiet => 'Quieto — nenhuma atividade ao vivo';
+
+  @override
   String get navExplorer => 'Explorador';
 
   @override

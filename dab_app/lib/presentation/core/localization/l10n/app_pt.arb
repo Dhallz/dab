@@ -257,5 +257,9 @@
   "dashboardProviderHealthDegraded": "Degradado",
   "dashboardProviderHealthOffline": "Offline",
   "dashboardIslandLive": "Ao vivo",
-  "dashboardIslandArchived": "Arquivado"
+  "dashboardIslandArchived": "Arquivado",
+  "dashboardFeedModeTimeline": "Linha do tempo",
+  "dashboardFeedModeCategory": "Categoria",
+  "dashboardFeedModeProvider": "Provedor",
+  "dashboardGroupEmptyQuiet": "Quieto — nenhuma atividade ao vivo"
 }

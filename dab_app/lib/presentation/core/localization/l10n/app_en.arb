@@ -12,6 +12,22 @@
   "@dashboardIslandArchived": {
     "description": "Toolbar/sidebar label for archived activity count."
   },
+  "dashboardFeedModeTimeline": "Timeline",
+  "@dashboardFeedModeTimeline": {
+    "description": "Dashboard toolbar chip — chronological Live Now list."
+  },
+  "dashboardFeedModeCategory": "Category",
+  "@dashboardFeedModeCategory": {
+    "description": "Dashboard toolbar chip — group Live Now by activity category."
+  },
+  "dashboardFeedModeProvider": "Provider",
+  "@dashboardFeedModeProvider": {
+    "description": "Dashboard toolbar chip — group Live Now by provider."
+  },
+  "dashboardGroupEmptyQuiet": "Quiet — no live activities",
+  "@dashboardGroupEmptyQuiet": {
+    "description": "Empty-state hint inside a Dashboard provider/category container with no visible activities."
+  },
   "navExplorer": "Explorer",
   "@navExplorer": {
     "description": "navExplorer: Explorer"

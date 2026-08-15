@@ -87,6 +87,7 @@
 | Secure token storage | `flutter_secure_storage` |
 | Formatting | `timeago` + `intl` |
 | Charts / visual analytics | `fl_chart` |
+| Masonry / staggered grids | `flutter_staggered_grid_view` |
 | Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
 | App metadata (version / build) | `package_info_plus` |
 | External browser (OAuth Connect) | `url_launcher` |

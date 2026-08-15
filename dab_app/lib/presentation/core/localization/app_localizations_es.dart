@@ -18,6 +18,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dashboardIslandArchived => 'Archivado';
 
   @override
+  String get dashboardFeedModeTimeline => 'Cronología';
+
+  @override
+  String get dashboardFeedModeCategory => 'Categoría';
+
+  @override
+  String get dashboardFeedModeProvider => 'Proveedor';
+
+  @override
+  String get dashboardGroupEmptyQuiet =>
+      'En silencio — no hay actividad en vivo';
+
+  @override
   String get navExplorer => 'Explorador';
 
   @override

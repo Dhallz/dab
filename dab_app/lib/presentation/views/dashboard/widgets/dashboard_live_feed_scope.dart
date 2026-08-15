@@ -20,6 +20,8 @@ class DashboardLiveFeedScope extends ConsumerWidget {
           status: s.status,
           activities: s.activities,
           showArchivedActivities: s.showArchivedActivities,
+          feedMode: s.feedMode,
+          providerHealth: s.providerHealth,
           reconnectNoticeAt: s.reconnectNoticeAt,
           errorMessage: s.errorMessage,
         ),
