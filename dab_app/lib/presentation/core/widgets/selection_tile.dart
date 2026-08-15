@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/styles/app_icons.dart';
+import '../styles/app_icons.dart';
 
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Multi-select filter row for sidebars (Explorer, Insights, Admin, Settings).
 class SelectionTile extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -113,8 +115,12 @@ class SelectionTile extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? cs.onSurface
+                            : cs.onSurfaceVariant,
                       ),
                       overflow: TextOverflow.ellipsis,
                     )
@@ -126,8 +132,9 @@ class SelectionTile extends StatelessWidget {
                           label,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: isSelected
                                 ? cs.onSurface
                                 : cs.onSurfaceVariant,

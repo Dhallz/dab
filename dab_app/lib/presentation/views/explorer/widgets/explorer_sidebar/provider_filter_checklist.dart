@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/styles/provider_icon_resolver.dart';
+import '../../../../core/widgets/selection_tile.dart';
 import '../../explorer_notifier.dart';
-import 'selection_tile.dart';
 
 class ProviderFilterChecklist extends ConsumerWidget {
   final List<String> availableProviders;

@@ -5,8 +5,8 @@ import '../../../../../domain/entities/activity/activity_category.dart';
 import '../../../../core/localization/l10n_extension.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
+import '../../../../core/widgets/selection_tile.dart';
 import '../../explorer_notifier.dart';
-import 'selection_tile.dart';
 
 class ActivityFilterChecklist extends ConsumerWidget {
   final Set<ActivityCategory> availableCategories;

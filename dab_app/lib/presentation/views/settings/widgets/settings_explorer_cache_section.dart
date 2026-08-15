@@ -8,7 +8,7 @@ import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../core/styles/provider_icon_resolver.dart';
 import '../../../features/app/app_notifier.dart';
-import '../../explorer/widgets/explorer_sidebar/selection_tile.dart';
+import '../../../core/widgets/selection_tile.dart';
 import '../settings_notifier.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]

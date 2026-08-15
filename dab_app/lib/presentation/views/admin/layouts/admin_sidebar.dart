@@ -5,7 +5,7 @@ import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_profile_card.dart';
-import 'package:dab_app/presentation/views/explorer/widgets/explorer_sidebar/selection_tile.dart';
+import 'package:dab_app/presentation/core/widgets/selection_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

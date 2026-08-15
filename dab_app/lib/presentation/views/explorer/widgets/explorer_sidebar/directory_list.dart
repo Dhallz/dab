@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../domain/entities/group/group.dart';
 import '../../../../../domain/entities/user/user.dart';
+import '../../../../core/localization/l10n_extension.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/localization/l10n_extension.dart';
+import '../../../../core/widgets/selection_tile.dart';
 import '../../explorer_notifier.dart';
 import '../../explorer_state.dart';
 import '../../models/directory_type.dart';
 import 'create_group_button.dart';
-import 'selection_tile.dart';
 
 class DirectoryList extends ConsumerWidget {
   final ExplorerState state;

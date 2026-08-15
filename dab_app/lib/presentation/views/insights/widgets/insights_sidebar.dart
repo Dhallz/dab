@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../core/localization/l10n_extension.dart';
+import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../core/styles/provider_icon_resolver.dart';
 import '../../../core/widgets/app_sidebar.dart';
+import '../../../core/widgets/selection_tile.dart';
 import '../insights_notifier.dart';
-import '../../../../domain/entities/activity/activity_category.dart';
 
 class InsightsSidebar extends ConsumerWidget {
   const InsightsSidebar({super.key});
@@ -39,53 +42,43 @@ class InsightsSidebar extends ConsumerWidget {
         const SizedBox(height: AppSpacing.m),
         _SectionTitle(title: context.l10n.insightsUsersSectionTitle),
         ...state.users.map(
-          (user) => CheckboxListTile(
-            value: state.selectedUserIds.contains(user.id),
-            onChanged: (_) => notifier.toggleUser(user.id),
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              user.name,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: cs.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          (user) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectionTile(
+              label: user.name,
+              isSelected: state.selectedUserIds.contains(user.id),
+              avatarUrl: user.avatarUrl,
+              iconData: user.avatarUrl == null ? AppIcons.user : null,
+              onTap: () => notifier.toggleUser(user.id),
             ),
           ),
         ),
         const SizedBox(height: AppSpacing.s),
         _SectionTitle(title: context.l10n.insightsProvidersSectionTitle),
         ...state.availableProviders.map(
-          (provider) => CheckboxListTile(
-            value: state.selectedProviders.contains(provider),
-            onChanged: (_) => notifier.toggleProvider(provider),
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              provider,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: cs.onSurface,
+          (provider) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectionTile(
+              label: provider,
+              isSelected: state.selectedProviders.contains(provider),
+              iconData: ProviderIconResolver.resolveFallbackIcon(
+                context,
+                provider,
               ),
+              onTap: () => notifier.toggleProvider(provider),
             ),
           ),
         ),
         const SizedBox(height: AppSpacing.s),
         _SectionTitle(title: context.l10n.insightsActivityTypesSectionTitle),
         ...state.availableActivityCategories.map(
-          (category) => CheckboxListTile(
-            value: state.selectedActivityCategories.contains(category),
-            onChanged: (_) => notifier.toggleActivityCategory(category),
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              _categoryLabel(context, category),
-              style: AppTextStyles.bodySmall.copyWith(
-                color: cs.onSurface,
-              ),
+          (category) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectionTile(
+              label: _categoryLabel(context, category),
+              isSelected: state.selectedActivityCategories.contains(category),
+              iconData: _iconFor(category),
+              onTap: () => notifier.toggleActivityCategory(category),
             ),
           ),
         ),
@@ -100,6 +93,16 @@ class InsightsSidebar extends ConsumerWidget {
       ActivityCategory.task => context.l10n.explorerActivityFilterTask,
       ActivityCategory.message => context.l10n.explorerActivityFilterMessage,
       ActivityCategory.generic => context.l10n.explorerActivityFilterGeneric,
+    };
+  }
+
+  IconData _iconFor(ActivityCategory category) {
+    return switch (category) {
+      ActivityCategory.commit => AppIcons.commit,
+      ActivityCategory.revision => AppIcons.revision,
+      ActivityCategory.task => AppIcons.task,
+      ActivityCategory.message => AppIcons.chatMessage,
+      ActivityCategory.generic => AppIcons.genericActivity,
     };
   }
 }
