@@ -1,7 +1,10 @@
-/// [ARCH: INFRASTRUCTURE]
-/// ROLE: Resolves configured GitHub repository allow-lists from provider settings JSON.
-/// CONTRACT: Returns canonical `owner/repo` strings consistent with webhook `full_name`.
-/// CONSTRAINTS: No I/O; pure parsing aligned with GitHub webhook field shapes.
+/// [ARCH: DOMAIN]
+/// ROLE: Parses GitHub repository allow-lists from provider settings.
+/// CONTRACT: Returns canonical `owner/repo` strings consistent with webhook
+/// `full_name`. No I/O.
+library;
+
+/// Extracts configured GitHub repos from `owner`/`repo` and `repos`.
 List<String> extractConfiguredGithubRepos(Map<String, dynamic> settings) {
   final repos = <String>{};
   final owner = (settings['owner'] ?? '').toString().trim();

@@ -8,7 +8,7 @@ part 'linear_issue_dto.mapper.dart';
 
 final _linearIssueActivityUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Parsed Linear issue row (GraphQL API or webhook) for ingestion.
 /// CONTRACT: [dabUserId] is resolved by the caller from linked `linear`
 /// identities (assignee first, then creator); rows without an attributable
@@ -62,7 +62,7 @@ class LinearIssueDto with LinearIssueDtoMappable {
   });
 }
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: One Linear comment on an issue, for a distinct live/Explorer event.
 @MappableClass()
 class LinearIssueCommentDto with LinearIssueCommentDtoMappable {

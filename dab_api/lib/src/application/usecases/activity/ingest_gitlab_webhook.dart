@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/gitlab/gitlab_commit_dto.dart';
+import '../../../domain/dtos/gitlab/gitlab_commit_mapping.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
@@ -123,38 +124,14 @@ class IngestGitLabWebhook {
     for (final raw in commitsRaw) {
       if (raw is! Map<String, dynamic>) continue;
 
-      final sha = (raw['id'] ?? '').toString().trim();
-      if (sha.isEmpty) continue;
-
-      final timestampRaw = raw['timestamp']?.toString();
-      final committedAt = timestampRaw != null
-          ? DateTime.tryParse(timestampRaw)?.toUtc()
-          : null;
-      if (committedAt == null) continue;
-
-      final author = raw['author'];
-      final authorEmail = author is Map<String, dynamic>
-          ? (author['email'] ?? '').toString().trim()
-          : '';
-      final userId = authorEmail.isEmpty
-          ? null
-          : emailToUser[authorEmail.toLowerCase()];
-      if (userId == null) continue;
-      attributableCommits++;
-
-      final dto = GitLabCommitDto(
+      final dto = mapGitLabCommitJson(
+        raw,
         project: project,
         branch: branch,
-        sha: sha,
-        message: (raw['message'] ?? raw['title'] ?? '').toString().trim(),
-        url: (raw['url'] ?? '').toString().trim(),
-        authorName: author is Map<String, dynamic>
-            ? author['name']?.toString()
-            : null,
-        authorEmail: authorEmail,
-        committedAt: committedAt,
-        userId: userId,
+        emailToUser: emailToUser,
       );
+      if (dto == null || dto.userId == null) continue;
+      attributableCommits++;
 
       for (final activity in dto.toActivities(users)) {
         final createResult = await _activityRepository.createActivity(

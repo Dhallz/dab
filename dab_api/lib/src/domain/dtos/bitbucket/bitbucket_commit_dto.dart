@@ -8,7 +8,7 @@ part 'bitbucket_commit_dto.mapper.dart';
 
 final _bitbucketCommitUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Parsed Bitbucket Cloud commit (REST 2.0 API or `repo:push` webhook)
 /// for ingestion.
 /// CONTRACT: [userId] is resolved by the caller — Bitbucket account ids from

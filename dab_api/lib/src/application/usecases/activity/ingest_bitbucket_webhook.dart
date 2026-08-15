@@ -2,13 +2,13 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/bitbucket/bitbucket_commit_dto.dart';
+import '../../../domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
 

@@ -60,7 +60,7 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 - **Temperature-Based Prioritization:** Features are sorted by "Temperature" (Community Heat):
   - **Hot:** High-demand integrations (Linear, GitHub Actions) or critical bug fixes.
   - **Cold:** Niche UI tweaks or rare provider requests.
-- **Extensibility:** Adding a custom internal tool is as simple as implementing **`IActivitySource<T>`**, defining the payload shape under **`entities/provider_payloads/`**, adding **`extension OnTDto`** with **`toActivities`**, and registering a **`TypedConnectorPair<T>`**.
+- **Extensibility:** Adding a custom internal tool is as simple as implementing **`IActivitySource<T>`**, defining the payload shape under **`domain/dtos/`**, adding **`extension OnTDto`** with **`toActivities`**, and registering a **`TypedConnectorPair<T>`**.
 
 ---
 

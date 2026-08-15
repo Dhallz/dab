@@ -1,5 +1,8 @@
+import 'package:dab_api/src/domain/core/discord_scope.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/discord/discord_message_dto.dart';
+import 'package:dab_api/src/domain/dtos/discord/discord_message_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -41,7 +44,7 @@ class DiscordMessageSource
     final cfg = await _activeDiscordConfig();
     if (cfg == null) return const [];
 
-    final botToken = discordBotToken(cfg.settings);
+    final botToken = extractProviderToken('discord', cfg.settings);
     if (botToken.isEmpty) return const [];
 
     final channelIds = discordChannelIds(cfg.settings);
@@ -118,7 +121,7 @@ class DiscordMessageSource
     final cfg = await _activeDiscordConfig();
     if (cfg == null) return const Right(null);
 
-    final botToken = discordBotToken(cfg.settings);
+    final botToken = extractProviderToken('discord', cfg.settings);
     final guildId = (cfg.settings['guildId'] ?? '').toString().trim();
     if (botToken.isEmpty || guildId.isEmpty) return const Right(null);
 
@@ -159,83 +162,4 @@ class DiscordMessageSource
   Map<String, String> _authHeaders(String botToken) {
     return {'Authorization': 'Bot $botToken', 'Accept': 'application/json'};
   }
-}
-
-/// Extracts the bot token from provider settings.
-String discordBotToken(Map<String, dynamic> settings) =>
-    (settings['botToken'] ?? settings['token'] ?? '').toString().trim();
-
-/// Extracts the configured channel allow-list (list or comma/newline string).
-List<String> discordChannelIds(Map<String, dynamic> settings) {
-  final raw = settings['channels'];
-  if (raw is List) {
-    return raw
-        .map((e) => e.toString().trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-  }
-  final str = (raw ?? '').toString();
-  if (str.trim().isEmpty) return const [];
-  return str
-      .split(RegExp(r'[\n,]+'))
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toList();
-}
-
-/// Maps one Discord message JSON object (REST response row or Gateway
-/// `MESSAGE_CREATE` dispatch data) into a [DiscordMessageDto].
-///
-/// Returns null for malformed rows and for bot/system authors.
-/// [externalToUser] maps Discord user snowflakes to DAB user ids.
-DiscordMessageDto? mapDiscordMessageJson(
-  Map<String, dynamic> json, {
-  required String fallbackChannelId,
-  String? guildId,
-  Map<String, String> externalToUser = const {},
-}) {
-  final messageId = (json['id'] ?? '').toString().trim();
-  if (messageId.isEmpty) return null;
-
-  final author = json['author'];
-  if (author is! Map<String, dynamic>) return null;
-  if (author['bot'] == true || author['system'] == true) return null;
-  final authorId = (author['id'] ?? '').toString().trim();
-  if (authorId.isEmpty) return null;
-
-  final timestampRaw = json['timestamp']?.toString();
-  final createdAt = timestampRaw != null
-      ? DateTime.tryParse(timestampRaw)?.toUtc()
-      : null;
-  if (createdAt == null) return null;
-
-  final channelId = (json['channel_id'] ?? '').toString().trim().isEmpty
-      ? fallbackChannelId
-      : (json['channel_id'] ?? '').toString().trim();
-
-  final avatarHash = (author['avatar'] ?? '').toString().trim();
-  final avatarUrl = avatarHash.isEmpty
-      ? null
-      : 'https://cdn.discordapp.com/avatars/$authorId/$avatarHash.png';
-
-  final reference = json['message_reference'];
-  final replyToId = reference is Map<String, dynamic>
-      ? (reference['message_id'] ?? '').toString().trim()
-      : '';
-
-  final displayName =
-      ((author['global_name'] ?? author['username']) ?? '').toString().trim();
-
-  return DiscordMessageDto(
-    messageId: messageId,
-    channelId: channelId,
-    guildId: (json['guild_id'] ?? guildId)?.toString().trim(),
-    content: (json['content'] ?? '').toString(),
-    authorId: authorId,
-    createdAt: createdAt,
-    authorDisplayName: displayName.isEmpty ? null : displayName,
-    authorAvatarUrl: avatarUrl,
-    replyToId: replyToId.isEmpty ? null : replyToId,
-    dabUserId: externalToUser[authorId],
-  );
 }

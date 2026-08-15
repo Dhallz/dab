@@ -5,9 +5,9 @@ import 'dart:math';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../../application/usecases/activity/ingest_discord_message.dart';
+import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
-import 'discord_message_source.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Outbound WebSocket client for the Discord Gateway (v10).
@@ -51,7 +51,8 @@ class DiscordGatewayService {
   /// a bot token; no-op otherwise.
   Future<void> start() async {
     final config = await _activeConfig();
-    final token = config == null ? '' : discordBotToken(config.settings);
+    final token =
+        config == null ? '' : extractProviderToken('discord', config.settings);
     if (token.isEmpty) {
       print('[DISCORD_GATEWAY] not started (provider inactive or no token)');
       return;

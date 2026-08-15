@@ -8,7 +8,7 @@ part 'jira_issue_dto.mapper.dart';
 
 final _jiraIssueActivityUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Parsed Jira Cloud issue search row for ingestion into DAB.
 /// CONTRACT: [dabUserId] is resolved in [JiraIssueSource] from linked identities;
 /// [siteHost] plus [updatedAt] disambiguate v5 IDs so a status move is a new

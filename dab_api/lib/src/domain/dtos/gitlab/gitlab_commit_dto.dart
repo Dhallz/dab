@@ -8,7 +8,7 @@ part 'gitlab_commit_dto.mapper.dart';
 
 final _gitLabCommitUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Parsed GitLab commit (REST API or Push Hook webhook) for ingestion.
 /// CONTRACT: [userId] is resolved by the caller — GitLab commit rows carry no
 /// platform user object, so attribution matches `author_email` against DAB

@@ -1,15 +1,18 @@
 import 'package:dab_api/src/application/usecases/activity/ingest_phorge_webhook.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/ports/i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/database/redis/redis_service.dart';
-import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -26,7 +29,7 @@ class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
 
-class _MockConduitProtocol extends Mock implements ConduitProtocol {}
+class _MockTaskHydrator extends Mock implements IPhorgeTaskHydrator {}
 
 void main() {
   late _MockUserRepository userRepository;
@@ -34,7 +37,7 @@ void main() {
   late _MockProviderConfigRepository providerConfigRepository;
   late _MockRedisService redisService;
   late _MockPresenceService presenceService;
-  late _MockConduitProtocol conduit;
+  late _MockTaskHydrator hydrator;
   late IngestPhorgeWebhook useCase;
 
   final user = User(
@@ -64,6 +67,28 @@ void main() {
     ],
   };
 
+  PhorgeTaskBundleDto bundle({String authorPhid = 'PHID-USER-ada'}) {
+    return PhorgeTaskBundleDto(
+      task: const PhorgeTaskDto(
+        id: 42,
+        phid: 'PHID-TASK-1',
+        fields: PhorgeTaskWireFieldsDto(name: 'Fix login bug'),
+      ),
+      transactions: [
+        PhorgeTransactionDto(
+          id: 101,
+          phid: 'PHID-XACT-TASK-aa',
+          objectPHID: 'PHID-TASK-1',
+          authorPHID: authorPhid,
+          type: 'comment',
+          commentText: 'Looks good!',
+          dateCreated: DateTime.utc(2026, 1, 1),
+        ),
+      ],
+      sprintTag: 'DS2026-01',
+    );
+  }
+
   setUpAll(() {
     registerFallbackValue(
       Activity(
@@ -84,13 +109,13 @@ void main() {
     providerConfigRepository = _MockProviderConfigRepository();
     redisService = _MockRedisService();
     presenceService = _MockPresenceService();
-    conduit = _MockConduitProtocol();
+    hydrator = _MockTaskHydrator();
 
     useCase = IngestPhorgeWebhook(
       userRepository,
       activityRepository,
       providerConfigRepository,
-      PhorgeTaskSource(conduit),
+      hydrator,
       redisService,
       presenceService,
     );
@@ -112,50 +137,13 @@ void main() {
     ).thenAnswer((_) async => Right([user]));
   });
 
-  void stubConduitHydration({String authorPhid = 'PHID-USER-ada'}) {
-    when(() => conduit.call('transaction.search', any())).thenAnswer(
-      (_) async => {
-        'data': [
-          {
-            'id': 101,
-            'phid': 'PHID-XACT-TASK-aa',
-            'objectPHID': 'PHID-TASK-1',
-            'authorPHID': authorPhid,
-            'type': 'comment',
-            'comments': [
-              {
-                'content': {'raw': 'Looks good!'},
-              },
-            ],
-            'dateCreated': '1767225600',
-          },
-          {
-            'id': 102,
-            'phid': 'PHID-XACT-TASK-other',
-            'objectPHID': 'PHID-TASK-1',
-            'authorPHID': authorPhid,
-            'type': 'comment',
-            'dateCreated': '1767225600',
-          },
-        ],
-      },
-    );
-    when(() => conduit.call('maniphest.search', any())).thenAnswer(
-      (_) async => {
-        'data': [
-          {
-            'id': 42,
-            'phid': 'PHID-TASK-1',
-            'fields': {'name': 'Fix login bug'},
-          },
-        ],
-      },
-    );
-  }
-
-  test('hydrates Herald payload via Conduit and ingests the transaction',
-      () async {
-    stubConduitHydration();
+  test('maps hydrator bundle and ingests the notified transaction', () async {
+    when(
+      () => hydrator.fetchBundleForWebhook(
+        taskPhid: any(named: 'taskPhid'),
+        transactionPhids: any(named: 'transactionPhids'),
+      ),
+    ).thenAnswer((_) async => bundle());
     when(
       () => activityRepository.createActivity(any()),
     ).thenAnswer((_) async => const Right(null));
@@ -166,8 +154,6 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
-    // Only the notified transaction PHID is ingested, not the other rows
-    // returned by transaction.search.
     verify(() => activityRepository.createActivity(any())).called(1);
     verify(() => redisService.fanOutActivity(any())).called(1);
     verify(
@@ -175,7 +161,7 @@ void main() {
     ).called(1);
   });
 
-  test('ignores Herald test events without touching Conduit', () async {
+  test('ignores Herald test events without hydrating', () async {
     final out = await useCase.execute(
       payload: {
         ...heraldPayload,
@@ -186,7 +172,12 @@ void main() {
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isFalse);
     expect(result.reason, 'test_event');
-    verifyNever(() => conduit.call(any(), any()));
+    verifyNever(
+      () => hydrator.fetchBundleForWebhook(
+        taskPhid: any(named: 'taskPhid'),
+        transactionPhids: any(named: 'transactionPhids'),
+      ),
+    );
   });
 
   test('ignores duplicate deliveries via Redis reservation', () async {
@@ -198,7 +189,12 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.reason, 'duplicate_delivery');
-    verifyNever(() => conduit.call(any(), any()));
+    verifyNever(
+      () => hydrator.fetchBundleForWebhook(
+        taskPhid: any(named: 'taskPhid'),
+        transactionPhids: any(named: 'transactionPhids'),
+      ),
+    );
   });
 
   test('ignores non-task objects', () async {
@@ -215,7 +211,12 @@ void main() {
   });
 
   test('drops transactions authored by unmapped Phorge users', () async {
-    stubConduitHydration(authorPhid: 'PHID-USER-stranger');
+    when(
+      () => hydrator.fetchBundleForWebhook(
+        taskPhid: any(named: 'taskPhid'),
+        transactionPhids: any(named: 'transactionPhids'),
+      ),
+    ).thenAnswer((_) async => bundle(authorPhid: 'PHID-USER-stranger'));
 
     final out = await useCase.execute(payload: heraldPayload);
 

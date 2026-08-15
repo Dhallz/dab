@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:dab_api/src/domain/core/bitbucket_scope.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_dto.dart';
+import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -204,90 +206,4 @@ Map<String, String>? bitbucketAuthHeaders(Map<String, dynamic> settings) {
   if (username.isEmpty) return null;
   final encoded = base64Encode(utf8.encode('$username:$secret'));
   return {'Authorization': 'Basic $encoded', 'Accept': 'application/json'};
-}
-
-/// Extracts the configured workspace slug.
-String bitbucketWorkspace(Map<String, dynamic> settings) =>
-    (settings['workspace'] ?? '').toString().trim();
-
-/// Extracts the configured repo allow-list (list or comma/newline string).
-List<String> bitbucketRepos(Map<String, dynamic> settings) {
-  final raw = settings['repos'];
-  if (raw is List) {
-    return raw
-        .map((e) => e.toString().trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-  }
-  final str = (raw ?? '').toString();
-  if (str.trim().isEmpty) return const [];
-  return str
-      .split(RegExp(r'[\n,]+'))
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toList();
-}
-
-/// Maps one Bitbucket commit JSON object (REST 2.0 row or `repo:push`
-/// webhook change commit) into a [BitbucketCommitDto].
-///
-/// Returns null for malformed rows. [branch] is only known on webhook
-/// payloads (the commits API is branch-agnostic).
-BitbucketCommitDto? mapBitbucketCommitJson(
-  Map<String, dynamic> json, {
-  required String repo,
-  String? branch,
-  Map<String, String> accountToUser = const {},
-  Map<String, String> emailToUser = const {},
-}) {
-  final sha = (json['hash'] ?? '').toString().trim();
-  if (sha.isEmpty) return null;
-
-  final dateRaw = json['date']?.toString();
-  final committedAt = dateRaw != null
-      ? DateTime.tryParse(dateRaw)?.toUtc()
-      : null;
-  if (committedAt == null) return null;
-
-  final author = json['author'];
-  String? accountId;
-  String? displayName;
-  String? rawSignature;
-  if (author is Map<String, dynamic>) {
-    rawSignature = author['raw']?.toString();
-    final platformUser = author['user'];
-    if (platformUser is Map<String, dynamic>) {
-      accountId = platformUser['account_id']?.toString().trim();
-      displayName = platformUser['display_name']?.toString().trim();
-    }
-  }
-  final email = bitbucketEmailFromRaw(rawSignature);
-
-  String? userId;
-  if (accountId != null && accountId.isNotEmpty) {
-    userId = accountToUser[accountId];
-  }
-  if (userId == null && email != null) {
-    userId = emailToUser[email.toLowerCase()];
-  }
-
-  final links = json['links'];
-  final html = links is Map<String, dynamic> ? links['html'] : null;
-  final url = html is Map<String, dynamic>
-      ? (html['href'] ?? '').toString().trim()
-      : '';
-
-  return BitbucketCommitDto(
-    repo: repo,
-    branch: branch,
-    sha: sha,
-    message: (json['message'] ?? '').toString().trim(),
-    url: url,
-    authorName: displayName?.isNotEmpty == true
-        ? displayName
-        : bitbucketNameFromRaw(rawSignature),
-    authorEmail: email,
-    committedAt: committedAt,
-    userId: userId,
-  );
 }

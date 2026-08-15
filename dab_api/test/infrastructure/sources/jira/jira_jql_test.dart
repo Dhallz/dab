@@ -1,3 +1,4 @@
+import 'package:dab_api/src/domain/core/jira_scope.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_jql.dart';
 import 'package:test/test.dart';
 

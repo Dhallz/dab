@@ -1,6 +1,8 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
+import 'package:dab_api/src/domain/dtos/jira/jira_issue_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
+import 'package:dab_api/src/domain/entities/user/jira_project_watch_list.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
@@ -69,7 +71,7 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     }
     if (auth == null) return const [];
 
-    final projectKeys = _projectKeys(cfg.settings);
+    final projectKeys = parseJiraProjectKeys(cfg.settings['projectKeys']);
     final extraJql = (cfg.settings['extraJql'] ?? '').toString();
 
     final accountIds = linkedIdentities.map((i) => i.externalId).toSet().toList();
@@ -217,16 +219,6 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
       if (c.id == 'jira' && c.isActive) return c;
     }
     return null;
-  }
-
-  List<String> _projectKeys(Map<String, dynamic> settings) {
-    final raw = (settings['projectKeys'] ?? '').toString();
-    if (raw.trim().isEmpty) return const [];
-    return raw
-        .split(RegExp(r'[\n,]+'))
-        .map((k) => k.trim())
-        .where((k) => k.isNotEmpty)
-        .toList();
   }
 
   JiraIssueDto? _mapSearchIssue({
@@ -419,77 +411,4 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     }
     return null;
   }
-}
-
-String extractJiraEmbeddedName(Object? nested) {
-  if (nested is! Map<String, dynamic>) return '';
-  final n = nested['name']?.toString().trim();
-  return n ?? '';
-}
-
-String? jiraPersonAccountId(Object? person) {
-  if (person == null || person == false) return null;
-  if (person is! Map<String, dynamic>) return null;
-  final raw = person['accountId']?.toString().trim();
-  if (raw == null || raw.isEmpty) return null;
-  return raw;
-}
-
-String? pickJiraPersonDisplay(Object? person) {
-  if (person is! Map<String, dynamic>) return null;
-  final name = person['displayName']?.toString().trim();
-  if (name == null || name.isEmpty) return null;
-  return name;
-}
-
-String extractJiraCommentText(Object? bodyNode) {
-  final lines = <String>[];
-  _collectJiraText(bodyNode, lines);
-  final joined = lines.join('\n').trim();
-  return joined;
-}
-
-void _collectJiraText(Object? node, List<String> lines) {
-  if (node == null) return;
-
-  if (node is List) {
-    for (final item in node) {
-      _collectJiraText(item, lines);
-    }
-    return;
-  }
-
-  if (node is! Map<String, dynamic>) return;
-
-  final type = node['type']?.toString() ?? '';
-  if (type == 'text') {
-    final t = node['text']?.toString() ?? '';
-    if (t.isNotEmpty) {
-      if (lines.isEmpty) {
-        lines.add(t);
-      } else {
-        lines[lines.length - 1] = '${lines.last}$t';
-      }
-    }
-    return;
-  }
-
-  if (type == 'hardBreak') {
-    lines.add('');
-    return;
-  }
-
-  final content = node['content'];
-  if (type == 'paragraph') {
-    final before = lines.length;
-    _collectJiraText(content, lines);
-    if (lines.length == before) {
-      lines.add('');
-    } else if (lines.last.isNotEmpty) {
-      lines.add('');
-    }
-    return;
-  }
-
-  _collectJiraText(content, lines);
 }

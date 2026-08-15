@@ -58,10 +58,10 @@ The innermost layer. **No imports from Infrastructure or Application.**
   - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
   - `ProviderMetadata` — registered connector metadata
 
-- **`entities/provider_payloads/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
+- **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
 - **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups).
-- **`gataways/`:** Per-provider outbound polling contracts. **`AbsIPhorgeGateway`** returns Conduit-decoded rows (`PhorgeUserDto` for active directory users, `PhorgeProjectDto` for sprint-scoped tags, bundled task + transactions, revisions); implementations orchestrate paging and multi-call flows but expose API-shaped types only—not secondary projections. GitHub and Slack gateways mirror their polled payloads the same way.
+- **`gateways/`:** Phorge-only Conduit facade (`AbsIPhorgeGateway`) for directory sync and metadata. GitHub, Slack, and every other provider poll through `IActivitySource`, not a gateway.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
 
@@ -73,15 +73,13 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `provider_payloads` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions).
+- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions).
 
-- **`protocols/`:** Reusable outbound HTTP wire adapters (`ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol`). Sources decide *what* to pull for DAB; protocols own *how* requests are encoded (Conduit form bodies, JSON REST, GraphQL envelope, Slack `ok`). Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions.
+- **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `IActivitySource`.
 
 - **`repositories/`:** Concrete SQL implementations using Drift + PostgreSQL. Implement Table-Per-Type polymorphism via `leftOuterJoin`.
 
 - **`database/`:** Drift schema definitions, DAOs, and `MigrationStrategy`. Never hand-edit generated `*.g.dart` files.
-
-- **`dtos/`:** Leftover **wire** parse types (e.g. Phorge Conduit JSON helpers). **Mapper contract types** live under **`domain/entities/provider_payloads/`**.
 
 - **`security/`:** JWT signing/verification (via `dart_jsonwebtoken`), bcrypt password hashing. All secrets come from `Config`.
 
@@ -131,7 +129,12 @@ Thin entry points only. No business logic.
 - **Account creation rules:** Enforced by use cases, not HTTP middleware. `RegisterUser` is bootstrap-only (rejects once any user exists; honors the `DAB_INITIAL_ADMIN_EMAIL` bootstrap lock). `CreateUserByAdmin` (behind `POST /admin/users`) is the only creation path afterwards and applies the allowed-domain guard when the `allowed_domain_enabled` system setting is on (domain from the `allowed_domain` setting, `DAB_ALLOWED_DOMAIN` env fallback). Existing accounts outside the domain are grandfathered — the toggle never blocks login.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config (a first OAuth connect or PAT save activates that row).
-- **Credential waterfall:** each provider fetch uses the target user's `UserProviderCredential`, else the org `ProviderConfig` token, else skip that user/provider. Tokens are fetch keys, not a visibility ACL.
+- **Credential waterfall:** each PAT/OAuth provider fetch uses the target user's `UserProviderCredential` overlaid onto org `ProviderConfig` settings (`ICredentialResolver`), else the org token, else skip. Slack and Discord use the instance **bot** token only (no per-user overlay). Tokens are fetch keys, not a visibility ACL.
+
+| Kind | Providers | Fetch credentials |
+|---|---|---|
+| OAuth / PAT | GitHub, GitLab, Bitbucket, Jira, Linear, Phorge | User secret overlay, else org settings |
+| Workspace bot | Slack, Discord | Org `botToken` only |
 - **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is interpreted as **organization calendar days** in the configured `system_timezone` (default `UTC`), converted to UTC instants for provider polling and DB queries (`ActivityController` + `OrgCalendar`). **`dab_app`** sends the same `YYYY-MM-DD` strings derived from Explorer/Insights picker dates in the org timezone (`ActivitySearchQueryMapper.toRemoteQueryParameters`), and client-side filtering uses the same org-day semantics. **`authoredOnly`:** **`dab_app`** Explorer keeps **`true`** for personal-scope browsing; **Insights** uses **`false`** for team analytics so connectors can apply broader retrieval (e.g. Phorge sprint/global paths).
 
 ---

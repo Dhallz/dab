@@ -35,8 +35,9 @@ dab/
 ```
 dab_api/lib/src/
 ├── domain/
-│   ├── entities/        ← Core model + provider_payloads/ (DTO shapes + extension OnDto → `toActivities`)
-│   ├── gataways/        ← Provider polling gateways (`AbsIGithubGateway`, `AbsISlackGateway`, `AbsIPhorgeGateway`)
+│   ├── entities/        ← Core model
+│   ├── dtos/            ← Provider DTO shapes + extension OnDto → `toActivities`
+│   ├── gateways/        ← Phorge Conduit facade (`AbsIPhorgeGateway`); poll still uses `IActivitySource`
 │   ├── ports/           ← Cross-cutting I/O seams: `IActivitySource<T>`, `IDiscoverySource`, … (infra implements)
 │   └── repositories/    ← Abstract Postgres persistence interfaces (`AbsI*Repository`)
 ├── application/
@@ -126,10 +127,11 @@ External Provider (Phorge, GitHub, Slack, …)
         ▼
  IActivitySource (Infrastructure)
   ── fetches raw DTOs via HTTP ──
-  ── ICredentialResolver: user PAT overlay, else org ProviderConfig, else skip ──
+  ── ICredentialResolver: user OAuth/PAT overlay, else org ProviderConfig, else skip
+  ── Slack/Discord: org bot token only ──
         │
         ▼
- DTO extensions (Domain, on provider_payloads)
+ DTO extensions (Domain, on `domain/dtos`)
   ── toActivities(...) maps rows to Activity entity ──
         │
         ▼

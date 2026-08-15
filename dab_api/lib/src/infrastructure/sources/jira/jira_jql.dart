@@ -5,18 +5,9 @@ library;
 
 import 'dart:convert';
 
+import 'package:dab_api/src/domain/core/jira_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-
-String normalizeJiraCloudHost(String raw) {
-  final t = raw.trim();
-  if (t.isEmpty) return '';
-  var u = t;
-  if (!u.startsWith('http')) u = 'https://$u';
-  final parsed = Uri.tryParse(u);
-  if (parsed == null || parsed.host.isEmpty) return '';
-  return parsed.host.toLowerCase();
-}
 
 /// REST API base + headers for Jira Cloud PAT or OAuth 3LO.
 class JiraRequestAuth {

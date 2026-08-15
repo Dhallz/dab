@@ -1,19 +1,32 @@
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
+import '../../../fakes/fake_credential_resolver.dart';
 import '../../../test_factories.dart';
 
 class _MockConduitProtocol extends Mock implements ConduitProtocol {}
 
+class _MockProviderConfigRepository extends Mock
+    implements AbsIProviderConfigRepository {}
+
 void main() {
   late _MockConduitProtocol client;
+  late _MockProviderConfigRepository configs;
   late PhorgeTaskSource source;
 
   setUp(() {
     client = _MockConduitProtocol();
-    source = PhorgeTaskSource(client);
+    configs = _MockProviderConfigRepository();
+    when(() => configs.getConfigs()).thenAnswer((_) async => const Right([]));
+    source = PhorgeTaskSource(
+      client,
+      credentials: FakeCredentialResolver(),
+      configs: configs,
+    );
   });
 
   test('paginates authored transaction search for older date ranges', () async {

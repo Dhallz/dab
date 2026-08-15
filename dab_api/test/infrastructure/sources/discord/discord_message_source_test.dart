@@ -1,4 +1,5 @@
 import 'package:dab_api/src/domain/dtos/discord/discord_message_dto.dart';
+import 'package:dab_api/src/domain/dtos/discord/discord_message_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';

@@ -3,9 +3,9 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/ports/i_provider_identity_probe.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_provider_credential_repository.dart';
-import '../../../infrastructure/services/provider_identity_probe.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Verifies stored or posted credentials without requiring a save.
@@ -14,7 +14,7 @@ class TestUserProviderCredential {
 
   final AbsIUserProviderCredentialRepository _credentials;
   final AbsIProviderConfigRepository _configs;
-  final ProviderIdentityProbe _probe;
+  final IProviderIdentityProbe _probe;
 
   Future<Either<Failure, void>> execute({
     required String userId,

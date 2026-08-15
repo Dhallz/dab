@@ -11,7 +11,7 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 ### 1. Domain Layer (`lib/src/domain`)
 - **Role**: Defines the absolute business logic and data contracts of the system.
 - **Components**:
-    - **Entities & provider payloads**: Pure data models (Activity, User, ProviderMetadata). `entities/provider_payloads/` carry remote row shapes plus co-located **`extension OnDto`** mappings — **business interpretation only**, no infrastructure dependencies.
+    - **Entities & provider DTOs**: Pure data models (Activity, User, ProviderMetadata). `dtos/` carry remote row shapes plus co-located **`extension OnDto`** mappings — **business interpretation only**, no infrastructure dependencies.
     - **Interfaces**: Abstract contracts (`AbsI*`) that define what the system needs without specifying how to fetch it.
 - **STRICT CONSTRAINT**: **ZERO IMPORTS** from Infrastructure or Application layers. This layer is isolated and pure.
 

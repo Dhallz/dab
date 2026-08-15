@@ -4,7 +4,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_d
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
+import 'package:dab_api/src/domain/gateways/abs_i_phorge_gateway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';

@@ -1,4 +1,6 @@
+import 'package:dab_api/src/domain/core/gitlab_scope.dart';
 import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_dto.dart';
+import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';

@@ -1,3 +1,4 @@
+import 'package:dab_api/src/domain/core/github_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
@@ -8,7 +9,6 @@ import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
-import 'package:dab_api/src/infrastructure/sources/github/github_repo_config.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Fetches read-only commit activity from GitHub REST API.

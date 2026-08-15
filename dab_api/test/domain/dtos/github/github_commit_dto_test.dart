@@ -1,7 +1,7 @@
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:test/test.dart';
 
-import '../../../../test_factories.dart';
+import '../../../test_factories.dart';
 
 void main() {
   test('returns no activity when dto is not attributed to a user', () {

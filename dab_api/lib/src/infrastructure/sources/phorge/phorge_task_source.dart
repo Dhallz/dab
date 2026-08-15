@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transac
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
 import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
@@ -18,15 +19,16 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// 1. Transaction discovery (either by author or by project).
 /// 2. Task hydration (fetching full task details for discovered transactions).
 /// 3. Bundling (pairing transactions with their parent tasks).
-class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
+class PhorgeTaskSource
+    implements IActivitySource<PhorgeTaskBundleDto>, IPhorgeTaskHydrator {
   final ConduitProtocol _client;
-  final ICredentialResolver? _credentials;
-  final AbsIProviderConfigRepository? _configs;
+  final ICredentialResolver _credentials;
+  final AbsIProviderConfigRepository _configs;
 
   PhorgeTaskSource(
     this._client, {
-    ICredentialResolver? credentials,
-    AbsIProviderConfigRepository? configs,
+    required ICredentialResolver credentials,
+    required AbsIProviderConfigRepository configs,
   }) : _credentials = credentials,
        _configs = configs;
 
@@ -145,6 +147,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
   /// (`objectIdentifier`), keeps only the notified transaction PHIDs, and
   /// hydrates the parent task via `maniphest.search` — the exact Conduit calls
   /// used by polling, so downstream mapping stays identical.
+  @override
   Future<PhorgeTaskBundleDto?> fetchBundleForWebhook({
     required String taskPhid,
     required List<String> transactionPhids,
@@ -333,20 +336,17 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
   }
 
   Future<String?> _resolvePersonalToken(List<User> users) async {
-    final credentials = _credentials;
-    final configs = _configs;
-    if (credentials == null || configs == null) return null;
-    final all = (await configs.getConfigs()).getOrElse((_) => []);
+    final all = (await _configs.getConfigs()).getOrElse((_) => []);
     final org = all.where((c) => c.id == 'phorge').firstOrNull;
     final orgSettings = org?.settings ?? const <String, dynamic>{};
     var token = extractProviderToken('phorge', orgSettings);
     if (token.isNotEmpty) return token;
-    final userSettings = await credentials.getUserSettingsForUsers(
+    final userSettings = await _credentials.getUserSettingsForUsers(
       userIds: users.map((u) => u.id),
       providerId: 'phorge',
     );
     for (final user in users) {
-      final merged = credentials.overlay(
+      final merged = _credentials.overlay(
         orgSettings: orgSettings,
         userSettings: userSettings[user.id],
       );

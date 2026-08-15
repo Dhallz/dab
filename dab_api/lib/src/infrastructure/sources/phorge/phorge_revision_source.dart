@@ -15,13 +15,13 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// Differential Revisions (D-numbers) within specific time bounds.
 class PhorgeRevisionSource implements IActivitySource<PhorgeRevisionDto> {
   final ConduitProtocol _client;
-  final ICredentialResolver? _credentials;
-  final AbsIProviderConfigRepository? _configs;
+  final ICredentialResolver _credentials;
+  final AbsIProviderConfigRepository _configs;
 
   PhorgeRevisionSource(
     this._client, {
-    ICredentialResolver? credentials,
-    AbsIProviderConfigRepository? configs,
+    required ICredentialResolver credentials,
+    required AbsIProviderConfigRepository configs,
   }) : _credentials = credentials,
        _configs = configs;
 
@@ -78,20 +78,17 @@ class PhorgeRevisionSource implements IActivitySource<PhorgeRevisionDto> {
   }
 
   Future<String?> _resolvePersonalToken(List<User> users) async {
-    final credentials = _credentials;
-    final configs = _configs;
-    if (credentials == null || configs == null) return null;
-    final all = (await configs.getConfigs()).getOrElse((_) => []);
+    final all = (await _configs.getConfigs()).getOrElse((_) => []);
     final org = all.where((c) => c.id == 'phorge').firstOrNull;
     final orgSettings = org?.settings ?? const <String, dynamic>{};
     var token = extractProviderToken('phorge', orgSettings);
     if (token.isNotEmpty) return token;
-    final userSettings = await credentials.getUserSettingsForUsers(
+    final userSettings = await _credentials.getUserSettingsForUsers(
       userIds: users.map((u) => u.id),
       providerId: 'phorge',
     );
     for (final user in users) {
-      final merged = credentials.overlay(
+      final merged = _credentials.overlay(
         orgSettings: orgSettings,
         userSettings: userSettings[user.id],
       );

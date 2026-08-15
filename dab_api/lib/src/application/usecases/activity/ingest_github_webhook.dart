@@ -2,13 +2,13 @@ import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/github_scope.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/sources/github/github_repo_config.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
 

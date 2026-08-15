@@ -12,6 +12,8 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/core/config/config.dart';
@@ -49,9 +51,18 @@ void main() async {
   print('🧪 Initializing Activity System (Source + typed pair)...');
 
   // Infrastructure Sources (Raw I/O)
+  final mockConfigRepo = _MockProviderConfigRepo();
   final projectSource = PhorgeProjectSource(client);
-  final taskSource = PhorgeTaskSource(client);
-  final revisionSource = PhorgeRevisionSource(client);
+  final taskSource = PhorgeTaskSource(
+    client,
+    credentials: _EmptyCredentialResolver(),
+    configs: mockConfigRepo,
+  );
+  final revisionSource = PhorgeRevisionSource(
+    client,
+    credentials: _EmptyCredentialResolver(),
+    configs: mockConfigRepo,
+  );
 
   // Application Registry
   final registry = ConnectorRegistry();
@@ -71,7 +82,6 @@ void main() async {
   );
 
   // Mock config repository to allow "Phorge" activities
-  final mockConfigRepo = _MockProviderConfigRepo();
 
   // Application Orchestrator
   final fetcher = UnifiedActivityFetcher(
@@ -155,6 +165,31 @@ void main() async {
     print('\n❌ PIPELINE ERROR: $e');
   } finally {
     exit(0);
+  }
+}
+
+class _EmptyCredentialResolver implements ICredentialResolver {
+  @override
+  Future<Map<String, dynamic>?> getUserSettings({
+    required String userId,
+    required String providerId,
+  }) async => null;
+
+  @override
+  Future<Map<String, Map<String, dynamic>>> getUserSettingsForUsers({
+    required Iterable<String> userIds,
+    required String providerId,
+  }) async => const {};
+
+  @override
+  Map<String, dynamic> overlay({
+    required Map<String, dynamic> orgSettings,
+    Map<String, dynamic>? userSettings,
+  }) {
+    return overlayProviderSecrets(
+      orgSettings: orgSettings,
+      userSettings: userSettings,
+    );
   }
 }
 

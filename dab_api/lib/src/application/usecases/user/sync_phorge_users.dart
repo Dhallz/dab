@@ -6,7 +6,7 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
-import '../../../domain/gataways/abs_i_phorge_gataway.dart';
+import '../../../domain/gateways/abs_i_phorge_gateway.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 

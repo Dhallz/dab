@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 
+import '../../domain/core/bitbucket_scope.dart';
+import '../../domain/core/discord_scope.dart';
 import '../../domain/core/failures/failure.dart';
+import '../../domain/core/github_scope.dart';
+import '../../domain/core/gitlab_scope.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
 import '../../infrastructure/protocols/conduit/http_conduit_protocol.dart';
-import '../../infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
-import '../../infrastructure/sources/discord/discord_message_source.dart';
-import '../../infrastructure/sources/github/github_repo_config.dart';
-import '../../infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'provider_live_connectivity_checker.dart';
 import 'provider_live_webhook_test_service.dart';
 

@@ -8,7 +8,7 @@ part 'slack_message_dto.mapper.dart';
 
 final _slackMessageUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Technical DTO for Slack messages.
 /// CONTRACT: Represents the raw data shape from the Slack Web API.
 ///
@@ -48,47 +48,64 @@ class SlackMessageDto with SlackMessageDtoMappable {
 
 /// [ARCH: DOMAIN]
 /// ROLE: Slack message DTO → unified [`Activity`] (linked DAB user attribution).
+///
+/// Polling attributes the row to [dabUserId]. Events API ingest passes
+/// [forUserIds] so mention / broadcast fan-out keeps live activity ids
+/// (`slack-{workspace}-{channel}-{ts}-{recipient}`).
 extension OnSlackMessageDto on SlackMessageDto {
-  List<Activity> toActivities(List<User> users) {
-    final userId = dabUserId;
-    if (userId == null || userId.isEmpty) {
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+  }) {
+    final targets = forUserIds == null
+        ? [if (dabUserId != null && dabUserId!.isNotEmpty) dabUserId!]
+        : forUserIds.where((id) => id.isNotEmpty).toList();
+    if (targets.isEmpty) {
       return const [];
     }
 
-    final user = users.where((u) => u.id == userId).firstOrNull;
-    if (user == null) {
-      return const [];
-    }
-
+    final usersById = {for (final user in users) user.id: user};
     final trimmedText = text.trim();
     final conversationLabel = (channelLabel ?? channelId).trim();
     final title = trimmedText.isEmpty
         ? '[$conversationLabel] Slack message'
         : '[$conversationLabel] ${_truncateSlackPreview(trimmedText)}';
-    final stableIdentity =
-        '${workspaceId ?? 'workspace'}-$channelId-${threadTs ?? ts}-$ts';
+    final content = trimmedText.isEmpty ? '(no message text)' : trimmedText;
+    final fanOut = forUserIds != null;
 
-    return [
-      Activity(
-        id: _slackMessageUuid.v5(Namespace.url.value, 'slack-$stableIdentity'),
-        userId: userId,
-        provider: SlackMessageProvider(
-          workspaceId: workspaceId,
-          channelId: channelId,
-          threadTs: threadTs,
-          messageTs: ts,
+    final activities = <Activity>[];
+    for (final targetUserId in targets) {
+      final user = usersById[targetUserId];
+      if (user == null) continue;
+
+      final stableIdentity = fanOut
+          ? '${workspaceId ?? 'workspace'}-$channelId-$ts-$targetUserId'
+          : '${workspaceId ?? 'workspace'}-$channelId-${threadTs ?? ts}-$ts';
+
+      activities.add(
+        Activity(
+          id: _slackMessageUuid.v5(Namespace.url.value, 'slack-$stableIdentity'),
+          userId: targetUserId,
+          provider: SlackMessageProvider(
+            workspaceId: workspaceId,
+            channelId: channelId,
+            threadTs: threadTs,
+            messageTs: ts,
+          ),
+          title: title,
+          content: content,
+          url: permalink,
+          authorName: userUsername?.trim().isNotEmpty == true
+              ? userUsername!.trim()
+              : (userDisplayName ?? (fanOut ? '' : user.name)),
+          authorAvatarUrl: fanOut
+              ? userAvatarUrl
+              : (userAvatarUrl ?? user.avatarUrl),
+          createdAt: createdAt,
         ),
-        title: title,
-        content: trimmedText.isEmpty ? '(no message text)' : trimmedText,
-        url: permalink,
-        authorName:
-            userUsername?.trim().isNotEmpty == true
-                ? userUsername!.trim()
-                : (userDisplayName ?? user.name),
-        authorAvatarUrl: userAvatarUrl ?? user.avatarUrl,
-        createdAt: createdAt,
-      ),
-    ];
+      );
+    }
+    return activities;
   }
 }
 

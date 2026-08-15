@@ -8,6 +8,8 @@ part 'github_commit_dto.mapper.dart';
 
 final _gitHubCommitUuid = const Uuid();
 
+/// [ARCH: DOMAIN]
+/// ROLE: GitHub commit row mapped to [Activity] via [OnGitHubCommitDto].
 @MappableClass()
 class GitHubCommitDto with GitHubCommitDtoMappable {
   final String repo;

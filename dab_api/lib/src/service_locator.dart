@@ -71,8 +71,10 @@ import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart'
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/application/usecases/user/test_user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
+import 'package:dab_api/src/domain/gateways/abs_i_phorge_gateway.dart';
 import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_phorge_task_hydrator.dart';
+import 'package:dab_api/src/domain/ports/i_provider_identity_probe.dart';
 import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_client_credential_resolver.dart';
@@ -202,7 +204,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<ICredentialResolver>(
     CredentialResolver(sl<AbsIUserProviderCredentialRepository>()),
   );
-  sl.registerSingleton<ProviderIdentityProbe>(
+  sl.registerSingleton<IProviderIdentityProbe>(
     ProviderIdentityProbe(
       jsonRest: jsonRestProtocol,
       graphql: graphqlProtocol,
@@ -230,6 +232,7 @@ Future<void> serviceLocator() async {
     revisionSource: phorgeRevisionSource,
     projectSource: phorgeProjectSource,
   );
+  sl.registerSingleton<AbsIPhorgeGateway>(phorgeGateway);
 
   // New Scaffolds (Slack, Jira, Linear, Discord)
   final slackSource = SlackMessageSource(
@@ -274,7 +277,7 @@ Future<void> serviceLocator() async {
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
-  sl.registerSingleton<AbsIPhorgeGateway>(phorgeGateway);
+  sl.registerSingleton<IPhorgeTaskHydrator>(phorgeTaskSource);
   sl.registerSingleton<SlackMessageSource>(slackSource);
   sl.registerSingleton<JiraIssueSource>(jiraSource);
   sl.registerSingleton<LinearIssueSource>(linearSource);
@@ -473,7 +476,7 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      phorgeTaskSource,
+      sl<IPhorgeTaskHydrator>(),
       sl<RedisService>(),
       sl<PresenceService>(),
       livePublisher: sl<ActivityLivePublisher>(),
@@ -587,7 +590,7 @@ Future<void> serviceLocator() async {
       sl<AbsIUserProviderCredentialRepository>(),
       sl<IUserRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ProviderIdentityProbe>(),
+      sl<IProviderIdentityProbe>(),
     ),
   );
   sl.registerSingleton<DeleteUserProviderCredential>(
@@ -600,7 +603,7 @@ Future<void> serviceLocator() async {
     TestUserProviderCredential(
       sl<AbsIUserProviderCredentialRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ProviderIdentityProbe>(),
+      sl<IProviderIdentityProbe>(),
     ),
   );
   sl.registerSingleton<StartProviderOauth>(

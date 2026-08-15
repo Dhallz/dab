@@ -2,11 +2,9 @@ import 'dart:convert';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
-import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
-import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/entities/activity/activity_provider.dart';
+import '../../../domain/dtos/slack/slack_message_dto.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
@@ -29,7 +27,6 @@ class IngestSlackEvent {
   final PresenceService _presenceService;
   final http.Client _httpClient;
   final ActivityLivePublisher? _livePublisher;
-  final _uuid = const Uuid();
 
   IngestSlackEvent(
     this._userRepository,
@@ -210,33 +207,29 @@ class IngestSlackEvent {
     }
 
     var ingestedCount = 0;
-    for (final recipientUserId in recipientUserIds) {
-      final activityId = _uuid.v5(
-        Namespace.url.value,
-        'slack-${teamId ?? 'workspace'}-$channelId-$ts-$recipientUserId',
-      );
-      final activity = Activity(
-        id: activityId,
-        userId: recipientUserId,
-        provider: SlackMessageProvider(
-          workspaceId: teamId,
-          channelId: channelId,
-          threadTs: (threadTs ?? '').isEmpty ? null : threadTs,
-          messageTs: ts,
-        ),
-        title: _buildTitle(channelLabel: channelLabel, text: normalizedText),
-        content: normalizedText.isEmpty ? '(no message text)' : normalizedText,
-        url: _buildSlackUrl(
-          baseUrl: slackConfig.baseUrl,
-          channelId: channelId,
-          ts: ts,
-          threadTs: threadTs,
-        ),
-        authorName: senderDisplayName,
-        authorAvatarUrl: senderUser?.avatarUrl,
-        createdAt: _parseSlackTs(ts) ?? DateTime.now().toUtc(),
-      );
-
+    final dto = SlackMessageDto(
+      channelId: channelId,
+      channelLabel: channelLabel,
+      workspaceId: teamId,
+      text: normalizedText,
+      userId: slackUserId,
+      ts: ts,
+      threadTs: (threadTs ?? '').isEmpty ? null : threadTs,
+      permalink: _buildSlackUrl(
+        baseUrl: slackConfig.baseUrl,
+        channelId: channelId,
+        ts: ts,
+        threadTs: threadTs,
+      ),
+      userDisplayName: senderDisplayName,
+      userAvatarUrl: senderUser?.avatarUrl,
+      dabUserId: senderIdentity?.userId,
+      createdAt: _parseSlackTs(ts) ?? DateTime.now().toUtc(),
+    );
+    for (final activity in dto.toActivities(
+      users,
+      forUserIds: recipientUserIds,
+    )) {
       final createResult = await _activityRepository.createActivity(activity);
       if (createResult.isLeft()) {
         final message = createResult
@@ -286,20 +279,6 @@ class IngestSlackEvent {
     }
     final millis = (seconds * 1000).round();
     return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
-  }
-
-  String _buildTitle({required String channelLabel, required String text}) {
-    final normalized = text.trim();
-    final label = channelLabel.trim().isEmpty
-        ? '#unknown'
-        : channelLabel.trim();
-    if (normalized.isEmpty) {
-      return '[$label] Slack message';
-    }
-    if (normalized.length <= 60) {
-      return '[$label] $normalized';
-    }
-    return '[$label] ${normalized.substring(0, 59)}...';
   }
 
   String? _buildSlackUrl({

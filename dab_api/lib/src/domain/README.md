@@ -7,7 +7,7 @@ The Domain layer is the heart of the system. It contains the business rules and 
 ## 🏗️ Core Responsibilities
 
 1. **Entities**: Define the core data models (`Activity`, `User`, `ProviderMetadata`).
-2. **Provider payloads + extensions**: **`entities/provider_payloads/`** hold provider-native shapes. Co-located **`extension OnXDto on XDto`** entries implement **`toActivities(List<User>)`** — the “meaning” rules (pure logic) linking remote rows to **`Activity`**.
+2. **Provider DTOs + extensions**: **`dtos/`** hold provider-native shapes, JSON→DTO factories, and co-located **`extension OnXDto on XDto`** entries that implement **`toActivities(List<User>)`**. Watch-list parsers live next to the entity or under **`core/{id}_scope.dart`**.
 3. **Failures**: Define systematic failure cases (e.g., `DatabaseFailure`, `AuthFailure`).
 
 ---
@@ -20,11 +20,11 @@ The Domain layer is the heart of the system. It contains the business rules and 
 
 ---
 
-## 🧩 Provider payload → Activity
+## 🧩 Provider DTO → Activity
 
 Extensions on each DTO (e.g. `OnPhorgeTaskBundleDto`) encode how a Slack message or Phorge transaction reads in the unified feed — business interpretation stays in Domain; infrastructure only fetches/builds DTOs.
 
 ---
 
 > [!CAUTION]
-> If you are adding a new platform (e.g. GitHub), add **`IActivitySource<T>`** Infrastructure + DTO(s) here, **`toActivities`** on the DTO, then register **`TypedConnectorPair<T>`** in **`register_activity_connectors`**.
+> If you are adding a new platform (e.g. GitHub), add **`IActivitySource<T>`** Infrastructure + DTO(s) under **`domain/dtos/`**, **`toActivities`** on the DTO, then register **`TypedConnectorPair<T>`** in **`register_activity_connectors`**.

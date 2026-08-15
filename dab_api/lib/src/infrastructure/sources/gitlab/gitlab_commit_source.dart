@@ -1,6 +1,8 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/gitlab_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_dto.dart';
+import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -34,8 +36,6 @@ class GitLabCommitSource
   final JsonRestProtocol _jsonRest;
   final ICredentialResolver _credentials;
 
-  static const _defaultApiBase = 'https://gitlab.com/api/v4';
-
   @override
   Future<List<GitLabCommitDto>> fetchRawData(
     List<User> users,
@@ -51,14 +51,14 @@ class GitLabCommitSource
       providerId: 'gitlab',
     );
     Map<String, dynamic> authSettings = cfg.settings;
-    var token = gitLabToken(authSettings);
+    var token = extractProviderToken('gitlab', authSettings);
     if (token.isEmpty) {
       for (final user in users) {
         final merged = _credentials.overlay(
           orgSettings: cfg.settings,
           userSettings: userSettings[user.id],
         );
-        token = gitLabToken(merged);
+        token = extractProviderToken('gitlab', merged);
         if (token.isNotEmpty) {
           authSettings = merged;
           break;
@@ -126,7 +126,7 @@ class GitLabCommitSource
     final cfg = await _activeGitLabConfig();
     if (cfg == null) return const Right(null);
 
-    final token = gitLabToken(cfg.settings);
+    final token = extractProviderToken('gitlab', cfg.settings);
     if (token.isEmpty) return const Right(null);
 
     final query = email.trim().isNotEmpty ? email.trim() : name.trim();
@@ -185,82 +185,9 @@ class GitLabCommitSource
 
 /// Auth headers for GitLab REST. OAuth access tokens use Bearer.
 Map<String, String> gitLabAuthHeaders(Map<String, dynamic> settings) {
-  final token = gitLabToken(settings);
+  final token = extractProviderToken('gitlab', settings);
   if (isOauthCredential(settings)) {
     return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
   }
   return {'PRIVATE-TOKEN': token, 'Accept': 'application/json'};
-}
-
-/// Extracts the personal access token from provider settings.
-String gitLabToken(Map<String, dynamic> settings) =>
-    (settings['api.token'] ?? settings['apiToken'] ?? settings['token'] ?? '')
-        .toString()
-        .trim();
-
-/// Normalized API base URL (`https://gitlab.example.com/api/v4`).
-///
-/// Resolution order: explicit `apiBaseUrl` setting, then the provider's base
-/// URL (instance URL) with `/api/v4` appended, then gitlab.com.
-String gitLabApiBase(Map<String, dynamic> settings, [String baseUrl = '']) {
-  final explicit = (settings['apiBaseUrl'] ?? '').toString().trim();
-  if (explicit.isNotEmpty) {
-    return explicit.replaceAll(RegExp(r'/+$'), '');
-  }
-  final instance = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
-  if (instance.isNotEmpty) {
-    return instance.endsWith('/api/v4') ? instance : '$instance/api/v4';
-  }
-  return GitLabCommitSource._defaultApiBase;
-}
-
-/// Extracts the configured project allow-list (list or comma/newline string).
-List<String> gitLabProjects(Map<String, dynamic> settings) {
-  final raw = settings['projects'];
-  if (raw is List) {
-    return raw
-        .map((e) => e.toString().trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-  }
-  final str = (raw ?? '').toString();
-  if (str.trim().isEmpty) return const [];
-  return str
-      .split(RegExp(r'[\n,]+'))
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toList();
-}
-
-/// Maps one GitLab commit JSON object (REST response row) into a
-/// [GitLabCommitDto]. Returns null for malformed rows.
-GitLabCommitDto? mapGitLabCommitJson(
-  Map<String, dynamic> json, {
-  required String project,
-  String? branch,
-  Map<String, String> emailToUser = const {},
-}) {
-  final sha = (json['id'] ?? '').toString().trim();
-  if (sha.isEmpty) return null;
-
-  final createdRaw =
-      (json['committed_date'] ?? json['created_at'])?.toString();
-  final committedAt = createdRaw != null
-      ? DateTime.tryParse(createdRaw)?.toUtc()
-      : null;
-  if (committedAt == null) return null;
-
-  final authorEmail = (json['author_email'] ?? '').toString().trim();
-
-  return GitLabCommitDto(
-    project: project,
-    branch: branch,
-    sha: sha,
-    message: (json['message'] ?? json['title'] ?? '').toString().trim(),
-    url: (json['web_url'] ?? '').toString().trim(),
-    authorName: json['author_name']?.toString(),
-    authorEmail: authorEmail.isEmpty ? null : authorEmail,
-    committedAt: committedAt,
-    userId: authorEmail.isEmpty ? null : emailToUser[authorEmail.toLowerCase()],
-  );
 }

@@ -8,7 +8,7 @@ part 'discord_message_dto.mapper.dart';
 
 final _discordMessageUuid = const Uuid();
 
-/// [ARCH: INFRASTRUCTURE_DTO]
+/// [ARCH: DOMAIN]
 /// ROLE: Parsed Discord message (REST API or Gateway dispatch) for ingestion.
 /// CONTRACT: [dabUserId] is resolved by the caller from linked `discord`
 /// identities (external id = Discord user snowflake); rows without an

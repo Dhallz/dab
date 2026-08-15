@@ -17,17 +17,16 @@ description: Package-specific rules for DAB API
 
 ```
 dab_api/lib/src/
-├── domain/            ← Entities incl. entities/provider_payloads/ (DTO `extension On*` → `toActivities`), ports/, AbsI* repos — ZERO infra imports
+├── domain/            ← Entities, dtos/ (`extension On*` → `toActivities`), ports/, gateways/, AbsI* repos — ZERO infra imports
 ├── application/       ← Use cases, services, ConnectorRegistry
 │   ├── services/
 │   ├── usecases/
 │   └── containers/
-├── infrastructure/    ← DB, HTTP, protocols, DTOs, security
+├── infrastructure/    ← DB, HTTP, protocols, security
 │   ├── protocols/     ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
 │   ├── database/      ← Drift schemas and DAOs
 │   ├── repositories/  ← Implements domain IRepository interfaces
 │   ├── sources/       ← IActivitySource raw data fetchers (one per provider/data type)
-│   ├── dtos/          ← Provider-specific DTOs (never leak into domain)
 │   ├── http/          ← HTTP client helpers
 │   ├── security/      ← JWT, bcrypt helpers
 │   └── config/        ← AppConfig, env loading
@@ -43,7 +42,7 @@ dab_api/lib/src/
 New provider integrations must follow this pattern precisely:
 
 1. **`IActivitySource`** (Infrastructure) — fetches raw DTO payloads from a provider API.
-2. **`extension OnXDto`** (Domain on `provider_payloads`) — implements **`toActivities(List<User>)`** with pure business logic (no I/O).
+2. **`extension OnXDto`** (Domain on `domain/dtos/`) — implements **`toActivities(List<User>)`** with pure business logic (no I/O).
 3. **`TypedConnectorPair<T>` + `providerId`** — registered via **`ConnectorRegistry.register`** inside **`register_activity_connectors`** (called from **`service_locator.dart`**) — binds Source, row type, wiring id (`github`, …), and mapping closure.
 
 Never merge HTTP fetch logic into the DTO extensions.

@@ -3,18 +3,18 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import '../../../domain/entities/user/user.dart';
+import '../../../domain/ports/i_phorge_task_hydrator.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/sources/phorge/phorge_task_source.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Phorge Herald webhooks into the DAB live pipeline.
 /// CONTRACT: Herald payloads carry only object/transaction PHIDs, so the task
-/// is re-hydrated via Conduit ([PhorgeTaskSource.fetchBundleForWebhook]) and
+/// is re-hydrated via Conduit ([IPhorgeTaskHydrator.fetchBundleForWebhook]) and
 /// mapped through the same [OnPhorgeTaskBundleDto.toActivities] shaping as
 /// polling. Only transactions authored by users with a known `phorgePhid` are
 /// persisted (no fallback attribution on the live path).
@@ -23,7 +23,7 @@ class IngestPhorgeWebhook {
   final IUserRepository _userRepository;
   final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final PhorgeTaskSource _taskSource;
+  final IPhorgeTaskHydrator _taskHydrator;
   final RedisService _redisService;
   final PresenceService _presenceService;
   final ActivityLivePublisher? _livePublisher;
@@ -32,7 +32,7 @@ class IngestPhorgeWebhook {
     this._userRepository,
     this._activityRepository,
     this._providerConfigRepository,
-    this._taskSource,
+    this._taskHydrator,
     this._redisService,
     this._presenceService, {
     ActivityLivePublisher? livePublisher,
@@ -121,7 +121,7 @@ class IngestPhorgeWebhook {
 
     final PhorgeTaskBundleDto? bundle;
     try {
-      bundle = await _taskSource.fetchBundleForWebhook(
+      bundle = await _taskHydrator.fetchBundleForWebhook(
         taskPhid: objectPhid,
         transactionPhids: transactionPhids,
       );

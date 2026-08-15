@@ -1,3 +1,4 @@
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -272,12 +273,7 @@ class SlackMessageSource
   }
 
   String _resolveToken(Map<String, dynamic> settings) {
-    return (settings['botToken'] ??
-            settings['api.token'] ??
-            settings['token'] ??
-            '')
-        .toString()
-        .trim();
+    return extractProviderToken('slack', settings);
   }
 
   String _resolveApiBaseUrl(Map<String, dynamic> settings) {

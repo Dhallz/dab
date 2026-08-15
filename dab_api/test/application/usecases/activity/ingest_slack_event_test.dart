@@ -14,6 +14,7 @@ import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
+import 'package:uuid/uuid.dart';
 
 class _MockUserRepository extends Mock implements IUserRepository {}
 
@@ -134,7 +135,19 @@ void main() {
       (_) => const SlackEventIngestionResult.ignored('x'),
     );
     expect(summary.ingested, isTrue);
-    verify(() => activityRepository.createActivity(any())).called(1);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny())).captured
+            .single as Activity;
+    expect(captured.userId, 'u-1');
+    expect(
+      captured.id,
+      const Uuid().v5(
+        Namespace.url.value,
+        'slack-T1-C1-1712950000.100000-u-1',
+      ),
+    );
+    expect(captured.url, 'https://slack.com/archives/C1/p1712950000100000');
+    expect(captured.authorName, 'Alice');
     verify(() => redisService.fanOutActivity(any())).called(1);
   });
 
@@ -376,7 +389,24 @@ void main() {
       (_) => const SlackEventIngestionResult.ignored('x'),
     );
     expect(summary.ingested, isTrue);
-    verify(() => activityRepository.createActivity(any())).called(2);
+    final captured = verify(
+      () => activityRepository.createActivity(captureAny()),
+    ).captured.cast<Activity>();
+    expect(captured, hasLength(2));
+    expect(captured.map((a) => a.userId).toSet(), {'u-1', 'u-2'});
+    expect(
+      captured.map((a) => a.id).toSet(),
+      {
+        const Uuid().v5(
+          Namespace.url.value,
+          'slack-T1-C9-1712950000.400000-u-1',
+        ),
+        const Uuid().v5(
+          Namespace.url.value,
+          'slack-T1-C9-1712950000.400000-u-2',
+        ),
+      },
+    );
     verify(() => redisService.fanOutActivity(any())).called(2);
     verify(
       () => presenceService.broadcastToUser(any(), any(), any()),
