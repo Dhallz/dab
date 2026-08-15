@@ -100,7 +100,7 @@ dab_app/lib/
 ### App Entities (`dab_app/lib/domain/entities/`)
 
 Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`).
-`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`) and optional `localeCode`. An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but Island Bars always show their real controls rather than those stored checkboxes.
+`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`) and optional `localeCode`. An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but is unused in the UI — home branches use per-view toolbars rather than those stored checkboxes.
 
 The Dashboard additionally introduces:
 

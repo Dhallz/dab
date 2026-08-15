@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_icons.dart';
-import '../../../core/styles/app_spacing.dart';
 import '../../../core/widgets/dab_island_stat.dart';
 import '../../../core/widgets/dab_toggle_chip.dart';
+import '../../../core/widgets/view_toolbar.dart';
 import '../dashboard_notifier.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Dashboard Island Bar — live/archived counts, last sync, archive toggle.
+/// ROLE: Dashboard toolbar — last sync and archive toggle; counts on compact widths.
 class DashboardIslandBarContent extends ConsumerWidget {
-  const DashboardIslandBarContent({super.key});
+  /// When true (mobile), live/archived counts sit in this toolbar.
+  final bool showCounts;
+
+  const DashboardIslandBarContent({super.key, this.showCounts = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,34 +38,32 @@ class DashboardIslandBarContent extends ConsumerWidget {
         ? l10n.dashboardArchiveShow
         : l10n.dashboardArchiveShowCount(state.archivedCount);
 
-    return Row(
+    return ViewToolbar(
       children: [
-        DabIslandStat(
-          icon: AppIcons.dashboard,
-          title: l10n.dashboardIslandLive,
-          value: '${state.visibleActivities.length}',
-        ),
-        const SizedBox(width: AppSpacing.m),
-        DabIslandStat(
-          icon: AppIcons.delete,
-          title: l10n.dashboardIslandArchived,
-          value: '${state.archivedCount}',
-        ),
-        const Spacer(),
-        Flexible(
-          child: Text(
-            state.lastSyncedAt == null
-                ? l10n.dashboardNoSyncYet
-                : l10n.dashboardLastSync(_formatSyncTime(state.lastSyncedAt!)),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
+        if (showCounts) ...[
+          DabIslandStat(
+            compact: true,
+            icon: AppIcons.dashboard,
+            title: l10n.dashboardIslandLive,
+            value: '${state.visibleActivities.length}',
           ),
+          DabIslandStat(
+            compact: true,
+            icon: AppIcons.delete,
+            title: l10n.dashboardIslandArchived,
+            value: '${state.archivedCount}',
+          ),
+        ],
+        Text(
+          state.lastSyncedAt == null
+              ? l10n.dashboardNoSyncYet
+              : l10n.dashboardLastSync(_formatSyncTime(state.lastSyncedAt!)),
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(width: AppSpacing.s),
         DabToggleChip(
           label: archiveLabel,
           isSelected: state.showArchivedActivities,

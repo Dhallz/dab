@@ -3,7 +3,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 part 'admin_island_bar_model.mapper.dart';
 
 /// [ARCH: PRESENTATION_MODEL]
-/// ROLE: Read-only projection of [AdminState] for the admin [IslandBar] metrics row.
+/// ROLE: Read-only projection of [AdminState] for the admin toolbar metrics row.
 /// CONTRACT: Immutable POD; built via [OnAdminState.islandBarModel].
 @MappableClass()
 class AdminIslandBarModel with AdminIslandBarModelMappable {
@@ -24,13 +24,4 @@ class AdminIslandBarModel with AdminIslandBarModelMappable {
     required this.connectionFailed,
     required this.connectionUnknown,
   });
-
-  /// Layout: use [Expanded] tiles when width is at least this (matches explorer breakpoint).
-  static const double expandBreakpointWidth = 900;
-
-  /// Matches Explorer island button width.
-  static const double scrollTileWidth = 70;
-
-  /// Matches Explorer island button width.
-  static const double refreshTileWidth = 70;
 }

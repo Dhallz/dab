@@ -124,7 +124,7 @@ extension OnExplorerState on ExplorerState {
     return heatScore.ceil();
   }
 
-  /// Accent color for a heat [count] (island bar strip + vertical bar).
+  /// Accent color for a heat [count] (calendar header strip + vertical bar).
   Color heatAccentColorForIntensity(int count, Color calmPrimary) {
     if (count >= 8) {
       return const Color(0xFFFF1744);
@@ -141,7 +141,7 @@ extension OnExplorerState on ExplorerState {
     return calmPrimary;
   }
 
-  /// One summary chip per known granular key for the Explorer island bar.
+  /// One summary chip per known granular key for the Explorer calendar header.
   List<ExplorerActivityKindSummary> islandActivityKindSummaries(
     BuildContext context,
   ) {

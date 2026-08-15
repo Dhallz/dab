@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_icons.dart';
-import '../../../core/styles/app_layout.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
+import '../../../core/widgets/view_toolbar.dart';
 import '../insights_notifier.dart';
 import '../insights_state.dart';
 import 'insights_breakdown_charts.dart';
@@ -50,11 +50,12 @@ class InsightsBodyContent extends ConsumerWidget {
     final userNames = {for (final user in state.users) user.id: user.name};
     final detailRows = state.detailRows(userNames);
 
+    final horizontal = ViewToolbar.horizontalPadding(context);
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        AppLayout.islandBarOuterPadding.left,
+        horizontal,
         AppSpacing.s,
-        AppLayout.islandBarOuterPadding.right,
+        horizontal,
         AppSpacing.l,
       ),
       child: Column(
@@ -84,7 +85,7 @@ class _FeedbackState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: AppLayout.islandBarOuterPadding.left,
+          horizontal: ViewToolbar.horizontalPadding(context),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

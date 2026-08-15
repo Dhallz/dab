@@ -6,11 +6,11 @@
   },
   "dashboardIslandLive": "Live",
   "@dashboardIslandLive": {
-    "description": "Island Bar label for visible live activity count."
+    "description": "Toolbar/sidebar label for visible live activity count."
   },
   "dashboardIslandArchived": "Archived",
   "@dashboardIslandArchived": {
-    "description": "Island Bar label for archived activity count."
+    "description": "Toolbar/sidebar label for archived activity count."
   },
   "navExplorer": "Explorer",
   "@navExplorer": {

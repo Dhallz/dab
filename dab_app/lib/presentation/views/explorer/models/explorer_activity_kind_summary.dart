@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// [ARCH: PRESENTATION_MODEL]
-/// ROLE: One row in the Explorer island bar activity-kind summary strip.
+/// ROLE: One row in the Explorer calendar-header activity-kind summary strip.
 /// CONTRACT: Immutable POD for UI projection only.
 class ExplorerActivityKindSummary {
   final String label;

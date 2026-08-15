@@ -5,7 +5,7 @@ import '../styles/app_spacing.dart';
 import '../styles/app_text_styles.dart';
 
 /// [ARCH: PRESENTATION_CORE]
-/// ROLE: Exclusive-select pill used in Island Bars and similar chrome.
+/// ROLE: Exclusive-select pill used in view toolbars and similar chrome.
 class DabToggleChip extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -40,8 +40,8 @@ class DabToggleChip extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.s,
-            vertical: AppSpacing.xs,
+            horizontal: AppSpacing.m,
+            vertical: 10,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -56,7 +56,7 @@ class DabToggleChip extends StatelessWidget {
               ],
               Text(
                 label,
-                style: AppTextStyles.labelMedium.copyWith(
+                style: AppTextStyles.labelLarge.copyWith(
                   color: selected ? scheme.primary : scheme.onSurface,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 ),

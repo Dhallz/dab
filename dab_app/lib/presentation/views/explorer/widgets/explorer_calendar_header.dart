@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/localization/l10n_extension.dart';
+import '../../../core/styles/app_spacing.dart';
+import '../../../core/styles/app_text_styles.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import '../models/explorer_item.dart';
@@ -9,104 +10,31 @@ import 'explorer_top_activity_kind_summary_buttons.dart';
 import 'explorer_top_heat_bar.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Header display for the active date in the explorer, including activity counts.
+/// ROLE: Second Explorer toolbar row — activity count, kind chips, heat.
 class ExplorerCalendarHeader extends StatelessWidget {
-  final DateTime displayDate;
   final ExplorerState state;
-  final bool compact;
 
-  const ExplorerCalendarHeader({
-    super.key,
-    required this.displayDate,
-    required this.state,
-    this.compact = false,
-  });
+  const ExplorerCalendarHeader({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final localeName = Localizations.localeOf(context).toString();
-    final isRangeMode = state.dateMode == ExplorerDateMode.range;
-    final dateStr = isRangeMode
-        ? _rangeLabel(localeName)
-        : DateFormat.yMMMMEEEEd(localeName).format(displayDate);
-    final shortDate = isRangeMode
-        ? _rangeLabel(localeName, short: true)
-        : DateFormat.MMMEd(localeName).format(displayDate);
-
     final cs = Theme.of(context).colorScheme;
-    if (compact) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    shortDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
-                      letterSpacing: -0.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    _buildStatusText(context),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: cs.onSurfaceVariant.withValues(alpha: 0.9),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            _buildStatusText(context),
+            style: AppTextStyles.labelLarge.copyWith(
+              color: cs.onSurfaceVariant,
             ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dateStr,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
-                    letterSpacing: -0.5,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _buildStatusText(context),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: cs.onSurfaceVariant.withValues(alpha: 0.9),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          ExplorerTopActivityKindSummaryButtons(state: state),
-          ExplorerTopHeatBar(state: state),
-        ],
-      ),
+        ),
+        const SizedBox(width: AppSpacing.s),
+        ExplorerTopActivityKindSummaryButtons(state: state, compact: true),
+        ExplorerTopHeatBar(state: state, compact: true),
+      ],
     );
   }
 
@@ -121,17 +49,6 @@ class ExplorerCalendarHeader extends StatelessWidget {
       return l10n.explorerViewingArchivedFromRange(activityCount);
     }
     return l10n.explorerViewingArchivedFromDate(activityCount);
-  }
-
-  String _rangeLabel(String localeName, {bool short = false}) {
-    final startDate = state.rangeStartDate ?? displayDate;
-    final endDate = state.rangeEndDate ?? displayDate;
-    if (short) {
-      final shortFmt = DateFormat.MMMd(localeName);
-      return '${shortFmt.format(startDate)} – ${shortFmt.format(endDate)}';
-    }
-    final fullFmt = DateFormat.yMMMMEEEEd(localeName);
-    return '${fullFmt.format(startDate)} – ${fullFmt.format(endDate)}';
   }
 
   int _countActivities(ExplorerItem item) => switch (item) {

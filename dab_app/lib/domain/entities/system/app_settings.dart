@@ -11,7 +11,7 @@ const String appSettingsIslandBarViewExplorer = 'explorer';
 const String appSettingsIslandBarViewInsights = 'insights';
 
 /// [ARCH: DOMAIN_ENTITY]
-/// ROLE: Fixed item catalogs inferred from current island bar compositions.
+/// ROLE: Fixed item catalogs for unused persisted `islandBarSelections` (no schema migration).
 const Map<String, List<String>> appSettingsIslandBarItemCatalog = {
   appSettingsIslandBarViewDashboard: ['title', 'subtitle'],
   appSettingsIslandBarViewExplorer: [
@@ -25,7 +25,7 @@ const Map<String, List<String>> appSettingsIslandBarItemCatalog = {
 };
 
 /// [ARCH: DOMAIN_ENTITY]
-/// ROLE: First-run defaults mirror currently visible island bar items.
+/// ROLE: First-run defaults for unused persisted `islandBarSelections`.
 const Map<String, List<String>> appSettingsDefaultIslandBarSelections = {
   appSettingsIslandBarViewDashboard: ['title', 'subtitle'],
   appSettingsIslandBarViewExplorer: [
@@ -57,7 +57,8 @@ extension OnAppSettings on AppSettings {
   Locale? get resolvedLocale => localeCode == null ? null : Locale(localeCode!);
 
   bool isIslandBarItemSelected(String viewId, String itemId) {
-    final selected = islandBarSelections[viewId] ??
+    final selected =
+        islandBarSelections[viewId] ??
         appSettingsDefaultIslandBarSelections[viewId] ??
         const <String>[];
     return selected.contains(itemId);

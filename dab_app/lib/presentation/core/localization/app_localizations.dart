@@ -112,13 +112,13 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboardTitle;
 
-  /// Island Bar label for visible live activity count.
+  /// Toolbar/sidebar label for visible live activity count.
   ///
   /// In en, this message translates to:
   /// **'Live'**
   String get dashboardIslandLive;
 
-  /// Island Bar label for archived activity count.
+  /// Toolbar/sidebar label for archived activity count.
   ///
   /// In en, this message translates to:
   /// **'Archived'**

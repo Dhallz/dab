@@ -1,22 +1,24 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
-import 'package:dab_app/presentation/core/styles/app_spacing.dart';
+import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/widgets/dab_island_stat.dart';
 import 'package:dab_app/presentation/core/widgets/dab_toggle_chip.dart';
+import 'package:dab_app/presentation/core/widgets/view_toolbar.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
-import 'package:dab_app/presentation/views/admin/models/admin_island_bar_model.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
-import 'package:dab_app/presentation/views/admin/widgets/admin_island_refresh_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Admin Island Bar — system snapshot + refresh; section chips on compact widths.
+/// ROLE: Admin toolbar — system snapshot + refresh; section chips on compact widths.
 class AdminIslandBarContent extends ConsumerWidget {
-  const AdminIslandBarContent({super.key});
+  /// When true (mobile/tablet), section chips replace the stats row.
+  final bool showSectionChips;
+
+  const AdminIslandBarContent({super.key, this.showSectionChips = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,90 +42,75 @@ class AdminIslandBarContent extends ConsumerWidget {
       appNotifierProvider.select((s) => s.isPersonalDeployment),
     );
     final cs = Theme.of(context).colorScheme;
+    final isLoading = state.status == ViewStatus.loading;
 
-    final providersStat = DabIslandStat(
-      icon: AppIcons.providers,
-      title: l10n.adminIslandProvidersTitle,
-      value: '${m.activeProviders} / ${m.totalProviders}',
-      tooltip: l10n.adminIslandProvidersTooltip,
-    );
-    final usersStat = DabIslandStat(
-      icon: AppIcons.profile,
-      title: l10n.adminIslandUsersTitle,
-      value: '${m.usersCount}',
-      tooltip: l10n.adminIslandUsersTooltip,
-    );
-    final failedStat = DabIslandStat(
-      icon: AppIcons.error,
-      title: l10n.adminIslandFailedTitle,
-      value: '${m.connectionFailed}',
-      tooltip: isPersonal
-          ? l10n.adminIslandFailedTooltipPersonal
-          : l10n.adminIslandFailedTooltip,
-      iconColor: m.connectionFailed > 0 ? cs.error : cs.onSurfaceVariant,
-    );
-    final unresolvedStat = DabIslandStat(
-      icon: AppIcons.warning,
-      title: l10n.adminIslandUnresolvedTitle,
-      value: '${m.unresolvedIdentities}',
-      tooltip: l10n.adminIslandUnresolvedTooltip,
-      iconColor: m.unresolvedIdentities > 0 ? cs.error : cs.onSurfaceVariant,
-    );
-    final refreshTile = AdminIslandRefreshTile(
-      loading: state.status == ViewStatus.loading,
-      onPressed: state.status == ViewStatus.loading ? null : notifier.start,
+    final refreshButton = IconButton(
+      tooltip: l10n.adminIslandRefreshTooltip,
+      visualDensity: VisualDensity.compact,
+      style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: isLoading ? null : notifier.start,
+      icon: isLoading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(AppIcons.refresh, size: AppLayout.iconMedium),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact =
-            constraints.maxWidth < AdminIslandBarModel.expandBreakpointWidth;
-        if (compact) {
-          return Row(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (final section in adminSectionsFor(
-                        isPersonal: isPersonal,
-                      )) ...[
-                        DabToggleChip(
-                          label: section.localizedTitle(l10n),
-                          isSelected: section == state.selectedSection,
-                          onTap: () => notifier.setSection(section),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: AdminIslandBarModel.refreshTileWidth,
-                child: refreshTile,
-              ),
-            ],
-          );
-        }
+    if (showSectionChips) {
+      return ViewToolbar(
+        children: [
+          for (final section in adminSectionsFor(isPersonal: isPersonal))
+            DabToggleChip(
+              label: section.localizedTitle(l10n),
+              isSelected: section == state.selectedSection,
+              onTap: () => notifier.setSection(section),
+            ),
+          refreshButton,
+        ],
+      );
+    }
 
-        return Row(
-          children: [
-            providersStat,
-            const SizedBox(width: AppSpacing.m),
-            usersStat,
-            const SizedBox(width: AppSpacing.m),
-            failedStat,
-            if (!isPersonal && m.unresolvedIdentities > 0) ...[
-              const SizedBox(width: AppSpacing.m),
-              unresolvedStat,
-            ],
-            const Spacer(),
-            refreshTile,
-          ],
-        );
-      },
+    return ViewToolbar(
+      children: [
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.providers,
+          title: l10n.adminIslandProvidersTitle,
+          value: '${m.activeProviders} / ${m.totalProviders}',
+          tooltip: l10n.adminIslandProvidersTooltip,
+        ),
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.profile,
+          title: l10n.adminIslandUsersTitle,
+          value: '${m.usersCount}',
+          tooltip: l10n.adminIslandUsersTooltip,
+        ),
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.error,
+          title: l10n.adminIslandFailedTitle,
+          value: '${m.connectionFailed}',
+          tooltip: isPersonal
+              ? l10n.adminIslandFailedTooltipPersonal
+              : l10n.adminIslandFailedTooltip,
+          iconColor: m.connectionFailed > 0 ? cs.error : cs.onSurfaceVariant,
+        ),
+        if (!isPersonal && m.unresolvedIdentities > 0)
+          DabIslandStat(
+            compact: true,
+            icon: AppIcons.warning,
+            title: l10n.adminIslandUnresolvedTitle,
+            value: '${m.unresolvedIdentities}',
+            tooltip: l10n.adminIslandUnresolvedTooltip,
+            iconColor: cs.error,
+          ),
+        refreshButton,
+      ],
     );
   }
 }

@@ -4,11 +4,16 @@ import 'activity_card/activity_intensity_bar.dart';
 import '../explorer_state.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Vertical intensity bar for aggregate activity heat in Explorer island bar.
+/// ROLE: Intensity bar for aggregate activity heat in the Explorer toolbar.
 class ExplorerTopHeatBar extends StatelessWidget {
   final ExplorerState state;
+  final bool compact;
 
-  const ExplorerTopHeatBar({super.key, required this.state});
+  const ExplorerTopHeatBar({
+    super.key,
+    required this.state,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,16 +23,14 @@ class ExplorerTopHeatBar extends StatelessWidget {
     }
     final heatCount = state.heatMetricForActivityTotal(totalCount);
     final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 70,
-      child: Center(
-        child: ActivityIntensityBar(
-          activityCount: heatCount,
-          accentColor:
-              state.heatAccentColorForIntensity(heatCount, cs.primary),
-          direction: Axis.vertical,
-        ),
-      ),
+    final bar = ActivityIntensityBar(
+      activityCount: heatCount,
+      accentColor: state.heatAccentColorForIntensity(heatCount, cs.primary),
+      direction: compact ? Axis.horizontal : Axis.vertical,
     );
+    if (compact) {
+      return bar;
+    }
+    return SizedBox(width: 70, child: Center(child: bar));
   }
 }

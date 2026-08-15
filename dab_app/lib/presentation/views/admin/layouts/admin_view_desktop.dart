@@ -1,7 +1,6 @@
 import 'package:dab_app/domain/entities/user/user_identity.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
-import 'package:dab_app/presentation/core/widgets/island_bar.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
@@ -89,7 +88,7 @@ class AdminViewDesktop extends ConsumerWidget {
           Expanded(
             child: Column(
               children: [
-                const IslandBar(content: AdminIslandBarContent()),
+                const AdminIslandBarContent(),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),

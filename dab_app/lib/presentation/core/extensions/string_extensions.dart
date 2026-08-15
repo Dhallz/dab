@@ -4,9 +4,9 @@ import '../localization/l10n_extension.dart';
 
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: UI helpers for [String] values that represent [Activity.granularKey] keys
-/// in Explorer chrome (island bar summaries).
+/// in Explorer chrome (calendar-header summaries).
 extension OnString on String {
-  /// User-facing label for this granular key in island summaries.
+  /// User-facing label for this granular key in activity-kind summaries.
   String islandSummaryLabel(BuildContext context) {
     return switch (this) {
       'comment' => context.l10n.activityKindComment,

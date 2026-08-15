@@ -5,13 +5,14 @@ import 'explorer_range_date_slot.dart';
 import 'explorer_range_ellipsis_button.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Seven-slot range preview + pickers for Explorer island bar.
+/// ROLE: Seven-slot range preview + pickers for the Explorer date toolbar.
 class ExplorerRangeModeDateSelector extends StatelessWidget {
   final DateTime startDate;
   final DateTime endDate;
   final void Function(DateTime startDate) onStartDateSelected;
   final void Function(DateTime endDate) onEndDateSelected;
   final void Function(DateTime startDate, DateTime endDate) onRangeSelected;
+  final bool compact;
 
   const ExplorerRangeModeDateSelector({
     super.key,
@@ -20,6 +21,7 @@ class ExplorerRangeModeDateSelector extends StatelessWidget {
     required this.onStartDateSelected,
     required this.onEndDateSelected,
     required this.onRangeSelected,
+    this.compact = false,
   });
 
   @override
@@ -30,9 +32,12 @@ class ExplorerRangeModeDateSelector extends StatelessWidget {
     final aroundEndB = endDate.subtract(const Duration(days: 1));
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: startDate,
             isSelected: true,
             onTap: () async {
@@ -49,21 +54,27 @@ class ExplorerRangeModeDateSelector extends StatelessWidget {
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: aroundStartA,
             isSelected: false,
             onTap: () {},
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: aroundStartB,
             isSelected: false,
             onTap: () {},
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerRangeEllipsisButton(
+            compact: compact,
             onTap: () async {
               final range = await showDateRangePicker(
                 context: context,
@@ -78,21 +89,27 @@ class ExplorerRangeModeDateSelector extends StatelessWidget {
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: aroundEndA,
             isSelected: false,
             onTap: () {},
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: aroundEndB,
             isSelected: false,
             onTap: () {},
           ),
         ),
         ExplorerRangeDateSlot(
+          compact: compact,
           child: ExplorerCalendarDateButton(
+            compact: compact,
             date: endDate,
             isSelected: true,
             onTap: () async {

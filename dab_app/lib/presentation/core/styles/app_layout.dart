@@ -21,23 +21,6 @@ class AppLayout {
   // Blur / Glassmorphism
   static const double glassBlur = 30.0;
 
-  /// Fixed height of the cross-branch [IslandBar] glass region (content lays out inside).
-  static const double islandBarHeight = 124.0;
-
-  /// Outer padding for [IslandBar] — identical on Dashboard, Explorer, and Admin.
-  static const EdgeInsets islandBarOuterPadding = EdgeInsets.fromLTRB(
-    32,
-    32,
-    32,
-    16,
-  );
-
-  /// Inner padding inside the island glass (around [IslandBar.content]).
-  static const EdgeInsets islandBarInnerPadding = EdgeInsets.symmetric(
-    horizontal: 24,
-    vertical: 8,
-  );
-
   // Icon Sizes
   static const double iconSmall = 18.0;
   static const double iconMedium = 24.0;

@@ -6,8 +6,13 @@ import '../../../core/styles/app_layout.dart';
 /// ROLE: Opens date-range picker for Explorer range mode strip.
 class ExplorerRangeEllipsisButton extends StatefulWidget {
   final VoidCallback onTap;
+  final bool compact;
 
-  const ExplorerRangeEllipsisButton({super.key, required this.onTap});
+  const ExplorerRangeEllipsisButton({
+    super.key,
+    required this.onTap,
+    this.compact = false,
+  });
 
   @override
   State<ExplorerRangeEllipsisButton> createState() =>
@@ -29,35 +34,23 @@ class _ExplorerRangeEllipsisButtonState
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 70,
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          width: widget.compact ? 52 : 70,
+          padding: EdgeInsets.symmetric(vertical: widget.compact ? 4 : 6),
           decoration: BoxDecoration(
             color: _isHovered
                 ? cs.onSurface.withValues(alpha: 0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppLayout.radiusMedium),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.9),
-                ),
+          child: Center(
+            child: Text(
+              ' ... ',
+              style: TextStyle(
+                fontSize: widget.compact ? 14 : 18,
+                fontWeight: FontWeight.bold,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.9),
               ),
-              const SizedBox(height: 4),
-              Text(
-                ' ... ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.9),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
