@@ -222,6 +222,10 @@ class ConnectedAccountsNotifier
   }
 
   Future<void> _pollUntilConnected(String providerId) async {
+    final previous = state.forProvider(providerId);
+    final wasConnected = previous?.isConnected == true;
+    final previousUpdated = previous?.updatedAt;
+
     for (var i = 0; i < 45; i++) {
       await Future<void>.delayed(const Duration(seconds: 2));
       final result = await _users.listMyCredentials.execute();
@@ -234,6 +238,18 @@ class ConnectedAccountsNotifier
         }
       }
       if (summary?.isConnected == true) {
+        final updated = summary!.updatedAt;
+        final isNewCredential =
+            !wasConnected ||
+            (updated != null &&
+                previousUpdated != null &&
+                updated.isAfter(previousUpdated)) ||
+            (updated != null &&
+                previousUpdated != null &&
+                updated != previousUpdated);
+        if (!isNewCredential && i < 44) {
+          continue;
+        }
         state = state.copyWith(
           credentials: list,
           clearBusy: true,

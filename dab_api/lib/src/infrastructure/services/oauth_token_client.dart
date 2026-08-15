@@ -24,16 +24,55 @@ class HttpOauthTokenClient implements IOauthTokenClient {
     required String redirectUri,
     required String codeVerifier,
   }) async {
-    try {
-      final fields = <String, String>{
-        'grant_type': 'authorization_code',
+    final fields = <String, String>{
+      'grant_type': 'authorization_code',
+      'client_id': clientId,
+      'code': code,
+      'redirect_uri': redirectUri,
+    };
+    if (spec.usePkce) {
+      fields['code_verifier'] = codeVerifier;
+    }
+    return _postToken(
+      spec: spec,
+      clientId: clientId,
+      clientSecret: clientSecret,
+      fields: fields,
+      rejectedMessage: 'Provider rejected the OAuth code exchange',
+      failedMessage: 'Could not complete OAuth token exchange',
+    );
+  }
+
+  @override
+  Future<Either<Failure, OauthTokenResponse>> refreshAccessToken({
+    required OauthProviderSpec spec,
+    required String clientId,
+    String? clientSecret,
+    required String refreshToken,
+  }) {
+    return _postToken(
+      spec: spec,
+      clientId: clientId,
+      clientSecret: clientSecret,
+      fields: {
+        'grant_type': 'refresh_token',
         'client_id': clientId,
-        'code': code,
-        'redirect_uri': redirectUri,
-      };
-      if (spec.usePkce) {
-        fields['code_verifier'] = codeVerifier;
-      }
+        'refresh_token': refreshToken,
+      },
+      rejectedMessage: 'Provider rejected the OAuth token refresh',
+      failedMessage: 'Could not refresh the OAuth access token',
+    );
+  }
+
+  Future<Either<Failure, OauthTokenResponse>> _postToken({
+    required OauthProviderSpec spec,
+    required String clientId,
+    required String? clientSecret,
+    required Map<String, String> fields,
+    required String rejectedMessage,
+    required String failedMessage,
+  }) async {
+    try {
       if (clientSecret != null &&
           clientSecret.isNotEmpty &&
           !spec.useBasicClientAuth) {
@@ -68,9 +107,7 @@ class HttpOauthTokenClient implements IOauthTokenClient {
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        return const Left(
-          ValidationFailure('Provider rejected the OAuth code exchange'),
-        );
+        return Left(ValidationFailure(rejectedMessage));
       }
 
       final decoded = _decodeBody(response.body);
@@ -99,9 +136,7 @@ class HttpOauthTokenClient implements IOauthTokenClient {
         ),
       );
     } catch (_) {
-      return const Left(
-        ValidationFailure('Could not complete OAuth token exchange'),
-      );
+      return Left(ValidationFailure(failedMessage));
     }
   }
 

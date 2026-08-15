@@ -105,6 +105,14 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
           .toString()
           .trim();
     case 'jira':
+      if (isOauthCredential(settings)) {
+        return (settings['apiToken'] ??
+                settings['api.token'] ??
+                settings['token'] ??
+                '')
+            .toString()
+            .trim();
+      }
       return (settings['api.token'] ??
               settings['apiToken'] ??
               settings['token'] ??
@@ -127,6 +135,37 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
 
 bool isOauthCredential(Map<String, dynamic> settings) =>
     (settings['tokenType'] ?? '').toString().trim().toLowerCase() == 'oauth';
+
+/// True when an OAuth credential has a refresh token and the access token is
+/// missing an expiry or expires within [skew] of [now].
+bool oauthAccessTokenNeedsRefresh(
+  Map<String, dynamic> settings, {
+  DateTime? now,
+  Duration skew = const Duration(seconds: 90),
+}) {
+  if (!isOauthCredential(settings)) return false;
+  final refresh = (settings['refreshToken'] ?? '').toString().trim();
+  if (refresh.isEmpty) return false;
+  final raw = (settings['tokenExpiresAt'] ?? '').toString().trim();
+  if (raw.isEmpty) return true;
+  final expires = DateTime.tryParse(raw);
+  if (expires == null) return true;
+  final n = (now ?? DateTime.now()).toUtc();
+  return !expires.toUtc().isAfter(n.add(skew));
+}
+
+/// True when [tokenExpiresAt] is in the past (or unparseable) for an OAuth row.
+bool oauthAccessTokenIsExpired(
+  Map<String, dynamic> settings, {
+  DateTime? now,
+}) {
+  if (!isOauthCredential(settings)) return false;
+  final raw = (settings['tokenExpiresAt'] ?? '').toString().trim();
+  if (raw.isEmpty) return false;
+  final expires = DateTime.tryParse(raw);
+  if (expires == null) return true;
+  return !expires.toUtc().isAfter((now ?? DateTime.now()).toUtc());
+}
 
 /// True when merged settings contain the secrets required to call [providerId].
 bool hasRequiredProviderSecrets(

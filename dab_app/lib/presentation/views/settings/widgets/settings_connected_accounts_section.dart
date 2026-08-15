@@ -192,11 +192,15 @@ class _OauthProviderCardState extends State<_OauthProviderCard> {
                   onPressed: widget.busy
                       ? null
                       : () async {
+                          setState(() {
+                            _ok = true;
+                            _message = l10n.settingsOauthOpened;
+                          });
                           final error = await widget.onConnect();
                           if (!mounted) return;
                           setState(() {
                             _ok = error == null;
-                            _message = error ?? l10n.settingsOauthOpened;
+                            _message = error;
                           });
                         },
                   child: Text(l10n.settingsConnectWithProvider(widget.title)),

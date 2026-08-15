@@ -21,4 +21,12 @@ abstract interface class IOauthTokenClient {
     Uri uri, {
     required Map<String, String> headers,
   });
+
+  /// Exchanges a refresh token for a new access token. Never logs secrets.
+  Future<Either<Failure, OauthTokenResponse>> refreshAccessToken({
+    required OauthProviderSpec spec,
+    required String clientId,
+    String? clientSecret,
+    required String refreshToken,
+  });
 }

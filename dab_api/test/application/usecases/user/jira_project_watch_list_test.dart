@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/entities/user/jira_project.dart';
 import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../fakes/fake_credential_resolver.dart';
+import '../../../fakes/fake_oauth_credential_refresher.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -16,6 +17,7 @@ class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 
 void main() {
   late FakeCredentialResolver resolver;
+  late FakeOauthCredentialRefresher oauth;
   late _MockCatalog catalog;
   late _MockConfigs configs;
   late GetJiraProjectWatchList getWatch;
@@ -29,6 +31,12 @@ void main() {
     settings: const {'projectKeys': 'DAB\nOPS'},
   );
 
+  const userSettings = {
+    'apiToken': 'atlassian_token',
+    'tokenType': 'oauth',
+    'cloudId': 'cloud-1',
+  };
+
   const projects = [
     JiraProject(key: 'DAB', name: 'DAB'),
     JiraProject(key: 'OPS', name: 'Ops'),
@@ -41,17 +49,12 @@ void main() {
   });
 
   setUp(() {
-    resolver = FakeCredentialResolver({
-      'user-1': {
-        'apiToken': 'atlassian_token',
-        'tokenType': 'oauth',
-        'cloudId': 'cloud-1',
-      },
-    });
+    resolver = FakeCredentialResolver({'user-1': userSettings});
+    oauth = FakeOauthCredentialRefresher({'user-1': userSettings});
     catalog = _MockCatalog();
     configs = _MockConfigs();
-    getWatch = GetJiraProjectWatchList(resolver, catalog, configs);
-    saveWatch = SaveJiraProjectWatchList(resolver, catalog, configs);
+    getWatch = GetJiraProjectWatchList(resolver, catalog, configs, oauth);
+    saveWatch = SaveJiraProjectWatchList(getWatch, configs, resolver);
     when(() => configs.getConfigs()).thenAnswer((_) async => Right([jiraConfig]));
     when(
       () => catalog.listAccessible(
@@ -70,7 +73,32 @@ void main() {
     final result = await getWatch.execute('user-1');
     final watch = result.getOrElse((l) => throw StateError(l.message));
     expect(watch.selected, ['DAB', 'OPS']);
-    expect(watch.available.map((p) => p.key), containsAll(['DAB', 'OPS', 'SKIP']));
+    expect(
+      watch.available.map((p) => p.key),
+      containsAll(['DAB', 'OPS', 'SKIP']),
+    );
+    expect(oauth.calls, 1);
+  });
+
+  test('retries catalog after an unauthorized response', () async {
+    var calls = 0;
+    when(
+      () => catalog.listAccessible(
+        settings: any(named: 'settings'),
+        orgConfig: any(named: 'orgConfig'),
+      ),
+    ).thenAnswer((_) async {
+      calls += 1;
+      if (calls == 1) {
+        return const Left(ValidationFailure('HTTP 401'));
+      }
+      return const Right(projects);
+    });
+
+    final result = await getWatch.execute('user-1');
+    expect(result.isRight(), isTrue);
+    expect(oauth.forced, isTrue);
+    expect(calls, 2);
   });
 
   test('saves only keys the caller can still see', () async {

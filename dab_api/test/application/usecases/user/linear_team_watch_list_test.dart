@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/entities/user/linear_team.dart';
 import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../fakes/fake_credential_resolver.dart';
+import '../../../fakes/fake_oauth_credential_refresher.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -16,6 +17,7 @@ class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 
 void main() {
   late FakeCredentialResolver resolver;
+  late FakeOauthCredentialRefresher oauth;
   late _MockCatalog catalog;
   late _MockConfigs configs;
   late GetLinearTeamWatchList getWatch;
@@ -29,6 +31,8 @@ void main() {
     settings: const {'teamKeys': 'ENG\nOPS'},
   );
 
+  const userSettings = {'apiKey': 'lin_oauth', 'tokenType': 'oauth'};
+
   const teams = [
     LinearTeam(key: 'ENG', name: 'Engineering'),
     LinearTeam(key: 'OPS', name: 'Ops'),
@@ -41,13 +45,12 @@ void main() {
   });
 
   setUp(() {
-    resolver = FakeCredentialResolver({
-      'user-1': {'apiKey': 'lin_oauth', 'tokenType': 'oauth'},
-    });
+    resolver = FakeCredentialResolver({'user-1': userSettings});
+    oauth = FakeOauthCredentialRefresher({'user-1': userSettings});
     catalog = _MockCatalog();
     configs = _MockConfigs();
-    getWatch = GetLinearTeamWatchList(resolver, catalog, configs);
-    saveWatch = SaveLinearTeamWatchList(resolver, catalog, configs);
+    getWatch = GetLinearTeamWatchList(resolver, catalog, configs, oauth);
+    saveWatch = SaveLinearTeamWatchList(getWatch, configs);
     when(
       () => configs.getConfigs(),
     ).thenAnswer((_) async => Right([linearConfig]));
@@ -87,9 +90,8 @@ void main() {
     final watch = result.getOrElse((l) => throw StateError(l.message));
     expect(watch.selected, ['ENG']);
 
-    final saved =
-        verify(() => configs.saveConfig(captureAny())).captured.single
-            as ProviderConfig;
+    final saved = verify(() => configs.saveConfig(captureAny())).captured.single
+        as ProviderConfig;
     expect(saved.settings['teamKeys'], 'ENG');
     expect(saved.isActive, isTrue);
   });

@@ -119,7 +119,7 @@ class SaveUserProviderCredential {
       id: previous?.id ?? '${userId}_$providerId',
       userId: userId,
       providerId: providerId,
-      settings: _secretOnly(settings, merged),
+      settings: _secretOnly(settings),
       status: UserProviderCredentialStatus.connected,
       createdAt: previous?.createdAt ?? now,
       updatedAt: now,
@@ -203,7 +203,7 @@ class SaveUserProviderCredential {
       id: '${userId}_$providerId',
       userId: userId,
       providerId: providerId,
-      settings: _secretOnly(merged, merged),
+      settings: _secretOnly(merged),
       status: UserProviderCredentialStatus.connected,
       createdAt: now,
       updatedAt: now,
@@ -297,14 +297,11 @@ class SaveUserProviderCredential {
     );
   }
 
-  Map<String, dynamic> _secretOnly(
-    Map<String, dynamic> incoming,
-    Map<String, dynamic> merged,
-  ) {
+  Map<String, dynamic> _secretOnly(Map<String, dynamic> incoming) {
     final out = <String, dynamic>{};
-    for (final key in {...incoming.keys, ...merged.keys}) {
+    for (final key in incoming.keys) {
       if (kProviderSecretSettingKeys.contains(key) || key.startsWith('api.')) {
-        final value = incoming[key] ?? merged[key];
+        final value = incoming[key];
         if (value != null && value.toString().trim().isNotEmpty) {
           out[key] = value;
         }
@@ -319,7 +316,7 @@ class SaveUserProviderCredential {
           key == 'tokenType' ||
           key == 'tokenExpiresAt' ||
           key == 'cloudId') {
-        final value = incoming[key] ?? merged[key];
+        final value = incoming[key];
         if (value != null) out[key] = value;
       }
     }

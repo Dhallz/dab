@@ -76,6 +76,7 @@ import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_oauth_credential_refresher.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_pkce.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_state_store.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_token_client.dart';
@@ -125,6 +126,7 @@ import 'package:dab_api/src/infrastructure/repositories/user_provider_credential
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/services/credential_resolver.dart';
 import 'package:dab_api/src/infrastructure/services/oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/infrastructure/services/oauth_credential_refresher.dart';
 import 'package:dab_api/src/infrastructure/services/oauth_state_store.dart';
 import 'package:dab_api/src/infrastructure/services/oauth_token_client.dart';
 import 'package:dab_api/src/infrastructure/services/provider_identity_probe.dart';
@@ -320,6 +322,14 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<IOauthTokenClient>(HttpOauthTokenClient());
   sl.registerSingleton<IOauthClientCredentialResolver>(
     OauthClientCredentialResolver(config),
+  );
+  sl.registerSingleton<IOauthCredentialRefresher>(
+    OauthCredentialRefresher(
+      sl<AbsIUserProviderCredentialRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<IOauthClientCredentialResolver>(),
+      sl<IOauthTokenClient>(),
+    ),
   );
 
   // -----------------------------------------------------
@@ -619,13 +629,14 @@ Future<void> serviceLocator() async {
       sl<ICredentialResolver>(),
       sl<IJiraProjectCatalog>(),
       sl<AbsIProviderConfigRepository>(),
+      sl<IOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveJiraProjectWatchList>(
     SaveJiraProjectWatchList(
-      sl<ICredentialResolver>(),
-      sl<IJiraProjectCatalog>(),
+      sl<GetJiraProjectWatchList>(),
       sl<AbsIProviderConfigRepository>(),
+      sl<ICredentialResolver>(),
     ),
   );
   sl.registerSingleton<ILinearTeamCatalog>(LinearTeamCatalog(graphqlProtocol));
@@ -634,12 +645,12 @@ Future<void> serviceLocator() async {
       sl<ICredentialResolver>(),
       sl<ILinearTeamCatalog>(),
       sl<AbsIProviderConfigRepository>(),
+      sl<IOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveLinearTeamWatchList>(
     SaveLinearTeamWatchList(
-      sl<ICredentialResolver>(),
-      sl<ILinearTeamCatalog>(),
+      sl<GetLinearTeamWatchList>(),
       sl<AbsIProviderConfigRepository>(),
     ),
   );

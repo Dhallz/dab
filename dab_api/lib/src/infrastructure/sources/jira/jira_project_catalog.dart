@@ -39,6 +39,9 @@ class JiraProjectCatalog implements IJiraProjectCatalog {
       projects.sort((a, b) => a.key.compareTo(b.key));
       return Right(projects);
     } on JsonRestProtocolException catch (e) {
+      if (e.statusCode == 401 || e.statusCode == 403) {
+        return const Left(ValidationFailure('HTTP 401'));
+      }
       return Left(ValidationFailure(e.message));
     } catch (_) {
       return const Left(ValidationFailure('Could not list Jira projects'));
@@ -60,9 +63,10 @@ Future<List<dynamic>> listJiraProjectRows(
     );
     final values = body['values'];
     if (values is List) return values;
-  } on JsonRestProtocolException {
-    // Classic `/project` remains valid on some Cloud sites.
-  }
+    } on JsonRestProtocolException catch (e) {
+      if (e.statusCode == 401 || e.statusCode == 403) rethrow;
+      // Classic `/project` remains valid on some Cloud sites.
+    }
   return jsonRest.getJsonList(
     Uri.parse('${auth.apiBase}/rest/api/3/project'),
     headers: auth.headers,

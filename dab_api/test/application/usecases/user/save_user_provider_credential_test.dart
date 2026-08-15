@@ -217,7 +217,7 @@ void main() {
           name: 'Jira',
           baseUrl: 'https://acme.atlassian.net',
           isActive: true,
-          settings: const {},
+          settings: const {'api.token': 'org-pat'},
         ),
       ]),
     );
@@ -268,5 +268,11 @@ void main() {
         verify(() => configs.saveConfig(captureAny())).captured.single
             as ProviderConfig;
     expect(savedConfig.settings['projectKeys'], 'DAB\nOPS');
+
+    final savedCred =
+        verify(() => creds.save(captureAny())).captured.single
+            as UserProviderCredential;
+    expect(savedCred.settings['apiToken'], 'atlassian_token');
+    expect(savedCred.settings.containsKey('api.token'), isFalse);
   });
 }

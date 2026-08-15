@@ -71,4 +71,19 @@ void main() {
       );
     });
   });
+
+  group('jiraRequestAuth', () {
+    test('OAuth uses the user apiToken even when org api.token is present', () {
+      final auth = jiraRequestAuth({
+        'api.token': 'org-pat',
+        'apiToken': 'oauth-access',
+        'tokenType': 'oauth',
+        'cloudId': 'cloud-1',
+        'instanceUrl': 'https://acme.atlassian.net',
+      });
+      expect(auth, isNotNull);
+      expect(auth!.apiBase, 'https://api.atlassian.com/ex/jira/cloud-1');
+      expect(auth.headers['Authorization'], 'Bearer oauth-access');
+    });
+  });
 }
