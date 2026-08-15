@@ -6,6 +6,14 @@ part 'admin_section.mapper.dart';
 @MappableEnum()
 enum AdminSection { providers, identities, security }
 
+/// Sections shown in the Admin shell. Personal mode hides Identities.
+List<AdminSection> adminSectionsFor({required bool isPersonal}) {
+  if (isPersonal) {
+    return const [AdminSection.security, AdminSection.providers];
+  }
+  return AdminSection.values;
+}
+
 extension OnAdminSection on AdminSection {
   /// Localized section title for admin shell headers and selectors.
   String localizedTitle(AppLocalizations l10n) => switch (this) {

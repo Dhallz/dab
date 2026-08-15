@@ -21,7 +21,10 @@ extension AuthContext on Request {
 /// CONTRACT: Implements [MiddlewareObject] to verify Bearer tokens via [JwtProvider].
 /// CONSTRAINTS: Must fail early with 401 Unauthorized for invalid or missing tokens.
 class AuthMiddleware extends MiddlewareObject {
-  final JwtProvider _jwtProvider = sl<JwtProvider>();
+  AuthMiddleware({JwtProvider? jwtProvider})
+    : _jwtProvider = jwtProvider ?? sl<JwtProvider>();
+
+  final JwtProvider _jwtProvider;
 
   /// Bootstrap endpoints that must work before login. Relic [Router.use] composes
   /// middleware along path prefixes; this bypass guarantees no accidental wrap.
@@ -45,15 +48,14 @@ class AuthMiddleware extends MiddlewareObject {
         return await next(request);
       }
 
-      final authHeader = _readAuthorizationHeader(request);
+      final token = _readBearerToken(request);
 
-      if (authHeader == null || !authHeader.startsWith('Bearer ')) {
+      if (token == null) {
         return Response.unauthorized(
           body: Body.fromString('Missing or invalid token'),
         );
       }
 
-      final token = authHeader.substring(7);
       final jwt = _jwtProvider.verifyToken(token);
 
       if (jwt == null) {
@@ -69,7 +71,26 @@ class AuthMiddleware extends MiddlewareObject {
     };
   }
 
-  String? _readAuthorizationHeader(Request request) {
+  /// Relic stores Authorization as a typed header; raw map lookup can miss it
+  /// depending on how dart:io folded the name. Prefer the typed accessor.
+  static String? _readBearerToken(Request request) {
+    try {
+      final auth = request.headers.authorization;
+      if (auth is BearerAuthorizationHeader) {
+        final token = auth.token.trim();
+        return token.isEmpty ? null : token;
+      }
+    } on HeaderException {
+      // Malformed Authorization — try the raw value below.
+    }
+
+    final raw = _rawAuthorizationHeader(request);
+    if (raw == null || !raw.startsWith('Bearer ')) return null;
+    final token = raw.substring(7).trim();
+    return token.isEmpty ? null : token;
+  }
+
+  static String? _rawAuthorizationHeader(Request request) {
     final direct = request.headers['Authorization'];
     if (direct != null && direct.isNotEmpty) {
       return direct.first;

@@ -114,6 +114,9 @@ void main() {
       () => presenceService.broadcastToUser(any(), any(), any()),
     ).thenReturn(null);
     when(
+      () => redisService.recordLiveIngestSuccess(any()),
+    ).thenAnswer((_) async {});
+    when(
       () => redisService.reserveIngestionEventId(any(), any()),
     ).thenAnswer((_) async => true);
     when(

@@ -81,10 +81,11 @@ activities                  ← Base table: id, userId, providerName, title, con
 | `activity_discord_message` | Discord message-specific metadata |
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
+| `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
-| `provider_configs` | External provider configuration |
-| `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`) |
+| `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |
+| `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`) |
 
 Identity linkage (`user_identities`) is the runtime source of provider
 participation for activity fetchers. Legacy tenants with historical
@@ -94,7 +95,15 @@ participation for activity fetchers. Legacy tenants with historical
 Slack ingestion is read-only and identity-gated: only messages authored by
 linked Slack identities (`provider_id='slack'`) are attributed. Provider
 credentials are stored in `provider_configs.settings` (`botToken`, optional
-`channels`, optional `apiBaseUrl`).
+`channels`, optional `apiBaseUrl`, plus OAuth `clientId`/`clientSecret` in
+personal mode) for instance bots and OAuth apps, or in
+`user_provider_credentials.settings` (encrypted) for user OAuth tokens / PATs.
+OAuth CSRF/PKCE state lives in Redis `oauth:state:{id}` (TTL ~10 minutes). Changing
+`DAB_CREDENTIALS_KEY` invalidates stored user tokens.
+
+A background `ActivityLivePollScheduler` ticks immediately on API start, then
+every ~45s, filling Redis + WebSocket when webhooks are absent. It skips a
+provider whose `live:last_ingest:{id}` is fresh.
 
 ---
 
@@ -223,9 +232,20 @@ REDIS_HOST=
 REDIS_PORT=6379
 JWT_SECRET=
 JWT_EXPIRY_MINUTES=60
+DAB_CREDENTIALS_KEY=
 DAB_ALLOWED_DOMAIN=
 PORT=8080
 DAB_INITIAL_ADMIN_EMAIL=
+DAB_GITHUB_OAUTH_CLIENT_ID=
+DAB_GITHUB_OAUTH_CLIENT_SECRET=
+DAB_GITLAB_OAUTH_CLIENT_ID=
+DAB_GITLAB_OAUTH_CLIENT_SECRET=
+DAB_LINEAR_OAUTH_CLIENT_ID=
+DAB_LINEAR_OAUTH_CLIENT_SECRET=
+DAB_BITBUCKET_OAUTH_CLIENT_ID=
+DAB_BITBUCKET_OAUTH_CLIENT_SECRET=
+DAB_JIRA_OAUTH_CLIENT_ID=
+DAB_JIRA_OAUTH_CLIENT_SECRET=
 ```
 Production compose currently configures DB + API; if Redis is not in compose, provide an external Redis and set `REDIS_HOST` / `REDIS_PORT`.
 

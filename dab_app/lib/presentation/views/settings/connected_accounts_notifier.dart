@@ -1,0 +1,336 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../domain/containers/user_usecases.dart';
+import '../../../domain/entities/user/jira_project_watch_list.dart';
+import '../../../domain/entities/user/user_provider_credential_summary.dart';
+import '../../../services/service_locator.dart';
+import '../../core/models/view_status.dart';
+import '../../features/app/app_notifier.dart';
+
+/// [ARCH: PRESENTATION]
+/// ROLE: Settings connected-accounts state — list, connect, test, disconnect.
+final connectedAccountsNotifierProvider =
+    NotifierProvider.autoDispose<
+      ConnectedAccountsNotifier,
+      ConnectedAccountsState
+    >(ConnectedAccountsNotifier.new);
+
+class ConnectedAccountsState {
+  final ViewStatus status;
+  final List<UserProviderCredentialSummary> credentials;
+  final String? errorMessage;
+  final String? busyProviderId;
+  final JiraProjectWatchList? jiraProjects;
+  final List<String> jiraDraftKeys;
+  final bool jiraProjectsLoading;
+  final bool jiraProjectsSaving;
+
+  const ConnectedAccountsState({
+    this.status = ViewStatus.initial,
+    this.credentials = const [],
+    this.errorMessage,
+    this.busyProviderId,
+    this.jiraProjects,
+    this.jiraDraftKeys = const [],
+    this.jiraProjectsLoading = false,
+    this.jiraProjectsSaving = false,
+  });
+
+  UserProviderCredentialSummary? forProvider(String providerId) {
+    for (final cred in credentials) {
+      if (cred.providerId == providerId) return cred;
+    }
+    return null;
+  }
+
+  bool get jiraDraftDirty {
+    final saved = {...(jiraProjects?.selected ?? const <String>[])};
+    final draft = {...jiraDraftKeys};
+    return saved.length != draft.length || !saved.containsAll(draft);
+  }
+
+  ConnectedAccountsState copyWith({
+    ViewStatus? status,
+    List<UserProviderCredentialSummary>? credentials,
+    String? errorMessage,
+    String? busyProviderId,
+    JiraProjectWatchList? jiraProjects,
+    List<String>? jiraDraftKeys,
+    bool? jiraProjectsLoading,
+    bool? jiraProjectsSaving,
+    bool clearBusy = false,
+    bool clearJiraProjects = false,
+  }) {
+    return ConnectedAccountsState(
+      status: status ?? this.status,
+      credentials: credentials ?? this.credentials,
+      errorMessage: errorMessage,
+      busyProviderId: clearBusy ? null : (busyProviderId ?? this.busyProviderId),
+      jiraProjects: clearJiraProjects
+          ? null
+          : (jiraProjects ?? this.jiraProjects),
+      jiraDraftKeys: clearJiraProjects
+          ? const []
+          : (jiraDraftKeys ?? this.jiraDraftKeys),
+      jiraProjectsLoading: jiraProjectsLoading ?? this.jiraProjectsLoading,
+      jiraProjectsSaving: jiraProjectsSaving ?? this.jiraProjectsSaving,
+    );
+  }
+}
+
+class ConnectedAccountsNotifier extends AutoDisposeNotifier<ConnectedAccountsState> {
+  UserUseCases get _users => sl.userUseCases;
+
+  @override
+  ConnectedAccountsState build() {
+    Future.microtask(refresh);
+    return const ConnectedAccountsState();
+  }
+
+  Future<void> refresh() async {
+    state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
+    final result = await _users.listMyCredentials.execute();
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (list) {
+        state = state.copyWith(
+          status: ViewStatus.success,
+          credentials: list,
+          errorMessage: null,
+        );
+        unawaited(_maybeLoadJiraProjects(list));
+      },
+    );
+  }
+
+  Future<String?> connect(
+    String providerId,
+    Map<String, dynamic> settings,
+  ) async {
+    state = state.copyWith(busyProviderId: providerId, errorMessage: null);
+    final result = await _users.saveMyCredential.execute(
+      providerId: providerId,
+      settings: settings,
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          clearBusy: true,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (summary) {
+        final next = [
+          for (final cred in state.credentials)
+            if (cred.providerId != providerId) cred,
+          summary,
+        ];
+        state = state.copyWith(
+          credentials: next,
+          clearBusy: true,
+          status: ViewStatus.success,
+        );
+        unawaitedRefreshHealth();
+        return null;
+      },
+    );
+  }
+
+  /// Opens the provider authorize URL and polls until the credential appears.
+  Future<String?> startOauth(String providerId) async {
+    state = state.copyWith(busyProviderId: providerId, errorMessage: null);
+    final result = await _users.startMyOauth.execute(providerId: providerId);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          clearBusy: true,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (url) async {
+        final uri = Uri.tryParse(url);
+        if (uri == null) {
+          state = state.copyWith(
+            clearBusy: true,
+            errorMessage: 'Invalid authorization URL',
+          );
+          return 'Invalid authorization URL';
+        }
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          state = state.copyWith(
+            clearBusy: true,
+            errorMessage: 'Could not open the browser',
+          );
+          return 'Could not open the browser';
+        }
+        await _pollUntilConnected(providerId);
+        return null;
+      },
+    );
+  }
+
+  Future<void> _pollUntilConnected(String providerId) async {
+    for (var i = 0; i < 45; i++) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      final result = await _users.listMyCredentials.execute();
+      final list = result.getOrElse((_) => state.credentials);
+      UserProviderCredentialSummary? summary;
+      for (final cred in list) {
+        if (cred.providerId == providerId) {
+          summary = cred;
+          break;
+        }
+      }
+      if (summary?.isConnected == true) {
+        state = state.copyWith(
+          credentials: list,
+          clearBusy: true,
+          status: ViewStatus.success,
+        );
+        unawaitedRefreshHealth();
+        if (providerId == 'jira') {
+          await loadJiraProjects();
+        }
+        return;
+      }
+    }
+    state = state.copyWith(clearBusy: true);
+  }
+
+  Future<void> _maybeLoadJiraProjects(
+    List<UserProviderCredentialSummary> list,
+  ) async {
+    final jira = list.where((c) => c.providerId == 'jira').firstOrNull;
+    if (jira?.isConnected != true) {
+      state = state.copyWith(clearJiraProjects: true);
+      return;
+    }
+    await loadJiraProjects();
+  }
+
+  Future<void> loadJiraProjects() async {
+    state = state.copyWith(jiraProjectsLoading: true);
+    final result = await _users.listMyJiraProjects.execute();
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          jiraProjectsLoading: false,
+          errorMessage: failure.message,
+        );
+      },
+      (watch) {
+        state = state.copyWith(
+          jiraProjectsLoading: false,
+          jiraProjects: watch,
+          jiraDraftKeys: List<String>.from(watch.selected),
+          errorMessage: null,
+        );
+      },
+    );
+  }
+
+  void toggleJiraProject(String key) {
+    final next = [...state.jiraDraftKeys];
+    if (next.contains(key)) {
+      next.remove(key);
+    } else {
+      next.add(key);
+    }
+    state = state.copyWith(jiraDraftKeys: next);
+  }
+
+  Future<String?> saveJiraProjects() async {
+    state = state.copyWith(jiraProjectsSaving: true, errorMessage: null);
+    final result = await _users.saveMyJiraProjects.execute(
+      projectKeys: state.jiraDraftKeys,
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          jiraProjectsSaving: false,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (watch) {
+        state = state.copyWith(
+          jiraProjectsSaving: false,
+          jiraProjects: watch,
+          jiraDraftKeys: List<String>.from(watch.selected),
+        );
+        unawaitedRefreshHealth();
+        return null;
+      },
+    );
+  }
+
+  Future<String?> test(
+    String providerId, {
+    Map<String, dynamic>? settings,
+  }) async {
+    state = state.copyWith(busyProviderId: providerId, errorMessage: null);
+    final result = await _users.testMyCredential.execute(
+      providerId: providerId,
+      settings: settings,
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          clearBusy: true,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (_) {
+        state = state.copyWith(clearBusy: true);
+        return null;
+      },
+    );
+  }
+
+  Future<String?> disconnect(String providerId) async {
+    state = state.copyWith(busyProviderId: providerId, errorMessage: null);
+    final result = await _users.deleteMyCredential.execute(
+      providerId: providerId,
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          clearBusy: true,
+          errorMessage: failure.message,
+        );
+        return failure.message;
+      },
+      (_) {
+        state = state.copyWith(
+          credentials: [
+            for (final cred in state.credentials)
+              if (cred.providerId != providerId) cred,
+          ],
+          clearBusy: true,
+          clearJiraProjects: providerId == 'jira',
+        );
+        unawaitedRefreshHealth();
+        return null;
+      },
+    );
+  }
+
+  void unawaitedRefreshHealth() {
+    ref.read(appNotifierProvider.notifier).refreshProviderConnectionStatuses();
+  }
+}

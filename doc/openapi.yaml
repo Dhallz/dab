@@ -963,6 +963,10 @@ paths:
                         type: string
                         example: UTC
                         description: IANA organization timezone for calendar-day boundaries.
+                      deploymentMode:
+                        type: string
+                        enum: [organization, personal]
+                        description: Organization (Admin-owned tokens) or personal/small-team (Settings PATs, shared live wall).
                   meta:
                     type: object
                     properties:
@@ -1003,6 +1007,186 @@ paths:
                       $ref: '#/components/schemas/User'
                   meta:
                     type: object
+  /users/me/credentials:
+    get:
+      summary: List masked provider credentials for the authenticated user
+      description: |
+        Returns connected providers and linked identity labels. Secrets are never included.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Masked credential summaries
+  /users/me/credentials/{provider}:
+    put:
+      summary: Save a personal credential (Phorge Conduit token; OAuth providers prefer /oauth/start)
+      description: |
+        Runs whoami, links `UserIdentity` as `linked`, and may seed a watch list
+        on `provider_configs` when empty. Prefer `POST .../oauth/start` for GitHub,
+        GitLab, Linear, Bitbucket, and Jira. Never returns secrets.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  additionalProperties: true
+            example:
+              settings:
+                api.token: ghp_example
+      responses:
+        '200':
+          description: Masked credential summary
+        '400':
+          description: Validation or whoami failure
+    delete:
+      summary: Disconnect the authenticated user's credential for a provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+  /users/me/credentials/{provider}/oauth/start:
+    post:
+      summary: Start browser OAuth for a provider
+      description: |
+        Returns `{ authorizationUrl }` for GitHub, GitLab, Linear, Bitbucket, or Jira.
+        PKCE verifier is stored in Redis and never returned. Requires an Admin OAuth
+        app (`clientId`) and `public_api_url`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authorization URL
+        '400':
+          description: Provider not OAuth-capable or OAuth app not configured
+  /users/me/credentials/{provider}/projects:
+    get:
+      summary: List Jira projects for the watch-list picker
+      description: |
+        Jira only. Returns `{ available: [{ key, name }], selected: [keys] }` from
+        the caller's OAuth token and instance `provider_configs.settings.projectKeys`.
+        Requires a connected Jira credential. Never returns tokens.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [jira]
+      responses:
+        '200':
+          description: Available and selected project keys
+        '400':
+          description: Not Jira, or Jira is not connected
+    put:
+      summary: Save Jira projects DAB should watch
+      description: |
+        Jira only. Replaces instance `projectKeys` with keys the caller can still
+        see. Shared with the team. Body `{ "projectKeys": ["DAB", "OPS"] }`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [jira]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectKeys:
+                  type: array
+                  items:
+                    type: string
+            example:
+              projectKeys: [DAB, OPS]
+      responses:
+        '200':
+          description: Updated watch list
+        '400':
+          description: Not Jira, or Jira is not connected
+  /integrations/{provider}/oauth/callback:
+    get:
+      summary: Public OAuth callback
+      description: |
+        Provider redirect. No JWT. Exchanges code+state, stores encrypted credentials,
+        returns HTML. Never includes tokens in the body.
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML success page
+        '400':
+          description: Invalid or expired state
+  /users/me/credentials/{provider}/test:
+    post:
+      summary: Test stored or posted credentials
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Probe succeeded
+        '400':
+          description: Probe failed
   /users/{id}:
     get:
       summary: Get a specific user by ID
@@ -1295,7 +1479,7 @@ paths:
         | :--- | :--- | :--- | :--- |
         | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
-        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
       security:
         - bearerAuth: []
@@ -1334,7 +1518,7 @@ paths:
         | :--- | :--- | :--- | :--- |
         | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
-        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
       security:
         - bearerAuth: []

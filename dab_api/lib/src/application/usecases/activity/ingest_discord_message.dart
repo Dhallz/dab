@@ -10,6 +10,7 @@ import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/sources/discord/discord_message_source.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Discord Gateway `MESSAGE_CREATE` dispatches into the DAB
@@ -26,14 +27,16 @@ class IngestDiscordMessage {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final RedisService _redisService;
   final PresenceService _presenceService;
+  final ActivityLivePublisher? _livePublisher;
 
   IngestDiscordMessage(
     this._userRepository,
     this._activityRepository,
     this._providerConfigRepository,
     this._redisService,
-    this._presenceService,
-  );
+    this._presenceService, {
+    ActivityLivePublisher? livePublisher,
+  }) : _livePublisher = livePublisher;
 
   Future<Either<Failure, DiscordMessageIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -141,12 +144,11 @@ class IngestDiscordMessage {
         return Left(createResult.getLeft().toNullable()!);
       }
       ingestedCount++;
-      await _redisService.incrementVersion();
-      await _redisService.fanOutActivity(activity);
-      _presenceService.broadcastToUser(
-        activity.userId,
-        'ACTIVITY_RECEIVED',
-        activity.toMap(),
+      await ActivityLivePublisher.emit(
+        redis: _redisService,
+        presence: _presenceService,
+        activity: activity,
+        publisher: _livePublisher,
       );
       print(
         '[DISCORD_GATEWAY] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

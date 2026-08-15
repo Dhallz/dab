@@ -41,6 +41,13 @@ class UserMapper extends ClassMapperBase<User> {
     _$avatarUrl,
     opt: true,
   );
+  static List<String> _$linkedProviderIds(User v) => v.linkedProviderIds;
+  static const Field<User, List<String>> _f$linkedProviderIds = Field(
+    'linkedProviderIds',
+    _$linkedProviderIds,
+    opt: true,
+    def: const [],
+  );
 
   @override
   final MappableFields<User> fields = const {
@@ -49,6 +56,7 @@ class UserMapper extends ClassMapperBase<User> {
     #email: _f$email,
     #role: _f$role,
     #avatarUrl: _f$avatarUrl,
+    #linkedProviderIds: _f$linkedProviderIds,
   };
 
   static User _instantiate(DecodingData data) {
@@ -58,6 +66,7 @@ class UserMapper extends ClassMapperBase<User> {
       email: data.dec(_f$email),
       role: data.dec(_f$role),
       avatarUrl: data.dec(_f$avatarUrl),
+      linkedProviderIds: data.dec(_f$linkedProviderIds),
     );
   }
 
@@ -107,12 +116,15 @@ extension UserValueCopy<$R, $Out> on ObjectCopyWith<$R, User, $Out> {
 
 abstract class UserCopyWith<$R, $In extends User, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get linkedProviderIds;
   $R call({
     String? id,
     String? name,
     String? email,
     UserRole? role,
     String? avatarUrl,
+    List<String>? linkedProviderIds,
   });
   UserCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -124,12 +136,20 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
   @override
   late final ClassMapperBase<User> $mapper = UserMapper.ensureInitialized();
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get linkedProviderIds => ListCopyWith(
+    $value.linkedProviderIds,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(linkedProviderIds: v),
+  );
+  @override
   $R call({
     String? id,
     String? name,
     String? email,
     UserRole? role,
     Object? avatarUrl = $none,
+    List<String>? linkedProviderIds,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -137,6 +157,7 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
       if (email != null) #email: email,
       if (role != null) #role: role,
       if (avatarUrl != $none) #avatarUrl: avatarUrl,
+      if (linkedProviderIds != null) #linkedProviderIds: linkedProviderIds,
     }),
   );
   @override
@@ -146,6 +167,10 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     email: data.get(#email, or: $value.email),
     role: data.get(#role, or: $value.role),
     avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
+    linkedProviderIds: data.get(
+      #linkedProviderIds,
+      or: $value.linkedProviderIds,
+    ),
   );
 
   @override

@@ -7,6 +7,8 @@ import '../../domain/entities/user/user.dart';
 import '../../domain/entities/user/user_role.dart';
 import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
+import '../../domain/entities/user/user_provider_credential_summary.dart';
+import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
 import '../core/remote/rest_api_client.dart';
 import './core/repository.dart';
@@ -26,9 +28,18 @@ class UserRepository extends Repository implements IUserRepository {
       final response = await _client.get('/users');
       final data = _getEnvelopeData(response);
       if (data is List) {
-        return data
-            .map((e) => UserMapper.fromMap(e as Map<String, dynamic>))
-            .toList();
+        final users = <User>[];
+        for (final entry in data) {
+          if (entry is! Map) continue;
+          try {
+            users.add(
+              UserMapper.fromMap(Map<String, dynamic>.from(entry)),
+            );
+          } catch (_) {
+            continue;
+          }
+        }
+        return users;
       }
       return [];
     });
@@ -185,6 +196,109 @@ class UserRepository extends Repository implements IUserRepository {
   }) async {
     return guardedCall(() async {
       await _client.dio.delete('/admin/identities/$identityId');
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<UserProviderCredentialSummary>>>
+  listMyCredentials() {
+    return guardedCall(() async {
+      final response = await _client.get('/users/me/credentials');
+      final data = _getEnvelopeData(response);
+      if (data is List) {
+        return data
+            .whereType<Map>()
+            .map(
+              (e) => UserProviderCredentialSummary.fromMap(
+                Map<String, dynamic>.from(e),
+              ),
+            )
+            .toList();
+      }
+      return const <UserProviderCredentialSummary>[];
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, UserProviderCredentialSummary>> saveMyCredential({
+    required String providerId,
+    required Map<String, dynamic> settings,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.dio.put(
+        '/users/me/credentials/$providerId',
+        data: {'settings': settings},
+      );
+      final data = _getEnvelopeData(response);
+      return UserProviderCredentialSummary.fromMap(
+        Map<String, dynamic>.from(data as Map),
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> testMyCredential({
+    required String providerId,
+    Map<String, dynamic>? settings,
+  }) {
+    return guardedCall(() async {
+      await _client.dio.post(
+        '/users/me/credentials/$providerId/test',
+        data: settings == null ? null : {'settings': settings},
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> deleteMyCredential({
+    required String providerId,
+  }) {
+    return guardedCall(() async {
+      await _client.dio.delete('/users/me/credentials/$providerId');
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, String>> startMyOauth({
+    required String providerId,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.dio.post(
+        '/users/me/credentials/$providerId/oauth/start',
+      );
+      final data = _getEnvelopeData(response);
+      if (data is Map) {
+        final url = (data['authorizationUrl'] ?? '').toString();
+        if (url.isNotEmpty) return url;
+      }
+      throw StateError('OAuth start did not return an authorization URL');
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, JiraProjectWatchList>> listMyJiraProjects() {
+    return guardedCall(() async {
+      final response = await _client.get('/users/me/credentials/jira/projects');
+      final data = _getEnvelopeData(response);
+      return JiraProjectWatchList.fromMap(
+        Map<String, dynamic>.from(data as Map),
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, JiraProjectWatchList>> saveMyJiraProjects({
+    required List<String> projectKeys,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.put(
+        '/users/me/credentials/jira/projects',
+        data: {'projectKeys': projectKeys},
+      );
+      final data = _getEnvelopeData(response);
+      return JiraProjectWatchList.fromMap(
+        Map<String, dynamic>.from(data as Map),
+      );
     });
   }
 

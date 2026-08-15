@@ -9,9 +9,11 @@ import 'package:dab_api/src/presentation/controllers/auth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/group_controller.dart';
 import 'package:dab_api/src/presentation/controllers/health_controller.dart';
 import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
+import 'package:dab_api/src/presentation/controllers/oauth_controller.dart';
 import 'package:dab_api/src/presentation/controllers/user_controller.dart';
 import 'package:dab_api/src/presentation/middlewares/admin_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
+import 'package:dab_api/src/application/services/activity_live_poll_scheduler.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
@@ -31,6 +33,7 @@ Future<void> main() async {
   // 2. Start the daily org-timezone midnight purge of stale live-feed entries
   //    (archived or older than the current org calendar day).
   sl<ActivityPurgeScheduler>().start();
+  sl<ActivityLivePollScheduler>().start();
 
   // 3. Start the Discord Gateway client (live Dashboard ingestion) when the
   //    Discord provider is active. No-op otherwise.
@@ -88,6 +91,10 @@ Future<void> main() async {
       '/integrations/bitbucket/webhook',
       ActivityController().receiveBitbucketWebhook,
     )
+    ..get(
+      '/integrations/:provider/oauth/callback',
+      OauthController().callback,
+    )
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
@@ -98,6 +105,31 @@ Future<void> main() async {
     ..get('/metadata/providers', MetadataController().getProviders)
     ..get('/metadata/capabilities', MetadataController().getCapabilities)
     ..use('/users', AuthMiddleware().call)
+    ..get('/users/me/credentials', UserController().listMyCredentials)
+    ..post(
+      '/users/me/credentials/:provider/oauth/start',
+      UserController().startMyOauth,
+    )
+    ..get(
+      '/users/me/credentials/:provider/projects',
+      UserController().getMyJiraProjects,
+    )
+    ..put(
+      '/users/me/credentials/:provider/projects',
+      UserController().saveMyJiraProjects,
+    )
+    ..put(
+      '/users/me/credentials/:provider',
+      UserController().saveMyCredential,
+    )
+    ..post(
+      '/users/me/credentials/:provider/test',
+      UserController().testMyCredential,
+    )
+    ..delete(
+      '/users/me/credentials/:provider',
+      UserController().deleteMyCredential,
+    )
     ..get('/users', UserController().getUsers)
     ..get('/users/:id', UserController().getUser)
     ..post('/users/sync', UserController().syncUsers)

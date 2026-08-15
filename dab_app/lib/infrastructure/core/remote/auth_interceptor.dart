@@ -5,9 +5,19 @@ import '../local/token_storage.dart';
 class AuthInterceptor extends Interceptor {
   final TokenStorage _tokenStorage;
   Future<void> Function()? onRefreshToken;
-  Future<void>? _refreshFuture;
 
-  AuthInterceptor(this._tokenStorage, {this.onRefreshToken});
+  /// Called after tokens are cleared because refresh failed or none exist.
+  /// Presentation should sign the user out so the router leaves protected views.
+  Future<void> Function()? onSessionExpired;
+
+  Future<void>? _refreshFuture;
+  Future<void>? _expireFuture;
+
+  AuthInterceptor(
+    this._tokenStorage, {
+    this.onRefreshToken,
+    this.onSessionExpired,
+  });
 
   /// Dio sometimes leaves [RequestOptions.path] without a leading `/` while
   /// [RequestOptions.uri.path] is correct — and `metadata/configs` does **not**
@@ -61,6 +71,7 @@ class AuthInterceptor extends Interceptor {
 
     final tokens = await _tokenStorage.readTokens();
     if (tokens != null && tokens['accessToken'] != null) {
+      _expireFuture = null;
       options.headers['Authorization'] = 'Bearer ${tokens['accessToken']}';
     }
 
@@ -75,34 +86,46 @@ class AuthInterceptor extends Interceptor {
     final ro = err.requestOptions;
 
     if (err.response?.statusCode == 401 &&
-        onRefreshToken != null &&
         !_isRefreshRequest(ro) &&
         !_skipBearer(ro)) {
       final existing = await _tokenStorage.readTokens();
-      if (existing == null || existing['refreshToken'] == null) {
-        return handler.next(err);
-      }
-      try {
-        _refreshFuture ??= onRefreshToken!();
-        await _refreshFuture;
-        _refreshFuture = null;
+      final refreshToken = existing?['refreshToken'];
+      if (refreshToken != null &&
+          refreshToken.isNotEmpty &&
+          onRefreshToken != null) {
+        try {
+          _refreshFuture ??= onRefreshToken!();
+          await _refreshFuture;
+          _refreshFuture = null;
 
-        // Retry the request with the new token
-        final tokens = await _tokenStorage.readTokens();
-        if (tokens != null && tokens['accessToken'] != null) {
-          final options = err.requestOptions;
-          options.headers['Authorization'] = 'Bearer ${tokens['accessToken']}';
+          final tokens = await _tokenStorage.readTokens();
+          if (tokens != null && tokens['accessToken'] != null) {
+            final options = err.requestOptions;
+            options.headers['Authorization'] =
+                'Bearer ${tokens['accessToken']}';
 
-          final dio = Dio(BaseOptions(baseUrl: options.baseUrl));
-          final response = await dio.fetch(options);
-          return handler.resolve(response);
+            final dio = Dio(BaseOptions(baseUrl: options.baseUrl));
+            final response = await dio.fetch(options);
+            return handler.resolve(response);
+          }
+        } catch (_) {
+          _refreshFuture = null;
+          await _expireSession();
+          return handler.next(err);
         }
-      } catch (e) {
-        _refreshFuture = null;
-        // Refresh failed, clear tokens and continue with error
-        await _tokenStorage.clear();
       }
+
+      await _expireSession();
     }
     return handler.next(err);
+  }
+
+  Future<void> _expireSession() {
+    _expireFuture ??= () async {
+      await _tokenStorage.clear();
+      final callback = onSessionExpired;
+      if (callback != null) await callback();
+    }();
+    return _expireFuture!;
   }
 }

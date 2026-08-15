@@ -9,6 +9,7 @@ import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/sources/phorge/phorge_task_source.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Phorge Herald webhooks into the DAB live pipeline.
@@ -25,6 +26,7 @@ class IngestPhorgeWebhook {
   final PhorgeTaskSource _taskSource;
   final RedisService _redisService;
   final PresenceService _presenceService;
+  final ActivityLivePublisher? _livePublisher;
 
   IngestPhorgeWebhook(
     this._userRepository,
@@ -32,8 +34,9 @@ class IngestPhorgeWebhook {
     this._providerConfigRepository,
     this._taskSource,
     this._redisService,
-    this._presenceService,
-  );
+    this._presenceService, {
+    ActivityLivePublisher? livePublisher,
+  }) : _livePublisher = livePublisher;
 
   Future<Either<Failure, PhorgeWebhookIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -173,12 +176,11 @@ class IngestPhorgeWebhook {
         return Left(createResult.getLeft().toNullable()!);
       }
       ingestedCount++;
-      await _redisService.incrementVersion();
-      await _redisService.fanOutActivity(activity);
-      _presenceService.broadcastToUser(
-        activity.userId,
-        'ACTIVITY_RECEIVED',
-        activity.toMap(),
+      await ActivityLivePublisher.emit(
+        redis: _redisService,
+        presence: _presenceService,
+        activity: activity,
+        publisher: _livePublisher,
       );
       print(
         '[PHORGE_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

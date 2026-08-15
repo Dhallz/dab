@@ -13,6 +13,7 @@ import 'package:dab_api/src/infrastructure/database/tables/provider_configs_tabl
 import 'package:dab_api/src/infrastructure/database/tables/sessions_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/system_settings_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/user_identities_table.dart';
+import 'package:dab_api/src/infrastructure/database/tables/user_provider_credentials_table.dart';
 import 'package:dab_api/src/infrastructure/database/tables/users_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_postgres/drift_postgres.dart';
@@ -37,6 +38,7 @@ part 'app_database.g.dart';
     GroupMembersTable,
     ProviderConfigsTable,
     UserIdentitiesTable,
+    UserProviderCredentialsTable,
     SystemSettingsTable,
   ],
 )
@@ -44,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -213,6 +215,9 @@ INSERT INTO provider_configs (id, name, base_url, is_active, icon_url, settings,
 VALUES ('bitbucket', 'Bitbucket', 'https://bitbucket.org', 1, 'https://bitbucket.org/favicon.ico', '{}', NOW())
 ON CONFLICT (id) DO NOTHING;
 ''');
+      }
+      if (from < 17) {
+        await m.createTable(userProviderCredentialsTable);
       }
     },
     beforeOpen: (details) async {

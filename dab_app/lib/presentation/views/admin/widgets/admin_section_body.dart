@@ -35,6 +35,8 @@ class AdminSectionBody extends StatelessWidget {
         users: state.users,
         notifier: notifier,
         systemSettings: state.systemSettings,
+        status: state.status,
+        errorMessage: state.errorMessage,
       ),
     };
   }

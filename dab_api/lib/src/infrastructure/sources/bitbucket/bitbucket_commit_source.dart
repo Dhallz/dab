@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
@@ -28,11 +30,13 @@ class BitbucketCommitSource
     this._configRepository,
     this._userRepository,
     this._jsonRest,
+    this._credentials,
   );
 
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
+  final ICredentialResolver _credentials;
 
   static const _apiBase = 'https://api.bitbucket.org/2.0';
 
@@ -46,7 +50,21 @@ class BitbucketCommitSource
     final cfg = await _activeBitbucketConfig();
     if (cfg == null) return const [];
 
-    final auth = _basicAuthHeaders(cfg.settings);
+    final userSettings = await _credentials.getUserSettingsForUsers(
+      userIds: users.map((u) => u.id),
+      providerId: 'bitbucket',
+    );
+    var auth = bitbucketAuthHeaders(cfg.settings);
+    if (auth == null) {
+      for (final user in users) {
+        final merged = _credentials.overlay(
+          orgSettings: cfg.settings,
+          userSettings: userSettings[user.id],
+        );
+        auth = bitbucketAuthHeaders(merged);
+        if (auth != null) break;
+      }
+    }
     if (auth == null) return const [];
 
     final workspace = bitbucketWorkspace(cfg.settings);
@@ -125,7 +143,7 @@ class BitbucketCommitSource
     final cfg = await _activeBitbucketConfig();
     if (cfg == null) return const Right(null);
 
-    final auth = _basicAuthHeaders(cfg.settings);
+    final auth = bitbucketAuthHeaders(cfg.settings);
     final workspace = bitbucketWorkspace(cfg.settings);
     if (auth == null || workspace.isEmpty) return const Right(null);
 
@@ -173,20 +191,19 @@ class BitbucketCommitSource
     }
     return null;
   }
+}
 
-  Map<String, String>? _basicAuthHeaders(Map<String, dynamic> settings) {
-    final username = (settings['username'] ?? '').toString().trim();
-    final secret =
-        (settings['apiToken'] ??
-                settings['appPassword'] ??
-                settings['token'] ??
-                '')
-            .toString()
-            .trim();
-    if (username.isEmpty || secret.isEmpty) return null;
-    final encoded = base64Encode(utf8.encode('$username:$secret'));
-    return {'Authorization': 'Basic $encoded', 'Accept': 'application/json'};
+/// Auth headers for Bitbucket REST. OAuth access tokens use Bearer.
+Map<String, String>? bitbucketAuthHeaders(Map<String, dynamic> settings) {
+  final secret = extractProviderToken('bitbucket', settings);
+  if (secret.isEmpty) return null;
+  if (isOauthCredential(settings)) {
+    return {'Authorization': 'Bearer $secret', 'Accept': 'application/json'};
   }
+  final username = (settings['username'] ?? '').toString().trim();
+  if (username.isEmpty) return null;
+  final encoded = base64Encode(utf8.encode('$username:$secret'));
+  return {'Authorization': 'Basic $encoded', 'Accept': 'application/json'};
 }
 
 /// Extracts the configured workspace slug.

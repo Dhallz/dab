@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:relic/relic.dart';
 import '../../application/services/activity_purge_scheduler.dart';
+import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
 import '../../domain/repositories/abs_i_system_settings_repository.dart';
@@ -115,6 +116,12 @@ class MetadataController {
       final systemTimezone = await loadOrgTimezoneId(
         sl<ISystemSettingsRepository>(),
       );
+      final modeResult = await sl<ISystemSettingsRepository>().getSetting(
+        kDeploymentModeSettingKey,
+      );
+      final deploymentMode = normalizeDeploymentMode(
+        modeResult.getOrElse((_) => null),
+      );
 
       return Response.ok(
         body: Body.fromString(
@@ -122,6 +129,7 @@ class MetadataController {
             'data': {
               'isSystemConfigured': isSystemConfigured,
               'systemTimezone': systemTimezone,
+              'deploymentMode': deploymentMode,
             },
             'meta': {
               'dataType': 'system_status',

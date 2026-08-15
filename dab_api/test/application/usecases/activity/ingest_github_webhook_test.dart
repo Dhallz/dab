@@ -68,6 +68,9 @@ void main() {
     when(
       () => presenceService.broadcastToUser(any(), any(), any()),
     ).thenReturn(null);
+    when(
+      () => redisService.recordLiveIngestSuccess(any()),
+    ).thenAnswer((_) async {});
   });
 
   test('ingests push webhook for linked github author', () async {

@@ -5,6 +5,8 @@ import 'package:dab_api/src/application/containers/group_usecases.dart';
 import 'package:dab_api/src/application/containers/health_usecases.dart';
 import 'package:dab_api/src/application/containers/metadata_usecases.dart';
 import 'package:dab_api/src/application/containers/user_usecases.dart';
+import 'package:dab_api/src/application/services/activity_live_poll_scheduler.dart';
+import 'package:dab_api/src/application/services/activity_live_publisher.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
@@ -54,12 +56,27 @@ import 'package:dab_api/src/application/usecases/metadata/get_provider_metadata.
 import 'package:dab_api/src/application/usecases/metadata/get_system_status.dart';
 import 'package:dab_api/src/application/usecases/metadata/save_provider_config.dart';
 import 'package:dab_api/src/application/usecases/metadata/test_provider_config.dart';
+import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.dart';
+import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
+import 'package:dab_api/src/application/usecases/user/get_jira_project_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
 import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
+import 'package:dab_api/src/application/usecases/user/list_user_provider_credentials.dart';
+import 'package:dab_api/src/application/usecases/user/save_jira_project_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/save_user_provider_credential.dart';
+import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart';
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
+import 'package:dab_api/src/application/usecases/user/test_user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/gataways/abs_i_phorge_gataway.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
+import 'package:dab_api/src/domain/ports/i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_oauth_pkce.dart';
+import 'package:dab_api/src/domain/ports/i_oauth_state_store.dart';
+import 'package:dab_api/src/domain/ports/i_oauth_token_client.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_user_provider_credential_repository.dart';
 // domain
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_auth_repository.dart';
@@ -78,6 +95,8 @@ import 'package:dab_api/src/infrastructure/core/security/github_webhook_verifier
 import 'package:dab_api/src/infrastructure/core/security/jwt_provider.dart';
 import 'package:dab_api/src/infrastructure/core/security/linear_webhook_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/phorge_webhook_verifier.dart';
+import 'package:dab_api/src/infrastructure/core/security/oauth_pkce.dart';
+import 'package:dab_api/src/infrastructure/core/security/settings_cipher.dart';
 import 'package:dab_api/src/infrastructure/core/security/shared_secret_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/slack_request_verifier.dart';
 import 'package:dab_api/src/infrastructure/database/app_database.dart';
@@ -99,13 +118,20 @@ import 'package:dab_api/src/infrastructure/repositories/activity_repository.dart
 import 'package:dab_api/src/infrastructure/repositories/auth_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/provider_metadata_repository.dart';
+import 'package:dab_api/src/infrastructure/repositories/user_provider_credential_repository.dart';
 import 'package:dab_api/src/infrastructure/repositories/user_repository.dart';
+import 'package:dab_api/src/infrastructure/services/credential_resolver.dart';
+import 'package:dab_api/src/infrastructure/services/oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/infrastructure/services/oauth_state_store.dart';
+import 'package:dab_api/src/infrastructure/services/oauth_token_client.dart';
+import 'package:dab_api/src/infrastructure/services/provider_identity_probe.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/jira/jira_project_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_gateway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
@@ -163,10 +189,33 @@ Future<void> serviceLocator() async {
 
   final userRepository = UserRepository(db);
   final providerConfigRepository = ProviderConfigRepository(db);
+  sl.registerSingleton<SettingsCipher>(SettingsCipher(config.credentialsKey));
+  sl.registerSingleton<AbsIUserProviderCredentialRepository>(
+    UserProviderCredentialRepository(db, sl<SettingsCipher>()),
+  );
+  sl.registerSingleton<ICredentialResolver>(
+    CredentialResolver(sl<AbsIUserProviderCredentialRepository>()),
+  );
+  sl.registerSingleton<ProviderIdentityProbe>(
+    ProviderIdentityProbe(
+      jsonRest: jsonRestProtocol,
+      graphql: graphqlProtocol,
+      slackWeb: slackWebProtocol,
+      conduit: conduitProtocol,
+    ),
+  );
 
   // Infrastructure Sources (Raw I/O)
-  final phorgeTaskSource = PhorgeTaskSource(conduitProtocol);
-  final phorgeRevisionSource = PhorgeRevisionSource(conduitProtocol);
+  final phorgeTaskSource = PhorgeTaskSource(
+    conduitProtocol,
+    credentials: sl<ICredentialResolver>(),
+    configs: providerConfigRepository,
+  );
+  final phorgeRevisionSource = PhorgeRevisionSource(
+    conduitProtocol,
+    credentials: sl<ICredentialResolver>(),
+    configs: providerConfigRepository,
+  );
   final phorgeUserSource = PhorgeUserSource(conduitProtocol);
   final phorgeProjectSource = PhorgeProjectSource(conduitProtocol);
   final phorgeGateway = PhorgeGateway(
@@ -186,11 +235,13 @@ Future<void> serviceLocator() async {
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
+    sl<ICredentialResolver>(),
   );
   final linearSource = LinearIssueSource(
     providerConfigRepository,
     userRepository,
     graphqlProtocol,
+    sl<ICredentialResolver>(),
   );
   final discordSource = DiscordMessageSource(
     providerConfigRepository,
@@ -201,16 +252,19 @@ Future<void> serviceLocator() async {
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
+    sl<ICredentialResolver>(),
   );
   final gitlabSource = GitLabCommitSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
+    sl<ICredentialResolver>(),
   );
   final bitbucketSource = BitbucketCommitSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
+    sl<ICredentialResolver>(),
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
@@ -255,6 +309,14 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<RedisService>(
     RedisService(redisClient, sl<ISystemSettingsRepository>()),
   );
+  sl.registerSingleton<IOauthPkce>(OauthPkce());
+  sl.registerSingleton<IOauthStateStore>(
+    RedisOauthStateStore(sl<RedisService>()),
+  );
+  sl.registerSingleton<IOauthTokenClient>(HttpOauthTokenClient());
+  sl.registerSingleton<IOauthClientCredentialResolver>(
+    OauthClientCredentialResolver(config),
+  );
 
   // -----------------------------------------------------
   // 3. System Services
@@ -265,6 +327,13 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<LoggingService>(LoggingService());
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
+  sl.registerSingleton<ActivityLivePublisher>(
+    ActivityLivePublisher(
+      sl<RedisService>(),
+      sl<PresenceService>(),
+      sl<ISystemSettingsRepository>(),
+    ),
+  );
 
   final fetcher = UnifiedActivityFetcher(
     registry,
@@ -372,6 +441,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestSlackEvent>(
@@ -381,6 +451,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestPhorgeWebhook>(
@@ -391,6 +462,7 @@ Future<void> serviceLocator() async {
       phorgeTaskSource,
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestJiraWebhook>(
@@ -400,6 +472,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestLinearWebhook>(
@@ -409,6 +482,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestGitLabWebhook>(
@@ -418,6 +492,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestBitbucketWebhook>(
@@ -427,6 +502,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<IngestDiscordMessage>(
@@ -436,6 +512,7 @@ Future<void> serviceLocator() async {
       sl<AbsIProviderConfigRepository>(),
       sl<RedisService>(),
       sl<PresenceService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<DiscordGatewayService>(
@@ -450,6 +527,7 @@ Future<void> serviceLocator() async {
       sl<AbsIAuthRepository>(),
       sl<PresenceService>(),
       sl<RedisService>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<ArchiveLiveActivity>(
@@ -462,6 +540,15 @@ Future<void> serviceLocator() async {
     ActivityPurgeScheduler(
       sl<RedisService>(),
       sl<ISystemSettingsRepository>(),
+    ),
+  );
+  sl.registerSingleton<ActivityLivePollScheduler>(
+    ActivityLivePollScheduler(
+      sl<UnifiedActivityFetcher>(),
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<RedisService>(),
+      sl<ActivityLivePublisher>(),
     ),
   );
 
@@ -477,6 +564,69 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GetUsers>(GetUsers(sl<IUserRepository>()));
   sl.registerSingleton<GetUserById>(GetUserById(sl<IUserRepository>()));
   sl.registerSingleton<GetUsersByGroup>(GetUsersByGroup(sl<IUserRepository>()));
+  sl.registerSingleton<ListUserProviderCredentials>(
+    ListUserProviderCredentials(
+      sl<AbsIUserProviderCredentialRepository>(),
+      sl<IUserRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<SaveUserProviderCredential>(
+    SaveUserProviderCredential(
+      sl<AbsIUserProviderCredentialRepository>(),
+      sl<IUserRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<ProviderIdentityProbe>(),
+    ),
+  );
+  sl.registerSingleton<DeleteUserProviderCredential>(
+    DeleteUserProviderCredential(
+      sl<AbsIUserProviderCredentialRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<TestUserProviderCredential>(
+    TestUserProviderCredential(
+      sl<AbsIUserProviderCredentialRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<ProviderIdentityProbe>(),
+    ),
+  );
+  sl.registerSingleton<StartProviderOauth>(
+    StartProviderOauth(
+      sl<AbsIProviderConfigRepository>(),
+      sl<ISystemSettingsRepository>(),
+      sl<IOauthStateStore>(),
+      sl<IOauthClientCredentialResolver>(),
+      sl<IOauthPkce>(),
+    ),
+  );
+  sl.registerSingleton<CompleteProviderOauth>(
+    CompleteProviderOauth(
+      sl<IOauthStateStore>(),
+      sl<IOauthTokenClient>(),
+      sl<IOauthClientCredentialResolver>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<SaveUserProviderCredential>(),
+    ),
+  );
+  sl.registerSingleton<IJiraProjectCatalog>(
+    JiraProjectCatalog(jsonRestProtocol),
+  );
+  sl.registerSingleton<GetJiraProjectWatchList>(
+    GetJiraProjectWatchList(
+      sl<ICredentialResolver>(),
+      sl<IJiraProjectCatalog>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<SaveJiraProjectWatchList>(
+    SaveJiraProjectWatchList(
+      sl<ICredentialResolver>(),
+      sl<IJiraProjectCatalog>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
 
   // Group
   sl.registerSingleton<GetGroups>(GetGroups(sl<IUserRepository>()));
@@ -596,6 +746,13 @@ Future<void> serviceLocator() async {
       getUsers: sl<GetUsers>(),
       getUsersByGroup: sl<GetUsersByGroup>(),
       syncPhorgeUsers: sl<SyncPhorgeUsers>(),
+      listUserProviderCredentials: sl<ListUserProviderCredentials>(),
+      saveUserProviderCredential: sl<SaveUserProviderCredential>(),
+      deleteUserProviderCredential: sl<DeleteUserProviderCredential>(),
+      testUserProviderCredential: sl<TestUserProviderCredential>(),
+      startProviderOauth: sl<StartProviderOauth>(),
+      getJiraProjectWatchList: sl<GetJiraProjectWatchList>(),
+      saveJiraProjectWatchList: sl<SaveJiraProjectWatchList>(),
     ),
   );
 

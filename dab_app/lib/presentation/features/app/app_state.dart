@@ -26,6 +26,9 @@ class AppState with AppStateMappable {
   /// Last-known Admin connection-test results keyed by provider id.
   final Map<String, ProviderConnectionStatus> providerConnectionStatuses;
 
+  /// `organization` or `personal` from `GET /metadata/status`.
+  final String deploymentMode;
+
   const AppState({
     this.status = ViewStatus.initial,
     this.settings = const AppSettings(),
@@ -34,5 +37,8 @@ class AppState with AppStateMappable {
     this.orgTimezoneId = kDefaultOrgTimezoneId,
     this.unresolvedIdentityCount = 0,
     this.providerConnectionStatuses = const {},
+    this.deploymentMode = 'organization',
   });
+
+  bool get isPersonalDeployment => deploymentMode == 'personal';
 }

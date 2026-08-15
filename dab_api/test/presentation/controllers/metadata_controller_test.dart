@@ -3,24 +3,40 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:relic/relic.dart';
 import 'package:test/test.dart';
-import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
 import 'package:dab_api/src/application/containers/metadata_usecases.dart';
+import 'package:dab_api/src/application/services/provider_config_connectivity_service.dart';
+import 'package:dab_api/src/application/services/provider_live_connectivity_checker.dart';
+import 'package:dab_api/src/application/services/provider_live_webhook_test_service.dart';
+import 'package:dab_api/src/application/usecases/metadata/test_provider_config.dart';
+import 'package:dab_api/src/presentation/controllers/metadata_controller.dart';
 import '../../test_utils.dart';
 
 class MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+class MockLiveChecker extends Mock implements ProviderLiveConnectivityChecker {}
+
+class MockWebhookTester extends Mock
+    implements ProviderLiveWebhookTestService {}
 
 void main() {
   group('MetadataController.testConfig Validation', () {
     late MetadataController controller;
 
-    setUpAll(() {
-      final sl = GetIt.instance;
-      if (!sl.isRegistered<MetadataUseCases>()) {
-        sl.registerSingleton<MetadataUseCases>(MockMetadataUseCases());
-      }
-    });
-
     setUp(() {
+      final sl = GetIt.instance;
+      if (sl.isRegistered<MetadataUseCases>()) {
+        sl.unregister<MetadataUseCases>();
+      }
+      final mockUseCases = MockMetadataUseCases();
+      when(() => mockUseCases.testProviderConfig).thenReturn(
+        TestProviderConfig(
+          ProviderConfigConnectivityService(
+            MockLiveChecker(),
+            MockWebhookTester(),
+          ),
+        ),
+      );
+      sl.registerSingleton<MetadataUseCases>(mockUseCases);
       controller = MetadataController();
     });
 

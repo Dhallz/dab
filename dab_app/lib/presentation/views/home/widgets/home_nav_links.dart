@@ -9,12 +9,14 @@ class HomeNavLinks extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final int adminTabBadgeCount;
+  final bool showAdminTab;
 
   const HomeNavLinks({
     super.key,
     required this.currentIndex,
     required this.onTap,
     this.adminTabBadgeCount = 0,
+    this.showAdminTab = true,
   });
 
   @override
@@ -24,12 +26,12 @@ class HomeNavLinks extends StatelessWidget {
       context.l10n.dashboardTitle,
       context.l10n.navExplorer,
       context.l10n.insightsTitle,
-      context.l10n.navAdmin,
+      if (showAdminTab) context.l10n.navAdmin,
     ];
     return Row(
       children: List.generate(tabs.length, (index) {
         final isSelected = currentIndex == index;
-        final isAdminTab = index == 3;
+        final isAdminTab = showAdminTab && index == 3;
         final showBadge = isAdminTab && adminTabBadgeCount > 0;
         return Padding(
           padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 20),

@@ -15,6 +15,7 @@ import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests a Slack Events API callback into DAB live pipeline.
@@ -27,6 +28,7 @@ class IngestSlackEvent {
   final RedisService _redisService;
   final PresenceService _presenceService;
   final http.Client _httpClient;
+  final ActivityLivePublisher? _livePublisher;
   final _uuid = const Uuid();
 
   IngestSlackEvent(
@@ -34,8 +36,10 @@ class IngestSlackEvent {
     this._activityRepository,
     this._providerConfigRepository,
     this._redisService,
-    this._presenceService,
-  ) : _httpClient = http.Client();
+    this._presenceService, {
+    ActivityLivePublisher? livePublisher,
+  }) : _httpClient = http.Client(),
+       _livePublisher = livePublisher;
 
   Future<Either<Failure, SlackEventIngestionResult>> execute(
     Map<String, dynamic> payload,
@@ -249,13 +253,11 @@ class IngestSlackEvent {
       print(
         '[SLACK_PIPELINE] db_insert activity_id=${activity.id} user_id=${activity.userId} event_user=$slackUserId',
       );
-      await _redisService.incrementVersion();
-      await _redisService.fanOutActivity(activity);
-      final broadcastPayload = activity.toMap();
-      _presenceService.broadcastToUser(
-        activity.userId,
-        'ACTIVITY_RECEIVED',
-        broadcastPayload,
+      await ActivityLivePublisher.emit(
+        redis: _redisService,
+        presence: _presenceService,
+        activity: activity,
+        publisher: _livePublisher,
       );
       print(
         '[SLACK_PIPELINE] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

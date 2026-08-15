@@ -136,6 +136,24 @@ class Config {
 
   String get initialAdminEmail => _getEnv('DAB_INITIAL_ADMIN_EMAIL', '');
 
+  /// AES key material for per-user provider credentials. Falls back to [jwtSecret].
+  String get credentialsKey {
+    final raw = _getEnv('DAB_CREDENTIALS_KEY', '').trim();
+    return raw.isEmpty ? jwtSecret : raw;
+  }
+
+  /// OAuth app client id from `DAB_{PROVIDER}_OAUTH_CLIENT_ID`.
+  String oauthClientId(String providerId) => _getEnv(
+    'DAB_${providerId.trim().toUpperCase()}_OAUTH_CLIENT_ID',
+    '',
+  ).trim();
+
+  /// OAuth app client secret from `DAB_{PROVIDER}_OAUTH_CLIENT_SECRET`.
+  String oauthClientSecret(String providerId) => _getEnv(
+    'DAB_${providerId.trim().toUpperCase()}_OAUTH_CLIENT_SECRET',
+    '',
+  ).trim();
+
   // Phorge Configuration
   String get phorgeUrl => _getEnv('PHORGE_URL', '');
   String get phorgeApiToken => _getEnv('PHORGE_API_TOKEN', '');

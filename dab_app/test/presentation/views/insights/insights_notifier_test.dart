@@ -10,7 +10,6 @@ import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
-import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';

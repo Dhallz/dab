@@ -5,6 +5,7 @@ import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:dab_app/presentation/core/styles/app_layout.dart';
 import 'package:dab_app/presentation/core/styles/app_spacing.dart';
 import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_config_field.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_provider_field_manifest.dart';
@@ -44,7 +45,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
   void initState() {
     super.initState();
     _pollingRateController = TextEditingController(
-      text: (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString(),
+      text:
+          (widget.config.settings['pollingRateSeconds'] ??
+                  widget.config.settings['polling_rate_seconds'] ??
+                  '60')
+              .toString(),
     );
     _syncControllersFromConfig(widget.config, replaceExisting: true);
     _showDetails = false;
@@ -58,7 +63,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
         oldWidget.config.settings != widget.config.settings ||
         oldWidget.config.baseUrl != widget.config.baseUrl;
     if (configChanged) {
-      _pollingRateController.text = (widget.config.settings['pollingRateSeconds'] ?? widget.config.settings['polling_rate_seconds'] ?? '60').toString();
+      _pollingRateController.text =
+          (widget.config.settings['pollingRateSeconds'] ??
+                  widget.config.settings['polling_rate_seconds'] ??
+                  '60')
+              .toString();
       final systemSettings = ref.read(adminNotifierProvider).systemSettings;
       _syncControllersFromConfig(
         widget.config,
@@ -98,11 +107,24 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
       config.id,
       lookupAppLocalizations(const Locale('en')),
     );
-    final fields = [
+    final personalManifest = ProviderFieldManifest.forProvider(
+      config.id,
+      lookupAppLocalizations(const Locale('en')),
+      personal: true,
+    );
+    final seen = <String>{};
+    final fields = <AdminConfigField>[];
+    for (final field in [
       ...manifest[ProviderConfigSection.core] ?? const [],
       ...manifest[ProviderConfigSection.live] ?? const [],
       ...manifest[ProviderConfigSection.polling] ?? const [],
-    ];
+      ...personalManifest[ProviderConfigSection.core] ?? const [],
+      ...personalManifest[ProviderConfigSection.live] ?? const [],
+      ...personalManifest[ProviderConfigSection.polling] ?? const [],
+    ]) {
+      if (!seen.add(field.key)) continue;
+      fields.add(field);
+    }
     for (final field in fields) {
       final rawValue = config.settings[field.key];
       final initialValue = _initialValueForField(
@@ -155,6 +177,42 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return rawValue?.toString() ?? '';
   }
 
+  String? _fieldHelperText({
+    required AdminConfigField field,
+    required AppLocalizations l10n,
+    required String providerId,
+    required Map<String, String> systemSettings,
+    required bool isWebhookUrlField,
+    required bool isMultiValueField,
+  }) {
+    final parts = <String>[
+      if (field.hint != null && field.hint!.isNotEmpty) field.hint!,
+      if (isWebhookUrlField)
+        _defaultWebhookUrlHint(providerId, systemSettings, l10n),
+      if (isMultiValueField) l10n.providerCardMultilineHint,
+      if (field.key == 'clientId')
+        _oauthCallbackHint(providerId, systemSettings, l10n),
+    ];
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  String _oauthCallbackHint(
+    String providerId,
+    Map<String, String> systemSettings,
+    AppLocalizations l10n,
+  ) {
+    final base = _resolvePublicApiBase(systemSettings);
+    if (base.isEmpty) {
+      return l10n.adminOauthCallbackMustMatch(
+        'Set Public API URL in Security first',
+      );
+    }
+    return l10n.adminOauthCallbackMustMatch(
+      '$base/integrations/$providerId/oauth/callback',
+    );
+  }
+
   String _defaultWebhookUrlHint(
     String providerId,
     Map<String, String> systemSettings,
@@ -184,7 +242,10 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     return sl.restApiClient.baseUrl.replaceAll(RegExp(r'/+$'), '');
   }
 
-  String _buildWebhookUrl(String providerId, Map<String, String> systemSettings) {
+  String _buildWebhookUrl(
+    String providerId,
+    Map<String, String> systemSettings,
+  ) {
     return '${_resolvePublicApiBase(systemSettings)}${_webhookPathForProvider(providerId)}';
   }
 
@@ -234,9 +295,15 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                 filled: true,
                 fillColor: cs.surfaceContainer.withValues(alpha: 0.65),
                 hintText: l10n.providerCardEnterField(field.label),
-                helperText: isWebhookUrlField
-                    ? _defaultWebhookUrlHint(providerId, systemSettings, l10n)
-                    : (isMultiValueField ? l10n.providerCardMultilineHint : null),
+                helperMaxLines: 4,
+                helperText: _fieldHelperText(
+                  field: field,
+                  l10n: l10n,
+                  providerId: providerId,
+                  systemSettings: systemSettings,
+                  isWebhookUrlField: isWebhookUrlField,
+                  isMultiValueField: isMultiValueField,
+                ),
                 hintStyle: AppTextStyles.bodyMedium.copyWith(
                   color: cs.onSurfaceVariant.withValues(alpha: 0.35),
                 ),
@@ -298,7 +365,14 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     final isExpanded = _showDetails;
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final manifest = ProviderFieldManifest.forProvider(config.id, l10n);
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
+    final manifest = ProviderFieldManifest.forProvider(
+      config.id,
+      l10n,
+      personal: isPersonal,
+    );
     final systemSettings = ref.watch(
       adminNotifierProvider.select((s) => s.systemSettings),
     );
@@ -371,7 +445,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                   ),
                 ),
                 LivePulsingIcon(status: status),
-                if (isExpanded) ...[
+                if (isExpanded && !isPersonal) ...[
                   SizedBox(width: AppSpacing.xs),
                   TextButton.icon(
                     onPressed: status?.status.isLoading == true
@@ -446,8 +520,9 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                     activeThumbColor: cs.primary,
                     activeTrackColor: cs.primary.withValues(alpha: 0.35),
                     inactiveThumbColor: cs.onSurfaceVariant,
-                    inactiveTrackColor: cs.surfaceContainerHigh
-                        .withValues(alpha: 0.5),
+                    inactiveTrackColor: cs.surfaceContainerHigh.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                 ),
               ],
@@ -478,56 +553,67 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
                         SizedBox(height: AppSpacing.l),
                         ProviderConfigSectionPanel(
                           title: 'CORE',
-                          sectionStatus: status?.core,
+                          sectionStatus: isPersonal ? null : status?.core,
                           children: _buildFieldWidgets(
                             context: context,
-                            fields: manifest[ProviderConfigSection.core] ?? const [],
+                            fields:
+                                manifest[ProviderConfigSection.core] ??
+                                const [],
                             l10n: l10n,
                             cs: cs,
                             providerId: config.id,
                             systemSettings: systemSettings,
                           ),
                         ),
-                        ProviderConfigSectionPanel(
-                          title: 'LIVE',
-                          sectionStatus: status?.live,
-                          children: [
-                            if (config.id.toLowerCase() == 'discord')
-                              Text(
-                                'Live ingestion uses the Discord Gateway WebSocket (no inbound webhook).',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: cs.onSurfaceVariant,
+                        if (!isPersonal)
+                          ProviderConfigSectionPanel(
+                            title: 'LIVE',
+                            sectionStatus: status?.live,
+                            children: [
+                              if (config.id.toLowerCase() == 'discord')
+                                Text(
+                                  'Live ingestion uses the Discord Gateway WebSocket (no inbound webhook).',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                 ),
+                              ..._buildFieldWidgets(
+                                context: context,
+                                fields:
+                                    manifest[ProviderConfigSection.live] ??
+                                    const [],
+                                l10n: l10n,
+                                cs: cs,
+                                providerId: config.id,
+                                systemSettings: systemSettings,
                               ),
-                            ..._buildFieldWidgets(
-                              context: context,
-                              fields: manifest[ProviderConfigSection.live] ?? const [],
-                              l10n: l10n,
-                              cs: cs,
-                              providerId: config.id,
-                              systemSettings: systemSettings,
-                            ),
-                          ],
-                        ),
-                        ProviderConfigSectionPanel(
-                          title: 'POLLING',
-                          sectionStatus: status?.polling,
-                          children: [
-                            providerPollingRateField(
-                              context: context,
-                              controller: _pollingRateController,
-                            ),
-                            ..._buildFieldWidgets(
-                              context: context,
-                              fields:
-                                  manifest[ProviderConfigSection.polling] ?? const [],
-                              l10n: l10n,
-                              cs: cs,
-                              providerId: config.id,
-                              systemSettings: systemSettings,
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        if (!isPersonal ||
+                            (manifest[ProviderConfigSection.polling] ??
+                                    const [])
+                                .isNotEmpty)
+                          ProviderConfigSectionPanel(
+                            title: 'POLLING',
+                            sectionStatus: isPersonal ? null : status?.polling,
+                            children: [
+                              if (!isPersonal)
+                                providerPollingRateField(
+                                  context: context,
+                                  controller: _pollingRateController,
+                                ),
+                              ..._buildFieldWidgets(
+                                context: context,
+                                fields:
+                                    manifest[ProviderConfigSection.polling] ??
+                                    const [],
+                                l10n: l10n,
+                                cs: cs,
+                                providerId: config.id,
+                                systemSettings: systemSettings,
+                              ),
+                            ],
+                          ),
                         SizedBox(height: AppSpacing.xs),
                         SizedBox(
                           width: double.infinity,

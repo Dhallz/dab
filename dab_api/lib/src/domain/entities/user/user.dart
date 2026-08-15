@@ -44,6 +44,9 @@ class User with UserMappable {
   /// When the user's profile was last modified.
   final DateTime? updatedAt;
 
+  /// Linked provider ids (non-secret) so Directory can show who has not connected.
+  final List<String> linkedProviderIds;
+
   User({
     required this.id,
     required this.name,
@@ -55,5 +58,6 @@ class User with UserMappable {
     this.phorgeUsername,
     DateTime? createdAt,
     this.updatedAt,
+    this.linkedProviderIds = const [],
   }) : createdAt = createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
 }

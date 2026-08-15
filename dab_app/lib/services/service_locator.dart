@@ -1,6 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../domain/core/failures.dart';
 import '../domain/containers/activity_usecases.dart';
 import '../domain/containers/auth_usecases.dart';
 import '../domain/containers/metadata_usecases.dart';
@@ -45,6 +44,7 @@ class ServiceLocator {
   late final RestApiClient restApiClient;
   late final ObjectBoxStore objectBoxStore;
   late final TokenStorage tokenStorage;
+  late final AuthInterceptor authInterceptor;
   late final FlutterSecureStorage secureStorage;
   late final AppRouter appRouter;
 
@@ -72,7 +72,7 @@ class ServiceLocator {
     // 1. Core Infrastructure
     restApiClient = RestApiClient(baseUrl: 'http://localhost:9080');
     tokenStorage = TokenStorage();
-    final authInterceptor = AuthInterceptor(tokenStorage);
+    authInterceptor = AuthInterceptor(tokenStorage);
     restApiClient.addInterceptor(authInterceptor);
 
     objectBoxStore = await ObjectBoxStore.create();
@@ -98,13 +98,7 @@ class ServiceLocator {
 
     authInterceptor.onRefreshToken = () async {
       final result = await authRepository.refreshToken();
-      result.fold((failure) {
-        if (failure is AuthFailure &&
-            failure.message == 'No refresh token available') {
-          return;
-        }
-        throw Exception(failure.message);
-      }, (_) {});
+      result.fold((failure) => throw Exception(failure.message), (_) {});
     };
 
     // 4. System Context

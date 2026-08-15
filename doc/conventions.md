@@ -70,6 +70,8 @@
 | DI | `get_it` — resolved via `sl<T>()` |
 | JWT | `dart_jsonwebtoken` |
 | Password hashing | `bcrypt` |
+| Credential encryption | `pointycastle` (AES-256-CBC for `user_provider_credentials.settings`; key `DAB_CREDENTIALS_KEY`, JWT secret fallback) |
+| OAuth PKCE | `crypto` (`sha256` for S256 code challenges) |
 | Cache | `redis` |
 | Config loading | `dotenv` |
 | External HTTP | `http` |
@@ -87,6 +89,7 @@
 | Charts / visual analytics | `fl_chart` |
 | Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
 | App metadata (version / build) | `package_info_plus` |
+| External browser (OAuth Connect) | `url_launcher` |
 | Testing | `mocktail` (`ProviderContainer` / overrides for notifiers) |
 
 ---

@@ -8,6 +8,7 @@ import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
+import '../../features/app/app_notifier.dart';
 import 'dashboard_state.dart';
 import 'models/dashboard_provider_health.dart';
 import 'services/banner_evaluator.dart';
@@ -38,15 +39,18 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     BannerEvaluator? bannerEvaluator,
     DateTime Function()? now,
     Duration bannerTickInterval = const Duration(seconds: 30),
+    bool Function()? isPersonalDeployment,
   }) : _bannerEvaluator = bannerEvaluator ?? const BannerEvaluator(),
        _now = now ?? DateTime.now,
-       _bannerTickInterval = bannerTickInterval;
+       _bannerTickInterval = bannerTickInterval,
+       _isPersonalDeployment = isPersonalDeployment;
 
   final ActivityUseCases _activityUseCases;
   final UpcomingEventUseCases _upcomingEventUseCases;
   final BannerEvaluator _bannerEvaluator;
   final DateTime Function() _now;
   final Duration _bannerTickInterval;
+  final bool Function()? _isPersonalDeployment;
 
   StreamSubscription<ActivityLiveEvent>? _activitySubscription;
   Timer? _bannerTimer;
@@ -75,9 +79,13 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     _reconnectNoticeTimer?.cancel();
     state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
 
+    final isPersonal =
+        _isPersonalDeployment?.call() ??
+        ref.read(appNotifierProvider).isPersonalDeployment;
     final liveResult = await _activityUseCases.getLiveActivities.execute(
       limit: 50,
       includeArchived: true,
+      global: isPersonal,
     );
     final upcomingResult = await _upcomingEventUseCases.getUpcomingEvents
         .execute();

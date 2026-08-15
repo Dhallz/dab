@@ -1333,5 +1333,62 @@
       "label": {},
       "count": {}
     }
-  }
+  },
+  "settingsConnectedAccountsTitle": "Connected accounts",
+  "settingsConnectedAccountsSubtitle": "Each teammate connects their own GitHub, Linear, or Jira token. DAB merges the team feed.",
+  "settingsBotTokenHint": "Paste a bot token (one per workspace), not your user token.",
+  "settingsCredentialConnect": "Connect",
+  "settingsCredentialTest": "Test",
+  "settingsCredentialDisconnect": "Disconnect",
+  "settingsCredentialConnected": "Connected",
+  "settingsCredentialTestOk": "Connection succeeded",
+  "settingsCredentialDisconnected": "Disconnected",
+  "settingsTeamTitle": "Team",
+  "settingsTeamSubtitle": "Add a teammate so they can connect their own tokens.",
+  "explorerUserNotConnected": "Hasn't connected {provider}",
+  "@explorerUserNotConnected": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDeploymentModeTitle": "Deployment mode",
+  "adminDeploymentModeSubtitle": "Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.",
+  "adminDeploymentModeOrganization": "Organization",
+  "adminDeploymentModePersonal": "Personal / small team",
+  "adminDeploymentModeSavedSnack": "Deployment mode saved",
+  "adminFieldOauthClientId": "OAuth client ID",
+  "adminFieldOauthClientIdJiraHint": "Copy Client ID from Authorization → OAuth 2.0 (3LO), not App ID. Add Jira API scopes read:jira-work and read:jira-user under Permissions first.",
+  "adminOauthCallbackMustMatch": "Callback URL in the provider console must be exactly: {url}",
+  "@adminOauthCallbackMustMatch": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "adminFieldOauthClientSecret": "OAuth client secret",
+  "adminFieldInstanceUrl": "Instance URL",
+  "adminPersonalProvidersHint": "Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.",
+  "settingsConnectedAccountsSubtitle": "Connect the providers you use. DAB never asks for your password — you sign in at the provider.",
+  "settingsConnectWithProvider": "Connect with {provider}",
+  "@settingsConnectWithProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsOauthOpened": "Finish signing in in your browser, then return here.",
+  "settingsOauthNotConfigured": "An admin must save this provider’s OAuth app in Admin → Providers first.",
+  "settingsPhorgeTokenHint": "Phorge has no user OAuth. Paste a Conduit API token if you use Phorge.",
+  "settingsJiraProjectsTitle": "Projects",
+  "settingsJiraProjectsSubtitle": "Choose which Jira projects DAB should watch for tasks. This list is shared with your team.",
+  "settingsJiraProjectsEmpty": "No projects were visible for this account.",
+  "settingsJiraProjectsSave": "Save projects",
+  "adminPublicApiUrlTitle": "Public API URL",
+  "adminPublicApiUrlSubtitle": "Reachable base URL for OAuth callbacks and webhook defaults (no trailing slash).",
+  "adminPublicApiUrlLabel": "https://your-dab-api.example",
+  "adminPublicApiUrlSavedSnack": "Public API URL saved"
 }

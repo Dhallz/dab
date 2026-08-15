@@ -1,7 +1,9 @@
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
@@ -11,16 +13,18 @@ import 'package:dab_api/src/infrastructure/sources/github/github_repo_config.dar
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Fetches read-only commit activity from GitHub REST API.
 /// CONTRACT: Returns commit DTOs scoped by configured repos and linked users.
-/// CONSTRAINTS: Must not mutate remote state.
+/// CONSTRAINTS: Must not mutate remote state. Auth: user PAT overlay, else org token.
 class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
+  final ICredentialResolver _credentials;
 
   GitHubCommitSource(
     this._configRepository,
     this._userRepository,
     this._jsonRest,
+    this._credentials,
   );
 
   @override
@@ -39,15 +43,8 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
       return [];
     }
 
-    final settings = config.settings;
-    final token = (settings['api.token'] ?? settings['token'] ?? '')
-        .toString()
-        .trim();
-    if (token.isEmpty) {
-      return [];
-    }
-
-    final configuredApiBaseUrl = (settings['apiBaseUrl'] ?? '')
+    final orgSettings = config.settings;
+    final configuredApiBaseUrl = (orgSettings['apiBaseUrl'] ?? '')
         .toString()
         .trim();
     final apiBaseUrl =
@@ -56,11 +53,11 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
                 : configuredApiBaseUrl)
             .replaceAll(RegExp(r'/+$'), '');
 
-    final repos = extractConfiguredGithubRepos(settings);
+    final repos = extractConfiguredGithubRepos(orgSettings);
     if (repos.isEmpty) {
       return [];
     }
-    final configuredBranch = (settings['branch'] ?? '').toString().trim();
+    final configuredBranch = (orgSettings['branch'] ?? '').toString().trim();
 
     final identitiesResult = await _userRepository
         .getIdentitiesForUsersAndProvider(users.map((u) => u.id), 'github');
@@ -78,37 +75,21 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
     };
     final userById = {for (final u in users) u.id: u};
     final authors = userIdByLogin.keys.toList();
+    final userSettings = await _credentials.getUserSettingsForUsers(
+      userIds: userIdByLogin.values,
+      providerId: 'github',
+    );
+
+    final orgToken = extractProviderToken('github', orgSettings);
+    final useOrgWide = !authoredOnly && orgToken.isNotEmpty;
 
     final commits = <GitHubCommitDto>[];
     final seen = <String>{};
     for (final repo in repos) {
-      if (authoredOnly) {
-        for (final author in authors) {
-          final rawCommits = await _fetchCommits(
-            apiBaseUrl: apiBaseUrl,
-            token: token,
-            repo: repo,
-            start: start,
-            end: end,
-            author: author,
-            branch: configuredBranch,
-          );
-          _appendDtos(
-            commits: commits,
-            seen: seen,
-            rawCommits: rawCommits,
-            repo: repo,
-            branch: configuredBranch.isEmpty ? null : configuredBranch,
-            userIdByLogin: userIdByLogin,
-            fallbackUserId: userIdByLogin[author],
-            fallbackAuthorName: userById[userIdByLogin[author]]?.name,
-            fallbackAuthorAvatarUrl: userById[userIdByLogin[author]]?.avatarUrl,
-          );
-        }
-      } else {
+      if (useOrgWide) {
         final rawCommits = await _fetchCommits(
           apiBaseUrl: apiBaseUrl,
-          token: token,
+          token: orgToken,
           repo: repo,
           start: start,
           end: end,
@@ -121,6 +102,38 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
           repo: repo,
           branch: configuredBranch.isEmpty ? null : configuredBranch,
           userIdByLogin: userIdByLogin,
+        );
+        continue;
+      }
+
+      for (final author in authors) {
+        final userId = userIdByLogin[author];
+        if (userId == null) continue;
+        final merged = _credentials.overlay(
+          orgSettings: orgSettings,
+          userSettings: userSettings[userId],
+        );
+        final token = extractProviderToken('github', merged);
+        if (token.isEmpty) continue;
+        final rawCommits = await _fetchCommits(
+          apiBaseUrl: apiBaseUrl,
+          token: token,
+          repo: repo,
+          start: start,
+          end: end,
+          author: author,
+          branch: configuredBranch,
+        );
+        _appendDtos(
+          commits: commits,
+          seen: seen,
+          rawCommits: rawCommits,
+          repo: repo,
+          branch: configuredBranch.isEmpty ? null : configuredBranch,
+          userIdByLogin: userIdByLogin,
+          fallbackUserId: userId,
+          fallbackAuthorName: userById[userId]?.name,
+          fallbackAuthorAvatarUrl: userById[userId]?.avatarUrl,
         );
       }
     }

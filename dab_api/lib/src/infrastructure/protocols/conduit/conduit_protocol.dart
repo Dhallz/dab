@@ -8,8 +8,9 @@ library;
 abstract interface class ConduitProtocol {
   Future<Map<String, dynamic>> call(
     String method,
-    Map<String, dynamic> params,
-  );
+    Map<String, dynamic> params, {
+    String? apiToken,
+  });
 
   void dispose();
 }

@@ -9,12 +9,14 @@ class HomeMobileNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   final int adminTabBadgeCount;
   final ValueChanged<int> onBranchSelected;
+  final bool showAdminTab;
 
   const HomeMobileNav({
     super.key,
     required this.navigationShell,
     this.adminTabBadgeCount = 0,
     required this.onBranchSelected,
+    this.showAdminTab = true,
   });
 
   @override
@@ -24,7 +26,7 @@ class HomeMobileNav extends StatelessWidget {
       context.l10n.dashboardTitle,
       context.l10n.navExplorer,
       context.l10n.insightsTitle,
-      context.l10n.navAdmin,
+      if (showAdminTab) context.l10n.navAdmin,
     ];
     return SizedBox(
       height: 48,
@@ -34,7 +36,7 @@ class HomeMobileNav extends StatelessWidget {
         itemCount: tabs.length,
         itemBuilder: (context, index) {
           final isSelected = navigationShell.currentIndex == index;
-          final isAdminTab = index == 3;
+          final isAdminTab = showAdminTab && index == 3;
           final showBadge = isAdminTab && adminTabBadgeCount > 0;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,

@@ -1,0 +1,26 @@
+meta {
+  name: OAuth Callback
+  type: http
+  seq: 20
+}
+
+docs {
+  Public provider redirect. No JWT. Exchanges `code` + `state` for tokens,
+  stores them encrypted on the user bound to Redis state, then returns HTML.
+  The body must never include access tokens or refresh tokens.
+}
+
+get {
+  url: {{baseUrl}}/integrations/github/oauth/callback?code=example&state=example
+  body: none
+  auth: none
+}
+
+tests {
+  test("Does not echo tokens", function() {
+    const body = typeof res.body === "string" ? res.body : JSON.stringify(res.body || {});
+    expect(body).to.not.include("access_token");
+    expect(body).to.not.include("refresh_token");
+    expect(body).to.not.include("gho_");
+  });
+}

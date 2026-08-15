@@ -10,6 +10,7 @@ import '../../../domain/repositories/abs_i_user_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/sources/github/github_repo_config.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests GitHub `push` webhooks into the DAB live pipeline.
@@ -21,14 +22,16 @@ class IngestGitHubWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final RedisService _redisService;
   final PresenceService _presenceService;
+  final ActivityLivePublisher? _livePublisher;
 
   IngestGitHubWebhook(
     this._userRepository,
     this._activityRepository,
     this._providerConfigRepository,
     this._redisService,
-    this._presenceService,
-  );
+    this._presenceService, {
+    ActivityLivePublisher? livePublisher,
+  }) : _livePublisher = livePublisher;
 
   Future<Either<Failure, GitHubWebhookIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -279,12 +282,11 @@ class IngestGitHubWebhook {
       print(
         '[GITHUB_WEBHOOK] db_insert activity_id=${activity.id} user_id=${activity.userId} sha=$sha',
       );
-      await _redisService.incrementVersion();
-      await _redisService.fanOutActivity(activity);
-      _presenceService.broadcastToUser(
-        activity.userId,
-        'ACTIVITY_RECEIVED',
-        activity.toMap(),
+      await ActivityLivePublisher.emit(
+        redis: _redisService,
+        presence: _presenceService,
+        activity: activity,
+        publisher: _livePublisher,
       );
       print(
         '[GITHUB_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

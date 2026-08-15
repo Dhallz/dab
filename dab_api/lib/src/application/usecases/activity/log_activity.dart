@@ -5,6 +5,7 @@ import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Creates and propagates a new Activity across the system.
@@ -15,9 +16,16 @@ class LogActivity {
   final AbsIAuthRepository _authRepo;
   final PresenceService _presence;
   final RedisService _redis;
+  final ActivityLivePublisher? _livePublisher;
   final _uuid = const Uuid();
 
-  LogActivity(this._repo, this._authRepo, this._presence, this._redis);
+  LogActivity(
+    this._repo,
+    this._authRepo,
+    this._presence,
+    this._redis, {
+    ActivityLivePublisher? livePublisher,
+  }) : _livePublisher = livePublisher;
 
   /// Executes the activity logging process.
   ///
@@ -60,15 +68,11 @@ class LogActivity {
     }
 
     // Step 2: Global State and Real-time Propagation
-    await _redis.incrementVersion();
-    await _redis.fanOutActivity(activity);
-    _broadcastActivity(activity);
-  }
-
-  /// Internal helper to push activity updates to the Presence WebSocket layer.
-  void _broadcastActivity(Activity activity) {
-    final payload = activity.toMap();
-
-    _presence.broadcastToUser(activity.userId, 'ACTIVITY_RECEIVED', payload);
+    await ActivityLivePublisher.emit(
+      redis: _redis,
+      presence: _presence,
+      activity: activity,
+      publisher: _livePublisher,
+    );
   }
 }

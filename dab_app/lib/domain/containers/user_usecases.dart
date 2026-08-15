@@ -1,10 +1,17 @@
 import '../repositories/abs_i_user_repository.dart';
 import '../usecases/user/create_user.dart';
 import '../usecases/user/delete_group.dart';
+import '../usecases/user/delete_my_credential.dart';
 import '../usecases/user/get_groups.dart';
 import '../usecases/user/get_user.dart';
 import '../usecases/user/get_users.dart';
+import '../usecases/user/list_my_credentials.dart';
+import '../usecases/user/list_my_jira_projects.dart';
 import '../usecases/user/save_group.dart';
+import '../usecases/user/save_my_credential.dart';
+import '../usecases/user/save_my_jira_projects.dart';
+import '../usecases/user/start_my_oauth.dart';
+import '../usecases/user/test_my_credential.dart';
 
 class UserUseCases {
   final CreateUser createUser;
@@ -13,6 +20,13 @@ class UserUseCases {
   final GetUser getUser;
   final GetUsers getUsers;
   final SaveGroup saveGroup;
+  final ListMyCredentials listMyCredentials;
+  final SaveMyCredential saveMyCredential;
+  final TestMyCredential testMyCredential;
+  final DeleteMyCredential deleteMyCredential;
+  final StartMyOauth startMyOauth;
+  final ListMyJiraProjects listMyJiraProjects;
+  final SaveMyJiraProjects saveMyJiraProjects;
 
   UserUseCases(IUserRepository repository)
     : createUser = CreateUser(repository),
@@ -20,5 +34,12 @@ class UserUseCases {
       getGroups = GetGroups(repository),
       getUser = GetUser(repository),
       getUsers = GetUsers(repository),
-      saveGroup = SaveGroup(repository);
+      saveGroup = SaveGroup(repository),
+      listMyCredentials = ListMyCredentials(repository),
+      saveMyCredential = SaveMyCredential(repository),
+      testMyCredential = TestMyCredential(repository),
+      deleteMyCredential = DeleteMyCredential(repository),
+      startMyOauth = StartMyOauth(repository),
+      listMyJiraProjects = ListMyJiraProjects(repository),
+      saveMyJiraProjects = SaveMyJiraProjects(repository);
 }

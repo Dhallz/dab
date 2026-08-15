@@ -44,6 +44,7 @@ class UnifiedActivityFetcher {
     required DateTime start,
     required DateTime end,
     required bool authoredOnly,
+    Set<String>? providerIds,
   }) async {
     if (users.isEmpty) return [];
 
@@ -65,8 +66,11 @@ class UnifiedActivityFetcher {
     // Fan-out: Trigger requests for all registered connector pairs simultaneously.
     final aggregationTasks = _registry.allPairs
         .where((pair) {
-          // Filter out connectors for providers that are deactivated in DAB settings.
-          return activeProviderIds.contains(pair.providerId);
+          if (!activeProviderIds.contains(pair.providerId)) return false;
+          if (providerIds != null && !providerIds.contains(pair.providerId)) {
+            return false;
+          }
+          return true;
         })
         .map((pair) async {
           try {

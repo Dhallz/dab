@@ -77,6 +77,19 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: const {},
   );
+  static String _$deploymentMode(AppState v) => v.deploymentMode;
+  static const Field<AppState, String> _f$deploymentMode = Field(
+    'deploymentMode',
+    _$deploymentMode,
+    opt: true,
+    def: 'organization',
+  );
+  static bool _$isPersonalDeployment(AppState v) => v.isPersonalDeployment;
+  static const Field<AppState, bool> _f$isPersonalDeployment = Field(
+    'isPersonalDeployment',
+    _$isPersonalDeployment,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<AppState> fields = const {
@@ -87,6 +100,8 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #orgTimezoneId: _f$orgTimezoneId,
     #unresolvedIdentityCount: _f$unresolvedIdentityCount,
     #providerConnectionStatuses: _f$providerConnectionStatuses,
+    #deploymentMode: _f$deploymentMode,
+    #isPersonalDeployment: _f$isPersonalDeployment,
   };
 
   static AppState _instantiate(DecodingData data) {
@@ -98,6 +113,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       orgTimezoneId: data.dec(_f$orgTimezoneId),
       unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
       providerConnectionStatuses: data.dec(_f$providerConnectionStatuses),
+      deploymentMode: data.dec(_f$deploymentMode),
     );
   }
 
@@ -184,6 +200,7 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     String? orgTimezoneId,
     int? unresolvedIdentityCount,
     Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
+    String? deploymentMode,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -235,6 +252,7 @@ class _AppStateCopyWithImpl<$R, $Out>
     String? orgTimezoneId,
     int? unresolvedIdentityCount,
     Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
+    String? deploymentMode,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -246,6 +264,7 @@ class _AppStateCopyWithImpl<$R, $Out>
         #unresolvedIdentityCount: unresolvedIdentityCount,
       if (providerConnectionStatuses != null)
         #providerConnectionStatuses: providerConnectionStatuses,
+      if (deploymentMode != null) #deploymentMode: deploymentMode,
     }),
   );
   @override
@@ -266,6 +285,7 @@ class _AppStateCopyWithImpl<$R, $Out>
       #providerConnectionStatuses,
       or: $value.providerConnectionStatuses,
     ),
+    deploymentMode: data.get(#deploymentMode, or: $value.deploymentMode),
   );
 
   @override

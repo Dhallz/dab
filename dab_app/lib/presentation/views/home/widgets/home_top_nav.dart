@@ -15,6 +15,7 @@ class HomeTopNav extends StatelessWidget {
   final String userName;
   final String userInitials;
   final VoidCallback onOpenSettings;
+  final bool showAdminTab;
 
   const HomeTopNav({
     super.key,
@@ -24,6 +25,7 @@ class HomeTopNav extends StatelessWidget {
     required this.userName,
     required this.userInitials,
     required this.onOpenSettings,
+    this.showAdminTab = true,
   });
 
   @override
@@ -54,6 +56,7 @@ class HomeTopNav extends StatelessWidget {
                     currentIndex: currentIndex,
                     onTap: onTap,
                     adminTabBadgeCount: adminTabBadgeCount,
+                    showAdminTab: showAdminTab,
                   ),
                 ],
               ),

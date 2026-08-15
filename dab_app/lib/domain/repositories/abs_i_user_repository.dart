@@ -5,6 +5,8 @@ import '../../domain/entities/user/user.dart';
 import '../../domain/entities/user/user_role.dart';
 import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
+import '../../domain/entities/user/user_provider_credential_summary.dart';
+import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../core/failures.dart';
 
 abstract class IUserRepository {
@@ -52,5 +54,39 @@ abstract class IUserRepository {
     required String email,
     required String password,
     UserRole role = UserRole.standard,
+  });
+
+  /// Self-serve: masked credential status for the authenticated user.
+  Future<Either<AppFailure, List<UserProviderCredentialSummary>>>
+  listMyCredentials();
+
+  /// Self-serve: save a personal PAT or workspace bot token.
+  Future<Either<AppFailure, UserProviderCredentialSummary>> saveMyCredential({
+    required String providerId,
+    required Map<String, dynamic> settings,
+  });
+
+  /// Self-serve: test stored or posted credentials.
+  Future<Either<AppFailure, void>> testMyCredential({
+    required String providerId,
+    Map<String, dynamic>? settings,
+  });
+
+  /// Self-serve: disconnect a personal credential (and shared bot if last user).
+  Future<Either<AppFailure, void>> deleteMyCredential({
+    required String providerId,
+  });
+
+  /// Self-serve: start browser OAuth for a provider. Returns the authorize URL.
+  Future<Either<AppFailure, String>> startMyOauth({
+    required String providerId,
+  });
+
+  /// Self-serve: Jira projects visible to the caller plus instance watch keys.
+  Future<Either<AppFailure, JiraProjectWatchList>> listMyJiraProjects();
+
+  /// Self-serve: replace instance Jira `projectKeys`.
+  Future<Either<AppFailure, JiraProjectWatchList>> saveMyJiraProjects({
+    required List<String> projectKeys,
   });
 }

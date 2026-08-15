@@ -48,14 +48,16 @@ void main() {
       verify(() => mockSocket2.trySendText(any())).called(1);
     });
 
-    test('broadcastToUser should target only matching sessions', () {
+    test('broadcastToUser ACTIVITY_RECEIVED stays author-scoped', () {
       final mockSocket2 = MockRelicWebSocket();
       when(() => mockSocket2.trySendText(any())).thenReturn(true);
 
       presenceService.addSession(mockSocket, 'user1');
       presenceService.addSession(mockSocket2, 'user2');
 
-      presenceService.broadcastToUser('user2', 'alert', {'msg': 'hello'});
+      presenceService.broadcastToUser('user2', 'ACTIVITY_RECEIVED', {
+        'id': 'a-1',
+      });
 
       verifyNever(() => mockSocket.trySendText(any()));
       verify(() => mockSocket2.trySendText(any())).called(1);

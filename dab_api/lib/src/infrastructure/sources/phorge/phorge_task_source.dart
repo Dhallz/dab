@@ -1,9 +1,12 @@
 import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
@@ -17,8 +20,24 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// 3. Bundling (pairing transactions with their parent tasks).
 class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
   final ConduitProtocol _client;
+  final ICredentialResolver? _credentials;
+  final AbsIProviderConfigRepository? _configs;
 
-  PhorgeTaskSource(this._client);
+  PhorgeTaskSource(
+    this._client, {
+    ICredentialResolver? credentials,
+    AbsIProviderConfigRepository? configs,
+  }) : _credentials = credentials,
+       _configs = configs;
+
+  String? _activeToken;
+
+  Future<Map<String, dynamic>> _conduitCall(
+    String method,
+    Map<String, dynamic> params,
+  ) {
+    return _client.call(method, params, apiToken: _activeToken);
+  }
 
   @override
   /// [ARCH: INFRASTRUCTURE_ENTRY]
@@ -31,11 +50,14 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
     bool authoredOnly,
   ) async {
     final sprintTag = start.phorgeSprintTag;
-
-    if (authoredOnly) {
-      return _fetchAuthoredActivities(users, start, end, sprintTag);
-    } else {
-      return _fetchGlobalSprintActivities(start, end, sprintTag);
+    _activeToken = await _resolvePersonalToken(users);
+    try {
+      if (authoredOnly) {
+        return await _fetchAuthoredActivities(users, start, end, sprintTag);
+      }
+      return await _fetchGlobalSprintActivities(start, end, sprintTag);
+    } finally {
+      _activeToken = null;
     }
   }
 
@@ -82,7 +104,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
     String sprintTag,
   ) async {
     // 1. Fetch Sprint Project PHID
-    final projectResult = await _client.call('project.search', {
+    final projectResult = await _conduitCall('project.search', {
       'constraints': {'query': sprintTag},
     });
     final projectData = projectResult['data'] as List<dynamic>?;
@@ -90,7 +112,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
     final sprintPhid = projectData.first['phid'].toString();
 
     // 2. Fetch all tasks in this sprint
-    final tasksResult = await _client.call('maniphest.search', {
+    final tasksResult = await _conduitCall('maniphest.search', {
       'constraints': {
         'projects': [sprintPhid],
       },
@@ -129,7 +151,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
   }) async {
     if (taskPhid.isEmpty || transactionPhids.isEmpty) return null;
 
-    final txResult = await _client.call('transaction.search', {
+    final txResult = await _conduitCall('transaction.search', {
       'objectIdentifier': taskPhid,
       'limit': 100,
     });
@@ -142,7 +164,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
         .toList();
     if (transactions.isEmpty) return null;
 
-    final taskResult = await _client.call('maniphest.search', {
+    final taskResult = await _conduitCall('maniphest.search', {
       'constraints': {
         'phids': [taskPhid],
       },
@@ -182,7 +204,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
         params['after'] = afterCursor;
       }
 
-      final txResult = await _client.call('transaction.search', params);
+      final txResult = await _conduitCall('transaction.search', params);
       final pageRows = txResult['data'] as List<dynamic>? ?? const [];
       if (pageRows.isEmpty) break;
 
@@ -250,7 +272,7 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
         .map((tx) => tx.objectPHID)
         .toSet()
         .toList();
-    final taskResult = await _client.call('maniphest.search', {
+    final taskResult = await _conduitCall('maniphest.search', {
       'constraints': {'phids': taskPhids},
       'attachments': {'projects': true},
     });
@@ -308,5 +330,29 @@ class PhorgeTaskSource implements IActivitySource<PhorgeTaskBundleDto> {
     final content = firstComment['content'] as Map<String, dynamic>?;
     if (content == null) return null;
     return content['raw']?.toString();
+  }
+
+  Future<String?> _resolvePersonalToken(List<User> users) async {
+    final credentials = _credentials;
+    final configs = _configs;
+    if (credentials == null || configs == null) return null;
+    final all = (await configs.getConfigs()).getOrElse((_) => []);
+    final org = all.where((c) => c.id == 'phorge').firstOrNull;
+    final orgSettings = org?.settings ?? const <String, dynamic>{};
+    var token = extractProviderToken('phorge', orgSettings);
+    if (token.isNotEmpty) return token;
+    final userSettings = await credentials.getUserSettingsForUsers(
+      userIds: users.map((u) => u.id),
+      providerId: 'phorge',
+    );
+    for (final user in users) {
+      final merged = credentials.overlay(
+        orgSettings: orgSettings,
+        userSettings: userSettings[user.id],
+      );
+      token = extractProviderToken('phorge', merged);
+      if (token.isNotEmpty) return token;
+    }
+    return null;
   }
 }

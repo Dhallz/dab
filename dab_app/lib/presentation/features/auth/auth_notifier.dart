@@ -22,6 +22,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   @override
   AuthState build() {
+    sl.authInterceptor.onSessionExpired = logout;
     Future.microtask(checkAuth);
     return AuthState.initial();
   }

@@ -28,6 +28,9 @@ class DirectoryList extends ConsumerWidget {
         if (isUsers)
           ...state.users.map((u) {
             final isSelected = state.selectedUserIds.contains(u.id);
+            final missing = state.selectedProviders
+                .where((p) => !u.linkedProviderIds.contains(p))
+                .toList();
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: SelectionTile(
@@ -35,6 +38,9 @@ class DirectoryList extends ConsumerWidget {
                 isSelected: isSelected,
                 avatarUrl: u.avatarUrl,
                 iconData: u.avatarUrl == null ? AppIcons.user : null,
+                subtitle: missing.isEmpty
+                    ? null
+                    : context.l10n.explorerUserNotConnected(missing.first),
                 onTap: () => notifier.toggleUser(u.id),
               ),
             );

@@ -47,7 +47,10 @@ void main() {
       expect(p.projectKey, 'FOO');
       expect(a.title, contains('FOO-10'));
       expect(a.url, contains('browse'));
-      expect(activities.any((e) => e.content.contains('Looks good to me.')), isTrue);
+      expect(
+        activities.any((e) => e.content.contains('Looks good to me.')),
+        isTrue,
+      );
     });
 
     test('returns empty without dabUserId', () {
@@ -73,78 +76,122 @@ void main() {
       expect(dto.toActivities([user]), isEmpty);
     });
 
-    test('maps linked comment activity even when issue owner is unavailable', () {
-      final user = User(
-        id: 'u1',
-        name: 'Pat',
-        email: 'pat@test',
-        role: UserRole.standard,
-        passwordHash: '',
-        createdAt: DateTime.utc(2020),
-      );
+    test(
+      'maps linked comment activity even when issue owner is unavailable',
+      () {
+        final user = User(
+          id: 'u1',
+          name: 'Pat',
+          email: 'pat@test',
+          role: UserRole.standard,
+          passwordHash: '',
+          createdAt: DateTime.utc(2020),
+        );
 
-      final dto = JiraIssueDto(
-        issueKey: 'FOO-12',
-        projectKey: 'FOO',
-        summary: 'Investigate bug',
-        statusName: 'Open',
-        browseUrl: 'https://acme.atlassian.net/browse/FOO-12',
-        updatedAt: DateTime.utc(2026, 5, 1, 12),
-        siteHost: 'acme.atlassian.net',
-        comments: [
-          JiraIssueCommentDto(
-            id: 'c-2',
-            body: 'I reproduced this locally.',
-            createdAt: DateTime.utc(2026, 5, 1, 13),
+        final dto = JiraIssueDto(
+          issueKey: 'FOO-12',
+          projectKey: 'FOO',
+          summary: 'Investigate bug',
+          statusName: 'Open',
+          browseUrl: 'https://acme.atlassian.net/browse/FOO-12',
+          updatedAt: DateTime.utc(2026, 5, 1, 12),
+          siteHost: 'acme.atlassian.net',
+          comments: [
+            JiraIssueCommentDto(
+              id: 'c-2',
+              body: 'I reproduced this locally.',
+              createdAt: DateTime.utc(2026, 5, 1, 13),
+              dabUserId: 'u1',
+              authorDisplayName: 'Pat Slack',
+            ),
+          ],
+        );
+
+        final activities = dto.toActivities([user]);
+        expect(activities, hasLength(1));
+        expect(activities.first.content, contains('reproduced'));
+        expect(activities.first.userId, 'u1');
+      },
+    );
+
+    test(
+      'keeps comment event using fallback user when comment author is unmapped',
+      () {
+        final user = User(
+          id: 'u1',
+          name: 'Pat',
+          email: 'pat@test',
+          role: UserRole.standard,
+          passwordHash: '',
+          createdAt: DateTime.utc(2020),
+        );
+
+        final dto = JiraIssueDto(
+          issueKey: 'FOO-13',
+          projectKey: 'FOO',
+          summary: 'Discuss scope',
+          statusName: 'Open',
+          browseUrl: 'https://acme.atlassian.net/browse/FOO-13',
+          updatedAt: DateTime.utc(2026, 5, 1, 12),
+          siteHost: 'acme.atlassian.net',
+          dabUserId: 'u1',
+          comments: [
+            JiraIssueCommentDto(
+              id: 'c-3',
+              body: 'Unlinked account comment',
+              createdAt: DateTime.utc(2026, 5, 1, 13),
+              dabUserId: null,
+              authorDisplayName: 'External Person',
+            ),
+          ],
+        );
+
+        final activities = dto.toActivities([user]);
+        expect(activities, hasLength(2));
+        final commentEvent = activities.firstWhere(
+          (a) => a.content.contains('Unlinked account comment'),
+        );
+        expect(commentEvent.userId, 'u1');
+        expect(commentEvent.authorName, contains('External Person'));
+      },
+    );
+
+    test(
+      'status moves mint a new activity id so Dashboard can live-publish',
+      () {
+        final user = User(
+          id: 'u1',
+          name: 'Pat',
+          email: 'pat@test',
+          role: UserRole.standard,
+          passwordHash: '',
+          createdAt: DateTime.utc(2020),
+        );
+
+        JiraIssueDto issueAt(DateTime updatedAt, String status) {
+          return JiraIssueDto(
+            issueKey: 'FOO-10',
+            projectKey: 'FOO',
+            summary: 'Fix flaky test',
+            statusName: status,
+            browseUrl: 'https://acme.atlassian.net/browse/FOO-10',
+            updatedAt: updatedAt,
+            siteHost: 'acme.atlassian.net',
             dabUserId: 'u1',
-            authorDisplayName: 'Pat Slack',
-          ),
-        ],
-      );
+          );
+        }
 
-      final activities = dto.toActivities([user]);
-      expect(activities, hasLength(1));
-      expect(activities.first.content, contains('reproduced'));
-      expect(activities.first.userId, 'u1');
-    });
-
-    test('keeps comment event using fallback user when comment author is unmapped', () {
-      final user = User(
-        id: 'u1',
-        name: 'Pat',
-        email: 'pat@test',
-        role: UserRole.standard,
-        passwordHash: '',
-        createdAt: DateTime.utc(2020),
-      );
-
-      final dto = JiraIssueDto(
-        issueKey: 'FOO-13',
-        projectKey: 'FOO',
-        summary: 'Discuss scope',
-        statusName: 'Open',
-        browseUrl: 'https://acme.atlassian.net/browse/FOO-13',
-        updatedAt: DateTime.utc(2026, 5, 1, 12),
-        siteHost: 'acme.atlassian.net',
-        dabUserId: 'u1',
-        comments: [
-          JiraIssueCommentDto(
-            id: 'c-3',
-            body: 'Unlinked account comment',
-            createdAt: DateTime.utc(2026, 5, 1, 13),
-            dabUserId: null,
-            authorDisplayName: 'External Person',
-          ),
-        ],
-      );
-
-      final activities = dto.toActivities([user]);
-      expect(activities, hasLength(2));
-      final commentEvent = activities.firstWhere(
-        (a) => a.content.contains('Unlinked account comment'),
-      );
-      expect(commentEvent.userId, 'u1');
-      expect(commentEvent.authorName, contains('External Person'));
-    });
+        final first = issueAt(
+          DateTime.utc(2026, 5, 1, 12),
+          'To Do',
+        ).toActivities([user]).single;
+        final moved = issueAt(
+          DateTime.utc(2026, 5, 1, 12, 5),
+          'In Progress',
+        ).toActivities([user]).single;
+        expect(first.id, isNot(moved.id));
+        expect(moved.content, contains('In Progress'));
+      },
+    );
   });
 }

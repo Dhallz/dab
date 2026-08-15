@@ -73,6 +73,7 @@ void main() {
       () => DashboardNotifier(
         ActivityUseCases(repository),
         UpcomingEventUseCases(upcomingRepository),
+        isPersonalDeployment: () => false,
       ),
     );
     final keepAlive = container.listen<DashboardState>(
@@ -128,6 +129,7 @@ void main() {
         () => DashboardNotifier(
           ActivityUseCases(repository),
           UpcomingEventUseCases(upcomingRepository),
+          isPersonalDeployment: () => false,
         ),
       );
       final keepAlive = container.listen<DashboardState>(
@@ -170,4 +172,53 @@ void main() {
       ).called(1);
     },
   );
+
+  test('personal deployment hydrates the team wall with global scope', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: true,
+        includeArchived: true,
+      ),
+    ).thenAnswer(
+      (_) async => Right([
+        Activity(
+          id: 'bob-push',
+          userId: 'bob',
+          provider: const GenericProvider(name: 'github'),
+          title: 'Bob push',
+          content: 'sha',
+          authorName: 'Bob',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
+        ),
+      ]),
+    );
+
+    final container = containerWithOverrides(
+      () => DashboardNotifier(
+        ActivityUseCases(repository),
+        UpcomingEventUseCases(upcomingRepository),
+        isPersonalDeployment: () => true,
+      ),
+    );
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+
+    final state = container.read(dashboardNotifierProvider);
+    expect(state.activities.map((a) => a.id), ['bob-push']);
+    verify(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: true,
+        includeArchived: true,
+      ),
+    ).called(1);
+  });
 }

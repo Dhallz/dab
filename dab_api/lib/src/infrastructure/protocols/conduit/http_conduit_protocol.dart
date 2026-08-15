@@ -37,11 +37,13 @@ class HttpConduitProtocol implements ConduitProtocol {
   @override
   Future<Map<String, dynamic>> call(
     String method,
-    Map<String, dynamic> params,
-  ) async {
+    Map<String, dynamic> params, {
+    String? apiToken,
+  }) async {
     final url = Uri.parse('$_baseUrl/api/$method');
 
-    final body = {...params, 'api.token': _apiToken};
+    final token = (apiToken ?? _apiToken).trim();
+    final body = {...params, 'api.token': token};
 
     final formBody = <String, String>{};
 

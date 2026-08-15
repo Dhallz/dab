@@ -3,6 +3,11 @@
 
 library;
 
+import 'dart:convert';
+
+import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
+import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
+
 String normalizeJiraCloudHost(String raw) {
   final t = raw.trim();
   if (t.isEmpty) return '';
@@ -11,6 +16,61 @@ String normalizeJiraCloudHost(String raw) {
   final parsed = Uri.tryParse(u);
   if (parsed == null || parsed.host.isEmpty) return '';
   return parsed.host.toLowerCase();
+}
+
+/// REST API base + headers for Jira Cloud PAT or OAuth 3LO.
+class JiraRequestAuth {
+  const JiraRequestAuth({
+    required this.apiBase,
+    required this.browseHost,
+    required this.headers,
+  });
+
+  /// Origin used for REST (`https://host` or `https://api.atlassian.com/ex/jira/{cloudId}`).
+  final String apiBase;
+
+  /// Hostname for browse URLs (`https://{browseHost}/browse/KEY`).
+  final String browseHost;
+
+  final Map<String, String> headers;
+}
+
+JiraRequestAuth? jiraRequestAuth(
+  Map<String, dynamic> settings, {
+  ProviderConfig? orgConfig,
+}) {
+  final token = extractProviderToken('jira', settings);
+  if (token.isEmpty) return null;
+
+  final browseHost = normalizeJiraCloudHost(
+    (settings['instanceUrl'] ?? orgConfig?.baseUrl ?? '').toString(),
+  );
+
+  if (isOauthCredential(settings)) {
+    final cloudId = (settings['cloudId'] ?? '').toString().trim();
+    if (cloudId.isEmpty) return null;
+    return JiraRequestAuth(
+      apiBase: 'https://api.atlassian.com/ex/jira/$cloudId',
+      browseHost: browseHost.isEmpty ? 'atlassian.net' : browseHost,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+  }
+
+  final email =
+      (settings['email'] ?? settings['api.email'] ?? '').toString().trim();
+  if (email.isEmpty || browseHost.isEmpty) return null;
+  final encoded = base64Encode(utf8.encode('$email:$token'));
+  return JiraRequestAuth(
+    apiBase: 'https://$browseHost',
+    browseHost: browseHost,
+    headers: {
+      'Authorization': 'Basic $encoded',
+      'Accept': 'application/json',
+    },
+  );
 }
 
 String jiraUtcDateTimeLiteral(DateTime utc) {

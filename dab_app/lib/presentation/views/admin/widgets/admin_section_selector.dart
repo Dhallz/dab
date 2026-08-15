@@ -1,4 +1,5 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +13,14 @@ class AdminSectionSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(adminNotifierProvider.notifier);
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
     final cs = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: AdminSection.values.map((section) {
+      children: adminSectionsFor(isPersonal: isPersonal).map((section) {
         return ChoiceChip(
           label: Text(section.localizedTitle(context.l10n)),
           selected: section == selectedSection,

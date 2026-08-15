@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
@@ -23,11 +22,13 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     this._configRepository,
     this._userRepository,
     this._jsonRest,
+    this._credentials,
   );
 
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
+  final ICredentialResolver _credentials;
 
   static const _searchFields =
       'key,summary,status,updated,assignee,reporter,creator,project,comment';
@@ -42,16 +43,6 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     final cfg = await _activeJiraConfig();
     if (cfg == null) return const [];
 
-    final host = normalizeJiraCloudHost(cfg.baseUrl);
-    if (host.isEmpty) return const [];
-
-    final email = _email(cfg.settings);
-    final token = _apiToken(cfg.settings);
-    if (email.isEmpty || token.isEmpty) return const [];
-
-    final projectKeys = _projectKeys(cfg.settings);
-    final extraJql = (cfg.settings['extraJql'] ?? '').toString();
-
     final identitiesResult = await _userRepository
         .getIdentitiesForUsersAndProvider(users.map((u) => u.id), 'jira');
     final linkedIdentities = identitiesResult
@@ -59,6 +50,27 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
         .where((i) => i.status == UserIdentityStatus.linked)
         .toList();
     if (linkedIdentities.isEmpty) return const [];
+
+    final userSettings = await _credentials.getUserSettingsForUsers(
+      userIds: linkedIdentities.map((i) => i.userId),
+      providerId: 'jira',
+    );
+
+    var auth = jiraRequestAuth(cfg.settings, orgConfig: cfg);
+    if (auth == null) {
+      for (final identity in linkedIdentities) {
+        final merged = _credentials.overlay(
+          orgSettings: cfg.settings,
+          userSettings: userSettings[identity.userId],
+        );
+        auth = jiraRequestAuth(merged, orgConfig: cfg);
+        if (auth != null) break;
+      }
+    }
+    if (auth == null) return const [];
+
+    final projectKeys = _projectKeys(cfg.settings);
+    final extraJql = (cfg.settings['extraJql'] ?? '').toString();
 
     final accountIds = linkedIdentities.map((i) => i.externalId).toSet().toList();
 
@@ -76,14 +88,15 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
       for (final i in linkedIdentities) i.externalId: i.userId,
     };
 
-    final authHeaders = _basicAuthHeaders(email, token);
+    final authHeaders = auth.headers;
+    final host = auth.browseHost;
     final results = <JiraIssueDto>[];
     final seenKeys = <String>{};
 
     var startAt = 0;
     const maxResults = 50;
     for (var page = 0; page < 20; page++) {
-      final uri = Uri.parse('https://$host/rest/api/3/search/jql').replace(
+      final uri = Uri.parse('${auth.apiBase}/rest/api/3/search/jql').replace(
         queryParameters: {
           'jql': jql,
           'startAt': '$startAt',
@@ -122,7 +135,7 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
         if (dto == null) continue;
 
         final fetchedComments = await _fetchIssueComments(
-          host: host,
+          apiBase: auth.apiBase,
           issueKey: dto.issueKey,
           authHeaders: authHeaders,
           accountToUser: accountToUser,
@@ -163,27 +176,20 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     final cfg = await _activeJiraConfig();
     if (cfg == null) return const Right(null);
 
-    final host = normalizeJiraCloudHost(cfg.baseUrl);
-    if (host.isEmpty) return const Right(null);
-
-    final atlassianEmail = _email(cfg.settings);
-    final token = _apiToken(cfg.settings);
-    if (atlassianEmail.isEmpty || token.isEmpty) return const Right(null);
+    final auth = jiraRequestAuth(cfg.settings, orgConfig: cfg);
+    if (auth == null) return const Right(null);
 
     final query = email.trim().isNotEmpty ? email.trim() : name.trim();
     if (query.isEmpty) return const Right(null);
 
-    final uri = Uri.parse('https://$host/rest/api/3/user/search').replace(
+    final uri = Uri.parse('${auth.apiBase}/rest/api/3/user/search').replace(
       queryParameters: {'query': query},
     );
 
     try {
       final list = await _jsonRest.getJsonList(
         uri,
-        headers: {
-          ..._basicAuthHeaders(atlassianEmail, token),
-          'Accept': 'application/json',
-        },
+        headers: auth.headers,
       );
       Map<String, dynamic>? firstUser;
       for (final raw in list) {
@@ -213,14 +219,6 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     return null;
   }
 
-  String _email(Map<String, dynamic> settings) =>
-      (settings['api.email'] ?? settings['email'] ?? '').toString().trim();
-
-  String _apiToken(Map<String, dynamic> settings) =>
-      (settings['api.token'] ?? settings['apiToken'] ?? settings['token'] ?? '')
-          .toString()
-          .trim();
-
   List<String> _projectKeys(Map<String, dynamic> settings) {
     final raw = (settings['projectKeys'] ?? '').toString();
     if (raw.trim().isEmpty) return const [];
@@ -229,12 +227,6 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
         .map((k) => k.trim())
         .where((k) => k.isNotEmpty)
         .toList();
-  }
-
-  Map<String, String> _basicAuthHeaders(String email, String token) {
-    final bytes = utf8.encode('$email:$token');
-    final encoded = base64Encode(bytes);
-    return {'Authorization': 'Basic $encoded'};
   }
 
   JiraIssueDto? _mapSearchIssue({
@@ -345,7 +337,7 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
   }
 
   Future<List<JiraIssueCommentDto>> _fetchIssueComments({
-    required String host,
+    required String apiBase,
     required String issueKey,
     required Map<String, String> authHeaders,
     required Map<String, String> accountToUser,
@@ -357,7 +349,7 @@ class JiraIssueSource implements IActivitySource<JiraIssueDto>, IDiscoverySource
     const maxResults = 100;
 
     for (var page = 0; page < 10; page++) {
-      final uri = Uri.parse('https://$host/rest/api/3/issue/$issueKey/comment').replace(
+      final uri = Uri.parse('$apiBase/rest/api/3/issue/$issueKey/comment').replace(
         queryParameters: {
           'startAt': '$startAt',
           'maxResults': '$maxResults',

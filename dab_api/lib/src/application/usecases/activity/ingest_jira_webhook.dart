@@ -11,6 +11,7 @@ import '../../../infrastructure/database/redis/redis_service.dart';
 import '../../../infrastructure/sources/jira/jira_issue_source.dart';
 import '../../../infrastructure/sources/jira/jira_jql.dart';
 import '../../../infrastructure/websockets/presence_service.dart';
+import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Jira Cloud webhooks into the DAB live pipeline.
@@ -24,14 +25,16 @@ class IngestJiraWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final RedisService _redisService;
   final PresenceService _presenceService;
+  final ActivityLivePublisher? _livePublisher;
 
   IngestJiraWebhook(
     this._userRepository,
     this._activityRepository,
     this._providerConfigRepository,
     this._redisService,
-    this._presenceService,
-  );
+    this._presenceService, {
+    ActivityLivePublisher? livePublisher,
+  }) : _livePublisher = livePublisher;
 
   static const _supportedEvents = {
     'jira:issue_created',
@@ -215,12 +218,11 @@ class IngestJiraWebhook {
         return Left(createResult.getLeft().toNullable()!);
       }
       ingestedCount++;
-      await _redisService.incrementVersion();
-      await _redisService.fanOutActivity(activity);
-      _presenceService.broadcastToUser(
-        activity.userId,
-        'ACTIVITY_RECEIVED',
-        activity.toMap(),
+      await ActivityLivePublisher.emit(
+        redis: _redisService,
+        presence: _presenceService,
+        activity: activity,
+        publisher: _livePublisher,
       );
       print(
         '[JIRA_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

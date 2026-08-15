@@ -11,7 +11,8 @@ final _jiraIssueActivityUuid = const Uuid();
 /// [ARCH: INFRASTRUCTURE_DTO]
 /// ROLE: Parsed Jira Cloud issue search row for ingestion into DAB.
 /// CONTRACT: [dabUserId] is resolved in [JiraIssueSource] from linked identities;
-/// [siteHost] disambiguates v5 IDs across tenants (e.g. `acme.atlassian.net`).
+/// [siteHost] plus [updatedAt] disambiguate v5 IDs so a status move is a new
+/// live event (Explorer search still returns the latest snapshot per issue).
 ///
 /// Mapped to [Activity] via [OnJiraIssueDto.toActivities].
 @MappableClass()
@@ -20,6 +21,7 @@ class JiraIssueDto with JiraIssueDtoMappable {
   final String projectKey;
   final String summary;
   final String statusName;
+
   /// Deep link (`…/browse/PROJ-1`).
   final String browseUrl;
   final DateTime updatedAt;
@@ -75,7 +77,8 @@ extension OnJiraIssueDto on JiraIssueDto {
     final userById = {for (final u in users) u.id: u};
     final events = <Activity>[];
 
-    final fingerprint = '${siteHost.trim().toLowerCase()}|$issueKey';
+    final fingerprint =
+        '${siteHost.trim().toLowerCase()}|$issueKey|${updatedAt.toUtc().millisecondsSinceEpoch}';
     final headline = summary.trim().isEmpty ? issueKey : summary.trim();
     final issueTitle = '[$issueKey] $headline';
 

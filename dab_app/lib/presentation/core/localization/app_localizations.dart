@@ -1969,6 +1969,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{label}: {count}'**
   String activityKindCountTooltip(Object label, Object count);
+
+  /// No description provided for @settingsConnectedAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected accounts'**
+  String get settingsConnectedAccountsTitle;
+
+  /// No description provided for @settingsConnectedAccountsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the providers you use. DAB never asks for your password — you sign in at the provider.'**
+  String get settingsConnectedAccountsSubtitle;
+
+  /// No description provided for @settingsBotTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a bot token (one per workspace), not your user token.'**
+  String get settingsBotTokenHint;
+
+  /// No description provided for @settingsCredentialConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get settingsCredentialConnect;
+
+  /// No description provided for @settingsCredentialTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get settingsCredentialTest;
+
+  /// No description provided for @settingsCredentialDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get settingsCredentialDisconnect;
+
+  /// No description provided for @settingsCredentialConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get settingsCredentialConnected;
+
+  /// No description provided for @settingsCredentialTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection succeeded'**
+  String get settingsCredentialTestOk;
+
+  /// No description provided for @settingsCredentialDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get settingsCredentialDisconnected;
+
+  /// No description provided for @settingsTeamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get settingsTeamTitle;
+
+  /// No description provided for @settingsTeamSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a teammate so they can connect their own tokens.'**
+  String get settingsTeamSubtitle;
+
+  /// No description provided for @explorerUserNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Hasn\'t connected {provider}'**
+  String explorerUserNotConnected(String provider);
+
+  /// No description provided for @adminDeploymentModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment mode'**
+  String get adminDeploymentModeTitle;
+
+  /// No description provided for @adminDeploymentModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.'**
+  String get adminDeploymentModeSubtitle;
+
+  /// No description provided for @adminDeploymentModeOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get adminDeploymentModeOrganization;
+
+  /// No description provided for @adminDeploymentModePersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal / small team'**
+  String get adminDeploymentModePersonal;
+
+  /// No description provided for @adminDeploymentModeSavedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment mode saved'**
+  String get adminDeploymentModeSavedSnack;
+
+  /// No description provided for @adminFieldOauthClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth client ID'**
+  String get adminFieldOauthClientId;
+
+  /// No description provided for @adminFieldOauthClientIdJiraHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Client ID from Authorization → OAuth 2.0 (3LO), not App ID. Add Jira API scopes read:jira-work and read:jira-user under Permissions first.'**
+  String get adminFieldOauthClientIdJiraHint;
+
+  /// No description provided for @adminOauthCallbackMustMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Callback URL in the provider console must be exactly: {url}'**
+  String adminOauthCallbackMustMatch(String url);
+
+  /// No description provided for @adminFieldOauthClientSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth client secret'**
+  String get adminFieldOauthClientSecret;
+
+  /// No description provided for @adminFieldInstanceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance URL'**
+  String get adminFieldInstanceUrl;
+
+  /// No description provided for @adminPersonalProvidersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.'**
+  String get adminPersonalProvidersHint;
+
+  /// No description provided for @settingsConnectWithProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with {provider}'**
+  String settingsConnectWithProvider(String provider);
+
+  /// No description provided for @settingsOauthOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish signing in in your browser, then return here.'**
+  String get settingsOauthOpened;
+
+  /// No description provided for @settingsOauthNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'An admin must save this provider’s OAuth app in Admin → Providers first.'**
+  String get settingsOauthNotConfigured;
+
+  /// No description provided for @settingsPhorgeTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phorge has no user OAuth. Paste a Conduit API token if you use Phorge.'**
+  String get settingsPhorgeTokenHint;
+
+  /// No description provided for @settingsJiraProjectsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get settingsJiraProjectsTitle;
+
+  /// No description provided for @settingsJiraProjectsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which Jira projects DAB should watch for tasks. This list is shared with your team.'**
+  String get settingsJiraProjectsSubtitle;
+
+  /// No description provided for @settingsJiraProjectsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects were visible for this account.'**
+  String get settingsJiraProjectsEmpty;
+
+  /// No description provided for @settingsJiraProjectsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save projects'**
+  String get settingsJiraProjectsSave;
+
+  /// No description provided for @adminPublicApiUrlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public API URL'**
+  String get adminPublicApiUrlTitle;
+
+  /// No description provided for @adminPublicApiUrlSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reachable base URL for OAuth callbacks and webhook defaults (no trailing slash).'**
+  String get adminPublicApiUrlSubtitle;
+
+  /// No description provided for @adminPublicApiUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'https://your-dab-api.example'**
+  String get adminPublicApiUrlLabel;
+
+  /// No description provided for @adminPublicApiUrlSavedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Public API URL saved'**
+  String get adminPublicApiUrlSavedSnack;
 }
 
 class _AppLocalizationsDelegate

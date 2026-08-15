@@ -1,0 +1,28 @@
+meta {
+  name: Save My Jira Projects
+  type: http
+  seq: 10
+}
+
+docs {
+  Replaces instance Jira `projectKeys` with the keys the caller can still see.
+  Body: `{ "projectKeys": ["DAB", "OPS"] }`.
+}
+
+put {
+  url: {{baseUrl}}/users/me/credentials/jira/projects
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "projectKeys": ["DAB"]
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

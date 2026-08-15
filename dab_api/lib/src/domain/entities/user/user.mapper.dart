@@ -77,6 +77,13 @@ class UserMapper extends ClassMapperBase<User> {
     _$updatedAt,
     opt: true,
   );
+  static List<String> _$linkedProviderIds(User v) => v.linkedProviderIds;
+  static const Field<User, List<String>> _f$linkedProviderIds = Field(
+    'linkedProviderIds',
+    _$linkedProviderIds,
+    opt: true,
+    def: const [],
+  );
 
   @override
   final MappableFields<User> fields = const {
@@ -90,6 +97,7 @@ class UserMapper extends ClassMapperBase<User> {
     #phorgeUsername: _f$phorgeUsername,
     #createdAt: _f$createdAt,
     #updatedAt: _f$updatedAt,
+    #linkedProviderIds: _f$linkedProviderIds,
   };
 
   static User _instantiate(DecodingData data) {
@@ -104,6 +112,7 @@ class UserMapper extends ClassMapperBase<User> {
       phorgeUsername: data.dec(_f$phorgeUsername),
       createdAt: data.dec(_f$createdAt),
       updatedAt: data.dec(_f$updatedAt),
+      linkedProviderIds: data.dec(_f$linkedProviderIds),
     );
   }
 
@@ -153,6 +162,8 @@ extension UserValueCopy<$R, $Out> on ObjectCopyWith<$R, User, $Out> {
 
 abstract class UserCopyWith<$R, $In extends User, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get linkedProviderIds;
   $R call({
     String? id,
     String? name,
@@ -164,6 +175,7 @@ abstract class UserCopyWith<$R, $In extends User, $Out>
     String? phorgeUsername,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<String>? linkedProviderIds,
   });
   UserCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -174,6 +186,13 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
 
   @override
   late final ClassMapperBase<User> $mapper = UserMapper.ensureInitialized();
+  @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get linkedProviderIds => ListCopyWith(
+    $value.linkedProviderIds,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(linkedProviderIds: v),
+  );
   @override
   $R call({
     String? id,
@@ -186,6 +205,7 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     Object? phorgeUsername = $none,
     Object? createdAt = $none,
     Object? updatedAt = $none,
+    List<String>? linkedProviderIds,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -198,6 +218,7 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
       if (phorgeUsername != $none) #phorgeUsername: phorgeUsername,
       if (createdAt != $none) #createdAt: createdAt,
       if (updatedAt != $none) #updatedAt: updatedAt,
+      if (linkedProviderIds != null) #linkedProviderIds: linkedProviderIds,
     }),
   );
   @override
@@ -212,6 +233,10 @@ class _UserCopyWithImpl<$R, $Out> extends ClassCopyWithBase<$R, User, $Out>
     phorgeUsername: data.get(#phorgeUsername, or: $value.phorgeUsername),
     createdAt: data.get(#createdAt, or: $value.createdAt),
     updatedAt: data.get(#updatedAt, or: $value.updatedAt),
+    linkedProviderIds: data.get(
+      #linkedProviderIds,
+      or: $value.linkedProviderIds,
+    ),
   );
 
   @override

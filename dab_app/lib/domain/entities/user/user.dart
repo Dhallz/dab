@@ -14,6 +14,7 @@ class User with UserMappable {
   final String email;
   final UserRole role;
   final String? avatarUrl;
+  final List<String> linkedProviderIds;
 
   const User({
     required this.id,
@@ -21,6 +22,7 @@ class User with UserMappable {
     required this.email,
     this.role = UserRole.standard,
     this.avatarUrl,
+    this.linkedProviderIds = const [],
   });
 }
 

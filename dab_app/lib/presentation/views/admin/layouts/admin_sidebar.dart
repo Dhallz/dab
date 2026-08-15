@@ -1,5 +1,6 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/admin_profile_card.dart';
@@ -15,7 +16,11 @@ class AdminSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(adminNotifierProvider.notifier);
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
     final cs = Theme.of(context).colorScheme;
+    final sections = adminSectionsFor(isPersonal: isPersonal);
     return AppSidebar(
       children: [
         Text(
@@ -28,29 +33,24 @@ class AdminSidebar extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        SelectionTile(
-          label: context.l10n.adminNavProviders,
-          isSelected: selectedSection == AdminSection.providers,
-          iconData: Icons.vibration_outlined,
-          onTap: () => notifier.setSection(AdminSection.providers),
-        ),
-        const SizedBox(height: 8),
-        SelectionTile(
-          label: context.l10n.adminNavIdentities,
-          isSelected: selectedSection == AdminSection.identities,
-          iconData: Icons.fingerprint_outlined,
-          onTap: () => notifier.setSection(AdminSection.identities),
-        ),
-        const SizedBox(height: 8),
-        SelectionTile(
-          label: context.l10n.adminNavSecurity,
-          isSelected: selectedSection == AdminSection.security,
-          iconData: Icons.shield_outlined,
-          onTap: () => notifier.setSection(AdminSection.security),
-        ),
+        for (var i = 0; i < sections.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          SelectionTile(
+            label: sections[i].localizedTitle(context.l10n),
+            isSelected: selectedSection == sections[i],
+            iconData: _iconFor(sections[i]),
+            onTap: () => notifier.setSection(sections[i]),
+          ),
+        ],
         const Spacer(),
         const AdminProfileCard(),
       ],
     );
   }
+
+  IconData _iconFor(AdminSection section) => switch (section) {
+    AdminSection.providers => Icons.vibration_outlined,
+    AdminSection.identities => Icons.fingerprint_outlined,
+    AdminSection.security => Icons.shield_outlined,
+  };
 }

@@ -2,8 +2,10 @@ import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/linear/linear_issue_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
 import 'package:dab_api/src/domain/ports/i_discovery_source.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_repository.dart';
@@ -23,11 +25,13 @@ class LinearIssueSource
     this._configRepository,
     this._userRepository,
     this._graphql,
+    this._credentials,
   );
 
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final GraphqlProtocol _graphql;
+  final ICredentialResolver _credentials;
 
   static const _defaultEndpoint = 'https://api.linear.app/graphql';
 
@@ -67,9 +71,6 @@ query DabUserLookup(\$filter: UserFilter) {
     final cfg = await _activeLinearConfig();
     if (cfg == null) return const [];
 
-    final apiKey = _apiKey(cfg.settings);
-    if (apiKey.isEmpty) return const [];
-
     final identitiesResult = await _userRepository
         .getIdentitiesForUsersAndProvider(users.map((u) => u.id), 'linear');
     final linkedIdentities = identitiesResult
@@ -77,6 +78,65 @@ query DabUserLookup(\$filter: UserFilter) {
         .where((i) => i.status == UserIdentityStatus.linked)
         .toList();
     if (linkedIdentities.isEmpty) return const [];
+
+    final userSettings = await _credentials.getUserSettingsForUsers(
+      userIds: linkedIdentities.map((i) => i.userId),
+      providerId: 'linear',
+    );
+    final orgKey = _apiKey(cfg.settings);
+
+    Future<List<LinearIssueDto>> fetchWith({
+      required String apiKey,
+      required List<String> identityIds,
+    }) {
+      return _fetchIssues(
+        cfg: cfg,
+        apiKey: apiKey,
+        start: start,
+        end: end,
+        authoredOnly: authoredOnly,
+        linkedIdentities: linkedIdentities
+            .where((i) => identityIds.contains(i.externalId))
+            .toList(),
+      );
+    }
+
+    if (orgKey.isNotEmpty) {
+      return fetchWith(
+        apiKey: orgKey,
+        identityIds: linkedIdentities.map((i) => i.externalId).toList(),
+      );
+    }
+
+    final results = <LinearIssueDto>[];
+    final seen = <String>{};
+    for (final identity in linkedIdentities) {
+      final merged = _credentials.overlay(
+        orgSettings: cfg.settings,
+        userSettings: userSettings[identity.userId],
+      );
+      final key = _apiKey(merged);
+      if (key.isEmpty) continue;
+      final rows = await fetchWith(
+        apiKey: key,
+        identityIds: [identity.externalId],
+      );
+      for (final row in rows) {
+        if (seen.add(row.identifier)) results.add(row);
+      }
+    }
+    return results;
+  }
+
+  Future<List<LinearIssueDto>> _fetchIssues({
+    required ProviderConfig cfg,
+    required String apiKey,
+    required DateTime start,
+    required DateTime end,
+    required bool authoredOnly,
+    required List<UserIdentity> linkedIdentities,
+  }) async {
+    if (apiKey.isEmpty || linkedIdentities.isEmpty) return const [];
 
     final externalToUser = {
       for (final i in linkedIdentities) i.externalId: i.userId,

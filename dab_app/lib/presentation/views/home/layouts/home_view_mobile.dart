@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/entities/user/user_role.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_state.dart';
@@ -25,6 +26,11 @@ class HomeViewMobile extends ConsumerWidget {
     final adminBadgeCount = ref.watch(
       appNotifierProvider.select((s) => s.unresolvedIdentityCount),
     );
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
+    final showAdminTab =
+        authState.user?.role == UserRole.admin || !isPersonal;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -37,6 +43,7 @@ class HomeViewMobile extends ConsumerWidget {
               HomeMobileNav(
                 navigationShell: navigationShell,
                 adminTabBadgeCount: adminBadgeCount,
+                showAdminTab: showAdminTab,
                 onBranchSelected: (index) {
                   navigationShell.goBranch(
                     index,

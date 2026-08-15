@@ -1,6 +1,7 @@
 import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
+import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:flutter/material.dart';
 
@@ -16,12 +17,16 @@ class SecurityTab extends StatefulWidget {
   final List<User> users;
   final AdminNotifier notifier;
   final Map<String, String> systemSettings;
+  final ViewStatus status;
+  final String? errorMessage;
 
   const SecurityTab({
     super.key,
     required this.users,
     required this.notifier,
     required this.systemSettings,
+    this.status = ViewStatus.success,
+    this.errorMessage,
   });
 
   @override
@@ -31,7 +36,9 @@ class SecurityTab extends StatefulWidget {
 class _SecurityTabState extends State<SecurityTab> {
   String _query = '';
   late final TextEditingController _domainController;
+  late final TextEditingController _publicApiUrlController;
   late String _selectedTimezone;
+  late String _deploymentMode;
 
   @override
   void initState() {
@@ -39,9 +46,14 @@ class _SecurityTabState extends State<SecurityTab> {
     _domainController = TextEditingController(
       text: widget.systemSettings['allowed_domain'] ?? '',
     );
+    _publicApiUrlController = TextEditingController(
+      text: widget.systemSettings['public_api_url'] ?? '',
+    );
     _selectedTimezone = resolveOrgTimezoneId(
       widget.systemSettings[kSystemTimezoneSettingKey],
     );
+    _deploymentMode =
+        widget.systemSettings['deployment_mode'] ?? 'organization';
   }
 
   @override
@@ -51,17 +63,28 @@ class _SecurityTabState extends State<SecurityTab> {
         oldWidget.systemSettings['allowed_domain']) {
       _domainController.text = widget.systemSettings['allowed_domain'] ?? '';
     }
+    if (widget.systemSettings['public_api_url'] !=
+        oldWidget.systemSettings['public_api_url']) {
+      _publicApiUrlController.text =
+          widget.systemSettings['public_api_url'] ?? '';
+    }
     final nextTz = resolveOrgTimezoneId(
       widget.systemSettings[kSystemTimezoneSettingKey],
     );
     if (nextTz != _selectedTimezone) {
       _selectedTimezone = nextTz;
     }
+    final nextMode =
+        widget.systemSettings['deployment_mode'] ?? 'organization';
+    if (nextMode != oldWidget.systemSettings['deployment_mode']) {
+      _deploymentMode = nextMode;
+    }
   }
 
   @override
   void dispose() {
     _domainController.dispose();
+    _publicApiUrlController.dispose();
     super.dispose();
   }
 
@@ -79,7 +102,13 @@ class _SecurityTabState extends State<SecurityTab> {
         .toList();
   }
 
-  void _saveSettings({bool? enabled, String? domain, String? timezone}) {
+  Future<bool> _saveSettings({
+    bool? enabled,
+    String? domain,
+    String? timezone,
+    String? deploymentMode,
+    String? publicApiUrl,
+  }) {
     final settings = Map<String, String>.from(widget.systemSettings);
     if (enabled != null) {
       settings['allowed_domain_enabled'] = enabled.toString();
@@ -90,7 +119,13 @@ class _SecurityTabState extends State<SecurityTab> {
     if (timezone != null) {
       settings[kSystemTimezoneSettingKey] = timezone;
     }
-    widget.notifier.saveSystemSettings(settings);
+    if (deploymentMode != null) {
+      settings['deployment_mode'] = deploymentMode;
+    }
+    if (publicApiUrl != null) {
+      settings['public_api_url'] = publicApiUrl;
+    }
+    return widget.notifier.saveSystemSettings(settings);
   }
 
   @override
@@ -110,22 +145,24 @@ class _SecurityTabState extends State<SecurityTab> {
       children: [
         const BootstrapStatusCard(),
         const SizedBox(height: 24),
-        _DomainValidationPanel(
-          isEnabled: _isValidationEnabled,
-          domainController: _domainController,
-          nonCompliantUsers: _nonCompliantUsers,
-          onToggled: (enabled) => _saveSettings(
-            enabled: enabled,
-            domain: _domainController.text.trim(),
+        if (_deploymentMode != 'personal') ...[
+          _DomainValidationPanel(
+            isEnabled: _isValidationEnabled,
+            domainController: _domainController,
+            nonCompliantUsers: _nonCompliantUsers,
+            onToggled: (enabled) => _saveSettings(
+              enabled: enabled,
+              domain: _domainController.text.trim(),
+            ),
+            onDomainSaved: () {
+              _saveSettings(domain: _domainController.text.trim());
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.adminDomainSavedSnack)),
+              );
+            },
           ),
-          onDomainSaved: () {
-            _saveSettings(domain: _domainController.text.trim());
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.adminDomainSavedSnack)),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 24),
+        ],
         _OrganizationTimezonePanel(
           selectedTimezone: _selectedTimezone,
           onTimezoneChanged: (timezone) {
@@ -134,6 +171,36 @@ class _SecurityTabState extends State<SecurityTab> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
             );
+          },
+        ),
+        const SizedBox(height: 24),
+        _PublicApiUrlPanel(
+          controller: _publicApiUrlController,
+          onSaved: () {
+            _saveSettings(publicApiUrl: _publicApiUrlController.text.trim());
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.adminPublicApiUrlSavedSnack)),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        _DeploymentModePanel(
+          mode: _deploymentMode,
+          onChanged: (mode) async {
+            setState(() => _deploymentMode = mode);
+            final messenger = ScaffoldMessenger.of(context);
+            final savedMessage = l10n.adminDeploymentModeSavedSnack;
+            final ok = await _saveSettings(deploymentMode: mode);
+            if (!mounted) return;
+            if (ok) {
+              messenger.showSnackBar(SnackBar(content: Text(savedMessage)));
+            } else {
+              setState(() {
+                _deploymentMode =
+                    widget.systemSettings['deployment_mode'] ??
+                    'organization';
+              });
+            }
           },
         ),
         const SizedBox(height: 32),
@@ -198,8 +265,16 @@ class _SecurityTabState extends State<SecurityTab> {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child: widget.users.isEmpty
+          child: widget.status.isLoading && widget.users.isEmpty
               ? const Center(child: CircularProgressIndicator())
+              : widget.users.isEmpty
+              ? Center(
+                  child: Text(
+                    widget.errorMessage ?? l10n.adminSecuritySectionTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                  ),
+                )
               : ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
@@ -488,6 +563,131 @@ class _OrganizationTimezonePanel extends StatelessWidget {
                   ),
                 )
                 .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeploymentModePanel extends StatelessWidget {
+  final String mode;
+  final ValueChanged<String> onChanged;
+
+  const _DeploymentModePanel({
+    required this.mode,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final selected = mode == 'personal' ? 'personal' : 'organization';
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.adminDeploymentModeTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.adminDeploymentModeSubtitle,
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(
+                  value: 'organization',
+                  label: Text(l10n.adminDeploymentModeOrganization),
+                ),
+                ButtonSegment(
+                  value: 'personal',
+                  label: Text(l10n.adminDeploymentModePersonal),
+                ),
+              ],
+              selected: {selected},
+              onSelectionChanged: (next) {
+                if (next.isEmpty) return;
+                onChanged(next.first);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PublicApiUrlPanel extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSaved;
+
+  const _PublicApiUrlPanel({
+    required this.controller,
+    required this.onSaved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.adminPublicApiUrlTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.adminPublicApiUrlSubtitle,
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: l10n.adminPublicApiUrlLabel,
+              hintText: 'https://dab.example.com',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: onSaved,
+              child: Text(l10n.settingsSave),
+            ),
           ),
         ],
       ),

@@ -1,6 +1,9 @@
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
+import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_spacing.dart';
+import 'package:dab_app/presentation/core/styles/app_text_styles.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:flutter/material.dart';
@@ -46,13 +49,36 @@ class ProvidersTab extends ConsumerWidget {
         (s) => (configs: s.configs, connectionStatuses: s.connectionStatuses),
       ),
     );
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
     final state = ref.read(adminNotifierProvider);
     final sorted = _sortedProviderConfigs(state.configs, state);
+    final visible = isPersonal
+        ? sorted
+              .where((c) {
+                final id = c.id.toLowerCase();
+                return id != 'phorge' && id != 'phabricator';
+              })
+              .toList()
+        : sorted;
+    final cs = Theme.of(context).colorScheme;
     return ListView.builder(
-      itemCount: sorted.length,
+      itemCount: visible.length + (isPersonal ? 1 : 0),
       padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
       itemBuilder: (context, index) {
-        final config = sorted[index];
+        if (isPersonal && index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.l),
+            child: Text(
+              context.l10n.adminPersonalProvidersHint,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        final config = visible[isPersonal ? index - 1 : index];
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.l),
           child: ProviderCard(key: ValueKey(config.id), config: config),

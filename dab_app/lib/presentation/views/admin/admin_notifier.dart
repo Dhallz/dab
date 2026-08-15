@@ -53,72 +53,51 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
 
   @override
   AdminState build() {
-    return const AdminState();
+    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
+    return AdminState(
+      selectedSection: isPersonal
+          ? AdminSection.security
+          : AdminSection.providers,
+    );
   }
 
   Future<void> start() async {
-    state = state.copyWith(status: ViewStatus.loading);
+    state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
 
+    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
     final configsResult = await _providerRepo.getProviderConfigs();
-    final identitiesResult = await _userRepo.getIdentities();
     final usersResult = await _userRepo.getUsers();
     final settingsResult = await _providerRepo.getSystemSettings();
 
-    configsResult.fold(
-      (failure) {
-        state = state.copyWith(
-          status: ViewStatus.failure,
-          errorMessage: failure.message,
-        );
-      },
-      (configs) {
-        identitiesResult.fold(
-          (failure) {
-            state = state.copyWith(
-              status: ViewStatus.failure,
-              errorMessage: failure.message,
-              configs: configs,
-            );
-          },
-          (identities) {
-            usersResult.fold(
-              (failure) {
-                state = state.copyWith(
-                  status: ViewStatus.failure,
-                  errorMessage: failure.message,
-                  configs: configs,
-                  identities: identities,
-                );
-              },
-              (users) {
-                settingsResult.fold(
-                  (failure) {
-                    state = state.copyWith(
-                      status: ViewStatus.failure,
-                      errorMessage: failure.message,
-                      configs: configs,
-                      identities: identities,
-                      users: users,
-                    );
-                  },
-                  (settings) {
-                    state = state.copyWith(
-                      status: ViewStatus.success,
-                      configs: configs,
-                      identities: identities,
-                      users: users,
-                      systemSettings: settings,
-                      errorMessage: null,
-                    );
-                    unawaited(refreshProviderStatuses());
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
+    final errors = <String>[];
+    var identities = state.identities;
+    if (isPersonal) {
+      identities = const [];
+    } else {
+      final identitiesResult = await _userRepo.getIdentities();
+      identities = identitiesResult.getOrElse((failure) {
+        errors.add(failure.message);
+        return state.identities;
+      });
+    }
+    state = state.copyWith(
+      configs: configsResult.getOrElse((failure) {
+        errors.add(failure.message);
+        return state.configs;
+      }),
+      identities: identities,
+      users: usersResult.getOrElse((failure) {
+        errors.add(failure.message);
+        return state.users;
+      }),
+      systemSettings: settingsResult.getOrElse((failure) {
+        errors.add(failure.message);
+        return state.systemSettings;
+      }),
+      status: ViewStatus.success,
+      errorMessage: errors.isEmpty ? null : errors.join('\n'),
     );
+    unawaited(refreshProviderStatuses());
   }
 
   Future<void> testConnection(ProviderConfig config) async {
@@ -184,8 +163,12 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   }
 
   Future<void> setSection(AdminSection section) async {
-    state = state.copyWith(selectedSection: section);
-    if (section == AdminSection.providers) {
+    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
+    final next = (isPersonal && section == AdminSection.identities)
+        ? AdminSection.security
+        : section;
+    state = state.copyWith(selectedSection: next);
+    if (next == AdminSection.providers) {
       await refreshProviderStatuses();
     }
   }
@@ -253,32 +236,40 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
     );
   }
 
-  Future<void> saveSystemSettings(Map<String, String> settings) async {
+  Future<bool> saveSystemSettings(Map<String, String> settings) async {
     final previousTimezone =
         state.systemSettings[kSystemTimezoneSettingKey];
     final nextTimezone = settings[kSystemTimezoneSettingKey];
     final timezoneChanged =
         nextTimezone != null && previousTimezone != nextTimezone;
 
-    state = state.copyWith(status: ViewStatus.loading);
     final result = await _providerRepo.saveSystemSettings(settings);
-    await result.fold(
-      (failure) async {
-        state = state.copyWith(
-          status: ViewStatus.failure,
-          errorMessage: failure.message,
-        );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
       },
-      (_) async {
+      (_) {
         if (timezoneChanged) {
-          await _activityRepo.clearExplorerCache();
+          unawaited(_activityRepo.clearExplorerCache());
         }
         state = state.copyWith(
-          status: ViewStatus.success,
           systemSettings: settings,
           errorMessage: null,
         );
-        await ref.read(appNotifierProvider.notifier).init();
+        final app = ref.read(appNotifierProvider.notifier);
+        final mode = settings['deployment_mode'];
+        if (mode != null) {
+          app.setDeploymentMode(mode);
+          if (mode == 'personal' &&
+              state.selectedSection == AdminSection.identities) {
+            state = state.copyWith(selectedSection: AdminSection.security);
+          }
+        }
+        if (timezoneChanged) {
+          app.setOrgTimezoneId(nextTimezone);
+        }
+        return true;
       },
     );
   }

@@ -50,12 +50,12 @@ dab_api/lib/src/
 │   ├── database/        ← Drift schema, DAOs, migrations
 │   ├── dtos/            ← Optional infra-local serde helpers; provider ingestion DTOs live under domain/dtos/
 │   ├── http/            ← HTTP client helpers
-│   ├── security/        ← JWT, bcrypt
+│   ├── security/        ← JWT, bcrypt, SettingsCipher (user credential AES)
 │   ├── config/          ← Config, env loading
 │   ├── logging/         ← Structured logging
 │   └── notifications/   ← WebSocket push logic
 └── presentation/
-    ├── controllers/     ← Relic HTTP controllers (7 controllers: activity, admin, auth, group, health, metadata, user)
+    ├── controllers/     ← Relic HTTP controllers (8 controllers: activity, oauth, admin, auth, group, health, metadata, user)
     └── middlewares/     ← Vegas Middleware, JWT Middleware
 ```
 
@@ -91,8 +91,10 @@ dab_app/lib/
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
 | `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, …) |
-| `User` | DAB user — `id`, `email`, `role` (`UserRole`), `groupId`, `isActive`, linked `UserIdentity` records |
-| `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). |
+| `User` | DAB user — `id`, `email`, `role` (`UserRole`), optional `linkedProviderIds` (non-secret Directory hint) |
+| `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
+| `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. |
+| `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer watch list. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -123,6 +125,7 @@ External Provider (Phorge, GitHub, Slack, …)
         ▼
  IActivitySource (Infrastructure)
   ── fetches raw DTOs via HTTP ──
+  ── ICredentialResolver: user PAT overlay, else org ProviderConfig, else skip ──
         │
         ▼
  DTO extensions (Domain, on provider_payloads)
@@ -156,7 +159,10 @@ External Provider (Phorge, GitHub, Slack, …)
 ### Live push ingestion (Dashboard)
 
 The polling flow above powers Explorer (historical backfill). Dashboard live
-data arrives through provider push instead:
+data arrives through provider push **or** `ActivityLivePollScheduler` (first
+tick on API start, then ~45s) when webhooks are absent. Jira issue activities
+include `updatedAt` in their id so a status move is a new live event. In `deployment_mode=personal`, ingest broadcasts
+`ACTIVITY_RECEIVED` to every session and the app hydrates `GET /activities/live?scope=global`. Archive flags stay a per-viewer overlay on `activities:user:{id}` and never rewrite `activities:global`.
 
 ```
 Provider push (webhook / Gateway WebSocket)
@@ -176,6 +182,9 @@ Provider push (webhook / Gateway WebSocket)
 Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge
 (Herald), Jira, Linear, and Slack (Events API); Discord uses the outbound
 `DiscordGatewayService` WebSocket client since Discord has no message webhooks.
+Insights with `authoredOnly=false` uses an org token when present; otherwise
+sources union per-user authored fetches (work not attributed to a connected
+identity is omitted).
 
 ---
 

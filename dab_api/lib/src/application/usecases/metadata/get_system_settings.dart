@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/org_calendar.dart';
 import '../../../domain/repositories/abs_i_system_settings_repository.dart';
@@ -16,6 +17,7 @@ class GetSystemSettings {
     final domainRes = await _repo.getAllowedDomain();
     final publicApiRes = await _repo.getSetting('public_api_url');
     final timezoneRes = await _repo.getSetting(kSystemTimezoneSettingKey);
+    final modeRes = await _repo.getSetting(kDeploymentModeSettingKey);
 
     return enabledRes.fold(
       (f) => Left(f),
@@ -25,12 +27,16 @@ class GetSystemSettings {
           (f) => Left(f),
           (publicApiUrl) => timezoneRes.fold(
             (f) => Left(f),
-            (timezone) => Right({
-              'allowed_domain_enabled': enabled.toString(),
-              'allowed_domain': domain ?? '',
-              'public_api_url': publicApiUrl ?? '',
-              kSystemTimezoneSettingKey: resolveOrgTimezoneId(timezone),
-            }),
+            (timezone) => modeRes.fold(
+              (f) => Left(f),
+              (mode) => Right({
+                'allowed_domain_enabled': enabled.toString(),
+                'allowed_domain': domain ?? '',
+                'public_api_url': publicApiUrl ?? '',
+                kSystemTimezoneSettingKey: resolveOrgTimezoneId(timezone),
+                kDeploymentModeSettingKey: normalizeDeploymentMode(mode),
+              }),
+            ),
           ),
         ),
       ),

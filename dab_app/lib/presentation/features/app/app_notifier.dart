@@ -65,9 +65,20 @@ class AppNotifier extends Notifier<AppState> {
       configs: configsResult.getOrElse((failure) => []),
       isSystemConfigured: systemStatus.isSystemConfigured,
       orgTimezoneId: systemStatus.orgTimezoneId,
+      deploymentMode: systemStatus.deploymentMode,
       status: ViewStatus.success,
     );
     unawaited(refreshProviderConnectionStatuses());
+  }
+
+  /// Updates deployment mode without a full [init] (avoids a global loading flash).
+  void setDeploymentMode(String mode) {
+    state = state.copyWith(deploymentMode: mode);
+  }
+
+  /// Updates org timezone without a full [init].
+  void setOrgTimezoneId(String timezoneId) {
+    state = state.copyWith(orgTimezoneId: timezoneId);
   }
 
   /// Refreshes admin identity-resolution badge count (no-op on API failure).
@@ -152,5 +163,24 @@ class AppNotifier extends Notifier<AppState> {
         ),
       );
     }
+
+    final credentialsResult = await _userRepository.listMyCredentials();
+    credentialsResult.fold((_) => null, (credentials) {
+      for (final cred in credentials) {
+        if (!cred.isConnected) continue;
+        final existing = statuses[cred.providerId];
+        if (existing?.status == ViewStatus.success) continue;
+        statuses[cred.providerId] = ProviderConnectionStatus(
+          status: ViewStatus.success,
+          message: cred.externalUsername ?? cred.externalId,
+          lastCheck: DateTime.now(),
+        );
+      }
+      state = state.copyWith(
+        providerConnectionStatuses: Map<String, ProviderConnectionStatus>.from(
+          statuses,
+        ),
+      );
+    });
   }
 }

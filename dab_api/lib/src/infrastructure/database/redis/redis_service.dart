@@ -121,10 +121,16 @@ class RedisService {
     if (raw is! List) return const [];
 
     final decoded = <Activity>[];
+    final viewerArchivedIds = global
+        ? await _archivedActivityIdsForUser(userId)
+        : const <String>{};
     for (final entry in raw) {
-      final activity = _decodeActivity(entry);
+      var activity = _decodeActivity(entry);
       if (activity == null) continue;
       if (activity.createdAt.isBefore(startOfTodayUtc)) continue;
+      if (global && viewerArchivedIds.contains(activity.id)) {
+        activity = activity.copyWith(archived: true);
+      }
       if (!includeArchived && activity.archived) continue;
       decoded.add(activity);
       if (decoded.length >= normalizedLimit) break;
@@ -165,7 +171,43 @@ class RedisService {
       return updated;
     }
 
+    if (archived) {
+      final globalRaw = await _cmd.send_object(['LRANGE', 'activities:global', 0, -1]);
+      if (globalRaw is List) {
+        for (final entry in globalRaw) {
+          final activity = _decodeActivity(entry);
+          if (activity == null || activity.id != activityId) continue;
+          final updated = activity.copyWith(archived: true);
+          await _cmd.send_object([
+            'LPUSH',
+            key,
+            _encodeActivity(updated),
+          ]);
+          await _cmd.send_object(['LTRIM', key, 0, 99]);
+          return updated;
+        }
+      }
+    }
+
     return null;
+  }
+
+  Future<Set<String>> _archivedActivityIdsForUser(String userId) async {
+    final raw = await _cmd.send_object([
+      'LRANGE',
+      'activities:user:$userId',
+      0,
+      -1,
+    ]);
+    if (raw is! List) return {};
+    final ids = <String>{};
+    for (final entry in raw) {
+      final activity = _decodeActivity(entry);
+      if (activity != null && activity.archived) {
+        ids.add(activity.id);
+      }
+    }
+    return ids;
   }
 
   /// Drops live-feed rows that are **archived** or older than the current UTC
@@ -401,6 +443,19 @@ class RedisService {
     final raw = await _cmd.send_object(['GET', key]);
     if (raw == null) return null;
     return DateTime.tryParse(raw.toString())?.toUtc();
+  }
+
+  /// Sets [key] to [value] with an expiry. Used for OAuth state.
+  Future<void> setEx(String key, String value, Duration ttl) async {
+    await _cmd.send_object(['SET', key, value, 'EX', ttl.inSeconds]);
+  }
+
+  /// GET then DEL [key]. Returns null when missing.
+  Future<String?> getAndDelete(String key) async {
+    final raw = await _cmd.send_object(['GET', key]);
+    if (raw == null) return null;
+    await _cmd.send_object(['DEL', key]);
+    return raw.toString();
   }
 
   /// --- HELPERS ---

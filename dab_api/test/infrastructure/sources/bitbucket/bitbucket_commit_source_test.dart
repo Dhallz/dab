@@ -12,6 +12,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
+import '../../../fakes/fake_credential_resolver.dart';
+
 class _MockProviderConfigRepository extends Mock
     implements AbsIProviderConfigRepository {}
 
@@ -77,7 +79,12 @@ void main() {
     configRepository = _MockProviderConfigRepository();
     userRepository = _MockUserRepository();
     jsonRest = _MockJsonRestProtocol();
-    source = BitbucketCommitSource(configRepository, userRepository, jsonRest);
+    source = BitbucketCommitSource(
+      configRepository,
+      userRepository,
+      jsonRest,
+      FakeCredentialResolver(),
+    );
 
     when(
       () => configRepository.getConfigs(),

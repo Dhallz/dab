@@ -1023,4 +1023,127 @@ class AppLocalizationsFr extends AppLocalizations {
   String activityKindCountTooltip(Object label, Object count) {
     return '$label: $count';
   }
+
+  @override
+  String get settingsConnectedAccountsTitle => 'Connected accounts';
+
+  @override
+  String get settingsConnectedAccountsSubtitle =>
+      'Connect the providers you use. DAB never asks for your password — you sign in at the provider.';
+
+  @override
+  String get settingsBotTokenHint =>
+      'Paste a bot token (one per workspace), not your user token.';
+
+  @override
+  String get settingsCredentialConnect => 'Connect';
+
+  @override
+  String get settingsCredentialTest => 'Test';
+
+  @override
+  String get settingsCredentialDisconnect => 'Disconnect';
+
+  @override
+  String get settingsCredentialConnected => 'Connected';
+
+  @override
+  String get settingsCredentialTestOk => 'Connection succeeded';
+
+  @override
+  String get settingsCredentialDisconnected => 'Disconnected';
+
+  @override
+  String get settingsTeamTitle => 'Team';
+
+  @override
+  String get settingsTeamSubtitle =>
+      'Add a teammate so they can connect their own tokens.';
+
+  @override
+  String explorerUserNotConnected(String provider) {
+    return 'Hasn\'t connected $provider';
+  }
+
+  @override
+  String get adminDeploymentModeTitle => 'Deployment mode';
+
+  @override
+  String get adminDeploymentModeSubtitle =>
+      'Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.';
+
+  @override
+  String get adminDeploymentModeOrganization => 'Organization';
+
+  @override
+  String get adminDeploymentModePersonal => 'Personal / small team';
+
+  @override
+  String get adminDeploymentModeSavedSnack => 'Deployment mode saved';
+
+  @override
+  String get adminFieldOauthClientId => 'OAuth client ID';
+
+  @override
+  String get adminFieldOauthClientIdJiraHint =>
+      'Copy Client ID from Authorization → OAuth 2.0 (3LO), not App ID. Add Jira API scopes read:jira-work and read:jira-user under Permissions first.';
+
+  @override
+  String adminOauthCallbackMustMatch(String url) {
+    return 'Callback URL in the provider console must be exactly: $url';
+  }
+
+  @override
+  String get adminFieldOauthClientSecret => 'OAuth client secret';
+
+  @override
+  String get adminFieldInstanceUrl => 'Instance URL';
+
+  @override
+  String get adminPersonalProvidersHint =>
+      'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.';
+
+  @override
+  String settingsConnectWithProvider(String provider) {
+    return 'Connect with $provider';
+  }
+
+  @override
+  String get settingsOauthOpened =>
+      'Finish signing in in your browser, then return here.';
+
+  @override
+  String get settingsOauthNotConfigured =>
+      'An admin must save this provider’s OAuth app in Admin → Providers first.';
+
+  @override
+  String get settingsPhorgeTokenHint =>
+      'Phorge has no user OAuth. Paste a Conduit API token if you use Phorge.';
+
+  @override
+  String get settingsJiraProjectsTitle => 'Projects';
+
+  @override
+  String get settingsJiraProjectsSubtitle =>
+      'Choose which Jira projects DAB should watch for tasks. This list is shared with your team.';
+
+  @override
+  String get settingsJiraProjectsEmpty =>
+      'No projects were visible for this account.';
+
+  @override
+  String get settingsJiraProjectsSave => 'Save projects';
+
+  @override
+  String get adminPublicApiUrlTitle => 'Public API URL';
+
+  @override
+  String get adminPublicApiUrlSubtitle =>
+      'Reachable base URL for OAuth callbacks and webhook defaults (no trailing slash).';
+
+  @override
+  String get adminPublicApiUrlLabel => 'https://your-dab-api.example';
+
+  @override
+  String get adminPublicApiUrlSavedSnack => 'Public API URL saved';
 }

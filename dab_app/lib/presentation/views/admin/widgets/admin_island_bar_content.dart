@@ -1,6 +1,7 @@
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_notifier.dart';
 import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_island_bar_model.dart';
@@ -34,6 +35,9 @@ class AdminIslandBarContent extends ConsumerWidget {
 
     final m = state.islandBarModel;
 
+    final isPersonal = ref.watch(
+      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    );
     final providersTile = AdminIslandStatTile(
       icon: Icons.dns_outlined,
       title: l10n.adminIslandProvidersTitle,
@@ -96,12 +100,13 @@ class AdminIslandBarContent extends ConsumerWidget {
                   child: providersTile,
                 ),
               ),
-              _DesktopIslandSlot(
-                child: SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: unresolvedTile,
+              if (!isPersonal)
+                _DesktopIslandSlot(
+                  child: SizedBox(
+                    width: AdminIslandBarModel.scrollTileWidth,
+                    child: unresolvedTile,
+                  ),
                 ),
-              ),
               _DesktopIslandSlot(
                 child: SizedBox(
                   width: AdminIslandBarModel.scrollTileWidth,
@@ -154,11 +159,13 @@ class AdminIslandBarContent extends ConsumerWidget {
                   width: AdminIslandBarModel.scrollTileWidth,
                   child: providersTile,
                 ),
-                gap,
-                SizedBox(
-                  width: AdminIslandBarModel.scrollTileWidth,
-                  child: unresolvedTile,
-                ),
+                if (!isPersonal) ...[
+                  gap,
+                  SizedBox(
+                    width: AdminIslandBarModel.scrollTileWidth,
+                    child: unresolvedTile,
+                  ),
+                ],
                 gap,
                 SizedBox(
                   width: AdminIslandBarModel.scrollTileWidth,

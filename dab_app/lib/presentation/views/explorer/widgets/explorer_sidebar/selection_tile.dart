@@ -9,6 +9,7 @@ class SelectionTile extends StatelessWidget {
   final String? avatarUrl;
   final IconData? iconData;
   final Widget? trailing;
+  final String? subtitle;
 
   const SelectionTile({
     super.key,
@@ -18,6 +19,7 @@ class SelectionTile extends StatelessWidget {
     this.avatarUrl,
     this.iconData,
     this.trailing,
+    this.subtitle,
   });
 
   @override
@@ -106,15 +108,42 @@ class SelectionTile extends StatelessWidget {
               ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: subtitle == null
+                  ? Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSelected
+                                ? cs.onSurface
+                                : cs.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.error.withValues(alpha: 0.85),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
             ),
             if (trailing != null)
               trailing!
