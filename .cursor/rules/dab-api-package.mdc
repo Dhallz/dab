@@ -78,6 +78,7 @@ Never merge HTTP fetch logic into the DTO extensions.
 ## 🌐 HTTP / Controller Rules
 
 - Controllers are **thin**: parse request → call one use case → map result to response. Nothing else.
+- Inbound webhook HMAC / shared-secret checks go through `IWebhookRequestAuthenticator`; do not inline crypto in controllers.
 - Return `Either<Failure, T>` from use cases; map `Left` to appropriate HTTP status codes in the controller.
 - Use Relic's middleware pipeline for cross-cutting concerns (auth, Vegas, logging). Do not inline them in controllers.
 - Endpoint paths: `kebab-case` (e.g., `/auth/refresh-token`).

@@ -6,7 +6,7 @@ The Application layer is the **Glue Layer**. It coordinates Domain business rule
 
 ## 🏗️ Core Responsibilities
 
-1. **Services**: Orchestrate cross-provider logic (UnifiedActivityFetcher, ConnectorRegistry, PresenceService, LoggingService, AuthService). This is where high-level state and fan-out happen.
+1. **Services**: Orchestrate cross-provider logic (`UnifiedActivityFetcher`, `ConnectorRegistry`, `LiveIngestPersister`). This is where high-level state and fan-out happen.
 2. **UseCases**: Encapsulate specific application flows (FetchRemoteActivities, SyncPhorgeUsers).
 3. **Dependency Management**: Centralized registration in `service_locator.dart`.
 

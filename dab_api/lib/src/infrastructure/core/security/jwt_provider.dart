@@ -1,10 +1,14 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
+import '../../../domain/ports/i_access_token_issuer.dart';
 import '../config/config.dart';
 
-class JwtProvider {
+/// [ARCH: INFRASTRUCTURE_SECURITY]
+/// ROLE: Signs and verifies HS256 access tokens.
+class JwtProvider implements IAccessTokenIssuer {
   final Config _config = Config();
 
+  @override
   String generateToken(Map<String, dynamic> payload) {
     final jwt = JWT(payload);
     return jwt.sign(

@@ -6,12 +6,17 @@ import '../../../domain/dtos/discord/discord_message_dto.dart';
 import '../../../domain/dtos/discord/discord_message_mapping.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/ports/i_discord_live_ingestor.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
+import '../../services/live_ingest_persister.dart';
+import 'ingestion_result.dart';
+
+export 'ingestion_result.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Discord Gateway `MESSAGE_CREATE` dispatches into the DAB
@@ -22,22 +27,36 @@ import '../../services/activity_live_publisher.dart';
 /// messages in the configured channel allow-list (when set) and authored by
 /// linked identities are persisted.
 /// CONSTRAINTS: Read-only toward Discord; dedupe on message snowflake id.
-class IngestDiscordMessage {
+class IngestDiscordMessage implements IDiscordLiveIngestor {
   final IUserRepository _userRepository;
-  final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final RedisService _redisService;
-  final PresenceService _presenceService;
-  final ActivityLivePublisher? _livePublisher;
+  final ILiveFeedStore _liveFeed;
+  final LiveIngestPersister _persister;
 
   IngestDiscordMessage(
     this._userRepository,
-    this._activityRepository,
+    AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
-    this._redisService,
-    this._presenceService, {
+    this._liveFeed,
+    IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
-  }) : _livePublisher = livePublisher;
+    LiveIngestPersister? persister,
+  }) : _persister =
+           persister ??
+           LiveIngestPersister(
+             activities: activityRepository,
+             liveFeed: _liveFeed,
+             presence: presence,
+             livePublisher: livePublisher,
+           );
+
+  @override
+  Future<Either<Failure, void>> ingestMessageCreate(
+    Map<String, dynamic> payload,
+  ) async {
+    final result = await execute(payload: payload);
+    return result.map((_) {});
+  }
 
   Future<Either<Failure, DiscordMessageIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -49,7 +68,7 @@ class IngestDiscordMessage {
       );
     }
 
-    final reserved = await _redisService.reserveIngestionEventId(
+    final reserved = await _liveFeed.reserveIngestionEventId(
       'discord',
       messageId,
     );
@@ -130,65 +149,11 @@ class IngestDiscordMessage {
       );
     }
 
-    var ingestedCount = 0;
-    for (final activity in activities) {
-      final createResult = await _activityRepository.createActivity(activity);
-      if (createResult.isLeft()) {
-        final message = createResult
-            .getLeft()
-            .toNullable()!
-            .message
-            .toLowerCase();
-        if (_isDuplicateViolation(message)) {
-          continue;
-        }
-        return Left(createResult.getLeft().toNullable()!);
-      }
-      ingestedCount++;
-      await ActivityLivePublisher.emit(
-        redis: _redisService,
-        presence: _presenceService,
-        activity: activity,
-        publisher: _livePublisher,
-      );
-      print(
-        '[DISCORD_GATEWAY] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',
-      );
-    }
-
-    if (ingestedCount == 0) {
-      return const Right(
-        DiscordMessageIngestionResult.ignored('duplicate_activity'),
-      );
-    }
-    await _redisService.recordLiveIngestSuccess('discord');
-    return const Right(DiscordMessageIngestionResult.ingested());
-  }
-
-  bool _isDuplicateViolation(String message) {
-    return message.contains('duplicate') ||
-        message.contains('unique constraint') ||
-        message.contains('already exists');
-  }
-}
-
-/// Outcome envelope for Discord Gateway processing (parity with webhooks).
-class DiscordMessageIngestionResult {
-  final bool ingested;
-  final String reason;
-
-  const DiscordMessageIngestionResult._({
-    required this.ingested,
-    required this.reason,
-  });
-
-  const DiscordMessageIngestionResult.ingested()
-    : this._(ingested: true, reason: 'ingested');
-
-  const DiscordMessageIngestionResult.ignored(String reason)
-    : this._(ingested: false, reason: reason);
-
-  Map<String, dynamic> toMap() {
-    return {'ingested': ingested, 'reason': reason};
+    return _persister.persist(
+      activities: activities,
+      providerId: 'discord',
+      emptyReason: 'duplicate_activity',
+      logTag: 'DISCORD_GATEWAY',
+    );
   }
 }

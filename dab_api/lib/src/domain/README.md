@@ -16,7 +16,7 @@ The Domain layer is the heart of the system. It contains the business rules and 
 
 - **🚫 NO INFRASTRUCTURE IMPORTS**: This layer must **NEVER** import from `infrastructure/` or `application/`. It must only import from within `domain/` or external pure-logic packages (e.g., `dart_mappable`, `uuid`).
 - **🚫 NO SIDE EFFECTS**: Entities and mapping extensions must be pure and predictable. No API calls or database queries are allowed here.
-- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `IActivitySource`, `IAuthRepository`).
+- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `IActivitySource`, `ILiveFeedStore`, `IWebhookRequestAuthenticator`).
 
 ---
 

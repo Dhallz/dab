@@ -2,7 +2,11 @@ import 'dart:convert';
 
 import 'package:relic/relic.dart';
 
-class PresenceService {
+import '../../domain/ports/i_presence_broadcaster.dart';
+
+/// [ARCH: INFRASTRUCTURE_SERVICE]
+/// ROLE: Tracks Relic WebSocket sessions and fans out live events.
+class PresenceService implements IPresenceBroadcaster {
   final Map<RelicWebSocket, String> _sessions = {};
 
   void addSession(RelicWebSocket session, String userId) {
@@ -17,7 +21,7 @@ class PresenceService {
 
   Set<String> getActiveUserIds() => _sessions.values.toSet();
 
-  /// Broadcasts a message to all connected sessions.
+  @override
   void broadcast(String type, Map<String, dynamic> data) {
     final payload = jsonEncode({'type': type, 'data': data});
     for (final session in _sessions.keys) {
@@ -25,7 +29,7 @@ class PresenceService {
     }
   }
 
-  /// Broadcasts a message to all sessions of a single user.
+  @override
   void broadcastToUser(String userId, String type, Map<String, dynamic> data) {
     final payload = jsonEncode({'type': type, 'data': data});
     var delivered = 0;

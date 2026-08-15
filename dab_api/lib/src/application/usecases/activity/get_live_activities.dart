@@ -2,7 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Serves **`GET /activities/live`** for the Dashboard.
@@ -11,7 +11,7 @@ import '../../../infrastructure/database/redis/redis_service.dart';
 /// the live slice can legitimately be empty. Explorer historical views use **`SearchActivities`**
 /// / **`GET /activities/search`** (not this use case).
 class GetLiveActivities {
-  final RedisService _redisService;
+  final ILiveFeedStore _redisService;
 
   GetLiveActivities(this._redisService);
 

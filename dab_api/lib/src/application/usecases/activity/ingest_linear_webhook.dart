@@ -6,12 +6,16 @@ import '../../../domain/dtos/linear/linear_issue_mapping.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
+import '../../services/live_ingest_persister.dart';
+import 'ingestion_result.dart';
+
+export 'ingestion_result.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Linear webhooks into the DAB live pipeline.
@@ -24,20 +28,26 @@ import '../../services/activity_live_publisher.dart';
 /// identifier + updatedAt / comment id).
 class IngestLinearWebhook {
   final IUserRepository _userRepository;
-  final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final RedisService _redisService;
-  final PresenceService _presenceService;
-  final ActivityLivePublisher? _livePublisher;
+  final ILiveFeedStore _liveFeed;
+  final LiveIngestPersister _persister;
 
   IngestLinearWebhook(
     this._userRepository,
-    this._activityRepository,
+    AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
-    this._redisService,
-    this._presenceService, {
+    this._liveFeed,
+    IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
-  }) : _livePublisher = livePublisher;
+    LiveIngestPersister? persister,
+  }) : _persister =
+           persister ??
+           LiveIngestPersister(
+             activities: activityRepository,
+             liveFeed: _liveFeed,
+             presence: presence,
+             livePublisher: livePublisher,
+           );
 
   static const _supportedTypes = {'Issue', 'Comment'};
   static const _supportedActions = {'create', 'update'};
@@ -82,7 +92,7 @@ class IngestLinearWebhook {
         : isComment
         ? '$action|comment|$commentId|$updatedRaw'
         : '$action|$identifier|$updatedRaw';
-    final reserved = await _redisService.reserveIngestionEventId(
+    final reserved = await _liveFeed.reserveIngestionEventId(
       'linear',
       fingerprint,
     );
@@ -183,39 +193,12 @@ class IngestLinearWebhook {
       );
     }
 
-    var ingestedCount = 0;
-    for (final activity in activities) {
-      final createResult = await _activityRepository.createActivity(activity);
-      if (createResult.isLeft()) {
-        final message = createResult
-            .getLeft()
-            .toNullable()!
-            .message
-            .toLowerCase();
-        if (_isDuplicateViolation(message)) {
-          continue;
-        }
-        return Left(createResult.getLeft().toNullable()!);
-      }
-      ingestedCount++;
-      await ActivityLivePublisher.emit(
-        redis: _redisService,
-        presence: _presenceService,
-        activity: activity,
-        publisher: _livePublisher,
-      );
-      print(
-        '[LINEAR_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',
-      );
-    }
-
-    if (ingestedCount == 0) {
-      return const Right(
-        LinearWebhookIngestionResult.ignored('duplicate_activity'),
-      );
-    }
-    await _redisService.recordLiveIngestSuccess('linear');
-    return const Right(LinearWebhookIngestionResult.ingested());
+    return _persister.persist(
+      activities: activities,
+      providerId: 'linear',
+      emptyReason: 'duplicate_activity',
+      logTag: 'LINEAR_WEBHOOK',
+    );
   }
 
   Map<String, dynamic>? _issueNodeFromIssue(
@@ -259,32 +242,5 @@ class IngestLinearWebhook {
     if (node[objectKey] is! Map<String, dynamic> && node[idKey] != null) {
       node[objectKey] = {'id': node[idKey]};
     }
-  }
-
-  bool _isDuplicateViolation(String message) {
-    return message.contains('duplicate') ||
-        message.contains('unique constraint') ||
-        message.contains('already exists');
-  }
-}
-
-/// Outcome envelope for Linear webhook processing (parity with Slack/GitHub).
-class LinearWebhookIngestionResult {
-  final bool ingested;
-  final String reason;
-
-  const LinearWebhookIngestionResult._({
-    required this.ingested,
-    required this.reason,
-  });
-
-  const LinearWebhookIngestionResult.ingested()
-    : this._(ingested: true, reason: 'ingested');
-
-  const LinearWebhookIngestionResult.ignored(String reason)
-    : this._(ingested: false, reason: reason);
-
-  Map<String, dynamic> toMap() {
-    return {'ingested': ingested, 'reason': reason};
   }
 }

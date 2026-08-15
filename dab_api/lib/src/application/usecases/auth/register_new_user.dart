@@ -3,8 +3,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
+import '../../../domain/ports/i_access_token_issuer.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/core/security/jwt_provider.dart';
 import 'register_user.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -14,7 +14,7 @@ import 'register_user.dart';
 class RegisterNewUser {
   final AbsIAuthRepository _repo;
   final RegisterUser _registerUser;
-  final JwtProvider _jwtProvider;
+  final IAccessTokenIssuer _jwtProvider;
   final _uuid = const Uuid();
 
   RegisterNewUser(this._repo, this._registerUser, this._jwtProvider);

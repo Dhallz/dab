@@ -10,6 +10,7 @@ import 'package:dab_api/src/application/services/activity_live_publisher.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/identity_discovery_service.dart';
+import 'package:dab_api/src/application/services/live_ingest_persister.dart';
 import 'package:dab_api/src/application/services/provider_capability_catalog.dart';
 import 'package:dab_api/src/application/services/provider_config_connectivity_service.dart';
 import 'package:dab_api/src/application/services/provider_live_connectivity_checker.dart';
@@ -72,8 +73,12 @@ import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/application/usecases/user/test_user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/gateways/abs_i_phorge_gateway.dart';
+import 'package:dab_api/src/domain/ports/i_access_token_issuer.dart';
 import 'package:dab_api/src/domain/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/ports/i_discord_live_ingestor.dart';
+import 'package:dab_api/src/domain/ports/i_live_feed_store.dart';
 import 'package:dab_api/src/domain/ports/i_phorge_task_hydrator.dart';
+import 'package:dab_api/src/domain/ports/i_presence_broadcaster.dart';
 import 'package:dab_api/src/domain/ports/i_provider_identity_probe.dart';
 import 'package:dab_api/src/domain/ports/i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/ports/i_linear_team_catalog.dart';
@@ -82,6 +87,7 @@ import 'package:dab_api/src/domain/ports/i_oauth_credential_refresher.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_pkce.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_state_store.dart';
 import 'package:dab_api/src/domain/ports/i_oauth_token_client.dart';
+import 'package:dab_api/src/domain/ports/i_webhook_request_authenticator.dart';
 import 'package:dab_api/src/domain/repositories/abs_i_user_provider_credential_repository.dart';
 // domain
 import 'package:dab_api/src/domain/repositories/abs_i_activity_repository.dart';
@@ -132,6 +138,7 @@ import 'package:dab_api/src/infrastructure/services/oauth_credential_refresher.d
 import 'package:dab_api/src/infrastructure/services/oauth_state_store.dart';
 import 'package:dab_api/src/infrastructure/services/oauth_token_client.dart';
 import 'package:dab_api/src/infrastructure/services/provider_identity_probe.dart';
+import 'package:dab_api/src/infrastructure/services/webhook_request_authenticator.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
@@ -149,6 +156,7 @@ import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dar
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
 import 'package:dab_api/src/infrastructure/websockets/presence_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 
 final GetIt sl = GetIt.instance;
 
@@ -181,7 +189,10 @@ Future<void> serviceLocator() async {
 
   final graphqlProtocol = HttpGraphqlProtocol();
   sl.registerSingleton<GraphqlProtocol>(graphqlProtocol);
-  sl.registerSingleton<JwtProvider>(JwtProvider());
+  final jwtProvider = JwtProvider();
+  sl.registerSingleton<JwtProvider>(jwtProvider);
+  sl.registerSingleton<IAccessTokenIssuer>(jwtProvider);
+  sl.registerSingleton<http.Client>(http.Client());
   sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
   sl.registerSingleton<GitHubWebhookVerifier>(GitHubWebhookVerifier());
   sl.registerSingleton<PhorgeWebhookVerifier>(PhorgeWebhookVerifier());
@@ -318,6 +329,17 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<RedisService>(
     RedisService(redisClient, sl<ISystemSettingsRepository>()),
   );
+  sl.registerSingleton<ILiveFeedStore>(sl<RedisService>());
+  sl.registerSingleton<IWebhookRequestAuthenticator>(
+    WebhookRequestAuthenticator(
+      sl<AbsIProviderConfigRepository>(),
+      sl<SlackRequestVerifier>(),
+      sl<GitHubWebhookVerifier>(),
+      sl<PhorgeWebhookVerifier>(),
+      sl<LinearWebhookVerifier>(),
+      sl<SharedSecretVerifier>(),
+    ),
+  );
   sl.registerSingleton<IOauthPkce>(OauthPkce());
   sl.registerSingleton<IOauthStateStore>(
     RedisOauthStateStore(sl<RedisService>()),
@@ -341,14 +363,23 @@ Future<void> serviceLocator() async {
   // ROLE: Cross-cutting system utilities.
   // -----------------------------------------------------
   sl.registerSingleton<PresenceService>(PresenceService());
+  sl.registerSingleton<IPresenceBroadcaster>(sl<PresenceService>());
   sl.registerSingleton<LoggingService>(LoggingService());
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
   sl.registerSingleton<ActivityLivePublisher>(
     ActivityLivePublisher(
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       sl<ISystemSettingsRepository>(),
+    ),
+  );
+  sl.registerSingleton<LiveIngestPersister>(
+    LiveIngestPersister(
+      activities: sl<AbsIActivityRepository>(),
+      liveFeed: sl<ILiveFeedStore>(),
+      presence: sl<IPresenceBroadcaster>(),
+      livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
 
@@ -404,21 +435,21 @@ Future<void> serviceLocator() async {
     AuthenticateUser(
       sl<AbsIAuthRepository>(),
       sl<LoginUser>(),
-      sl<JwtProvider>(),
+      sl<IAccessTokenIssuer>(),
     ),
   );
   sl.registerSingleton<RegisterNewUser>(
     RegisterNewUser(
       sl<AbsIAuthRepository>(),
       sl<RegisterUser>(),
-      sl<JwtProvider>(),
+      sl<IAccessTokenIssuer>(),
     ),
   );
   sl.registerSingleton<LinkUserIdentity>(
     LinkUserIdentity(sl<IUserRepository>()),
   );
   sl.registerSingleton<RefreshToken>(
-    RefreshToken(sl<AbsIAuthRepository>(), sl<JwtProvider>()),
+    RefreshToken(sl<AbsIAuthRepository>(), sl<IAccessTokenIssuer>()),
   );
   sl.registerSingleton<LogoutUser>(LogoutUser(sl<AbsIAuthRepository>()));
   sl.registerSingleton<GetAllIdentities>(
@@ -446,7 +477,7 @@ Future<void> serviceLocator() async {
     GetRecentActivities(sl<AbsIActivityRepository>()),
   );
   sl.registerSingleton<GetLiveActivities>(
-    GetLiveActivities(sl<RedisService>()),
+    GetLiveActivities(sl<ILiveFeedStore>()),
   );
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
@@ -456,9 +487,10 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestSlackEvent>(
@@ -466,9 +498,11 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
+      httpClient: sl<http.Client>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestPhorgeWebhook>(
@@ -477,9 +511,10 @@ Future<void> serviceLocator() async {
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
       sl<IPhorgeTaskHydrator>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestJiraWebhook>(
@@ -487,9 +522,10 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestLinearWebhook>(
@@ -497,9 +533,10 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestGitLabWebhook>(
@@ -507,9 +544,10 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestBitbucketWebhook>(
@@ -517,9 +555,10 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
   sl.registerSingleton<IngestDiscordMessage>(
@@ -527,41 +566,43 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<RedisService>(),
-      sl<PresenceService>(),
+      sl<ILiveFeedStore>(),
+      sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
     ),
   );
+  sl.registerSingleton<IDiscordLiveIngestor>(sl<IngestDiscordMessage>());
   sl.registerSingleton<DiscordGatewayService>(
     DiscordGatewayService(
       sl<AbsIProviderConfigRepository>(),
-      sl<IngestDiscordMessage>(),
+      sl<IDiscordLiveIngestor>(),
     ),
   );
   sl.registerSingleton<LogActivity>(
     LogActivity(
       sl<AbsIActivityRepository>(),
       sl<AbsIAuthRepository>(),
-      sl<PresenceService>(),
-      sl<RedisService>(),
+      sl<IPresenceBroadcaster>(),
+      sl<ILiveFeedStore>(),
       livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<ArchiveLiveActivity>(
-    ArchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
+    ArchiveLiveActivity(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
   );
   sl.registerSingleton<UnarchiveLiveActivity>(
-    UnarchiveLiveActivity(sl<RedisService>(), sl<PresenceService>()),
+    UnarchiveLiveActivity(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
   );
   sl.registerSingleton<ActivityPurgeScheduler>(
-    ActivityPurgeScheduler(sl<RedisService>(), sl<ISystemSettingsRepository>()),
+    ActivityPurgeScheduler(sl<ILiveFeedStore>(), sl<ISystemSettingsRepository>()),
   );
   sl.registerSingleton<ActivityLivePollScheduler>(
     ActivityLivePollScheduler(
       sl<UnifiedActivityFetcher>(),
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
-      sl<RedisService>(),
+      sl<ILiveFeedStore>(),
       sl<ActivityLivePublisher>(),
     ),
   );
@@ -696,13 +737,13 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<ProviderLiveConnectivityChecker>(
     ProviderLiveConnectivityChecker(
-      sl<RedisService>(),
+      sl<ILiveFeedStore>(),
       sl<DiscordGatewayService>(),
     ),
   );
   sl.registerSingleton<ProviderLiveWebhookTestService>(
     ProviderLiveWebhookTestService(
-      sl<RedisService>(),
+      sl<ILiveFeedStore>(),
       sl<DiscordGatewayService>(),
       sl<GitHubWebhookVerifier>(),
       sl<SlackRequestVerifier>(),

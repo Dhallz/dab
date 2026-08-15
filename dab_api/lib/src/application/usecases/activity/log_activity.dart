@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_provider.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -14,8 +14,8 @@ import '../../services/activity_live_publisher.dart';
 class LogActivity {
   final AbsIActivityRepository _repo;
   final AbsIAuthRepository _authRepo;
-  final PresenceService _presence;
-  final RedisService _redis;
+  final IPresenceBroadcaster _presence;
+  final ILiveFeedStore _redis;
   final ActivityLivePublisher? _livePublisher;
   final _uuid = const Uuid();
 
@@ -35,7 +35,7 @@ class LogActivity {
   /// 4. Propagation:
   ///    - Increments the global activity version in Redis.
   ///    - Fans out the activity data to Redis subscribers.
-  ///    - Broadcasts the update via [PresenceService] (WebSockets).
+  ///    - Broadcasts the update via WebSockets.
   Future<void> execute({
     required String userId,
     required ActivityProvider provider,

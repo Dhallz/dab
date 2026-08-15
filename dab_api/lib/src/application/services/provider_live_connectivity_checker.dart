@@ -1,5 +1,5 @@
 import '../../domain/entities/provider/provider_connectivity_report.dart';
-import '../../infrastructure/database/redis/redis_service.dart';
+import '../../domain/ports/i_live_feed_store.dart';
 import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
@@ -9,7 +9,7 @@ import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 class ProviderLiveConnectivityChecker {
   ProviderLiveConnectivityChecker(this._redis, this._discordGateway);
 
-  final RedisService _redis;
+  final ILiveFeedStore _redis;
   final DiscordGatewayService _discordGateway;
 
   static const _noEventMessage =

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/user/user.dart';
+import '../../domain/ports/i_live_feed_store.dart';
 import '../../domain/repositories/abs_i_activity_repository.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
-import '../../infrastructure/database/redis/redis_service.dart';
 import 'activity_live_publisher.dart';
 import 'unified_activity_fetcher.dart';
 
@@ -33,7 +33,7 @@ class ActivityLivePollScheduler {
   final UnifiedActivityFetcher _fetcher;
   final IUserRepository _users;
   final AbsIActivityRepository _activities;
-  final RedisService _redis;
+  final ILiveFeedStore _redis;
   final ActivityLivePublisher _publisher;
   final Duration _interval;
   final Duration _lookback;

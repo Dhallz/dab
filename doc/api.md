@@ -60,7 +60,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 - **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
-- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups).
+- **`ports/`:** Cross-layer contracts implemented in Infrastructure (e.g. `IActivitySource<T>` for connector fetch, `IDiscoverySource` for identity lookups, `ILiveFeedStore` / `IPresenceBroadcaster` / `IAccessTokenIssuer` for live ingest and auth, `IWebhookRequestAuthenticator` for inbound webhook HMAC, `IDiscordLiveIngestor` so Discord Gateway never imports application use cases).
 - **`gateways/`:** Phorge-only Conduit facade (`AbsIPhorgeGateway`) for directory sync and metadata. GitHub, Slack, and every other provider poll through `IActivitySource`, not a gateway.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
@@ -97,7 +97,8 @@ Orchestrates use cases. Use cases return `Either<Failure, T>` where failures mat
 
 - **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. If **`getConfigs()`** fails, emits a **WARNING** log and skips all connectors (empty active set). Per-connector failures still log WARNING and return an empty slice for that provider only.
 
-- **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `PresenceService`.
+- **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `IPresenceBroadcaster`.
+- **Live ingest:** Provider ingest use cases share `IngestionResult` and `LiveIngestPersister` (SQL insert + Redis fan-out + ingest-success timestamp). Application talks to Redis/Presence/JWT through `ILiveFeedStore`, `IPresenceBroadcaster`, and `IAccessTokenIssuer`.
 - **Activity query use cases:** `GetRecentActivities`, `SearchActivities`, and `FetchRemoteActivities`.
 - **`GetLiveActivities`:** Serves **`GET /activities/live`** from Redis lists only (no Postgres). Explorer historical browsing uses **`SearchActivities`** (**`GET /activities/search`**), not Redis.
 - **Auth workflows:** Implemented through `AuthUseCases` (`RegisterUser`, `AuthenticateUser`, `RefreshUserToken`, etc.).
@@ -112,7 +113,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; `?scope=global` for the personal/small-team wall with a per-viewer archive overlay). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`), historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` fills the bus when webhooks are absent. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; `?scope=global` for the personal/small-team wall with a per-viewer archive overlay). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `IWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` fills the bus when webhooks are absent. |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public (no JWT) OAuth redirect. Validates Redis `oauth:state:{id}`, exchanges the code, persists via `SaveUserProviderCredential`. Returns HTML. Never includes tokens. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
@@ -270,7 +271,8 @@ Discord has no outbound webhooks for messages, so live ingestion uses
 `DiscordGatewayService` — an outbound Gateway WebSocket client (IDENTIFY with
 the **`botToken`**, `GUILD_MESSAGES`/`MESSAGE_CONTENT` intents, heartbeat +
 RESUME reconnect). `MESSAGE_CREATE` dispatches flow through
-`IngestDiscordMessage` into the same persist/fan-out pipeline. The service
+`IDiscordLiveIngestor` (`IngestDiscordMessage`) into the same persist/fan-out
+pipeline. The service
 starts on boot when the Discord config is active and reloads on config save.
 Explorer backfill polls `GET /channels/{id}/messages` per configured
 **`channels`** id; attribution requires linked identities

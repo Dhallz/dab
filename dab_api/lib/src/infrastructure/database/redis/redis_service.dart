@@ -4,10 +4,13 @@ import 'package:redis/redis.dart';
 
 import '../../../domain/core/org_calendar.dart' as org_calendar;
 import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
 import '../../../domain/repositories/abs_i_system_settings_repository.dart';
 import 'redis_client.dart';
 
-class RedisService {
+/// [ARCH: INFRASTRUCTURE_SERVICE]
+/// ROLE: Redis live feeds, Vegas clock, and ingest dedup keys.
+class RedisService implements ILiveFeedStore {
   final RedisClient _client;
   final ISystemSettingsRepository _settings;
 
@@ -18,6 +21,7 @@ class RedisService {
   /// --- VEGAS PATTERN (VERSION CLOCK) ---
 
   /// Increments the global DAB version counter.
+  @override
   Future<int> incrementVersion() async {
     return await _cmd.send_object(['INCR', 'dab:version']);
   }
@@ -31,6 +35,7 @@ class RedisService {
   /// --- THE FAN-OUT PATTERN ---
 
   /// Fans out a single activity to Global, Per-User, and Temporal feeds.
+  @override
   Future<void> fanOutActivity(Activity activity) async {
     final activityJson = _encodeActivity(activity);
     final timestamp = activity.createdAt.millisecondsSinceEpoch;
@@ -105,6 +110,7 @@ class RedisService {
   /// The [limit] is the upper bound on the **returned** list, so we over-read
   /// internally to avoid starving the result when many entries are archived or
   /// stale.
+  @override
   Future<List<Activity>> getLiveActivities({
     required String userId,
     int limit = 50,
@@ -144,6 +150,7 @@ class RedisService {
   /// the timestamp ordering) in place. Returns the updated [Activity] on
   /// success, or `null` if the id could not be found in the caller's live
   /// feed (e.g. already purged or never fanned out to this user).
+  @override
   Future<Activity?> setActivityArchiveFlag({
     required String userId,
     required String activityId,
@@ -219,6 +226,7 @@ class RedisService {
   /// a `DEL` + `RPUSH` cycle so order is preserved.
   ///
   /// Returns a map of Redis key -> removedCount for observability.
+  @override
   Future<Map<String, int>> purgeStaleLiveFeedActivities() async {
     final removed = <String, int>{};
     final startOfTodayUtc = await liveFeedStartOfTodayUtc();
@@ -364,6 +372,7 @@ class RedisService {
   ///
   /// Returns true if the event id was not seen recently and is now reserved.
   /// Returns false when the id already exists (retry/duplicate delivery).
+  @override
   Future<bool> reserveSlackEventId(
     String eventId, {
     Duration ttl = const Duration(hours: 24),
@@ -384,6 +393,7 @@ class RedisService {
   ///
   /// Returns true when the delivery was not seen recently and is now reserved.
   /// Returns false on duplicate webhook delivery retries.
+  @override
   Future<bool> reserveGitHubDeliveryId(
     String deliveryId, {
     Duration ttl = const Duration(hours: 24),
@@ -406,6 +416,7 @@ class RedisService {
   /// Shared by all webhook / gateway ingestion paths that do not have a
   /// dedicated legacy key format. Returns true when the event was not seen
   /// recently and is now reserved; false on duplicate deliveries.
+  @override
   Future<bool> reserveIngestionEventId(
     String provider,
     String eventId, {
@@ -426,6 +437,7 @@ class RedisService {
   static const Duration liveIngestSuccessTtl = Duration(days: 7);
 
   /// Records a successful live-ingestion event for [providerId] (webhook or gateway).
+  @override
   Future<void> recordLiveIngestSuccess(String providerId) async {
     final key = 'live:last_ingest:${providerId.trim().toLowerCase()}';
     await _cmd.send_object([
@@ -438,6 +450,7 @@ class RedisService {
   }
 
   /// Returns the last successful live-ingestion instant for [providerId], if any.
+  @override
   Future<DateTime?> getLiveIngestLastSuccess(String providerId) async {
     final key = 'live:last_ingest:${providerId.trim().toLowerCase()}';
     final raw = await _cmd.send_object(['GET', key]);

@@ -4,9 +4,9 @@ import 'dart:math';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../../../application/usecases/activity/ingest_discord_message.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
+import '../../../domain/ports/i_discord_live_ingestor.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
@@ -16,14 +16,14 @@ import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 /// token and `GUILD_MESSAGES` + `MESSAGE_CONTENT` intents, heartbeat on the
 /// server-provided interval, track sequence numbers, RESUME after drops with
 /// exponential backoff. `MESSAGE_CREATE` dispatches are handed to
-/// [IngestDiscordMessage] (same persist/fan-out pipeline as webhooks).
+/// [IDiscordLiveIngestor] (same persist/fan-out pipeline as webhooks).
 /// CONSTRAINTS: Read-only toward Discord — the client never sends anything
 /// besides IDENTIFY/RESUME/HEARTBEAT control frames.
 class DiscordGatewayService {
   final AbsIProviderConfigRepository _configRepository;
-  final IngestDiscordMessage _ingestDiscordMessage;
+  final IDiscordLiveIngestor _liveIngestor;
 
-  DiscordGatewayService(this._configRepository, this._ingestDiscordMessage);
+  DiscordGatewayService(this._configRepository, this._liveIngestor);
 
   static const _gatewayUrl = 'wss://gateway.discord.gg/?v=10&encoding=json';
 
@@ -189,7 +189,7 @@ class DiscordGatewayService {
     }
     if (eventType == 'MESSAGE_CREATE' && data is Map<String, dynamic>) {
       unawaited(
-        _ingestDiscordMessage.execute(payload: data).then((result) {
+        _liveIngestor.ingestMessageCreate(data).then((result) {
           result.fold((failure) {
             print('Discord live ingestion failed: ${failure.message}');
           }, (_) {});

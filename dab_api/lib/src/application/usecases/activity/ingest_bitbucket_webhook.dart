@@ -3,14 +3,19 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import '../../../domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
+import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
+import '../../services/live_ingest_persister.dart';
+import 'ingestion_result.dart';
+
+export 'ingestion_result.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Bitbucket Cloud `repo:push` webhooks into the DAB live
@@ -23,20 +28,26 @@ import '../../services/activity_live_publisher.dart';
 /// repo + change target hashes).
 class IngestBitbucketWebhook {
   final IUserRepository _userRepository;
-  final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final RedisService _redisService;
-  final PresenceService _presenceService;
-  final ActivityLivePublisher? _livePublisher;
+  final ILiveFeedStore _liveFeed;
+  final LiveIngestPersister _persister;
 
   IngestBitbucketWebhook(
     this._userRepository,
-    this._activityRepository,
+    AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
-    this._redisService,
-    this._presenceService, {
+    this._liveFeed,
+    IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
-  }) : _livePublisher = livePublisher;
+    LiveIngestPersister? persister,
+  }) : _persister =
+           persister ??
+           LiveIngestPersister(
+             activities: activityRepository,
+             liveFeed: _liveFeed,
+             presence: presence,
+             livePublisher: livePublisher,
+           );
 
   Future<Either<Failure, BitbucketWebhookIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -68,7 +79,7 @@ class IngestBitbucketWebhook {
     final fingerprint = (deliveryId ?? '').trim().isNotEmpty
         ? deliveryId!.trim()
         : '$repo|${_changeHashes(changes).join(',')}';
-    final reserved = await _redisService.reserveIngestionEventId(
+    final reserved = await _liveFeed.reserveIngestionEventId(
       'bitbucket',
       fingerprint,
     );
@@ -114,8 +125,8 @@ class IngestBitbucketWebhook {
         if (u.email.trim().isNotEmpty) u.email.trim().toLowerCase(): u.id,
     };
 
-    var ingestedCount = 0;
     var attributableCommits = 0;
+    final toPersist = <Activity>[];
     for (final change in changes) {
       if (change is! Map<String, dynamic>) continue;
       final newState = change['new'];
@@ -139,33 +150,7 @@ class IngestBitbucketWebhook {
         );
         if (dto == null || dto.userId == null) continue;
         attributableCommits++;
-
-        for (final activity in dto.toActivities(users)) {
-          final createResult = await _activityRepository.createActivity(
-            activity,
-          );
-          if (createResult.isLeft()) {
-            final message = createResult
-                .getLeft()
-                .toNullable()!
-                .message
-                .toLowerCase();
-            if (_isDuplicateViolation(message)) {
-              continue;
-            }
-            return Left(createResult.getLeft().toNullable()!);
-          }
-          ingestedCount++;
-          await ActivityLivePublisher.emit(
-            redis: _redisService,
-            presence: _presenceService,
-            activity: activity,
-            publisher: _livePublisher,
-          );
-          print(
-            '[BITBUCKET_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',
-          );
-        }
+        toPersist.addAll(dto.toActivities(users));
       }
     }
 
@@ -174,13 +159,12 @@ class IngestBitbucketWebhook {
         BitbucketWebhookIngestionResult.ignored('no_attributable_users'),
       );
     }
-    if (ingestedCount == 0) {
-      return const Right(
-        BitbucketWebhookIngestionResult.ignored('duplicate_activity'),
-      );
-    }
-    await _redisService.recordLiveIngestSuccess('bitbucket');
-    return const Right(BitbucketWebhookIngestionResult.ingested());
+    return _persister.persist(
+      activities: toPersist,
+      providerId: 'bitbucket',
+      emptyReason: 'duplicate_activity',
+      logTag: 'BITBUCKET_WEBHOOK',
+    );
   }
 
   List<String> _changeHashes(List<dynamic> changes) {
@@ -197,32 +181,5 @@ class IngestBitbucketWebhook {
       }
     }
     return hashes;
-  }
-
-  bool _isDuplicateViolation(String message) {
-    return message.contains('duplicate') ||
-        message.contains('unique constraint') ||
-        message.contains('already exists');
-  }
-}
-
-/// Outcome envelope for Bitbucket webhook processing (parity with GitHub).
-class BitbucketWebhookIngestionResult {
-  final bool ingested;
-  final String reason;
-
-  const BitbucketWebhookIngestionResult._({
-    required this.ingested,
-    required this.reason,
-  });
-
-  const BitbucketWebhookIngestionResult.ingested()
-    : this._(ingested: true, reason: 'ingested');
-
-  const BitbucketWebhookIngestionResult.ignored(String reason)
-    : this._(ingested: false, reason: reason);
-
-  Map<String, dynamic> toMap() {
-    return {'ingested': ingested, 'reason': reason};
   }
 }

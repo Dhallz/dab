@@ -3,15 +3,15 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
+import '../../../domain/ports/i_access_token_issuer.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
 import '../../../infrastructure/core/config/config.dart';
-import '../../../infrastructure/core/security/jwt_provider.dart';
 import 'login_user.dart';
 
 class AuthenticateUser {
   final AbsIAuthRepository _repo;
   final LoginUser _loginUser;
-  final JwtProvider _jwtProvider;
+  final IAccessTokenIssuer _jwtProvider;
   final _uuid = const Uuid();
 
   AuthenticateUser(this._repo, this._loginUser, this._jwtProvider);

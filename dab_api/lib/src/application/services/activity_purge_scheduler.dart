@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import '../../domain/core/org_calendar.dart' as org_calendar;
+import '../../domain/ports/i_live_feed_store.dart';
 import '../../domain/repositories/abs_i_system_settings_repository.dart';
-import '../../infrastructure/database/redis/redis_service.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Runs a daily purge at **org-timezone midnight**: removes archived live-feed
 /// rows and anything older than the current org calendar day from Redis
 /// (`activities:user:*`, `activities:global`).
 /// CONTRACT: Schedules a one-shot [Timer] to fire at the next org midnight,
-/// triggers [RedisService.purgeStaleLiveFeedActivities], and reschedules itself.
+/// triggers live-feed purge, and reschedules itself.
 /// Idempotent and safe to re-run (a missed run is picked up on next startup).
 /// CONSTRAINTS: Owns its own [Timer] instance; [stop] must be called on
 /// shutdown to release it.
 class ActivityPurgeScheduler {
-  final RedisService _redis;
+  final ILiveFeedStore _redis;
   final ISystemSettingsRepository _settings;
   final DateTime Function() _now;
 

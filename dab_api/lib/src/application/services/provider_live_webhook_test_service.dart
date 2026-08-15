@@ -4,12 +4,12 @@ import 'package:crypto/crypto.dart';
 
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
+import '../../domain/ports/i_live_feed_store.dart';
 import '../../infrastructure/core/security/github_webhook_verifier.dart';
 import '../../infrastructure/core/security/linear_webhook_verifier.dart';
 import '../../infrastructure/core/security/phorge_webhook_verifier.dart';
 import '../../infrastructure/core/security/shared_secret_verifier.dart';
 import '../../infrastructure/core/security/slack_request_verifier.dart';
-import '../../infrastructure/database/redis/redis_service.dart';
 import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
@@ -27,7 +27,7 @@ class ProviderLiveWebhookTestService {
     this._sharedSecretVerifier,
   );
 
-  final RedisService _redis;
+  final ILiveFeedStore _redis;
   final DiscordGatewayService _discordGateway;
   final GitHubWebhookVerifier _githubVerifier;
   final SlackRequestVerifier _slackVerifier;

@@ -2,8 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Marks a live-feed activity as archived for the requesting user.
@@ -13,8 +13,8 @@ import '../../../infrastructure/websockets/presence_service.dart';
 /// touch the persistent `activities` table. Returns [NotFoundFailure] when the
 /// activity is no longer present in the caller's live feed.
 class ArchiveLiveActivity {
-  final RedisService _redis;
-  final PresenceService _presence;
+  final ILiveFeedStore _redis;
+  final IPresenceBroadcaster _presence;
 
   ArchiveLiveActivity(this._redis, this._presence);
 

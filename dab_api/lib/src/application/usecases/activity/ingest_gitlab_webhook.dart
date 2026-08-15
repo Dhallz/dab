@@ -3,14 +3,19 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/gitlab/gitlab_commit_dto.dart';
 import '../../../domain/dtos/gitlab/gitlab_commit_mapping.dart';
+import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
+import '../../services/live_ingest_persister.dart';
+import 'ingestion_result.dart';
+
+export 'ingestion_result.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests GitLab Push Hook webhooks into the DAB live pipeline.
@@ -22,20 +27,26 @@ import '../../services/activity_live_publisher.dart';
 /// CONSTRAINTS: Read-only toward GitLab; dedupe on checkout SHA + ref.
 class IngestGitLabWebhook {
   final IUserRepository _userRepository;
-  final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final RedisService _redisService;
-  final PresenceService _presenceService;
-  final ActivityLivePublisher? _livePublisher;
+  final ILiveFeedStore _liveFeed;
+  final LiveIngestPersister _persister;
 
   IngestGitLabWebhook(
     this._userRepository,
-    this._activityRepository,
+    AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
-    this._redisService,
-    this._presenceService, {
+    this._liveFeed,
+    IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
-  }) : _livePublisher = livePublisher;
+    LiveIngestPersister? persister,
+  }) : _persister =
+           persister ??
+           LiveIngestPersister(
+             activities: activityRepository,
+             liveFeed: _liveFeed,
+             presence: presence,
+             livePublisher: livePublisher,
+           );
 
   Future<Either<Failure, GitLabWebhookIngestionResult>> execute({
     required Map<String, dynamic> payload,
@@ -73,7 +84,7 @@ class IngestGitLabWebhook {
         .toString()
         .trim();
     final fingerprint = '$project|$ref|$checkoutSha';
-    final reserved = await _redisService.reserveIngestionEventId(
+    final reserved = await _liveFeed.reserveIngestionEventId(
       'gitlab',
       fingerprint,
     );
@@ -119,8 +130,8 @@ class IngestGitLabWebhook {
       }
     }
 
-    var ingestedCount = 0;
     var attributableCommits = 0;
+    final toPersist = <Activity>[];
     for (final raw in commitsRaw) {
       if (raw is! Map<String, dynamic>) continue;
 
@@ -132,33 +143,7 @@ class IngestGitLabWebhook {
       );
       if (dto == null || dto.userId == null) continue;
       attributableCommits++;
-
-      for (final activity in dto.toActivities(users)) {
-        final createResult = await _activityRepository.createActivity(
-          activity,
-        );
-        if (createResult.isLeft()) {
-          final message = createResult
-              .getLeft()
-              .toNullable()!
-              .message
-              .toLowerCase();
-          if (_isDuplicateViolation(message)) {
-            continue;
-          }
-          return Left(createResult.getLeft().toNullable()!);
-        }
-        ingestedCount++;
-        await ActivityLivePublisher.emit(
-          redis: _redisService,
-          presence: _presenceService,
-          activity: activity,
-          publisher: _livePublisher,
-        );
-        print(
-          '[GITLAB_WEBHOOK] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',
-        );
-      }
+      toPersist.addAll(dto.toActivities(users));
     }
 
     if (attributableCommits == 0) {
@@ -166,39 +151,11 @@ class IngestGitLabWebhook {
         GitLabWebhookIngestionResult.ignored('no_attributable_users'),
       );
     }
-    if (ingestedCount == 0) {
-      return const Right(
-        GitLabWebhookIngestionResult.ignored('duplicate_activity'),
-      );
-    }
-    await _redisService.recordLiveIngestSuccess('gitlab');
-    return const Right(GitLabWebhookIngestionResult.ingested());
-  }
-
-  bool _isDuplicateViolation(String message) {
-    return message.contains('duplicate') ||
-        message.contains('unique constraint') ||
-        message.contains('already exists');
-  }
-}
-
-/// Outcome envelope for GitLab webhook processing (parity with Slack/GitHub).
-class GitLabWebhookIngestionResult {
-  final bool ingested;
-  final String reason;
-
-  const GitLabWebhookIngestionResult._({
-    required this.ingested,
-    required this.reason,
-  });
-
-  const GitLabWebhookIngestionResult.ingested()
-    : this._(ingested: true, reason: 'ingested');
-
-  const GitLabWebhookIngestionResult.ignored(String reason)
-    : this._(ingested: false, reason: reason);
-
-  Map<String, dynamic> toMap() {
-    return {'ingested': ingested, 'reason': reason};
+    return _persister.persist(
+      activities: toPersist,
+      providerId: 'gitlab',
+      emptyReason: 'duplicate_activity',
+      logTag: 'GITLAB_WEBHOOK',
+    );
   }
 }

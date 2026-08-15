@@ -38,7 +38,7 @@ dab_api/lib/src/
 │   ├── entities/        ← Core model
 │   ├── dtos/            ← Provider DTO shapes + extension OnDto → `toActivities`
 │   ├── gateways/        ← Phorge Conduit facade (`AbsIPhorgeGateway`); poll still uses `IActivitySource`
-│   ├── ports/           ← Cross-cutting I/O seams: `IActivitySource<T>`, `IDiscoverySource`, … (infra implements)
+│   ├── ports/           ← Cross-cutting I/O seams: `IActivitySource<T>`, `IDiscoverySource`, `ILiveFeedStore`, `IWebhookRequestAuthenticator`, … (infra implements)
 │   └── repositories/    ← Abstract Postgres persistence interfaces (`AbsI*Repository`)
 ├── application/
 │   ├── usecases/        ← Single-responsibility use cases
@@ -173,14 +173,14 @@ Provider push (webhook / Gateway WebSocket)
         │
         ▼
  ActivityController (Presentation)
-  ── verify signature/secret, fast ACK ──
+  ── IWebhookRequestAuthenticator, fast ACK ──
         │
         ▼
  Ingest use case (Application)
   ── Redis dedup + business filter + DTO mapping ──
         │
         ▼
- SQL ActivityRepository ──► Redis fan-out ──► PresenceService (ACTIVITY_RECEIVED over /ws)
+ SQL ActivityRepository ──► LiveIngestPersister (Redis fan-out + IPresenceBroadcaster ACTIVITY_RECEIVED)
 ```
 
 Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge

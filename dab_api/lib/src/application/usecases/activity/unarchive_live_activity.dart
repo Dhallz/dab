@@ -2,8 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/activity/activity.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Restores an archived live-feed activity to visible state.
@@ -14,8 +14,8 @@ import '../../../infrastructure/websockets/presence_service.dart';
 /// [NotFoundFailure] when the activity is no longer present in the caller's
 /// live feed (typically because the daily midnight purge already ran).
 class UnarchiveLiveActivity {
-  final RedisService _redis;
-  final PresenceService _presence;
+  final ILiveFeedStore _redis;
+  final IPresenceBroadcaster _presence;
 
   UnarchiveLiveActivity(this._redis, this._presence);
 

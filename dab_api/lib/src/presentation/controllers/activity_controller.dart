@@ -9,14 +9,11 @@ import '../../domain/core/failures/failure.dart';
 import '../../domain/core/org_calendar.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_provider.dart';
-import '../../domain/repositories/abs_i_provider_config_repository.dart';
+import '../../domain/ports/i_webhook_request_authenticator.dart';
+import '../../domain/ports/webhook_auth_input.dart';
+import '../../domain/ports/webhook_auth_status.dart';
 import '../../domain/repositories/abs_i_system_settings_repository.dart';
 import '../../infrastructure/core/http/github_webhook_payload.dart';
-import '../../infrastructure/core/security/github_webhook_verifier.dart';
-import '../../infrastructure/core/security/linear_webhook_verifier.dart';
-import '../../infrastructure/core/security/phorge_webhook_verifier.dart';
-import '../../infrastructure/core/security/shared_secret_verifier.dart';
-import '../../infrastructure/core/security/slack_request_verifier.dart';
 import '../../infrastructure/database/redis/redis_service.dart';
 import '../../infrastructure/websockets/presence_service.dart';
 import '../../service_locator.dart';
@@ -32,6 +29,8 @@ import '../middlewares/auth_middleware.dart';
 class ActivityController {
   final ActivityUseCases _activity = sl<ActivityUseCases>();
   final PresenceService _presence = sl<PresenceService>();
+  final IWebhookRequestAuthenticator _webhookAuth =
+      sl<IWebhookRequestAuthenticator>();
 
   Future<Response> getActivities(Request request) async {
     final userId = userIdProperty.get(request);
@@ -200,34 +199,21 @@ class ActivityController {
 
   Future<Response> receiveSlackEvents(Request request) async {
     final body = await request.readAsString();
-    final signature = request.headers['X-Slack-Signature']?.first ?? '';
-    final timestamp = request.headers['X-Slack-Request-Timestamp']?.first ?? '';
-    final signingSecret = await _resolveSlackSigningSecret();
-
-    if (signingSecret.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'Slack signing secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<SlackRequestVerifier>();
-    final valid = verifier.isValid(
-      body: body,
-      signatureHeader: signature,
-      timestampHeader: timestamp,
-      signingSecret: signingSecret,
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'slack',
+        body: body,
+        signatureHeader: request.headers['X-Slack-Signature']?.first ?? '',
+        timestampHeader:
+            request.headers['X-Slack-Request-Timestamp']?.first ?? '',
+      ),
     );
-    if (!valid) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid Slack signature'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Slack signing secret is not configured',
+      invalid: 'Invalid Slack signature',
+    );
+    if (authRejected != null) return authRejected;
 
     final payload = jsonDecode(body);
     if (payload is! Map<String, dynamic>) {
@@ -287,34 +273,22 @@ class ActivityController {
   /// POST /integrations/github/webhook — verifies `X-Hub-Signature-256` and ingests push events.
   Future<Response> receiveGitHubWebhook(Request request) async {
     final body = await request.readAsString();
-    final signature = request.headers['X-Hub-Signature-256']?.first ?? '';
     final delivery = request.headers['X-GitHub-Delivery']?.first ?? '';
     final eventType = request.headers['X-GitHub-Event']?.first ?? '';
 
-    final webhookSecret = await _resolveGitHubWebhookSecret();
-    if (webhookSecret.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'GitHub webhook secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<GitHubWebhookVerifier>();
-    final valid = verifier.isValidSha256Signature(
-      body: body,
-      signature256Header: signature,
-      webhookSecret: webhookSecret,
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'github',
+        body: body,
+        signatureHeader: request.headers['X-Hub-Signature-256']?.first ?? '',
+      ),
     );
-    if (!valid) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid GitHub webhook signature'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'GitHub webhook secret is not configured',
+      invalid: 'Invalid GitHub webhook signature',
+    );
+    if (authRejected != null) return authRejected;
 
     final decoded = decodeGitHubWebhookPayload(body);
     if (decoded == null) {
@@ -365,36 +339,21 @@ class ActivityController {
   /// `X-Phabricator-Webhook-Signature` HMAC and ingests task transactions.
   Future<Response> receivePhorgeWebhook(Request request) async {
     final body = await request.readAsString();
-    final signature =
-        request.headers['X-Phabricator-Webhook-Signature']?.first ?? '';
 
-    final hmacKey = await _resolveProviderSetting('phorge', const [
-      'webhookHmacKey',
-      'webhook_hmac_key',
-    ]);
-    if (hmacKey.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'Phorge webhook HMAC key is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<PhorgeWebhookVerifier>();
-    final valid = verifier.isValidSignature(
-      body: body,
-      signatureHeader: signature,
-      hmacKey: hmacKey,
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'phorge',
+        body: body,
+        signatureHeader:
+            request.headers['X-Phabricator-Webhook-Signature']?.first ?? '',
+      ),
     );
-    if (!valid) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid Phorge webhook signature'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Phorge webhook HMAC key is not configured',
+      invalid: 'Invalid Phorge webhook signature',
+    );
+    if (authRejected != null) return authRejected;
 
     final dynamic decoded;
     try {
@@ -449,39 +408,24 @@ class ActivityController {
   /// events.
   Future<Response> receiveBitbucketWebhook(Request request) async {
     final body = await request.readAsString();
-    final signature = request.headers['X-Hub-Signature']?.first ?? '';
     final deliveryId =
         request.headers['X-Request-UUID']?.first ??
         request.headers['X-Hook-UUID']?.first;
     final eventKey = request.headers['X-Event-Key']?.first ?? '';
 
-    final webhookSecret = await _resolveProviderSetting('bitbucket', const [
-      'webhookSecret',
-      'webhook_secret',
-    ]);
-    if (webhookSecret.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'Bitbucket webhook secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<GitHubWebhookVerifier>();
-    final valid = verifier.isValidSha256Signature(
-      body: body,
-      signature256Header: signature,
-      webhookSecret: webhookSecret,
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'bitbucket',
+        body: body,
+        signatureHeader: request.headers['X-Hub-Signature']?.first ?? '',
+      ),
     );
-    if (!valid) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid Bitbucket webhook signature'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Bitbucket webhook secret is not configured',
+      invalid: 'Invalid Bitbucket webhook signature',
+    );
+    if (authRejected != null) return authRejected;
 
     final dynamic decoded;
     try {
@@ -534,30 +478,18 @@ class ActivityController {
   /// token (`X-Gitlab-Token` header, no HMAC), compared constant-time against
   /// the provider's `webhookSecret` setting.
   Future<Response> receiveGitLabWebhook(Request request) async {
-    final provided = request.headers['X-Gitlab-Token']?.first ?? '';
-
-    final expected = await _resolveProviderSetting('gitlab', const [
-      'webhookSecret',
-      'webhook_secret',
-    ]);
-    if (expected.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'GitLab webhook secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<SharedSecretVerifier>();
-    if (!verifier.isValid(provided: provided, expected: expected)) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid GitLab webhook token'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'gitlab',
+        sharedSecretHeader: request.headers['X-Gitlab-Token']?.first ?? '',
+      ),
+    );
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'GitLab webhook secret is not configured',
+      invalid: 'Invalid GitLab webhook token',
+    );
+    if (authRejected != null) return authRejected;
 
     final body = await request.readAsString();
     final dynamic decoded;
@@ -612,36 +544,21 @@ class ActivityController {
   /// Comment events.
   Future<Response> receiveLinearWebhook(Request request) async {
     final body = await request.readAsString();
-    final signature = request.headers['linear-signature']?.first ?? '';
     final deliveryId = request.headers['linear-delivery']?.first;
 
-    final signingSecret = await _resolveProviderSetting('linear', const [
-      'webhookSecret',
-      'webhook_secret',
-    ]);
-    if (signingSecret.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'Linear webhook secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final verifier = sl<LinearWebhookVerifier>();
-    final valid = verifier.isValidSignature(
-      body: body,
-      signatureHeader: signature,
-      signingSecret: signingSecret,
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'linear',
+        body: body,
+        signatureHeader: request.headers['linear-signature']?.first ?? '',
+      ),
     );
-    if (!valid) {
-      return Response.unauthorized(
-        body: Body.fromString(
-          jsonEncode({'error': 'Invalid Linear webhook signature'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Linear webhook secret is not configured',
+      invalid: 'Invalid Linear webhook signature',
+    );
+    if (authRejected != null) return authRejected;
 
     final dynamic decoded;
     try {
@@ -697,49 +614,22 @@ class ActivityController {
   /// Falls back to plain `X-Webhook-Secret` / `?secret=` for Bruno simulations.
   Future<Response> receiveJiraWebhook(Request request) async {
     final body = await request.readAsString();
-    final hubSignature = request.headers['X-Hub-Signature']?.first ?? '';
 
-    final webhookSecret = await _resolveProviderSetting('jira', const [
-      'webhookSecret',
-      'webhook_secret',
-    ]);
-    if (webhookSecret.isEmpty) {
-      return Response.internalServerError(
-        body: Body.fromString(
-          jsonEncode({'error': 'Jira webhook secret is not configured'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
-
-    final hubVerifier = sl<GitHubWebhookVerifier>();
-    final hubValid =
-        hubSignature.trim().isNotEmpty &&
-        hubVerifier.isValidSha256Signature(
-          body: body,
-          signature256Header: hubSignature,
-          webhookSecret: webhookSecret,
-        );
-
-    if (!hubValid) {
-      final providedShared =
-          request.headers['X-Webhook-Secret']?.first ??
-          request.url.queryParameters['secret'] ??
-          '';
-      final sharedVerifier = sl<SharedSecretVerifier>();
-      final sharedValid = sharedVerifier.isValid(
-        provided: providedShared,
-        expected: webhookSecret,
-      );
-      if (!sharedValid) {
-        return Response.unauthorized(
-          body: Body.fromString(
-            jsonEncode({'error': 'Invalid Jira webhook signature or secret'}),
-            mimeType: MimeType.json,
-          ),
-        );
-      }
-    }
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'jira',
+        body: body,
+        signatureHeader: request.headers['X-Hub-Signature']?.first ?? '',
+        sharedSecretHeader: request.headers['X-Webhook-Secret']?.first ?? '',
+        sharedSecretQuery: request.url.queryParameters['secret'] ?? '',
+      ),
+    );
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Jira webhook secret is not configured',
+      invalid: 'Invalid Jira webhook signature or secret',
+    );
+    if (authRejected != null) return authRejected;
 
     final dynamic decoded;
     try {
@@ -900,59 +790,28 @@ class ActivityController {
     );
   }
 
-  Future<String> _resolveSlackSigningSecret() async {
-    final repo = sl<AbsIProviderConfigRepository>();
-    final result = await repo.getConfigs();
-    final slackConfig = result
-        .getOrElse((_) => const [])
-        .where(
-          (config) => config.id.toLowerCase() == 'slack' && config.isActive,
-        )
-        .firstOrNull;
-    if (slackConfig == null) {
-      return '';
+  Response? _webhookAuthResponse(
+    WebhookAuthStatus status, {
+    required String missingSecret,
+    required String invalid,
+  }) {
+    switch (status) {
+      case WebhookAuthStatus.ok:
+        return null;
+      case WebhookAuthStatus.missingSecret:
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': missingSecret}),
+            mimeType: MimeType.json,
+          ),
+        );
+      case WebhookAuthStatus.invalid:
+        return Response.unauthorized(
+          body: Body.fromString(
+            jsonEncode({'error': invalid}),
+            mimeType: MimeType.json,
+          ),
+        );
     }
-    return (slackConfig.settings['signingSecret'] ?? '').toString().trim();
-  }
-
-  Future<String> _resolveGitHubWebhookSecret() async {
-    final repo = sl<AbsIProviderConfigRepository>();
-    final result = await repo.getConfigs();
-    final githubConfig = result
-        .getOrElse((_) => const [])
-        .where(
-          (config) => config.id.toLowerCase() == 'github' && config.isActive,
-        )
-        .firstOrNull;
-    if (githubConfig == null) {
-      return '';
-    }
-    final settings = githubConfig.settings;
-    return (settings['webhookSecret'] ?? settings['webhook_secret'] ?? '')
-        .toString()
-        .trim();
-  }
-
-  /// Reads the first non-empty settings value among [keys] from the active
-  /// provider config identified by [providerId]. Returns '' when the provider
-  /// is inactive, missing, or no key is set.
-  Future<String> _resolveProviderSetting(
-    String providerId,
-    List<String> keys,
-  ) async {
-    final repo = sl<AbsIProviderConfigRepository>();
-    final result = await repo.getConfigs();
-    final config = result
-        .getOrElse((_) => const [])
-        .where((c) => c.id.toLowerCase() == providerId && c.isActive)
-        .firstOrNull;
-    if (config == null) {
-      return '';
-    }
-    for (final key in keys) {
-      final value = (config.settings[key] ?? '').toString().trim();
-      if (value.isNotEmpty) return value;
-    }
-    return '';
   }
 }

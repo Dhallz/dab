@@ -8,12 +8,16 @@ import '../../../domain/dtos/slack/slack_message_dto.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/ports/i_live_feed_store.dart';
+import '../../../domain/ports/i_presence_broadcaster.dart';
 import '../../../domain/repositories/abs_i_activity_repository.dart';
 import '../../../domain/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/repositories/abs_i_user_repository.dart';
-import '../../../infrastructure/database/redis/redis_service.dart';
-import '../../../infrastructure/websockets/presence_service.dart';
 import '../../services/activity_live_publisher.dart';
+import '../../services/live_ingest_persister.dart';
+import 'ingestion_result.dart';
+
+export 'ingestion_result.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests a Slack Events API callback into DAB live pipeline.
@@ -21,22 +25,29 @@ import '../../services/activity_live_publisher.dart';
 /// CONSTRAINTS: Read-only with Slack, deduped by Slack event id and activity id.
 class IngestSlackEvent {
   final IUserRepository _userRepository;
-  final AbsIActivityRepository _activityRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final RedisService _redisService;
-  final PresenceService _presenceService;
+  final ILiveFeedStore _liveFeed;
   final http.Client _httpClient;
-  final ActivityLivePublisher? _livePublisher;
+  final LiveIngestPersister _persister;
 
   IngestSlackEvent(
     this._userRepository,
-    this._activityRepository,
+    AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
-    this._redisService,
-    this._presenceService, {
+    this._liveFeed,
+    IPresenceBroadcaster presence, {
+    http.Client? httpClient,
     ActivityLivePublisher? livePublisher,
-  }) : _httpClient = http.Client(),
-       _livePublisher = livePublisher;
+    LiveIngestPersister? persister,
+  }) : _httpClient = httpClient ?? http.Client(),
+       _persister =
+           persister ??
+           LiveIngestPersister(
+             activities: activityRepository,
+             liveFeed: _liveFeed,
+             presence: presence,
+             livePublisher: livePublisher,
+           );
 
   Future<Either<Failure, SlackEventIngestionResult>> execute(
     Map<String, dynamic> payload,
@@ -53,7 +64,7 @@ class IngestSlackEvent {
       return const Right(SlackEventIngestionResult.ignored('missing_event_id'));
     }
 
-    final reserved = await _redisService.reserveSlackEventId(eventId);
+    final reserved = await _liveFeed.reserveSlackEventId(eventId);
     if (!reserved) {
       return const Right(
         SlackEventIngestionResult.ignored('duplicate_event_id'),
@@ -206,7 +217,6 @@ class IngestSlackEvent {
       );
     }
 
-    var ingestedCount = 0;
     final dto = SlackMessageDto(
       channelId: channelId,
       channelLabel: channelLabel,
@@ -226,50 +236,20 @@ class IngestSlackEvent {
       dabUserId: senderIdentity?.userId,
       createdAt: _parseSlackTs(ts) ?? DateTime.now().toUtc(),
     );
-    for (final activity in dto.toActivities(
-      users,
-      forUserIds: recipientUserIds,
-    )) {
-      final createResult = await _activityRepository.createActivity(activity);
-      if (createResult.isLeft()) {
-        final message = createResult
-            .getLeft()
-            .toNullable()!
-            .message
-            .toLowerCase();
-        if (_isDuplicateViolation(message)) {
-          continue;
-        }
-        return Left(createResult.getLeft().toNullable()!);
-      }
-      ingestedCount++;
-      print(
-        '[SLACK_PIPELINE] db_insert activity_id=${activity.id} user_id=${activity.userId} event_user=$slackUserId',
-      );
-      await ActivityLivePublisher.emit(
-        redis: _redisService,
-        presence: _presenceService,
-        activity: activity,
-        publisher: _livePublisher,
-      );
-      print(
-        '[SLACK_PIPELINE] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',
-      );
-    }
-
-    if (ingestedCount == 0) {
-      return const Right(
-        SlackEventIngestionResult.ignored('duplicate_activity'),
-      );
-    }
-    await _redisService.recordLiveIngestSuccess('slack');
-    return const Right(SlackEventIngestionResult.ingested());
-  }
-
-  bool _isDuplicateViolation(String message) {
-    return message.contains('duplicate') ||
-        message.contains('unique constraint') ||
-        message.contains('already exists');
+    return _persister.persist(
+      activities: dto.toActivities(
+        users,
+        forUserIds: recipientUserIds,
+      ),
+      providerId: 'slack',
+      emptyReason: 'duplicate_activity',
+      logTag: 'SLACK_PIPELINE',
+      onInserted: (activity) {
+        print(
+          '[SLACK_PIPELINE] db_insert activity_id=${activity.id} user_id=${activity.userId} event_user=$slackUserId',
+        );
+      },
+    );
   }
 
   DateTime? _parseSlackTs(String ts) {
@@ -531,25 +511,5 @@ class IngestSlackEvent {
     final external = (identity.externalUsername ?? '').trim();
     if (external.isNotEmpty) return external;
     return '';
-  }
-}
-
-class SlackEventIngestionResult {
-  final bool ingested;
-  final String reason;
-
-  const SlackEventIngestionResult._({
-    required this.ingested,
-    required this.reason,
-  });
-
-  const SlackEventIngestionResult.ingested()
-    : this._(ingested: true, reason: 'ingested');
-
-  const SlackEventIngestionResult.ignored(String reason)
-    : this._(ingested: false, reason: reason);
-
-  Map<String, dynamic> toMap() {
-    return {'ingested': ingested, 'reason': reason};
   }
 }

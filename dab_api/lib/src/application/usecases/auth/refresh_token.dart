@@ -3,8 +3,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
+import '../../../domain/ports/i_access_token_issuer.dart';
 import '../../../domain/repositories/abs_i_auth_repository.dart';
-import '../../../infrastructure/core/security/jwt_provider.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Refreshes a short-lived Access Token using a long-lived Refresh Token.
@@ -12,7 +12,7 @@ import '../../../infrastructure/core/security/jwt_provider.dart';
 /// CONSTRAINTS: Must implement "Token Rotation" (old refresh token is invalidated).
 class RefreshToken {
   final AbsIAuthRepository _repo;
-  final JwtProvider _jwtProvider;
+  final IAccessTokenIssuer _jwtProvider;
   final _uuid = const Uuid();
 
   RefreshToken(this._repo, this._jwtProvider);
