@@ -83,6 +83,20 @@ class DiscordMessageDtoMapper extends ClassMapperBase<DiscordMessageDto> {
     _$dabUserId,
     opt: true,
   );
+  static List<String> _$mentionIds(DiscordMessageDto v) => v.mentionIds;
+  static const Field<DiscordMessageDto, List<String>> _f$mentionIds = Field(
+    'mentionIds',
+    _$mentionIds,
+    opt: true,
+    def: const [],
+  );
+  static bool _$mentionEveryone(DiscordMessageDto v) => v.mentionEveryone;
+  static const Field<DiscordMessageDto, bool> _f$mentionEveryone = Field(
+    'mentionEveryone',
+    _$mentionEveryone,
+    opt: true,
+    def: false,
+  );
 
   @override
   final MappableFields<DiscordMessageDto> fields = const {
@@ -97,6 +111,8 @@ class DiscordMessageDtoMapper extends ClassMapperBase<DiscordMessageDto> {
     #authorAvatarUrl: _f$authorAvatarUrl,
     #replyToId: _f$replyToId,
     #dabUserId: _f$dabUserId,
+    #mentionIds: _f$mentionIds,
+    #mentionEveryone: _f$mentionEveryone,
   };
 
   static DiscordMessageDto _instantiate(DecodingData data) {
@@ -112,6 +128,8 @@ class DiscordMessageDtoMapper extends ClassMapperBase<DiscordMessageDto> {
       authorAvatarUrl: data.dec(_f$authorAvatarUrl),
       replyToId: data.dec(_f$replyToId),
       dabUserId: data.dec(_f$dabUserId),
+      mentionIds: data.dec(_f$mentionIds),
+      mentionEveryone: data.dec(_f$mentionEveryone),
     );
   }
 
@@ -186,6 +204,7 @@ abstract class DiscordMessageDtoCopyWith<
   $Out
 >
     implements ClassCopyWith<$R, $In, $Out> {
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get mentionIds;
   $R call({
     String? messageId,
     String? channelId,
@@ -198,6 +217,8 @@ abstract class DiscordMessageDtoCopyWith<
     String? authorAvatarUrl,
     String? replyToId,
     String? dabUserId,
+    List<String>? mentionIds,
+    bool? mentionEveryone,
   });
   DiscordMessageDtoCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -213,6 +234,13 @@ class _DiscordMessageDtoCopyWithImpl<$R, $Out>
   late final ClassMapperBase<DiscordMessageDto> $mapper =
       DiscordMessageDtoMapper.ensureInitialized();
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get mentionIds =>
+      ListCopyWith(
+        $value.mentionIds,
+        (v, t) => ObjectCopyWith(v, $identity, t),
+        (v) => call(mentionIds: v),
+      );
+  @override
   $R call({
     String? messageId,
     String? channelId,
@@ -225,6 +253,8 @@ class _DiscordMessageDtoCopyWithImpl<$R, $Out>
     Object? authorAvatarUrl = $none,
     Object? replyToId = $none,
     Object? dabUserId = $none,
+    List<String>? mentionIds,
+    bool? mentionEveryone,
   }) => $apply(
     FieldCopyWithData({
       if (messageId != null) #messageId: messageId,
@@ -238,6 +268,8 @@ class _DiscordMessageDtoCopyWithImpl<$R, $Out>
       if (authorAvatarUrl != $none) #authorAvatarUrl: authorAvatarUrl,
       if (replyToId != $none) #replyToId: replyToId,
       if (dabUserId != $none) #dabUserId: dabUserId,
+      if (mentionIds != null) #mentionIds: mentionIds,
+      if (mentionEveryone != null) #mentionEveryone: mentionEveryone,
     }),
   );
   @override
@@ -256,6 +288,8 @@ class _DiscordMessageDtoCopyWithImpl<$R, $Out>
     authorAvatarUrl: data.get(#authorAvatarUrl, or: $value.authorAvatarUrl),
     replyToId: data.get(#replyToId, or: $value.replyToId),
     dabUserId: data.get(#dabUserId, or: $value.dabUserId),
+    mentionIds: data.get(#mentionIds, or: $value.mentionIds),
+    mentionEveryone: data.get(#mentionEveryone, or: $value.mentionEveryone),
   );
 
   @override

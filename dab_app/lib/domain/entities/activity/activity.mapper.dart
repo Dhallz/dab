@@ -26,6 +26,12 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   static const Field<Activity, String> _f$id = Field('id', _$id);
   static String _$userId(Activity v) => v.userId;
   static const Field<Activity, String> _f$userId = Field('userId', _$userId);
+  static String? _$senderUserId(Activity v) => v.senderUserId;
+  static const Field<Activity, String> _f$senderUserId = Field(
+    'senderUserId',
+    _$senderUserId,
+    opt: true,
+  );
   static ActivityProvider _$provider(Activity v) => v.provider;
   static const Field<Activity, ActivityProvider> _f$provider = Field(
     'provider',
@@ -70,6 +76,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
   final MappableFields<Activity> fields = const {
     #id: _f$id,
     #userId: _f$userId,
+    #senderUserId: _f$senderUserId,
     #provider: _f$provider,
     #title: _f$title,
     #content: _f$content,
@@ -85,6 +92,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     return Activity(
       id: data.dec(_f$id),
       userId: data.dec(_f$userId),
+      senderUserId: data.dec(_f$senderUserId),
       provider: data.dec(_f$provider),
       title: data.dec(_f$title),
       content: data.dec(_f$content),
@@ -157,6 +165,7 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
   $R call({
     String? id,
     String? userId,
+    String? senderUserId,
     ActivityProvider? provider,
     String? title,
     String? content,
@@ -182,6 +191,7 @@ class _ActivityCopyWithImpl<$R, $Out>
   $R call({
     String? id,
     String? userId,
+    Object? senderUserId = $none,
     ActivityProvider? provider,
     String? title,
     String? content,
@@ -195,6 +205,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     FieldCopyWithData({
       if (id != null) #id: id,
       if (userId != null) #userId: userId,
+      if (senderUserId != $none) #senderUserId: senderUserId,
       if (provider != null) #provider: provider,
       if (title != null) #title: title,
       if (content != null) #content: content,
@@ -210,6 +221,7 @@ class _ActivityCopyWithImpl<$R, $Out>
   Activity $make(CopyWithData data) => Activity(
     id: data.get(#id, or: $value.id),
     userId: data.get(#userId, or: $value.userId),
+    senderUserId: data.get(#senderUserId, or: $value.senderUserId),
     provider: data.get(#provider, or: $value.provider),
     title: data.get(#title, or: $value.title),
     content: data.get(#content, or: $value.content),

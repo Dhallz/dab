@@ -6,6 +6,8 @@ import '../../domain/entities/user/user_role.dart';
 import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
+import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../../domain/entities/user/linear_team_watch_list.dart';
 import '../core/failures.dart';
@@ -95,5 +97,32 @@ abstract class IUserRepository {
   /// Self-serve: replace instance Linear `teamKeys`.
   Future<Either<AppFailure, LinearTeamWatchList>> saveMyLinearTeams({
     required List<String> teamKeys,
+  });
+
+  /// Self-serve: instance git repos plus the caller's personal inbox watches.
+  Future<Either<AppFailure, GitWatchList>> listMyGitWatches({
+    required String providerId,
+  });
+
+  /// Self-serve: replace personal git `watchedRepos` / `watchedBranches`.
+  Future<Either<AppFailure, GitWatchList>> saveMyGitWatches({
+    required String providerId,
+    required List<String> repos,
+    List<String> branches = const [],
+  });
+
+  /// Self-serve: Dashboard object Follow pins for the caller.
+  Future<Either<AppFailure, List<ActivityFollow>>> listMyActivityFollows();
+
+  /// Self-serve: upsert a Dashboard object Follow pin.
+  Future<Either<AppFailure, ActivityFollow>> saveMyActivityFollow({
+    required String providerId,
+    required String objectKey,
+  });
+
+  /// Self-serve: remove a Dashboard object Follow pin.
+  Future<Either<AppFailure, void>> deleteMyActivityFollow({
+    required String providerId,
+    required String objectKey,
   });
 }

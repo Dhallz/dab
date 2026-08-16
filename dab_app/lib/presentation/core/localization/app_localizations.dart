@@ -1532,6 +1532,18 @@ abstract class AppLocalizations {
   /// **'Archive'**
   String get activityTooltipArchive;
 
+  /// Dashboard card action to pin later updates on this object.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get activityTooltipFollow;
+
+  /// Dashboard card action while this object is followed; tap to unfollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get activityTooltipFollowing;
+
   /// activityTooltipUnarchive: Unarchive
   ///
   /// In en, this message translates to:
@@ -1823,7 +1835,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsConnectedAccountsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Connect the providers you use. DAB never asks for your password — you sign in at the provider.'**
+  /// **'Connect the providers you use so DAB can deliver a personal inbound inbox. Mentions, assignments, and git watches require a linked identity. DAB never asks for your password — you sign in at the provider.'**
   String get settingsConnectedAccountsSubtitle;
 
   /// No description provided for @settingsBotTokenHint.
@@ -2029,6 +2041,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save teams'**
   String get settingsLinearTeamsSave;
+
+  /// No description provided for @settingsGitWatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox repos'**
+  String get settingsGitWatchesTitle;
+
+  /// No description provided for @settingsGitWatchesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which repos land in your Dashboard inbox. Saving none means no git inbox. Your own commits are excluded.'**
+  String get settingsGitWatchesSubtitle;
+
+  /// No description provided for @settingsGitWatchesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No repos are on the instance allow-list yet. Ask an admin to add them in Admin → Providers.'**
+  String get settingsGitWatchesEmpty;
+
+  /// No description provided for @settingsGitWatchesSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save watches'**
+  String get settingsGitWatchesSave;
+
+  /// No description provided for @settingsGitWatchesBranchesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional branches (comma-separated). Leave blank for all branches.'**
+  String get settingsGitWatchesBranchesHint;
 
   /// No description provided for @adminPublicApiUrlTitle.
   ///

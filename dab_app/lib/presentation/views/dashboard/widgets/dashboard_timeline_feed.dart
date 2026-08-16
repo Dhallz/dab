@@ -16,12 +16,18 @@ class DashboardTimelineFeed extends ConsumerWidget {
   final List<Activity> activities;
   final void Function(Activity activity) onArchive;
   final void Function(Activity activity) onUnarchive;
+  final bool Function(Activity activity) isFollowing;
+  final void Function(Activity activity) onFollow;
+  final void Function(Activity activity) onUnfollow;
 
   const DashboardTimelineFeed({
     super.key,
     required this.activities,
     required this.onArchive,
     required this.onUnarchive,
+    required this.isFollowing,
+    required this.onFollow,
+    required this.onUnfollow,
   });
 
   @override
@@ -74,6 +80,9 @@ class DashboardTimelineFeed extends ConsumerWidget {
               onUnarchive: activity.archived
                   ? () => onUnarchive(activity)
                   : null,
+              isFollowing: isFollowing(activity),
+              onFollow: () => onFollow(activity),
+              onUnfollow: () => onUnfollow(activity),
             ),
           ],
         );

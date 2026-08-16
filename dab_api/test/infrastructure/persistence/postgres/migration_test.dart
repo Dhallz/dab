@@ -22,7 +22,14 @@ void main() {
       connection = MockGeneratedDatabase();
 
       registerFallbackValue(db.systemSettingsTable);
+      registerFallbackValue(db.activityFollowsTable);
       when(() => migrator.createTable(any())).thenAnswer((_) async {});
+      when(
+        () => migrator.addColumn(
+          db.activitiesTable,
+          db.activitiesTable.senderUserId,
+        ),
+      ).thenAnswer((_) async {});
       when(() => migrator.database).thenReturn(connection);
       when(() => connection.customStatement(any(), any()))
           .thenAnswer((_) async {});
@@ -94,6 +101,21 @@ void main() {
           ),
         ),
         isTrue,
+      );
+    });
+
+    test('should create activity_follows table when upgrading from < 19',
+        () async {
+      final migration = db.migration;
+
+      await migration.onUpgrade(migrator, 18, 19);
+
+      verify(() => migrator.createTable(db.activityFollowsTable)).called(1);
+      verifyNever(
+        () => migrator.addColumn(
+          db.activitiesTable,
+          db.activitiesTable.senderUserId,
+        ),
       );
     });
   });

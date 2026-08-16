@@ -100,11 +100,16 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
   }
 
   /// Iterates transactions and skips irrelevant noise (VCS/Edits).
-  List<Activity> toActivities(List<User> users) {
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
+    String? senderUserId,
+    bool inbound = false,
+  }) {
     if (transactions.isEmpty) return [];
 
     final activities = <Activity>[];
-
     final userMap = {for (final u in users) u.phorgePhid: u};
     User? defaultUser;
     if (users.isNotEmpty) {
@@ -114,12 +119,144 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
     for (final tx in transactions) {
       if (tx.type == 'vcs' || tx.type == 'edit') continue;
 
-      final activity = activityFromTransaction(tx, userMap, defaultUser);
-      if (activity != null) {
+      var activity = activityFromTransaction(tx, userMap, defaultUser);
+      if (activity == null && (inbound || forUserIds != null)) {
+        activity = _directedInboxActivity(tx, userMap, defaultUser);
+      }
+      if (activity == null) continue;
+
+      if (!inbound && forUserIds == null) {
         activities.add(activity);
+        continue;
+      }
+
+      final author = userMap[tx.authorPHID];
+      final recipients = <String>{
+        if (forUserIds != null) ...forUserIds.where((id) => id.isNotEmpty),
+        if (forUserIds == null) ..._inboxRecipientsFor(tx, users),
+        if (forUserIds == null)
+          ...?followerUserIds?.where((id) => id.isNotEmpty),
+      };
+      for (final targetId in recipients) {
+        final recipient = users.where((u) => u.id == targetId).firstOrNull;
+        if (recipient == null) continue;
+        activities.add(
+          Activity(
+            id: 'phorge-tx-${tx.id}-$targetId'.v5Uuid,
+            userId: recipient.id,
+            senderUserId: senderUserId ?? author?.id,
+            authorName: activity.authorName,
+            commentCount: activity.commentCount,
+            provider: activity.provider,
+            title: activity.title,
+            content: activity.content,
+            url: activity.url,
+            createdAt: activity.createdAt,
+          ),
+        );
       }
     }
 
     return activities;
+  }
+
+  /// Maps assignee / CC / reviewer transactions that Explorer does not surface.
+  Activity? _directedInboxActivity(
+    PhorgeTransactionDto tx,
+    Map<String?, User> authorMap,
+    User? defaultUser,
+  ) {
+    final content = _directedInboxContent(tx.type);
+    if (content == null) return null;
+    final author = authorMap[tx.authorPHID] ?? defaultUser;
+    if (author == null) return null;
+    return Activity(
+      id: 'phorge-tx-${tx.id}'.v5Uuid,
+      userId: author.id,
+      authorName: (author.phorgeUsername ?? '').trim().isNotEmpty
+          ? author.phorgeUsername!.trim()
+          : author.name,
+      commentCount: 0,
+      provider: PhorgeTaskProvider(
+        taskPhid: task.conduitPhid,
+        tags: task.projectPHIDs.join(','),
+      ),
+      title: '[T${task.conduitTaskId}] ${task.name}',
+      content: content,
+      url: '/T${task.conduitTaskId}',
+      createdAt: tx.dateCreated,
+    );
+  }
+
+  String? _directedInboxContent(String type) {
+    if (type == 'owner' || type == 'reassign') return 'Changed task assignee';
+    if (type == 'reviewers' || type.contains('reviewer')) {
+      return 'Updated reviewers';
+    }
+    if (type == 'subscribers' || type.contains('subscriber')) {
+      return 'Updated subscribers';
+    }
+    return null;
+  }
+
+  /// Mentions, new assignee, and newly added CC/reviewers. Standing owner is
+  /// not automatic — Follow supplies extra recipients at ingest.
+  Set<String> _inboxRecipientsFor(
+    PhorgeTransactionDto tx,
+    List<User> users,
+  ) {
+    final phidToUser = {
+      for (final user in users)
+        if ((user.phorgePhid ?? '').isNotEmpty) user.phorgePhid!: user.id,
+    };
+    final nameToUser = {
+      for (final user in users)
+        if ((user.phorgeUsername ?? '').trim().isNotEmpty)
+          user.phorgeUsername!.trim().toLowerCase(): user.id,
+    };
+    final explicit = <String>{};
+
+    void addPhid(Object? raw, Set<String> into) {
+      if (raw is List) {
+        for (final item in raw) {
+          addPhid(item, into);
+        }
+        return;
+      }
+      if (raw is Map) {
+        for (final key in raw.keys) {
+          addPhid(key, into);
+        }
+        return;
+      }
+      final phid = raw?.toString().trim() ?? '';
+      if (phid.isEmpty) return;
+      final userId = phidToUser[phid];
+      if (userId != null) into.add(userId);
+    }
+
+    if (tx.type == 'comment') {
+      final text = tx.commentText ?? '';
+      for (final match in RegExp(r'\{@([^}]+)\}').allMatches(text)) {
+        addPhid(match.group(1), explicit);
+      }
+      for (final match in RegExp(r'@([A-Za-z0-9._-]+)').allMatches(text)) {
+        final name = match.group(1)?.toLowerCase();
+        if (name == null) continue;
+        final userId = nameToUser[name];
+        if (userId != null) explicit.add(userId);
+      }
+    }
+    if (tx.type == 'owner' || tx.type == 'reassign') {
+      addPhid(tx.newValue, explicit);
+    }
+    if (tx.type == 'subscribers' ||
+        tx.type == 'reviewers' ||
+        tx.type.contains('reviewer') ||
+        tx.type.contains('subscriber')) {
+      addPhid(tx.newValue, explicit);
+    }
+
+    return explicit;
   }
 }

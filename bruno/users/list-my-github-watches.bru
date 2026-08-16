@@ -1,0 +1,29 @@
+meta {
+  name: List My GitHub Watches
+  type: http
+  seq: 13
+}
+
+docs {
+  Lists instance GitHub repos plus the caller's personal inbox watches
+  (`watchedRepos` / `watchedBranches` on the user credential). Empty
+  `watchedRepos` inherits the instance allow-list; saving none means no git
+  inbox. Requires a connected GitHub credential.
+}
+
+get {
+  url: {{baseUrl}}/users/me/credentials/github/projects
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  test("Does not return tokens", function() {
+    const body = JSON.stringify(res.body || {});
+    expect(body).to.not.include("access_token");
+    expect(body).to.not.include("apiToken");
+  });
+}

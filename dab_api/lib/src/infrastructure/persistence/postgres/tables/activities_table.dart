@@ -7,6 +7,7 @@ class ActivitiesTable extends Table {
 
   TextColumn get id => text()();
   TextColumn get userId => text().named('user_id')();
+  TextColumn get senderUserId => text().nullable().named('sender_user_id')();
   TextColumn get providerName =>
       text().named('provider_name')(); // discriminator
   TextColumn get title => text()();

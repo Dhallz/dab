@@ -67,6 +67,8 @@ class AppIcons {
   static final IconData users = HeroIcons.userGroup.outline;
   static final IconData user = HeroIcons.user.outline;
   static final IconData selected = HeroIcons.checkCircle.solid;
+  static final IconData follow = HeroIcons.bookmark.outline;
+  static final IconData following = HeroIcons.bookmark.solid;
   static final IconData openExternal = HeroIcons.arrowTopRightOnSquare.outline;
   static final IconData calendar = HeroIcons.calendarDays.outline;
   static final IconData insights = HeroIcons.chartBar.outline;

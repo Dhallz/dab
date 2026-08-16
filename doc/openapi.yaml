@@ -1087,12 +1087,15 @@ paths:
           description: Provider not OAuth-capable or OAuth app not configured
   /users/me/credentials/{provider}/projects:
     get:
-      summary: List Jira projects or Linear teams for the watch-list picker
+      summary: List Jira projects, Linear teams, or git inbox watches
       description: |
-        Jira or Linear. Returns `{ available: [{ key, name }], selected: [keys] }`
-        from the caller's OAuth token and instance
-        `provider_configs.settings.projectKeys` (Jira) or `teamKeys` (Linear).
-        Requires a connected credential. Never returns tokens.
+        Jira or Linear: `{ available: [{ key, name }], selected: [keys] }`
+        from the caller's OAuth token and instance `projectKeys` / `teamKeys`.
+        GitHub, GitLab, or Bitbucket: instance allow-list repos plus the
+        caller's personal inbox watches (`watchedRepos` / `watchedBranches`
+        on the user credential). Missing `watchedRepos` inherits the instance
+        list; an empty list means no git inbox. Requires a connected
+        credential. Never returns tokens.
       security:
         - bearerAuth: []
       parameters:
@@ -1101,18 +1104,21 @@ paths:
           required: true
           schema:
             type: string
-            enum: [jira, linear]
+            enum: [jira, linear, github, gitlab, bitbucket]
       responses:
         '200':
           description: Available and selected keys
         '400':
           description: Unsupported provider, or the account is not connected
     put:
-      summary: Save Jira projects or Linear teams DAB should watch
+      summary: Save Jira/Linear ingest allow-lists or personal git watches
       description: |
-        Jira or Linear. Replaces instance `projectKeys` (Jira) or `teamKeys`
-        (Linear) with keys the caller can still see. Shared with the team.
-        Body `{ "projectKeys": ["DAB"] }` or `{ "teamKeys": ["ENG"] }`.
+        Jira or Linear: replaces instance `projectKeys` / `teamKeys` with keys
+        the caller can still see (shared ingest allow-list).
+        GitHub, GitLab, or Bitbucket: replaces personal `watchedRepos` /
+        `watchedBranches` on the caller's credential (Dashboard inbox).
+        Body `{ "projectKeys": ["DAB"] }`, `{ "teamKeys": ["ENG"] }`, or
+        `{ "repos": ["acme/app"], "branches": ["main"] }`.
       security:
         - bearerAuth: []
       parameters:
@@ -1121,7 +1127,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [jira, linear]
+            enum: [jira, linear, github, gitlab, bitbucket]
       requestBody:
         required: true
         content:
@@ -1144,6 +1150,74 @@ paths:
           description: Updated watch list
         '400':
           description: Unsupported provider, or the account is not connected
+  /users/me/follows:
+    get:
+      summary: List Dashboard object Follow pins
+      description: |
+        Returns `{ providerId, objectKey }` pins for the authenticated user.
+        Followable providers: phorge, jira, linear, slack, discord. Git stays
+        on personal repo/branch watches.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of Follow pins
+    put:
+      summary: Follow a Dashboard inbox object
+      description: |
+        Upserts a Follow pin. Later updates on that object land in the inbox,
+        including untagged progress and the caller's own actions.
+        Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerId, objectKey]
+              properties:
+                providerId:
+                  type: string
+                  enum: [phorge, jira, linear, slack, discord]
+                objectKey:
+                  type: string
+            example:
+              providerId: phorge
+              objectKey: PHID-TASK-1
+      responses:
+        '200':
+          description: Saved Follow pin
+        '400':
+          description: Missing body or unsupported provider
+    delete:
+      summary: Unfollow a Dashboard inbox object
+      description: |
+        Removes a Follow pin. Body matches PUT
+        `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerId, objectKey]
+              properties:
+                providerId:
+                  type: string
+                objectKey:
+                  type: string
+            example:
+              providerId: phorge
+              objectKey: PHID-TASK-1
+      responses:
+        '200':
+          description: Follow pin removed
+        '400':
+          description: Missing body or unsupported provider
   /integrations/{provider}/oauth/callback:
     get:
       summary: Public OAuth callback

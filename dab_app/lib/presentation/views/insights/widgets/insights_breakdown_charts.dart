@@ -67,15 +67,17 @@ class InsightsBreakdownCharts extends StatelessWidget {
         ];
 
         if (isWide) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: cards[0]),
-              const SizedBox(width: AppSpacing.m),
-              Expanded(child: cards[1]),
-              const SizedBox(width: AppSpacing.m),
-              Expanded(child: cards[2]),
-            ],
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: cards[0]),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(child: cards[1]),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(child: cards[2]),
+              ],
+            ),
           );
         }
 

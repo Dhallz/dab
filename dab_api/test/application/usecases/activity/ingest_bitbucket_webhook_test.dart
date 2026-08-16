@@ -43,6 +43,15 @@ void main() {
     createdAt: DateTime.utc(2026, 1, 1),
   );
 
+  final watcher = User(
+    id: 'u-bob',
+    name: 'Bob',
+    email: 'bob@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
   final identity = UserIdentity(
     id: 'ident-1',
     userId: 'u-bb',
@@ -62,6 +71,7 @@ void main() {
       'apiToken': 'app-password',
       'workspace': 'acme',
       'webhookSecret': 's',
+      'repos': ['acme/widget'],
     },
   );
 
@@ -141,7 +151,7 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([user, watcher]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
     ).thenAnswer((_) async => Right([identity]));
@@ -152,7 +162,7 @@ void main() {
     when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
   });
 
-  test('ingests repo:push commits attributed by account id', () async {
+  test('ingests repo:push commits for watchers, excluding the committer', () async {
     final out = await useCase.execute(
       payload: pushPayload(),
       deliveryId: 'req-uuid-1',
@@ -164,7 +174,8 @@ void main() {
         verify(() => activityRepository.createActivity(captureAny()))
             .captured
             .single as Activity;
-    expect(captured.userId, 'u-bb');
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-bb');
     expect(captured.title, '[main] Fix login bug');
     final provider = captured.provider as BitbucketCommitProvider;
     expect(provider.repo, 'acme/widget');
@@ -174,7 +185,7 @@ void main() {
     ).called(1);
   });
 
-  test('falls back to raw signature email attribution', () async {
+  test('falls back to raw signature email attribution for the sender', () async {
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
     ).thenAnswer((_) async => const Right([]));
@@ -189,7 +200,8 @@ void main() {
         verify(() => activityRepository.createActivity(captureAny()))
             .captured
             .single as Activity;
-    expect(captured.userId, 'u-bb');
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-bb');
   });
 
   test('ignores non-push payloads', () async {

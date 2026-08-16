@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/live_inbox_targets.dart';
 import '../../../domain/dtos/linear/linear_issue_dto.dart';
 import '../../../domain/dtos/linear/linear_issue_mapping.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
@@ -8,11 +9,13 @@ import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -31,6 +34,7 @@ class IngestLinearWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestLinearWebhook(
     this._userRepository,
@@ -40,7 +44,9 @@ class IngestLinearWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    AbsIActivityFollowRepository? follows,
+  }) : _follows = follows,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -179,14 +185,48 @@ class IngestLinearWebhook {
         ? dto.copyWith(includeIssueSnapshot: false, comments: comments)
         : dto.copyWith(comments: comments);
 
-    if (hydrated.dabUserId == null &&
-        hydrated.comments.every((c) => (c.dabUserId ?? '').isEmpty)) {
+    final senderUserId = isComment
+        ? comments.firstOrNull?.dabUserId
+        : externalToUser[linearPersonId(payload['actor']) ?? ''];
+
+    Set<String> inboxTargets;
+    if (isComment) {
+      inboxTargets = liveInboxTargets(
+        externalIds: extractLinearMentionUserIds(
+          body: comments.firstOrNull?.body ?? data['body'],
+          mentionedUserIds: data['mentionedUserIds'] ?? data['mentionedUsers'],
+        ),
+        externalToUser: externalToUser,
+      );
+    } else {
+      final became = extractLinearAssigneeBecameId(
+        action: action,
+        payload: payload,
+        data: data,
+      );
+      inboxTargets = liveInboxTargets(
+        externalIds: [?became],
+        externalToUser: externalToUser,
+      );
+    }
+    inboxTargets.addAll(
+      await inboxFollowerUserIds(
+        _follows,
+        providerId: 'linear',
+        objectKeys: [dto.identifier],
+      ),
+    );
+    if (inboxTargets.isEmpty) {
       return const Right(
-        LinearWebhookIngestionResult.ignored('no_attributable_users'),
+        LinearWebhookIngestionResult.ignored('no_target_mentions'),
       );
     }
 
-    final activities = hydrated.toActivities(users);
+    final activities = hydrated.toActivities(
+      users,
+      forUserIds: inboxTargets,
+      senderUserId: senderUserId,
+    );
     if (activities.isEmpty) {
       return const Right(
         LinearWebhookIngestionResult.ignored('no_eligible_activities'),

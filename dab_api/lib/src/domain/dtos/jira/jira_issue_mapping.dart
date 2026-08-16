@@ -78,3 +78,46 @@ void _collectJiraText(Object? node, List<String> lines) {
 
   _collectJiraText(content, lines);
 }
+
+/// Collects Atlassian account ids from ADF `mention` nodes.
+List<String> extractJiraMentionAccountIds(Object? node) {
+  final ids = <String>{};
+  _collectJiraMentions(node, ids);
+  return ids.toList();
+}
+
+void _collectJiraMentions(Object? node, Set<String> ids) {
+  if (node == null) return;
+  if (node is List) {
+    for (final item in node) {
+      _collectJiraMentions(item, ids);
+    }
+    return;
+  }
+  if (node is! Map<String, dynamic>) return;
+  final type = node['type']?.toString() ?? '';
+  if (type == 'mention') {
+    final attrs = node['attrs'];
+    if (attrs is Map<String, dynamic>) {
+      final id = (attrs['id'] ?? '').toString().trim();
+      if (id.isNotEmpty) ids.add(id);
+    }
+  }
+  _collectJiraMentions(node['content'], ids);
+}
+
+/// Account ids that became the assignee in a Jira changelog.
+List<String> extractJiraAssigneeBecameAccountIds(Object? changelog) {
+  if (changelog is! Map<String, dynamic>) return const [];
+  final items = changelog['items'];
+  if (items is! List) return const [];
+  final ids = <String>[];
+  for (final item in items) {
+    if (item is! Map) continue;
+    final field = (item['field'] ?? '').toString().toLowerCase();
+    if (field != 'assignee') continue;
+    final to = (item['to'] ?? '').toString().trim();
+    if (to.isNotEmpty) ids.add(to);
+  }
+  return ids;
+}

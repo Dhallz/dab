@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
@@ -26,6 +27,8 @@ class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
 
+class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
+
 void main() {
   late _MockUserRepository userRepository;
   late _MockActivityRepository activityRepository;
@@ -40,6 +43,24 @@ void main() {
     email: 'ada@example.com',
     passwordHash: 'hash',
     role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final recipient = User(
+    id: 'u-bob',
+    name: 'Bob',
+    email: 'bob@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final recipientIdentity = UserIdentity(
+    id: 'ident-2',
+    userId: 'u-bob',
+    providerId: 'discord',
+    externalId: '444555666',
+    status: UserIdentityStatus.linked,
     createdAt: DateTime.utc(2026, 1, 1),
   );
 
@@ -69,6 +90,8 @@ void main() {
     String channelId = 'chan-1',
     String authorId = '111222333',
     bool bot = false,
+    List<Map<String, String>> mentions = const [],
+    bool mentionEveryone = false,
   }) {
     return <String, dynamic>{
       'id': messageId,
@@ -76,6 +99,8 @@ void main() {
       'guild_id': 'guild-1',
       'content': 'Hello world',
       'timestamp': '2026-06-30T10:00:00.000Z',
+      'mention_everyone': mentionEveryone,
+      'mentions': mentions,
       'author': {
         'id': authorId,
         'username': 'ada',
@@ -128,10 +153,10 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([user, recipient]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
-    ).thenAnswer((_) async => Right([identity]));
+    ).thenAnswer((_) async => Right([identity, recipientIdentity]));
     when(
       () => activityRepository.createActivity(any()),
     ).thenAnswer((_) async => const Right(null));
@@ -139,8 +164,45 @@ void main() {
     when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
   });
 
-  test('ingests MESSAGE_CREATE dispatches from linked authors', () async {
-    final out = await useCase.execute(payload: messagePayload());
+  test('ingests MESSAGE_CREATE mentions for linked recipients', () async {
+    final out = await useCase.execute(
+      payload: messagePayload(
+        mentions: [
+          {'id': '444555666'},
+        ],
+      ),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-discord');
+    final provider = captured.provider as DiscordMessageProvider;
+    expect(provider.messageId, 'msg-1');
+    expect(provider.channelId, 'chan-1');
+    verify(() => redisService.reserveIngestionEventId('discord', 'msg-1'))
+        .called(1);
+    verify(
+      () => presenceService.broadcastToUser(
+        'u-bob',
+        'ACTIVITY_RECEIVED',
+        any(),
+      ),
+    ).called(1);
+  });
+
+  test('ingests a self-mention for the author', () async {
+    final out = await useCase.execute(
+      payload: messagePayload(
+        mentions: [
+          {'id': '111222333'},
+        ],
+      ),
+    );
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
@@ -149,11 +211,7 @@ void main() {
             .captured
             .single as Activity;
     expect(captured.userId, 'u-discord');
-    final provider = captured.provider as DiscordMessageProvider;
-    expect(provider.messageId, 'msg-1');
-    expect(provider.channelId, 'chan-1');
-    verify(() => redisService.reserveIngestionEventId('discord', 'msg-1'))
-        .called(1);
+    expect(captured.senderUserId, 'u-discord');
     verify(
       () => presenceService.broadcastToUser(
         'u-discord',
@@ -193,14 +251,14 @@ void main() {
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
-  test('drops messages from unmapped authors', () async {
+  test('drops messages without linked mentions', () async {
     final out = await useCase.execute(
       payload: messagePayload(authorId: '999888777'),
     );
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isFalse);
-    expect(result.reason, 'no_attributable_users');
+    expect(result.reason, 'no_target_mentions');
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
@@ -213,5 +271,36 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.reason, 'discord_not_configured');
+  });
+
+  test('persists an untagged message for followers including the sender', () async {
+    final follows = _MockFollows();
+    when(
+      () => follows.userIdsFor(
+        providerId: 'discord',
+        objectKey: 'guild-1|chan-1|msg-follow',
+      ),
+    ).thenAnswer((_) async => const Right(['u-discord']));
+    useCase = IngestDiscordMessage(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+      follows: follows,
+    );
+
+    final out = await useCase.execute(
+      payload: messagePayload(messageId: 'msg-follow'),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-discord');
+    expect(captured.senderUserId, 'u-discord');
   });
 }

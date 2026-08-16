@@ -1,0 +1,30 @@
+meta {
+  name: Save My Follow
+  type: http
+  seq: 16
+}
+
+docs {
+  Upserts a Dashboard object Follow pin for the caller.
+  Body: `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+  Allowed provider ids: phorge, jira, linear, slack, discord.
+}
+
+put {
+  url: {{baseUrl}}/users/me/follows
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "providerId": "phorge",
+    "objectKey": "PHID-TASK-1"
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

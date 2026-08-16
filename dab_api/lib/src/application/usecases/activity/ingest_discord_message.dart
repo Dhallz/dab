@@ -1,7 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/discord_scope.dart';
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/live_inbox_targets.dart';
 import '../../../domain/dtos/discord/discord_message_dto.dart';
 import '../../../domain/dtos/discord/discord_message_mapping.dart';
 import '../../../domain/entities/user/user.dart';
@@ -9,11 +11,13 @@ import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_discord_live_ingestor.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -32,6 +36,7 @@ class IngestDiscordMessage implements IDiscordLiveIngestor {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestDiscordMessage(
     this._userRepository,
@@ -41,7 +46,9 @@ class IngestDiscordMessage implements IDiscordLiveIngestor {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    AbsIActivityFollowRepository? follows,
+  }) : _follows = follows,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -136,13 +143,43 @@ class IngestDiscordMessage implements IDiscordLiveIngestor {
         DiscordMessageIngestionResult.ignored('invalid_message_payload'),
       );
     }
-    if (dto.dabUserId == null) {
+
+    final senderUserId = dto.dabUserId;
+    final recipientUserIds = liveInboxTargets(
+      externalIds: dto.mentionIds,
+      externalToUser: externalToUser,
+    );
+    if (dto.mentionEveryone) {
+      recipientUserIds.addAll(
+        liveInboxBroadcastTargets(
+          linkedUserIds: externalToUser.values,
+          senderUserId: senderUserId,
+        ),
+      );
+    }
+    recipientUserIds.addAll(
+      await inboxFollowerUserIds(
+        _follows,
+        providerId: 'discord',
+        objectKeys: discordFollowLookupKeys(
+          guildId: dto.guildId,
+          channelId: dto.channelId,
+          messageId: dto.messageId,
+          replyToId: dto.replyToId,
+        ),
+      ),
+    );
+    if (recipientUserIds.isEmpty) {
       return const Right(
-        DiscordMessageIngestionResult.ignored('no_attributable_users'),
+        DiscordMessageIngestionResult.ignored('no_target_mentions'),
       );
     }
 
-    final activities = dto.toActivities(users);
+    final activities = dto.toActivities(
+      users,
+      forUserIds: recipientUserIds,
+      senderUserId: senderUserId,
+    );
     if (activities.isEmpty) {
       return const Right(
         DiscordMessageIngestionResult.ignored('no_eligible_activities'),

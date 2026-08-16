@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/containers/user_usecases.dart';
+import '../../../domain/entities/user/git_watch_list.dart';
 import '../../../domain/entities/user/jira_project_watch_list.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
@@ -18,6 +19,55 @@ final connectedAccountsNotifierProvider =
       ConnectedAccountsNotifier,
       ConnectedAccountsState
     >(ConnectedAccountsNotifier.new);
+
+class GitWatchDraft {
+  final GitWatchList? watch;
+  final List<String> draftRepos;
+  final String draftBranches;
+  final bool loading;
+  final bool saving;
+  final String? error;
+
+  const GitWatchDraft({
+    this.watch,
+    this.draftRepos = const [],
+    this.draftBranches = '',
+    this.loading = false,
+    this.saving = false,
+    this.error,
+  });
+
+  bool get hasLoaded => watch != null;
+
+  bool get dirty {
+    final savedRepos = {...(watch?.selected ?? const <String>[])};
+    final draft = {...draftRepos};
+    final savedBranches = (watch?.branches ?? const []).join(', ');
+    return savedRepos.length != draft.length ||
+        !savedRepos.containsAll(draft) ||
+        savedBranches != draftBranches.trim();
+  }
+
+  GitWatchDraft copyWith({
+    GitWatchList? watch,
+    List<String>? draftRepos,
+    String? draftBranches,
+    bool? loading,
+    bool? saving,
+    String? error,
+    bool clearWatch = false,
+    bool clearError = false,
+  }) {
+    return GitWatchDraft(
+      watch: clearWatch ? null : (watch ?? this.watch),
+      draftRepos: clearWatch ? const [] : (draftRepos ?? this.draftRepos),
+      draftBranches: clearWatch ? '' : (draftBranches ?? this.draftBranches),
+      loading: loading ?? this.loading,
+      saving: saving ?? this.saving,
+      error: clearWatch || clearError ? null : (error ?? this.error),
+    );
+  }
+}
 
 class ConnectedAccountsState {
   final ViewStatus status;
@@ -34,6 +84,7 @@ class ConnectedAccountsState {
   final bool linearTeamsSaving;
   final String? jiraError;
   final String? linearError;
+  final Map<String, GitWatchDraft> git;
 
   const ConnectedAccountsState({
     this.status = ViewStatus.initial,
@@ -50,6 +101,7 @@ class ConnectedAccountsState {
     this.linearTeamsSaving = false,
     this.jiraError,
     this.linearError,
+    this.git = const {},
   });
 
   UserProviderCredentialSummary? forProvider(String providerId) {
@@ -86,6 +138,7 @@ class ConnectedAccountsState {
     bool? linearTeamsSaving,
     String? jiraError,
     String? linearError,
+    Map<String, GitWatchDraft>? git,
     bool clearBusy = false,
     bool clearJiraProjects = false,
     bool clearLinearTeams = false,
@@ -119,8 +172,12 @@ class ConnectedAccountsState {
       linearError: clearLinearTeams || clearLinearError
           ? null
           : (linearError ?? this.linearError),
+      git: git ?? this.git,
     );
   }
+
+  GitWatchDraft gitDraft(String providerId) =>
+      git[providerId] ?? const GitWatchDraft();
 }
 
 class ConnectedAccountsNotifier
@@ -151,6 +208,7 @@ class ConnectedAccountsNotifier
         );
         unawaited(_maybeLoadJiraProjects(list));
         unawaited(_maybeLoadLinearTeams(list));
+        unawaited(_maybeLoadGitWatches(list));
       },
     );
   }
@@ -262,6 +320,11 @@ class ConnectedAccountsNotifier
         if (providerId == 'linear') {
           await loadLinearTeams();
         }
+        if (providerId == 'github' ||
+            providerId == 'gitlab' ||
+            providerId == 'bitbucket') {
+          await loadGitWatches(providerId);
+        }
         return;
       }
     }
@@ -339,6 +402,114 @@ class ConnectedAccountsNotifier
           jiraProjectsSaving: false,
           jiraProjects: watch,
           jiraDraftKeys: List<String>.from(watch.selected),
+        );
+        unawaitedRefreshHealth();
+        return null;
+      },
+    );
+  }
+
+  Future<void> _maybeLoadGitWatches(
+    List<UserProviderCredentialSummary> list,
+  ) async {
+    const gitIds = ['github', 'gitlab', 'bitbucket'];
+    for (final id in gitIds) {
+      final cred = list.where((c) => c.providerId == id).firstOrNull;
+      if (cred?.isConnected != true) {
+        _clearGit(id);
+        continue;
+      }
+      await loadGitWatches(id);
+    }
+  }
+
+  void _patchGit(String providerId, GitWatchDraft draft) {
+    state = state.copyWith(
+      git: {...state.git, providerId: draft},
+    );
+  }
+
+  void _clearGit(String providerId) {
+    final next = {...state.git}..remove(providerId);
+    state = state.copyWith(git: next);
+  }
+
+  Future<void> loadGitWatches(String providerId) async {
+    _patchGit(
+      providerId,
+      state.gitDraft(providerId).copyWith(loading: true, clearError: true),
+    );
+    final result = await _users.listMyGitWatches.execute(providerId: providerId);
+    result.fold(
+      (failure) {
+        _patchGit(
+          providerId,
+          state.gitDraft(providerId).copyWith(
+            loading: false,
+            error: failure.message,
+          ),
+        );
+      },
+      (watch) {
+        _patchGit(
+          providerId,
+          GitWatchDraft(
+            watch: watch,
+            draftRepos: List<String>.from(watch.selected),
+            draftBranches: watch.branches.join(', '),
+          ),
+        );
+      },
+    );
+  }
+
+  void toggleGitRepo(String providerId, String key) {
+    final current = state.gitDraft(providerId);
+    final next = [...current.draftRepos];
+    if (next.contains(key)) {
+      next.remove(key);
+    } else {
+      next.add(key);
+    }
+    _patchGit(providerId, current.copyWith(draftRepos: next));
+  }
+
+  void setGitDraftBranches(String providerId, String value) {
+    final current = state.gitDraft(providerId);
+    _patchGit(providerId, current.copyWith(draftBranches: value));
+  }
+
+  Future<String?> saveGitWatches(String providerId) async {
+    final current = state.gitDraft(providerId);
+    _patchGit(providerId, current.copyWith(saving: true));
+    final branches = [
+      for (final part in current.draftBranches.split(RegExp(r'[\n,]+')))
+        if (part.trim().isNotEmpty) part.trim(),
+    ];
+    final result = await _users.saveMyGitWatches.execute(
+      providerId: providerId,
+      repos: current.draftRepos,
+      branches: branches,
+    );
+    return result.fold(
+      (failure) {
+        _patchGit(
+          providerId,
+          state.gitDraft(providerId).copyWith(
+            saving: false,
+            error: failure.message,
+          ),
+        );
+        return failure.message;
+      },
+      (watch) {
+        _patchGit(
+          providerId,
+          GitWatchDraft(
+            watch: watch,
+            draftRepos: List<String>.from(watch.selected),
+            draftBranches: watch.branches.join(', '),
+          ),
         );
         unawaitedRefreshHealth();
         return null;
@@ -442,6 +613,11 @@ class ConnectedAccountsNotifier
           clearBusy: true,
           clearJiraProjects: providerId == 'jira',
           clearLinearTeams: providerId == 'linear',
+          git: providerId == 'github' ||
+                  providerId == 'gitlab' ||
+                  providerId == 'bitbucket'
+              ? ({...state.git}..remove(providerId))
+              : state.git,
         );
         unawaitedRefreshHealth();
         return null;

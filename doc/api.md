@@ -106,14 +106,14 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; `?scope=global` for the personal/small-team wall with a per-viewer archive overlay). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `IWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` fills the bus when webhooks are absent. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `IWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public (no JWT) OAuth redirect. Validates Redis `oauth:state:{id}`, exchanges the code, persists via `SaveUserProviderCredential`. Returns HTML. Never includes tokens. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
 | `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs (includes `deploymentMode`), provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test (`POST /admin/configs/test` returns Core/Live/Polling section report; Live green = Redis `live:last_ingest:{providerId}` within 7 days), system settings (domain validation toggle + allowed domain + `public_api_url` for OAuth callbacks and webhooks + `deployment_mode`) |
-| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear}/projects` for the instance Jira `projectKeys` / Linear `teamKeys` watch lists). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
+| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear,github,gitlab,bitbucket}/projects` for Jira/Linear instance allow-lists and personal git inbox watches) and Dashboard object Follow pins (`GET/PUT/DELETE /users/me/follows` with `{ providerId, objectKey }` for Phorge, Jira, Linear, Slack, Discord). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
 
 #### Middleware
 
@@ -178,7 +178,12 @@ GitHub v1 ingestion is commits-only and uses provider-linked identities from
 settings may include **`webhookSecret`** (matching the secret configured on the
 repository webhook in GitHub) for **`POST /integrations/github/webhook`**. The
 configured repo allow-list (`owner`/`repo`, `repos` list — same shaping as polling)
-gates which repositories may deliver push events into DAB; the unified fetcher continues to backfill commits via polling when configured.
+gates which repositories may deliver push events into DAB. Dashboard git inbox
+rows fan out to users who **watch** that repo/branch on their credential
+(`watchedRepos` / `watchedBranches`), excluding the committer. Missing
+`watchedRepos` inherits the instance allow-list; an empty list means no git
+inbox. The unified fetcher continues to backfill commits via polling when
+configured.
 
 **Bruno — GitHub historical polling:** run the `bruno/github-polling-flow/` folder in order (login → load config → pick linked user → test polling → search → optional direct GitHub API probe). Set `githubSearchStartDate` / `githubSearchEndDate` in the environment to a window with known commits. Step **07 Probe GitHub API Direct** calls `GET https://api.github.com/repos/{owner}/{repo}/commits` with the same `since`/`until`/`sha`/`author` params DAB uses — use it to tell whether empty search results come from GitHub or from DAB mapping.
 
@@ -218,16 +223,26 @@ quickly, and processes event callbacks asynchronously into DB + Redis live keys
 and scoped WebSocket delivery. Message routing is mention-targeted: activities
 are created per recipient when a message includes direct user mentions (`<@U...>`),
 broadcast mentions (`@all`, `<!channel>`, `<!here>`, `<!everyone>`), or Slack
-user-group mention tokens (`<!subteam^...>`). Messages without target mentions
-are ignored for live-feed ingestion.
+user-group mention tokens (`<!subteam^...>`). An explicit user mention, including
+a self-@, still creates a row for that recipient. Broadcast mentions
+(`@channel` / `@here` / `@everyone`) omit the sender. Users who **Follow** that
+thread (`workspaceId|channelId|thread root ts`) also receive later messages,
+including their own. Messages without target mentions and without followers
+are ignored for live-feed ingestion. `Activity.userId` is the
+recipient; `senderUserId` is the linked actor.
 
 For local webhook testing, generate signature headers from the exact raw request
 body using:
 `./scripts/generate_slack_signature.sh "$SLACK_SIGNING_SECRET" /path/to/body.json`
 
-Phorge live ingestion uses Herald webhooks (`POST /integrations/phorge/webhook`).
-Herald payloads are thin (object PHID + transaction PHIDs), so `IngestPhorgeWebhook`
-hydrates the object via the existing Conduit client before mapping. Signature is
+Phorge live ingestion uses Herald webhooks (`POST /integrations/phorge/webhook`)
+for `TASK` and `DREV`. Herald payloads are thin (object PHID + transaction PHIDs),
+so `IngestPhorgeWebhook` hydrates the object via Conduit before mapping.
+Recipients are subscribers/CC, reviewers, new assignee/owner, and Remarkup
+`@username` / `{@PHID}` mentions. Standing task owner is **not** automatic.
+An explicit self-@, self-assign, or adding yourself as CC/reviewer still
+creates a Dashboard row. Users who **Follow** the task PHID also receive later
+updates, including untagged comments and their own actions. Signature is
 HMAC-SHA256 of the raw body in `X-Phabricator-Webhook-Signature`, keyed by the
 provider setting **`webhookHmacKey`**; dedup is per transaction PHID via Redis.
 
@@ -239,33 +254,43 @@ a **Secret** is configured on the webhook (Atlassian “Secure admin webhooks”
 DAB verifies that signature against **`webhookSecret`**. Plain
 `X-Webhook-Secret` / `?secret=` are accepted only as a Bruno simulation
 fallback. Comment events are distinct activity ids
-(`jira|{host}|{issueKey}|comment|{commentId}`) so Dashboard live-publishes them;
-Explorer still groups by issue key. Unmapped comment authors fall back to the
-linked issue owner. When instance **`projectKeys`** is set (Settings project
-picker after Connect, seeded from whoami), both polling and live webhooks skip
-other projects. Events map through the same `JiraIssueDto.toActivities` path as
+(`jira|{host}|{issueKey}|comment|{commentId}|{recipient}`) so Dashboard live-publishes them;
+Explorer still groups by issue key. Live comments fan out only to **linked ADF
+mentions**; issue updates fan out only when changelog **assignee became me**.
+Users who **Follow** the issue key also receive untagged comments and later
+status updates, including their own. Unlinked mentions are dropped. When instance **`projectKeys`** is set (Settings
+project picker after Connect, seeded from whoami), both polling and live
+webhooks skip other projects — that list is an ingest allow-list, not inbox
+targeting. Events map through the same `JiraIssueDto.toActivities` path as
 polling.
 
 Linear ingestion is issue-oriented: `LinearIssueSource` queries the GraphQL API
 (`issues` filtered by an `updatedAt` window and, with `authoredOnly`, by linked
 assignee/creator identities) using the provider **`apiKey`** setting; comments
 in the same window are merged onto those issues. When instance **`teamKeys`**
-is set (Settings team picker after Connect, shared with the team), both polling
-and live webhooks skip other Linear teams. Discovery resolves Linear user
-ids by email. Live ingestion (`POST /integrations/linear/webhook`) handles
-`Issue` and `Comment` create/update payloads, verifying the `linear-signature`
-HMAC-SHA256 header against **`webhookSecret`** and deduping on the
-`linear-delivery` id. Each comment is a distinct activity id
-(`linear|{issue}|comment|{commentId}`) so Dashboard live-publishes it; Explorer
-still groups by issue identifier like Phorge. Issue snapshots include
-`updatedAt` in the activity id so status moves also notify Dashboard.
+is set (Settings team picker after Connect; ingest allow-list, not inbox
+targeting), both polling and live webhooks skip other Linear teams. Discovery
+resolves Linear user ids by email. Live ingestion (`POST /integrations/linear/webhook`)
+handles `Issue` and `Comment` create/update payloads, verifying the
+`linear-signature` HMAC-SHA256 header against **`webhookSecret`** and deduping
+on the `linear-delivery` id. Live comments fan out to **linked `@[Name](userId)`
+mentions**; issue updates fan out only when **assignee became me**. Users who
+**Follow** the issue identifier (`ENG-123`) also receive untagged comments and
+later updates, including their own. Each
+comment is a distinct activity id (`linear|{issue}|comment|{commentId}|{recipient}`)
+so Dashboard live-publishes it; Explorer still groups by issue identifier.
 
 Discord has no outbound webhooks for messages, so live ingestion uses
 `DiscordGatewayService` — an outbound Gateway WebSocket client (IDENTIFY with
 the **`botToken`**, `GUILD_MESSAGES`/`MESSAGE_CONTENT` intents, heartbeat +
 RESUME reconnect). `MESSAGE_CREATE` dispatches flow through
 `IDiscordLiveIngestor` (`IngestDiscordMessage`) into the same persist/fan-out
-pipeline. The service
+pipeline. Live messages fan out like Slack: Gateway `mentions[].id` and
+`@everyone`/`@here` (when `mention_everyone`) to linked Discord identities.
+An explicit user mention, including a self-@, still lands for that recipient;
+`@everyone`/`@here` omit the author. Users who **Follow** the conversation
+(`guildId|channelId|root message id`) also receive later replies, including
+their own. Unmentioned messages without followers are ignored. The service
 starts on boot when the Discord config is active and reloads on config save.
 Explorer backfill polls `GET /channels/{id}/messages` per configured
 **`channels`** id; attribution requires linked identities
@@ -277,7 +302,9 @@ GitLab ingestion is commit-oriented: `GitLabCommitSource` polls
 attributing commits by `author_email` against user emails and linked
 identities. Live ingestion (`POST /integrations/gitlab/webhook`) handles Push
 Hook events authenticated with the plain shared **`webhookSecret`** in
-`X-Gitlab-Token` (constant-time compare; GitLab does not sign payloads).
+`X-Gitlab-Token` (constant-time compare; GitLab does not sign payloads). After
+the instance `projects` allow-list, commits fan out to users watching that
+project on their credential, excluding the committer.
 
 Bitbucket ingestion mirrors GitLab: `BitbucketCommitSource` polls
 `GET /repositories/{workspace}/{repo}/commits` (Basic auth with **`username`** +
@@ -286,6 +313,8 @@ preferring `account_id` from linked identities with email fallback from the raw
 commit signature. Live ingestion (`POST /integrations/bitbucket/webhook`)
 handles `repo:push` events verified with HMAC-SHA256 (`X-Hub-Signature`,
 `sha256=<hex>`) against **`webhookSecret`**, deduping on `X-Request-UUID`.
+After the instance `repos` allow-list, commits fan out to credential watchers,
+excluding the committer.
 
 Microsoft Teams support was removed from the active codebase and returned to
 the roadmap: Graph change notifications require tenant-wide admin consent,
@@ -298,12 +327,13 @@ schema v16).
 GitHub sends the JSON body as either **raw JSON** (`Content-Type:
 application/json`) or **URL-encoded** (`application/x-www-form-urlencoded` with a
 `payload` form field). Both are accepted; HMAC is always over the **exact raw
-request bytes** GitHub posts.
-configured allow-list fork into one activity per commit whose webhook author
-login matches a **linked** `user_identities` row (`provider_id: github`), then the
-pipeline matches Slack: Postgres + Redis **`fanOutActivity`** +
-**`PresenceService`** (`ACTIVITY_RECEIVED`). **`ping`** is acknowledged without
-persisting commits. Other event types return success but perform no ingestion.
+request bytes** GitHub posts. Allowed-list pushes fan out one activity per
+watcher (stable id includes the recipient) after excluding the committer;
+login still maps to a **linked** `user_identities` row (`provider_id: github`)
+for `senderUserId`. Then the pipeline matches Slack: Postgres + Redis
+**`fanOutActivity`** + **`PresenceService.broadcastToUser`** (`ACTIVITY_RECEIVED`).
+**`ping`** is acknowledged without persisting commits. Other event types return
+success but perform no ingestion.
 
 ### Admin provider connectivity (Live ingest signal)
 

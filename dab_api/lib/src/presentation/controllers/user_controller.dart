@@ -197,10 +197,22 @@ class UserController {
         'linear_team_watch_list',
       );
     }
+    if (provider == 'github' ||
+        provider == 'gitlab' ||
+        provider == 'bitbucket') {
+      return _watchListResponse(
+        await _user.getGitWatchList.execute(
+          userId: userId,
+          providerId: provider,
+        ),
+        'git_watch_list',
+      );
+    }
     return Response.badRequest(
       body: Body.fromString(
         jsonEncode({
-          'error': 'Watch list picker is only available for Jira and Linear',
+          'error':
+              'Watch list picker is only available for Jira, Linear, GitHub, GitLab, and Bitbucket',
         }),
         mimeType: MimeType.json,
       ),
@@ -213,11 +225,16 @@ class UserController {
         .toString()
         .trim()
         .toLowerCase();
-    if (provider != 'jira' && provider != 'linear') {
+    if (provider != 'jira' &&
+        provider != 'linear' &&
+        provider != 'github' &&
+        provider != 'gitlab' &&
+        provider != 'bitbucket') {
       return Response.badRequest(
         body: Body.fromString(
           jsonEncode({
-            'error': 'Watch list picker is only available for Jira and Linear',
+            'error':
+                'Watch list picker is only available for Jira, Linear, GitHub, GitLab, and Bitbucket',
           }),
           mimeType: MimeType.json,
         ),
@@ -229,12 +246,22 @@ class UserController {
           ? <String, dynamic>{}
           : jsonDecode(bodyStr);
       final rawKeys = data is Map
-          ? (data['teamKeys'] ?? data['projectKeys'])
+          ? (data['teamKeys'] ??
+                data['projectKeys'] ??
+                data['repos'] ??
+                data['selected'])
           : null;
       final keys = <String>[];
       if (rawKeys is List) {
         for (final item in rawKeys) {
           keys.add(item.toString());
+        }
+      }
+      final rawBranches = data is Map ? data['branches'] : null;
+      final branches = <String>[];
+      if (rawBranches is List) {
+        for (final item in rawBranches) {
+          branches.add(item.toString());
         }
       }
       if (provider == 'linear') {
@@ -246,12 +273,23 @@ class UserController {
           'linear_team_watch_list',
         );
       }
+      if (provider == 'jira') {
+        return _watchListResponse(
+          await _user.saveJiraProjectWatchList.execute(
+            userId: userId,
+            projectKeys: keys,
+          ),
+          'jira_project_watch_list',
+        );
+      }
       return _watchListResponse(
-        await _user.saveJiraProjectWatchList.execute(
+        await _user.saveGitWatchList.execute(
           userId: userId,
-          projectKeys: keys,
+          providerId: provider,
+          repos: keys,
+          branches: branches,
         ),
-        'jira_project_watch_list',
+        'git_watch_list',
       );
     } catch (e) {
       return Response.badRequest(
@@ -437,5 +475,148 @@ class UserController {
         ),
       ),
     );
+  }
+
+  Future<Response> listMyFollows(Request request) async {
+    final userId = userIdProperty.get(request);
+    final result = await _user.listMyActivityFollows.execute(userId: userId);
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (list) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': list.map((follow) => follow.toApiMap()).toList(),
+            'meta': {
+              'dataType': 'list:activity_follow',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> saveMyFollow(Request request) async {
+    final userId = userIdProperty.get(request);
+    final body = await _readFollowBody(request);
+    if (body == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Body must include providerId and objectKey',
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    final result = await _user.saveActivityFollow.execute(
+      userId: userId,
+      providerId: body.providerId,
+      objectKey: body.objectKey,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (follow) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': follow.toApiMap(),
+            'meta': {
+              'dataType': 'activity_follow',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> deleteMyFollow(Request request) async {
+    final userId = userIdProperty.get(request);
+    final body = await _readFollowBody(request);
+    if (body == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Body must include providerId and objectKey',
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    final result = await _user.deleteActivityFollow.execute(
+      userId: userId,
+      providerId: body.providerId,
+      objectKey: body.objectKey,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (_) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': {'deleted': true},
+            'meta': {
+              'dataType': 'activity_follow_delete',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<({String providerId, String objectKey})?> _readFollowBody(
+    Request request,
+  ) async {
+    try {
+      final bodyStr = await request.readAsString();
+      final data = bodyStr.trim().isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(bodyStr);
+      if (data is! Map) return null;
+      final providerId = (data['providerId'] ?? '').toString().trim();
+      final objectKey = (data['objectKey'] ?? '').toString().trim();
+      if (providerId.isEmpty || objectKey.isEmpty) return null;
+      return (providerId: providerId, objectKey: objectKey);
+    } catch (_) {
+      return null;
+    }
   }
 }

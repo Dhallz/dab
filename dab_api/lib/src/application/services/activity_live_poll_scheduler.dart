@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import '../../domain/entities/activity/activity.dart';
-import '../../domain/entities/user/user.dart';
 import '../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../domain/contracts/repositories/abs_i_user_repository.dart';
@@ -9,50 +7,45 @@ import 'activity_live_publisher.dart';
 import 'unified_activity_fetcher.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
-/// ROLE: Background poller that fills the live bus when webhooks are absent.
-/// CONTRACT: Skips a provider when Redis live ingest is fresh (webhook winning).
-/// CONSTRAINTS: Same persist path as webhooks; dedup via createActivity.
+/// ROLE: Background timer retained so DI and start/stop stay stable.
+/// CONTRACT: Does **not** publish authored-only poll rows into the live inbox.
+/// Explorer search still uses [UnifiedActivityFetcher] on demand.
+/// CONSTRAINTS: Authored poll refill would put the viewer's own work on
+/// Dashboard. Inbound rows come from webhooks / Gateway only.
 class ActivityLivePollScheduler {
   ActivityLivePollScheduler(
-    this._fetcher,
-    this._users,
-    this._activities,
-    this._redis,
-    this._publisher, {
+    UnifiedActivityFetcher fetcher,
+    IUserRepository users,
+    AbsIActivityRepository activities,
+    ILiveFeedStore redis,
+    ActivityLivePublisher publisher, {
     Duration interval = const Duration(seconds: 45),
     Duration lookback = const Duration(minutes: 20),
     Duration webhookFreshness = const Duration(minutes: 2),
     DateTime Function()? now,
     bool tickImmediately = true,
   }) : _interval = interval,
-       _lookback = lookback,
-       _webhookFreshness = webhookFreshness,
-       _now = now ?? DateTime.now,
-       _tickImmediately = tickImmediately;
+       _tickImmediately = tickImmediately {
+    // Positional deps stay in the constructor so service_locator wiring is
+    // unchanged. Authored live refill is intentionally disabled.
+    Object.hash(
+      fetcher,
+      users,
+      activities,
+      redis,
+      publisher,
+      lookback,
+      webhookFreshness,
+      now,
+    );
+  }
 
-  final UnifiedActivityFetcher _fetcher;
-  final IUserRepository _users;
-  final AbsIActivityRepository _activities;
-  final ILiveFeedStore _redis;
-  final ActivityLivePublisher _publisher;
   final Duration _interval;
-  final Duration _lookback;
-  final Duration _webhookFreshness;
-  final DateTime Function() _now;
   final bool _tickImmediately;
 
   Timer? _timer;
   bool _running = false;
   bool _tickInFlight = false;
-
-  static const _patProviders = {
-    'github',
-    'gitlab',
-    'bitbucket',
-    'jira',
-    'linear',
-    'phorge',
-  };
 
   void start() {
     if (_running) return;
@@ -73,56 +66,9 @@ class ActivityLivePollScheduler {
     if (!_running || _tickInFlight) return;
     _tickInFlight = true;
     try {
-      final stale = <String>{};
-      for (final providerId in _patProviders) {
-        final last = await _redis.getLiveIngestLastSuccess(providerId);
-        if (last == null ||
-            _now().toUtc().difference(last) > _webhookFreshness) {
-          stale.add(providerId);
-        }
-      }
-      if (stale.isEmpty) return;
-
-      final usersResult = await _users.getUsers();
-      final users = usersResult.getOrElse((_) => const <User>[]);
-      if (users.isEmpty) return;
-
-      final end = _now().toUtc();
-      final start = end.subtract(_lookback);
-      final fetched = await _fetcher.fetchAll(
-        users: users,
-        start: start,
-        end: end,
-        authoredOnly: true,
-        providerIds: stale,
-      );
-
-      final ingestedProviders = <String>{};
-      for (final activity in fetched) {
-        final created = await _activities.createActivity(activity);
-        if (created.isLeft()) {
-          final message =
-              created.getLeft().toNullable()?.message.toLowerCase() ?? '';
-          if (message.contains('duplicate') || message.contains('unique')) {
-            continue;
-          }
-          continue;
-        }
-        await _publisher.publish(activity);
-        ingestedProviders.add(_providerIdOf(activity));
-      }
-      for (final providerId in ingestedProviders) {
-        if (providerId.isEmpty) continue;
-        await _redis.recordLiveIngestSuccess(providerId);
-      }
-    } catch (e) {
-      print('[LIVE_POLLER] tick_failed error=$e');
+      return;
     } finally {
       _tickInFlight = false;
     }
-  }
-
-  String _providerIdOf(Activity activity) {
-    return activity.provider.name.trim().toLowerCase();
   }
 }

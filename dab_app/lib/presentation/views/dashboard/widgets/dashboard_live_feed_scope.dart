@@ -24,6 +24,7 @@ class DashboardLiveFeedScope extends ConsumerWidget {
           providerHealth: s.providerHealth,
           reconnectNoticeAt: s.reconnectNoticeAt,
           errorMessage: s.errorMessage,
+          followedObjectRefs: s.followedObjectRefs,
         ),
       ),
     );

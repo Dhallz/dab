@@ -13,6 +13,9 @@ class DashboardTimelineRow extends StatelessWidget {
   final bool isLast;
   final VoidCallback? onArchive;
   final VoidCallback? onUnarchive;
+  final bool isFollowing;
+  final VoidCallback? onFollow;
+  final VoidCallback? onUnfollow;
 
   const DashboardTimelineRow({
     super.key,
@@ -21,6 +24,9 @@ class DashboardTimelineRow extends StatelessWidget {
     required this.isLast,
     this.onArchive,
     this.onUnarchive,
+    this.isFollowing = false,
+    this.onFollow,
+    this.onUnfollow,
   });
 
   static const double timeColumnWidth = 72;
@@ -82,6 +88,9 @@ class DashboardTimelineRow extends StatelessWidget {
                 activity: activity,
                 onArchive: onArchive,
                 onUnarchive: onUnarchive,
+                isFollowing: isFollowing,
+                onFollow: onFollow,
+                onUnfollow: onUnfollow,
               ),
             ),
           ],

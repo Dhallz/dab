@@ -85,13 +85,15 @@ dab_app/lib/
 
 | Entity | Description |
 |---|---|
-| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
+| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
 | `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, …) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), optional `linkedProviderIds` (non-secret Directory hint) |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
 | `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. Jira/Linear OAuth access tokens are refreshed from the stored refresh token when expired. |
-| `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer watch list. |
-| `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer/Dashboard watch list. |
+| `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer ingest allow-list (not Dashboard targeting). |
+| `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
+| `GitWatchList` | Per-user git inbox watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. |
+| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`) for Phorge, Jira, Linear, Slack, and Discord. Git stays on `GitWatchList`. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -154,12 +156,21 @@ External Provider (Phorge, GitHub, Slack, …)
 
 ### Live push ingestion (Dashboard)
 
-The polling flow above powers Explorer (historical backfill). Dashboard live
-data arrives through provider push **or** `ActivityLivePollScheduler` (first
-tick on API start, then ~45s) when webhooks are absent. Jira issue activities
-include `updatedAt` in their id so a status move is a new live event; Jira
-comments use a stable `jira|{host}|{issueKey}|comment|{commentId}` id. In `deployment_mode=personal`, ingest broadcasts
-`ACTIVITY_RECEIVED` to every session and the app hydrates `GET /activities/live?scope=global`. Archive flags stay a per-viewer overlay on `activities:user:{id}` and never rewrite `activities:global`.
+The polling flow above powers Explorer (historical backfill). Dashboard is a
+**personal inbound inbox**: live ingest fans out one row per recipient
+(`Activity.userId`), records the linked actor as `senderUserId`, and delivers
+`ACTIVITY_RECEIVED` with `broadcastToUser(recipient)`. The app hydrates
+`GET /activities/live` without `scope=global`. Archive flags live natively on
+`activities:user:{id}`. `ActivityLivePollScheduler` does **not** refill the
+inbox with authored poll rows; inbound rows come from webhooks / Gateway.
+Identity linking is required — unlinked mentions are dropped. Followable
+providers (Phorge, Jira, Linear, Slack, Discord) also union users who Follow
+that object key, so untagged later updates and the follower's own actions land
+until Unfollow. Standing ownership or channel membership is not automatic.
+Jira issue
+activities include `updatedAt` in their id so a status move is a new live
+event; Jira comments use a stable `jira|{host}|{issueKey}|comment|{commentId}`
+id (plus recipient on fan-out).
 
 ```
 Provider push (webhook / Gateway WebSocket)
@@ -217,7 +228,7 @@ Client request  ──►  Vegas Middleware
 ### Table-Per-Type (TBT) Persistence
 
 ```
-activities               ← shared fields (id, userId, title, content, createdAt)
+activities               ← shared fields (id, userId recipient, senderUserId, title, content, createdAt)
 activity_phorge            ← Phorge-specific metadata (taskPhid, revisionId, tags)
 activity_github_commit     ← GitHub commit metadata (repo, branch)
 activity_gitlab_commit     ← GitLab commit metadata (project, branch)
@@ -262,13 +273,13 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`, user-scoped inbound inbox), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management (creation + roles) + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
 | `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
-| `UserController` | `/users` | User profile, identity linking |
+| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, and Dashboard object Follow pins (`/users/me/follows`) |
 
 ---
 

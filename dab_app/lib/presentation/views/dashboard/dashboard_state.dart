@@ -1,6 +1,7 @@
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import 'models/dashboard_feed_group.dart';
 import 'models/dashboard_feed_mode.dart';
@@ -23,6 +24,7 @@ class DashboardState with DashboardStateMappable {
   final DateTime? lastSyncedAt;
   final DateTime? reconnectNoticeAt;
   final String? errorMessage;
+  final List<String> followedObjectRefs;
 
   const DashboardState({
     this.status = ViewStatus.initial,
@@ -33,6 +35,7 @@ class DashboardState with DashboardStateMappable {
     this.lastSyncedAt,
     this.reconnectNoticeAt,
     this.errorMessage,
+    this.followedObjectRefs = const [],
   });
 
   factory DashboardState.initial() => const DashboardState();
@@ -46,6 +49,12 @@ class DashboardState with DashboardStateMappable {
 
   int get archivedCount =>
       activities.where((activity) => activity.archived).length;
+
+  /// Whether [activity] is currently Follow-pinned.
+  bool isFollowing(Activity activity) {
+    final ref = followObjectRefFor(activity.provider);
+    return ref != null && followedObjectRefs.contains(ref);
+  }
 }
 
 /// Derived feed projections so widgets stay layout-only.

@@ -8,6 +8,8 @@ import '../../domain/entities/user/user_role.dart';
 import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
+import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../../domain/entities/user/linear_team_watch_list.dart';
 import '../../domain/repositories/abs_i_user_repository.dart';
@@ -326,6 +328,80 @@ class UserRepository extends Repository implements IUserRepository {
       final data = _getEnvelopeData(response);
       return LinearTeamWatchList.fromMap(
         Map<String, dynamic>.from(data as Map),
+      );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, GitWatchList>> listMyGitWatches({
+    required String providerId,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get(
+        '/users/me/credentials/$providerId/projects',
+      );
+      final data = _getEnvelopeData(response);
+      return GitWatchList.fromMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, GitWatchList>> saveMyGitWatches({
+    required String providerId,
+    required List<String> repos,
+    List<String> branches = const [],
+  }) {
+    return guardedCall(() async {
+      final response = await _client.put(
+        '/users/me/credentials/$providerId/projects',
+        data: {'repos': repos, 'branches': branches},
+      );
+      final data = _getEnvelopeData(response);
+      return GitWatchList.fromMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<ActivityFollow>>> listMyActivityFollows() {
+    return guardedCall(() async {
+      final response = await _client.get('/users/me/follows');
+      final data = _getEnvelopeData(response);
+      if (data is! List) return const <ActivityFollow>[];
+      final follows = <ActivityFollow>[];
+      for (final item in data) {
+        if (item is! Map) continue;
+        follows.add(
+          ActivityFollow.fromMap(Map<String, dynamic>.from(item)),
+        );
+      }
+      return follows;
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, ActivityFollow>> saveMyActivityFollow({
+    required String providerId,
+    required String objectKey,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.put(
+        '/users/me/follows',
+        data: {'providerId': providerId, 'objectKey': objectKey},
+      );
+      final data = _getEnvelopeData(response);
+      return ActivityFollow.fromMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, void>> deleteMyActivityFollow({
+    required String providerId,
+    required String objectKey,
+  }) {
+    return guardedCall(() async {
+      await _client.dio.delete(
+        '/users/me/follows',
+        data: {'providerId': providerId, 'objectKey': objectKey},
       );
     });
   }

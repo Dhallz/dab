@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
@@ -26,6 +27,8 @@ class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
 
+class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
+
 void main() {
   late _MockUserRepository userRepository;
   late _MockActivityRepository activityRepository;
@@ -43,11 +46,29 @@ void main() {
     createdAt: DateTime.utc(2026, 1, 1),
   );
 
+  final recipient = User(
+    id: 'u-bob',
+    name: 'Bob',
+    email: 'bob@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
   final identity = UserIdentity(
     id: 'ident-1',
     userId: 'u-linear',
     providerId: 'linear',
     externalId: 'linear-user-ada',
+    status: UserIdentityStatus.linked,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final recipientIdentity = UserIdentity(
+    id: 'ident-2',
+    userId: 'u-bob',
+    providerId: 'linear',
+    externalId: 'linear-user-bob',
     status: UserIdentityStatus.linked,
     createdAt: DateTime.utc(2026, 1, 1),
   );
@@ -64,11 +85,13 @@ void main() {
     String action = 'update',
     String type = 'Issue',
     String assigneeId = 'linear-user-ada',
+    Map<String, dynamic>? updatedFrom,
   }) {
     return <String, dynamic>{
       'type': type,
       'action': action,
       'url': 'https://linear.app/acme/issue/ENG-42/fix-login',
+      'updatedFrom': ?updatedFrom,
       'data': {
         'id': 'issue-uuid',
         'identifier': 'ENG-42',
@@ -154,10 +177,10 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([user, recipient]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
-    ).thenAnswer((_) async => Right([identity]));
+    ).thenAnswer((_) async => Right([identity, recipientIdentity]));
     when(
       () => activityRepository.createActivity(any()),
     ).thenAnswer((_) async => const Right(null));
@@ -165,9 +188,12 @@ void main() {
     when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
   });
 
-  test('ingests an Issue update attributed via assigneeId', () async {
+  test('ingests an Issue update when assignee became a linked user', () async {
     final out = await useCase.execute(
-      payload: issuePayload(),
+      payload: issuePayload(
+        assigneeId: 'linear-user-bob',
+        updatedFrom: {'assigneeId': 'linear-user-ada'},
+      ),
       deliveryId: 'delivery-1',
     );
 
@@ -178,7 +204,7 @@ void main() {
               () => activityRepository.createActivity(captureAny()),
             ).captured.single
             as Activity;
-    expect(captured.userId, 'u-linear');
+    expect(captured.userId, 'u-bob');
     expect(captured.title, '[ENG-42] Fix login');
     final provider = captured.provider as LinearIssueProvider;
     expect(provider.identifier, 'ENG-42');
@@ -189,7 +215,7 @@ void main() {
     ).called(1);
     verify(
       () => presenceService.broadcastToUser(
-        'u-linear',
+        'u-bob',
         'ACTIVITY_RECEIVED',
         any(),
       ),
@@ -205,9 +231,9 @@ void main() {
     verifyNever(() => redisService.reserveIngestionEventId(any(), any()));
   });
 
-  test('ingests a Comment as a distinct live activity', () async {
+  test('ingests a Comment mention as a distinct live activity', () async {
     final out = await useCase.execute(
-      payload: commentPayload(),
+      payload: commentPayload(body: '@[Bob](linear-user-bob) Can you take a look?'),
       deliveryId: 'delivery-comment-1',
     );
 
@@ -219,36 +245,36 @@ void main() {
             ).captured.single
             as Activity;
     expect(captured.commentCount, 1);
-    expect(captured.content, 'Can you take a look?');
-    expect(captured.userId, 'u-linear');
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-linear');
     expect((captured.provider as LinearIssueProvider).identifier, 'ENG-42');
     verify(
       () => presenceService.broadcastToUser(
-        'u-linear',
+        'u-bob',
         'ACTIVITY_RECEIVED',
         any(),
       ),
     ).called(1);
   });
 
-  test(
-    'comment from an unmapped author still notifies the issue owner',
-    () async {
-      final out = await useCase.execute(
-        payload: commentPayload(userId: 'linear-user-stranger'),
-      );
+  test('comment from an unmapped author still notifies mentioned users', () async {
+    final out = await useCase.execute(
+      payload: commentPayload(
+        userId: 'linear-user-stranger',
+        body: '@[Ada](linear-user-ada) please review',
+      ),
+    );
 
-      final result = out.getOrElse((_) => throw StateError('left'));
-      expect(result.ingested, isTrue);
-      final captured =
-          verify(
-                () => activityRepository.createActivity(captureAny()),
-              ).captured.single
-              as Activity;
-      expect(captured.commentCount, 1);
-      expect(captured.userId, 'u-linear');
-    },
-  );
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(
+              () => activityRepository.createActivity(captureAny()),
+            ).captured.single
+            as Activity;
+    expect(captured.commentCount, 1);
+    expect(captured.userId, 'u-linear');
+  });
 
   test('ignores unsupported actions', () async {
     final out = await useCase.execute(payload: issuePayload(action: 'remove'));
@@ -276,7 +302,7 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isFalse);
-    expect(result.reason, 'no_attributable_users');
+    expect(result.reason, 'no_target_mentions');
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
@@ -305,5 +331,32 @@ void main() {
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.reason, 'linear_not_configured');
+  });
+
+  test('persists an untagged comment for followers including the author', () async {
+    final follows = _MockFollows();
+    when(
+      () => follows.userIdsFor(providerId: 'linear', objectKey: 'ENG-42'),
+    ).thenAnswer((_) async => const Right(['u-linear']));
+    useCase = IngestLinearWebhook(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+      follows: follows,
+    );
+
+    final out = await useCase.execute(
+      payload: commentPayload(body: 'Working on this'),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-linear');
   });
 }

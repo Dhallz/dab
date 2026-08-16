@@ -9,6 +9,10 @@ part 'activity.mapper.dart';
 class Activity with ActivityMappable {
   final String id;
   final String userId;
+
+  /// Linked DAB user who caused the event, when known.
+  final String? senderUserId;
+
   final ActivityProvider provider;
   final String title;
   final String content;
@@ -26,6 +30,7 @@ class Activity with ActivityMappable {
   Activity({
     required this.id,
     required this.userId,
+    this.senderUserId,
     required this.provider,
     required this.title,
     required this.content,

@@ -2,15 +2,18 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
+import '../../../domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_phorge_task_hydrator.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -29,6 +32,7 @@ class IngestPhorgeWebhook {
   final IPhorgeTaskHydrator _taskHydrator;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestPhorgeWebhook(
     this._userRepository,
@@ -39,7 +43,9 @@ class IngestPhorgeWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    AbsIActivityFollowRepository? follows,
+  }) : _follows = follows,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -69,7 +75,7 @@ class IngestPhorgeWebhook {
         PhorgeWebhookIngestionResult.ignored('missing_object_phid'),
       );
     }
-    if (objectType != 'TASK') {
+    if (objectType != 'TASK' && objectType != 'DREV') {
       return Right(
         PhorgeWebhookIngestionResult.ignored(
           'unsupported_object_type:$objectType',
@@ -164,7 +170,16 @@ class IngestPhorgeWebhook {
       transactions: attributable,
       sprintTag: bundle.sprintTag,
     );
-    final activities = scopedBundle.toActivities(mappedUsers);
+    final followers = await inboxFollowerUserIds(
+      _follows,
+      providerId: 'phorge',
+      objectKeys: [bundle.task.conduitPhid],
+    );
+    final activities = scopedBundle.toActivities(
+      mappedUsers,
+      inbound: true,
+      followerUserIds: followers,
+    );
     if (activities.isEmpty) {
       return const Right(
         PhorgeWebhookIngestionResult.ignored('no_eligible_activities'),

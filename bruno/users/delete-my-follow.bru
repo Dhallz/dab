@@ -1,0 +1,29 @@
+meta {
+  name: Delete My Follow
+  type: http
+  seq: 17
+}
+
+docs {
+  Removes a Dashboard object Follow pin for the caller.
+  Body: `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+}
+
+delete {
+  url: {{baseUrl}}/users/me/follows
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "providerId": "phorge",
+    "objectKey": "PHID-TASK-1"
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

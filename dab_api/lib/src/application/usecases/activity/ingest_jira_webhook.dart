@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/jira_scope.dart';
+import '../../../domain/core/live_inbox_targets.dart';
 import '../../../domain/dtos/jira/jira_issue_dto.dart';
 import '../../../domain/dtos/jira/jira_issue_mapping.dart';
 import '../../../domain/entities/user/jira_project_watch_list.dart';
@@ -9,11 +10,13 @@ import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -31,6 +34,7 @@ class IngestJiraWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestJiraWebhook(
     this._userRepository,
@@ -40,7 +44,9 @@ class IngestJiraWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    AbsIActivityFollowRepository? follows,
+  }) : _follows = follows,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -163,19 +169,17 @@ class IngestJiraWebhook {
     final assignee = fields['assignee'];
     final reporter = fields['reporter'];
     final creator = fields['creator'];
-    final dabUserId = _firstMatchedUserId(accountToUser, [
-      jiraPersonAccountId(assignee),
-      jiraPersonAccountId(reporter),
-      jiraPersonAccountId(creator),
-    ]);
 
     final comments = <JiraIssueCommentDto>[];
+    String? commentSenderUserId;
+    Object? commentBodyRaw;
     if (hasComment && commentId.isNotEmpty) {
       final author = commentRaw['author'];
       final authorAccountId = jiraPersonAccountId(author);
-      final commentUserId = authorAccountId == null
+      commentSenderUserId = authorAccountId == null
           ? null
           : accountToUser[authorAccountId];
+      commentBodyRaw = commentRaw['body'];
       final createdAt =
           _parseJiraDateTime(commentRaw['created']) ??
           _parseJiraDateTime(commentRaw['updated']) ??
@@ -183,18 +187,11 @@ class IngestJiraWebhook {
       comments.add(
         JiraIssueCommentDto(
           id: commentId,
-          body: _extractCommentBody(commentRaw['body']),
+          body: _extractCommentBody(commentBodyRaw),
           createdAt: createdAt,
-          dabUserId: commentUserId,
+          dabUserId: commentSenderUserId,
           authorDisplayName: pickJiraPersonDisplay(author),
         ),
-      );
-    }
-
-    if (dabUserId == null &&
-        comments.every((c) => (c.dabUserId ?? '').isEmpty)) {
-      return const Right(
-        JiraWebhookIngestionResult.ignored('no_attributable_users'),
       );
     }
 
@@ -214,6 +211,40 @@ class IngestJiraWebhook {
       );
     }
 
+    final actorAccountId = hasComment
+        ? jiraPersonAccountId(commentRaw['author'])
+        : jiraPersonAccountId(payload['user']) ??
+              jiraPersonAccountId(creator);
+    final senderUserId = actorAccountId == null
+        ? commentSenderUserId
+        : accountToUser[actorAccountId];
+
+    Set<String> inboxTargets;
+    final commentOnlyRow = commentOnly && comments.isNotEmpty;
+    if (commentOnlyRow) {
+      inboxTargets = liveInboxTargets(
+        externalIds: extractJiraMentionAccountIds(commentBodyRaw),
+        externalToUser: accountToUser,
+      );
+    } else {
+      inboxTargets = liveInboxTargets(
+        externalIds: extractJiraAssigneeBecameAccountIds(payload['changelog']),
+        externalToUser: accountToUser,
+      );
+    }
+    inboxTargets.addAll(
+      await inboxFollowerUserIds(
+        _follows,
+        providerId: 'jira',
+        objectKeys: [issueKey],
+      ),
+    );
+    if (inboxTargets.isEmpty) {
+      return const Right(
+        JiraWebhookIngestionResult.ignored('no_target_mentions'),
+      );
+    }
+
     final dto = JiraIssueDto(
       issueKey: issueKey,
       projectKey: projectKey.isEmpty ? 'UNKNOWN' : projectKey,
@@ -222,16 +253,20 @@ class IngestJiraWebhook {
       browseUrl: 'https://$host/browse/$issueKey',
       updatedAt: updatedAt,
       siteHost: host,
-      dabUserId: dabUserId,
+      dabUserId: senderUserId,
       authorDisplayName:
           pickJiraPersonDisplay(assignee) ??
           pickJiraPersonDisplay(reporter) ??
           pickJiraPersonDisplay(creator),
       comments: comments,
-      includeIssueSnapshot: !commentOnly,
+      includeIssueSnapshot: !commentOnlyRow,
     );
 
-    final activities = dto.toActivities(users);
+    final activities = dto.toActivities(
+      users,
+      forUserIds: inboxTargets,
+      senderUserId: senderUserId,
+    );
     if (activities.isEmpty) {
       return const Right(
         JiraWebhookIngestionResult.ignored('no_eligible_activities'),
@@ -273,17 +308,5 @@ class IngestJiraWebhook {
       (m) => '${m[1]}:${m[2]}',
     );
     return DateTime.tryParse(text)?.toUtc();
-  }
-
-  static String? _firstMatchedUserId(
-    Map<String, String> accountToUser,
-    List<String?> candidateAccountIds,
-  ) {
-    for (final aid in candidateAccountIds) {
-      if (aid == null || aid.isEmpty) continue;
-      final dab = accountToUser[aid];
-      if (dab != null && dab.isNotEmpty) return dab;
-    }
-    return null;
   }
 }

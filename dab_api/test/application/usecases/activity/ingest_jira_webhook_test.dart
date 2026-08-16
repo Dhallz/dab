@@ -7,6 +7,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
@@ -27,6 +28,8 @@ class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
 
+class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
+
 void main() {
   late _MockUserRepository userRepository;
   late _MockActivityRepository activityRepository;
@@ -44,11 +47,29 @@ void main() {
     createdAt: DateTime.utc(2026, 1, 1),
   );
 
+  final recipient = User(
+    id: 'u-bob',
+    name: 'Bob',
+    email: 'bob@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
   final identity = UserIdentity(
     id: 'ident-1',
     userId: 'u-jira',
     providerId: 'jira',
     externalId: 'acct-ada',
+    status: UserIdentityStatus.linked,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
+  final recipientIdentity = UserIdentity(
+    id: 'ident-2',
+    userId: 'u-bob',
+    providerId: 'jira',
+    externalId: 'acct-bob',
     status: UserIdentityStatus.linked,
     createdAt: DateTime.utc(2026, 1, 1),
   );
@@ -65,6 +86,7 @@ void main() {
     String event = 'jira:issue_updated',
     String assigneeAccountId = 'acct-ada',
     Map<String, dynamic>? comment,
+    Map<String, dynamic>? changelog,
   }) {
     return <String, dynamic>{
       'webhookEvent': event,
@@ -81,6 +103,7 @@ void main() {
         },
       },
       'comment': ?comment,
+      'changelog': ?changelog,
     };
   }
 
@@ -127,10 +150,10 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([user, recipient]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
-    ).thenAnswer((_) async => Right([identity]));
+    ).thenAnswer((_) async => Right([identity, recipientIdentity]));
     when(
       () => activityRepository.createActivity(any()),
     ).thenAnswer((_) async => const Right(null));
@@ -138,8 +161,16 @@ void main() {
     when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
   });
 
-  test('ingests an issue update attributed to a linked identity', () async {
-    final out = await useCase.execute(payload: issuePayload());
+  test('ingests assignee-became-me on a linked identity', () async {
+    final out = await useCase.execute(
+      payload: issuePayload(
+        changelog: {
+          'items': [
+            {'field': 'assignee', 'from': 'acct-other', 'to': 'acct-bob'},
+          ],
+        },
+      ),
+    );
 
     final result = out.getOrElse((_) => throw StateError('left'));
     expect(result.ingested, isTrue);
@@ -148,23 +179,31 @@ void main() {
               () => activityRepository.createActivity(captureAny()),
             ).captured.single
             as Activity;
-    expect(captured.userId, 'u-jira');
+    expect(captured.userId, 'u-bob');
     expect(captured.title, '[DAB-7] Fix login bug');
     expect(captured.provider, isA<JiraIssueProvider>());
     expect(captured.url, 'https://acme.atlassian.net/browse/DAB-7');
     verify(() => redisService.fanOutActivity(any())).called(1);
     verify(
       () =>
-          presenceService.broadcastToUser('u-jira', 'ACTIVITY_RECEIVED', any()),
+          presenceService.broadcastToUser('u-bob', 'ACTIVITY_RECEIVED', any()),
     ).called(1);
   });
 
-  test('ingests comment events with mapped comment authors', () async {
+  test('ingests comment mentions for linked recipients', () async {
     final out = await useCase.execute(
       payload: issuePayload(
         comment: {
           'id': 'c-1',
-          'body': 'Ship it',
+          'body': {
+            'type': 'doc',
+            'content': [
+              {
+                'type': 'mention',
+                'attrs': {'id': 'acct-bob'},
+              },
+            ],
+          },
           'created': '2026-06-30T10:00:00.000+0000',
           'author': {'accountId': 'acct-ada', 'displayName': 'Ada L.'},
         },
@@ -176,22 +215,29 @@ void main() {
     final captured = verify(
       () => activityRepository.createActivity(captureAny()),
     ).captured;
-    // Comment webhooks omit the issue snapshot so Dashboard gets one ping.
     expect(captured, hasLength(1));
     final comment = captured.cast<Activity>().single;
     expect(comment.commentCount, 1);
-    expect(comment.content, 'Ship it');
-    expect(comment.userId, 'u-jira');
+    expect(comment.userId, 'u-bob');
+    expect(comment.senderUserId, 'u-jira');
   });
 
-  test('ingests comment_created without issue.fields.updated', () async {
+  test('ingests comment_created mentions without issue.fields.updated', () async {
     final out = await useCase.execute(
       payload: {
         'webhookEvent': 'comment_created',
         'timestamp': 1719741600000,
         'comment': {
           'id': 'c-live',
-          'body': 'Ping the board',
+          'body': {
+            'type': 'doc',
+            'content': [
+              {
+                'type': 'mention',
+                'attrs': {'id': 'acct-bob'},
+              },
+            ],
+          },
           'created': '2026-06-30T10:05:00.000+0000',
           'author': {'accountId': 'acct-ada', 'displayName': 'Ada L.'},
         },
@@ -217,62 +263,58 @@ void main() {
             ).captured.single
             as Activity;
     expect(captured.commentCount, 1);
-    expect(captured.content, 'Ping the board');
+    expect(captured.userId, 'u-bob');
     verify(
       () =>
-          presenceService.broadcastToUser('u-jira', 'ACTIVITY_RECEIVED', any()),
+          presenceService.broadcastToUser('u-bob', 'ACTIVITY_RECEIVED', any()),
     ).called(1);
   });
 
-  test(
-    'attributes unmapped comment authors to the linked issue owner',
-    () async {
-      final out = await useCase.execute(
-        payload: issuePayload(
-          event: 'comment_created',
-          comment: {
-            'id': 'c-2',
-            'body': 'Who am I?',
-            'created': '2026-06-30T10:00:00.000+0000',
-            'author': {'accountId': 'acct-stranger', 'displayName': 'Guest'},
+  test('ignores comments without linked mentions', () async {
+    final out = await useCase.execute(
+      payload: issuePayload(
+        event: 'comment_created',
+        comment: {
+          'id': 'c-2',
+          'body': 'Who am I?',
+          'created': '2026-06-30T10:00:00.000+0000',
+          'author': {'accountId': 'acct-stranger', 'displayName': 'Guest'},
+        },
+      ),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isFalse);
+    expect(result.reason, 'no_target_mentions');
+    verifyNever(() => activityRepository.createActivity(any()));
+  });
+
+  test('drops unlinked mention targets', () async {
+    final out = await useCase.execute(
+      payload: issuePayload(
+        assigneeAccountId: 'acct-stranger',
+        comment: {
+          'id': 'c-2',
+          'body': {
+            'type': 'doc',
+            'content': [
+              {
+                'type': 'mention',
+                'attrs': {'id': 'acct-stranger'},
+              },
+            ],
           },
-        ),
-      );
+          'created': '2026-06-30T10:00:00.000+0000',
+          'author': {'accountId': 'acct-ada'},
+        },
+      ),
+    );
 
-      final result = out.getOrElse((_) => throw StateError('left'));
-      expect(result.ingested, isTrue);
-      final captured =
-          verify(
-                () => activityRepository.createActivity(captureAny()),
-              ).captured.single
-              as Activity;
-      expect(captured.commentCount, 1);
-      expect(captured.userId, 'u-jira');
-      expect(captured.authorName, contains('Guest'));
-    },
-  );
-
-  test(
-    'drops comments when neither author nor issue owner is linked',
-    () async {
-      final out = await useCase.execute(
-        payload: issuePayload(
-          assigneeAccountId: 'acct-stranger',
-          comment: {
-            'id': 'c-2',
-            'body': 'Who am I?',
-            'created': '2026-06-30T10:00:00.000+0000',
-            'author': {'accountId': 'acct-stranger'},
-          },
-        ),
-      );
-
-      final result = out.getOrElse((_) => throw StateError('left'));
-      expect(result.ingested, isFalse);
-      expect(result.reason, 'no_attributable_users');
-      verifyNever(() => activityRepository.createActivity(any()));
-    },
-  );
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isFalse);
+    expect(result.reason, 'no_target_mentions');
+    verifyNever(() => activityRepository.createActivity(any()));
+  });
 
   test('ignores issues outside the watched project list', () async {
     when(() => providerConfigRepository.getConfigs()).thenAnswer(
@@ -333,7 +375,15 @@ void main() {
         ),
       );
 
-      final out = await useCase.execute(payload: issuePayload());
+      final out = await useCase.execute(
+        payload: issuePayload(
+          changelog: {
+            'items': [
+              {'field': 'assignee', 'from': 'acct-other', 'to': 'acct-bob'},
+            ],
+          },
+        ),
+      );
 
       final result = out.getOrElse((_) => throw StateError('left'));
       expect(result.ingested, isFalse);
@@ -341,4 +391,40 @@ void main() {
       verifyNever(() => redisService.fanOutActivity(any()));
     },
   );
+
+  test('persists an untagged comment for followers including the author', () async {
+    final follows = _MockFollows();
+    when(
+      () => follows.userIdsFor(providerId: 'jira', objectKey: 'DAB-7'),
+    ).thenAnswer((_) async => const Right(['u-jira']));
+    useCase = IngestJiraWebhook(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+      follows: follows,
+    );
+
+    final out = await useCase.execute(
+      payload: issuePayload(
+        event: 'comment_created',
+        comment: {
+          'id': 'c-follow',
+          'body': 'Working on this',
+          'created': '2026-06-30T10:00:00.000+0000',
+          'author': {'accountId': 'acct-ada', 'displayName': 'Ada L.'},
+        },
+      ),
+    );
+
+    final result = out.getOrElse((_) => throw StateError('left'));
+    expect(result.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-jira');
+    expect(captured.senderUserId, 'u-jira');
+  });
 }

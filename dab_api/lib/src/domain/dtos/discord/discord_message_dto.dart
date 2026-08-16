@@ -42,6 +42,12 @@ class DiscordMessageDto with DiscordMessageDtoMappable {
   /// DAB user id when the author resolves to a linked Discord identity.
   final String? dabUserId;
 
+  /// Mentioned Discord user snowflakes from Gateway `mentions`.
+  final List<String> mentionIds;
+
+  /// True when the payload mentions `@everyone` or `@here`.
+  final bool mentionEveryone;
+
   const DiscordMessageDto({
     required this.messageId,
     required this.channelId,
@@ -54,6 +60,8 @@ class DiscordMessageDto with DiscordMessageDtoMappable {
     this.authorAvatarUrl,
     this.replyToId,
     this.dabUserId,
+    this.mentionIds = const [],
+    this.mentionEveryone = false,
   });
 }
 
@@ -61,12 +69,17 @@ class DiscordMessageDto with DiscordMessageDtoMappable {
 /// ROLE: Discord message DTO → unified [`Activity`] (linked DAB user attribution).
 /// CONSTRAINTS: Pure logic; skips rows without attributable DAB users.
 extension OnDiscordMessageDto on DiscordMessageDto {
-  List<Activity> toActivities(List<User> users) {
-    final ownerId = dabUserId?.trim();
-    if (ownerId == null || ownerId.isEmpty) return const [];
-    final owner = users.where((u) => u.id == ownerId).firstOrNull;
-    if (owner == null) return const [];
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    String? senderUserId,
+  }) {
+    final targets = forUserIds == null
+        ? [if (dabUserId != null && dabUserId!.isNotEmpty) dabUserId!]
+        : forUserIds.where((id) => id.isNotEmpty).toList();
+    if (targets.isEmpty) return const [];
 
+    final usersById = {for (final u in users) u.id: u};
     final trimmedContent = content.trim();
     final conversationLabel = (channelLabel ?? channelId).trim();
     final title = trimmedContent.isEmpty
@@ -77,27 +90,36 @@ extension OnDiscordMessageDto on DiscordMessageDto {
     final url = (gid == null || gid.isEmpty)
         ? null
         : 'https://discord.com/channels/$gid/$channelId/$messageId';
+    final fanOut = forUserIds != null;
 
-    return [
-      Activity(
-        id: _discordMessageUuid.v5(Namespace.url.value, 'discord-$messageId'),
-        userId: owner.id,
-        provider: DiscordMessageProvider(
-          guildId: guildId,
-          channelId: channelId,
-          messageId: messageId,
-          replyToId: replyToId,
+    final activities = <Activity>[];
+    for (final targetUserId in targets) {
+      final owner = usersById[targetUserId];
+      if (owner == null) continue;
+      final stableId = fanOut ? '$messageId-$targetUserId' : messageId;
+      activities.add(
+        Activity(
+          id: _discordMessageUuid.v5(Namespace.url.value, 'discord-$stableId'),
+          userId: owner.id,
+          senderUserId: senderUserId ?? dabUserId,
+          provider: DiscordMessageProvider(
+            guildId: guildId,
+            channelId: channelId,
+            messageId: messageId,
+            replyToId: replyToId,
+          ),
+          title: title,
+          content: trimmedContent.isEmpty ? '(no message text)' : trimmedContent,
+          url: url,
+          authorName: authorDisplayName?.trim().isNotEmpty == true
+              ? authorDisplayName!.trim()
+              : owner.name,
+          authorAvatarUrl: authorAvatarUrl ?? owner.avatarUrl,
+          createdAt: createdAt.toUtc(),
         ),
-        title: title,
-        content: trimmedContent.isEmpty ? '(no message text)' : trimmedContent,
-        url: url,
-        authorName: authorDisplayName?.trim().isNotEmpty == true
-            ? authorDisplayName!.trim()
-            : owner.name,
-        authorAvatarUrl: authorAvatarUrl ?? owner.avatarUrl,
-        createdAt: createdAt.toUtc(),
-      ),
-    ];
+      );
+    }
+    return activities;
   }
 }
 

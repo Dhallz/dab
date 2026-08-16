@@ -141,149 +141,170 @@ class _SecurityTabState extends State<SecurityTab> {
                 u.email.toLowerCase().contains(q);
           }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const BootstrapStatusCard(),
-        const SizedBox(height: 24),
-        if (_deploymentMode != 'personal') ...[
-          _DomainValidationPanel(
-            isEnabled: _isValidationEnabled,
-            domainController: _domainController,
-            nonCompliantUsers: _nonCompliantUsers,
-            onToggled: (enabled) => _saveSettings(
-              enabled: enabled,
-              domain: _domainController.text.trim(),
-            ),
-            onDomainSaved: () {
-              _saveSettings(domain: _domainController.text.trim());
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.adminDomainSavedSnack)),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-        ],
-        _OrganizationTimezonePanel(
-          selectedTimezone: _selectedTimezone,
-          onTimezoneChanged: (timezone) {
-            setState(() => _selectedTimezone = timezone);
-            _saveSettings(timezone: timezone);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
-        _PublicApiUrlPanel(
-          controller: _publicApiUrlController,
-          onSaved: () {
-            _saveSettings(publicApiUrl: _publicApiUrlController.text.trim());
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.adminPublicApiUrlSavedSnack)),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
-        _DeploymentModePanel(
-          mode: _deploymentMode,
-          onChanged: (mode) async {
-            setState(() => _deploymentMode = mode);
-            final messenger = ScaffoldMessenger.of(context);
-            final savedMessage = l10n.adminDeploymentModeSavedSnack;
-            final ok = await _saveSettings(deploymentMode: mode);
-            if (!mounted) return;
-            if (ok) {
-              messenger.showSnackBar(SnackBar(content: Text(savedMessage)));
-            } else {
-              setState(() {
-                _deploymentMode =
-                    widget.systemSettings['deployment_mode'] ??
-                    'organization';
-              });
-            }
-          },
-        ),
-        const SizedBox(height: 32),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.adminSecuritySectionTitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurfaceVariant,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (_) => const UserCreateDialog(),
-              ),
-              icon: Icon(AppIcons.personAdd, size: 18),
-              label: Text(
-                l10n.adminAddUser,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          onChanged: (v) => setState(() => _query = v),
-          style: TextStyle(color: cs.onSurface, fontSize: 14),
-          decoration: InputDecoration(
-            hintText: l10n.adminSecuritySearchHint,
-            hintStyle: TextStyle(
-              color: cs.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
-            filled: true,
-            fillColor: cs.surfaceContainerLow,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: widget.status.isLoading && widget.users.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : widget.users.isEmpty
-              ? Center(
-                  child: Text(
-                    widget.errorMessage ?? l10n.adminSecuritySectionTitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: cs.onSurfaceVariant),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const BootstrapStatusCard(),
+              const SizedBox(height: 24),
+              if (_deploymentMode != 'personal') ...[
+                _DomainValidationPanel(
+                  isEnabled: _isValidationEnabled,
+                  domainController: _domainController,
+                  nonCompliantUsers: _nonCompliantUsers,
+                  onToggled: (enabled) => _saveSettings(
+                    enabled: enabled,
+                    domain: _domainController.text.trim(),
                   ),
-                )
-              : ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final user = filtered[index];
-                    return UserTile(user: user, notifier: widget.notifier);
+                  onDomainSaved: () {
+                    _saveSettings(domain: _domainController.text.trim());
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.adminDomainSavedSnack)),
+                    );
                   },
                 ),
+                const SizedBox(height: 24),
+              ],
+              _OrganizationTimezonePanel(
+                selectedTimezone: _selectedTimezone,
+                onTimezoneChanged: (timezone) {
+                  setState(() => _selectedTimezone = timezone);
+                  _saveSettings(timezone: timezone);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              _PublicApiUrlPanel(
+                controller: _publicApiUrlController,
+                onSaved: () {
+                  _saveSettings(
+                    publicApiUrl: _publicApiUrlController.text.trim(),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.adminPublicApiUrlSavedSnack)),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              _DeploymentModePanel(
+                mode: _deploymentMode,
+                onChanged: (mode) async {
+                  setState(() => _deploymentMode = mode);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final savedMessage = l10n.adminDeploymentModeSavedSnack;
+                  final ok = await _saveSettings(deploymentMode: mode);
+                  if (!mounted) return;
+                  if (ok) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(savedMessage)),
+                    );
+                  } else {
+                    setState(() {
+                      _deploymentMode =
+                          widget.systemSettings['deployment_mode'] ??
+                          'organization';
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.adminSecuritySectionTitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurfaceVariant,
+                        letterSpacing: 1.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => const UserCreateDialog(),
+                    ),
+                    icon: Icon(AppIcons.personAdd, size: 18),
+                    label: Text(
+                      l10n.adminAddUser,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                onChanged: (v) => setState(() => _query = v),
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: l10n.adminSecuritySearchHint,
+                  hintStyle: TextStyle(
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  filled: true,
+                  fillColor: cs.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
+        if (widget.status.isLoading && widget.users.isEmpty)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (widget.users.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Text(
+                widget.errorMessage ?? l10n.adminSecuritySectionTitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: cs.onSurfaceVariant),
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final user = filtered[index];
+                return UserTile(user: user, notifier: widget.notifier);
+              },
+              childCount: filtered.length,
+            ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }

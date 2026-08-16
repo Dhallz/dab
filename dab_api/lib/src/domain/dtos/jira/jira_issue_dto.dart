@@ -79,9 +79,14 @@ class JiraIssueCommentDto with JiraIssueCommentDtoMappable {
 /// ROLE: Maps a hydrated [JiraIssueDto] into a normalized [Activity].
 /// CONSTRAINTS: Pure logic; skips rows without attributable DAB users.
 extension OnJiraIssueDto on JiraIssueDto {
-  List<Activity> toActivities(List<User> users) {
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    String? senderUserId,
+  }) {
     final userById = {for (final u in users) u.id: u};
     final events = <Activity>[];
+    final fanOut = forUserIds != null;
 
     final fingerprint =
         '${siteHost.trim().toLowerCase()}|$issueKey|${updatedAt.toUtc().millisecondsSinceEpoch}';
@@ -94,29 +99,41 @@ extension OnJiraIssueDto on JiraIssueDto {
         ? null
         : userById[issueOwnerId];
     final fallbackUser = issueOwner;
-    if (includeIssueSnapshot && issueOwner != null) {
-      final id = _jiraIssueActivityUuid.v5(Namespace.url.value, fingerprint);
-      final bodyParts = <String>[];
-      if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
-      if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
-      events.add(
-        Activity(
-          id: id,
-          userId: issueOwner.id,
-          provider: JiraIssueProvider(
-            issueKey: issueKey,
-            projectKey: projectKey,
-            statusName: statusTrim.isEmpty ? null : statusTrim,
+
+    Iterable<String> snapshotTargets() {
+      if (fanOut) return forUserIds.where((id) => id.isNotEmpty);
+      if (issueOwner == null) return const [];
+      return [issueOwner.id];
+    }
+
+    if (includeIssueSnapshot) {
+      for (final targetId in snapshotTargets()) {
+        final owner = userById[targetId];
+        if (owner == null) continue;
+        final bodyParts = <String>[];
+        if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
+        if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
+        final idSeed = fanOut ? '$fingerprint|$targetId' : fingerprint;
+        events.add(
+          Activity(
+            id: _jiraIssueActivityUuid.v5(Namespace.url.value, idSeed),
+            userId: owner.id,
+            senderUserId: senderUserId,
+            provider: JiraIssueProvider(
+              issueKey: issueKey,
+              projectKey: projectKey,
+              statusName: statusTrim.isEmpty ? null : statusTrim,
+            ),
+            title: issueTitle,
+            content: bodyParts.join('\n\n'),
+            url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
+            authorName: _authorLine(owner, authorDisplayName),
+            authorAvatarUrl: owner.avatarUrl,
+            commentCount: 0,
+            createdAt: updatedAt.toUtc(),
           ),
-          title: issueTitle,
-          content: bodyParts.join('\n\n'),
-          url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
-          authorName: _authorLine(issueOwner, authorDisplayName),
-          authorAvatarUrl: issueOwner.avatarUrl,
-          commentCount: 0,
-          createdAt: updatedAt.toUtc(),
-        ),
-      );
+        );
+      }
     }
 
     for (final comment in comments) {
@@ -125,31 +142,40 @@ extension OnJiraIssueDto on JiraIssueDto {
           ? null
           : userById[commentUserId];
       final commentUser = mappedCommentUser ?? fallbackUser;
-      if (commentUser == null) continue;
-
-      final cid = _jiraIssueActivityUuid.v5(
-        Namespace.url.value,
-        'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}',
-      );
-      final commentBody = comment.body.trim();
-      events.add(
-        Activity(
-          id: cid,
-          userId: commentUser.id,
-          provider: JiraIssueProvider(
-            issueKey: issueKey,
-            projectKey: projectKey,
-            statusName: statusTrim.isEmpty ? null : statusTrim,
+      final commentTargets = fanOut
+          ? forUserIds.where((id) => id.isNotEmpty)
+          : [if (commentUser != null) commentUser.id];
+      for (final targetId in commentTargets) {
+        final recipient = userById[targetId];
+        if (recipient == null) continue;
+        final cidSeed = fanOut
+            ? 'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}|$targetId'
+            : 'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}';
+        final cid = _jiraIssueActivityUuid.v5(Namespace.url.value, cidSeed);
+        final commentBody = comment.body.trim();
+        events.add(
+          Activity(
+            id: cid,
+            userId: recipient.id,
+            senderUserId: senderUserId ?? comment.dabUserId,
+            provider: JiraIssueProvider(
+              issueKey: issueKey,
+              projectKey: projectKey,
+              statusName: statusTrim.isEmpty ? null : statusTrim,
+            ),
+            title: issueTitle,
+            content: commentBody.isEmpty ? '(no comment body)' : commentBody,
+            url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
+            authorName: _authorLine(
+              mappedCommentUser ?? recipient,
+              comment.authorDisplayName,
+            ),
+            authorAvatarUrl: (mappedCommentUser ?? recipient).avatarUrl,
+            commentCount: 1,
+            createdAt: comment.createdAt.toUtc(),
           ),
-          title: issueTitle,
-          content: commentBody.isEmpty ? '(no comment body)' : commentBody,
-          url: browseUrl.trim().isEmpty ? null : browseUrl.trim(),
-          authorName: _authorLine(commentUser, comment.authorDisplayName),
-          authorAvatarUrl: commentUser.avatarUrl,
-          commentCount: 1,
-          createdAt: comment.createdAt.toUtc(),
-        ),
-      );
+        );
+      }
     }
 
     events.sort((a, b) => b.createdAt.compareTo(a.createdAt));

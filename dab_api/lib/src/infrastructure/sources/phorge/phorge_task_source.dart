@@ -1,7 +1,9 @@
 import 'package:dab_api/src/domain/core/extensions/datetime_extensions.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
+import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
@@ -171,14 +173,37 @@ class PhorgeTaskSource
       'constraints': {
         'phids': [taskPhid],
       },
-      'attachments': {'projects': true},
+      'attachments': {'projects': true, 'subscribers': true},
     });
     final rawTaskData = taskResult['data'] as List<dynamic>?;
-    if (rawTaskData == null || rawTaskData.isEmpty) return null;
-
-    final task = PhorgeTaskDtoMapper.fromMap(
-      rawTaskData.first as Map<String, dynamic>,
-    );
+    PhorgeTaskDto? task;
+    if (rawTaskData != null && rawTaskData.isNotEmpty) {
+      task = PhorgeTaskDtoMapper.fromMap(
+        rawTaskData.first as Map<String, dynamic>,
+      );
+    } else {
+      final revResult = await _conduitCall('differential.revision.search', {
+        'constraints': {
+          'phids': [taskPhid],
+        },
+      });
+      final rawRev = revResult['data'] as List<dynamic>?;
+      if (rawRev == null || rawRev.isEmpty) return null;
+      final rev = PhorgeRevisionDtoMapper.fromMap(
+        rawRev.first as Map<String, dynamic>,
+      );
+      task = PhorgeTaskDto(
+        id: rev.id,
+        phid: rev.phid,
+        fields: PhorgeTaskWireFieldsDto(
+          title: 'D${rev.id}: ${rev.fields.title}',
+          name: 'D${rev.id}: ${rev.fields.title}',
+          uri: rev.fields.uri,
+          ownerPHID: rev.fields.authorPHID,
+          dateModified: rev.fields.dateModified,
+        ),
+      );
+    }
     final sprintTag = transactions.first.dateCreated.phorgeSprintTag;
 
     return PhorgeTaskBundleDto(

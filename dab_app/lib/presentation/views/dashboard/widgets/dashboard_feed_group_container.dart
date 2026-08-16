@@ -18,12 +18,18 @@ class DashboardFeedGroupContainer extends StatelessWidget {
   final DashboardFeedGroup group;
   final void Function(Activity activity)? onArchive;
   final void Function(Activity activity)? onUnarchive;
+  final bool Function(Activity activity)? isFollowing;
+  final void Function(Activity activity)? onFollow;
+  final void Function(Activity activity)? onUnfollow;
 
   const DashboardFeedGroupContainer({
     super.key,
     required this.group,
     this.onArchive,
     this.onUnarchive,
+    this.isFollowing,
+    this.onFollow,
+    this.onUnfollow,
   });
 
   @override
@@ -94,6 +100,9 @@ class DashboardFeedGroupContainer extends StatelessWidget {
                 onUnarchive: activity.archived
                     ? () => onUnarchive?.call(activity)
                     : null,
+                isFollowing: isFollowing?.call(activity) ?? false,
+                onFollow: () => onFollow?.call(activity),
+                onUnfollow: () => onUnfollow?.call(activity),
               ),
         ],
       ),

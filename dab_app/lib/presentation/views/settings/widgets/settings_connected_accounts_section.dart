@@ -59,47 +59,7 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
               onConnect: () => notifier.startOauth(id),
               onDisconnect: () => notifier.disconnect(id),
               jiraPicker:
-                  id == 'jira' && state.forProvider(id)?.isConnected == true
-                  ? _WatchListPicker(
-                      title: l10n.settingsJiraProjectsTitle,
-                      subtitle: l10n.settingsJiraProjectsSubtitle,
-                      empty: l10n.settingsJiraProjectsEmpty,
-                      saveLabel: l10n.settingsJiraProjectsSave,
-                      items: [
-                        for (final p
-                            in state.jiraProjects?.available ?? const [])
-                          (key: p.key, name: p.name),
-                      ],
-                      draftKeys: state.jiraDraftKeys,
-                      loading: state.jiraProjectsLoading,
-                      saving: state.jiraProjectsSaving,
-                      dirty: state.jiraDraftDirty,
-                      hasLoaded: state.jiraProjects != null,
-                      errorMessage: state.jiraError,
-                      onToggle: notifier.toggleJiraProject,
-                      onSave: notifier.saveJiraProjects,
-                    )
-                  : id == 'linear' && state.forProvider(id)?.isConnected == true
-                  ? _WatchListPicker(
-                      title: l10n.settingsLinearTeamsTitle,
-                      subtitle: l10n.settingsLinearTeamsSubtitle,
-                      empty: l10n.settingsLinearTeamsEmpty,
-                      saveLabel: l10n.settingsLinearTeamsSave,
-                      items: [
-                        for (final t
-                            in state.linearTeams?.available ?? const [])
-                          (key: t.key, name: t.name),
-                      ],
-                      draftKeys: state.linearDraftKeys,
-                      loading: state.linearTeamsLoading,
-                      saving: state.linearTeamsSaving,
-                      dirty: state.linearDraftDirty,
-                      hasLoaded: state.linearTeams != null,
-                      errorMessage: state.linearError,
-                      onToggle: notifier.toggleLinearTeam,
-                      onSave: notifier.saveLinearTeams,
-                    )
-                  : null,
+                  _watchPickerFor(id, state, notifier, l10n),
             ),
           for (final id in _tokenProviders)
             _PhorgeTokenCard(
@@ -112,6 +72,83 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
         ],
       ],
     );
+  }
+
+  Widget? _watchPickerFor(
+    String id,
+    ConnectedAccountsState state,
+    ConnectedAccountsNotifier notifier,
+    dynamic l10n,
+  ) {
+    final connected = state.forProvider(id)?.isConnected == true;
+    if (!connected) return null;
+    if (id == 'jira') {
+      return _WatchListPicker(
+        title: l10n.settingsJiraProjectsTitle,
+        subtitle: l10n.settingsJiraProjectsSubtitle,
+        empty: l10n.settingsJiraProjectsEmpty,
+        saveLabel: l10n.settingsJiraProjectsSave,
+        items: [
+          for (final p in state.jiraProjects?.available ?? const [])
+            (key: p.key, name: p.name),
+        ],
+        draftKeys: state.jiraDraftKeys,
+        loading: state.jiraProjectsLoading,
+        saving: state.jiraProjectsSaving,
+        dirty: state.jiraDraftDirty,
+        hasLoaded: state.jiraProjects != null,
+        errorMessage: state.jiraError,
+        onToggle: notifier.toggleJiraProject,
+        onSave: notifier.saveJiraProjects,
+      );
+    }
+    if (id == 'linear') {
+      return _WatchListPicker(
+        title: l10n.settingsLinearTeamsTitle,
+        subtitle: l10n.settingsLinearTeamsSubtitle,
+        empty: l10n.settingsLinearTeamsEmpty,
+        saveLabel: l10n.settingsLinearTeamsSave,
+        items: [
+          for (final t in state.linearTeams?.available ?? const [])
+            (key: t.key, name: t.name),
+        ],
+        draftKeys: state.linearDraftKeys,
+        loading: state.linearTeamsLoading,
+        saving: state.linearTeamsSaving,
+        dirty: state.linearDraftDirty,
+        hasLoaded: state.linearTeams != null,
+        errorMessage: state.linearError,
+        onToggle: notifier.toggleLinearTeam,
+        onSave: notifier.saveLinearTeams,
+      );
+    }
+    if (id == 'github' || id == 'gitlab' || id == 'bitbucket') {
+      final draft = state.gitDraft(id);
+      return _WatchListPicker(
+        title: l10n.settingsGitWatchesTitle,
+        subtitle: l10n.settingsGitWatchesSubtitle,
+        empty: l10n.settingsGitWatchesEmpty,
+        saveLabel: l10n.settingsGitWatchesSave,
+        items: [
+          for (final repo in draft.watch?.available ?? const [])
+            (key: repo.key, name: repo.name),
+        ],
+        draftKeys: draft.draftRepos,
+        loading: draft.loading,
+        saving: draft.saving,
+        dirty: draft.dirty,
+        hasLoaded: draft.hasLoaded,
+        errorMessage: draft.error,
+        onToggle: (key) => notifier.toggleGitRepo(id, key),
+        onSave: () => notifier.saveGitWatches(id),
+        extra: _GitBranchesField(
+          value: draft.draftBranches,
+          hint: l10n.settingsGitWatchesBranchesHint,
+          onChanged: (value) => notifier.setGitDraftBranches(id, value),
+        ),
+      );
+    }
+    return null;
   }
 }
 
@@ -394,6 +431,7 @@ class _WatchListPicker extends StatelessWidget {
   final String? errorMessage;
   final void Function(String key) onToggle;
   final Future<String?> Function() onSave;
+  final Widget? extra;
 
   const _WatchListPicker({
     required this.title,
@@ -409,6 +447,7 @@ class _WatchListPicker extends StatelessWidget {
     this.errorMessage,
     required this.onToggle,
     required this.onSave,
+    this.extra,
   });
 
   @override
@@ -470,6 +509,7 @@ class _WatchListPicker extends StatelessWidget {
                 ),
             ],
           ),
+        if (extra != null) extra!,
         if (dirty) ...[
           const SizedBox(height: 8),
           Align(
@@ -481,6 +521,60 @@ class _WatchListPicker extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _GitBranchesField extends StatefulWidget {
+  final String value;
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  const _GitBranchesField({
+    required this.value,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  @override
+  State<_GitBranchesField> createState() => _GitBranchesFieldState();
+}
+
+class _GitBranchesFieldState extends State<_GitBranchesField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _GitBranchesField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && _controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: widget.hint,
+        ),
+        onChanged: widget.onChanged,
+      ),
     );
   }
 }

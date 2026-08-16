@@ -29,12 +29,18 @@ class DashboardGroupedFeed extends StatelessWidget {
   final List<DashboardFeedGroup> groups;
   final void Function(Activity activity) onArchive;
   final void Function(Activity activity) onUnarchive;
+  final bool Function(Activity activity) isFollowing;
+  final void Function(Activity activity) onFollow;
+  final void Function(Activity activity) onUnfollow;
 
   const DashboardGroupedFeed({
     super.key,
     required this.groups,
     required this.onArchive,
     required this.onUnarchive,
+    required this.isFollowing,
+    required this.onFollow,
+    required this.onUnfollow,
   });
 
   @override
@@ -55,6 +61,9 @@ class DashboardGroupedFeed extends StatelessWidget {
               group: groups[index],
               onArchive: onArchive,
               onUnarchive: onUnarchive,
+              isFollowing: isFollowing,
+              onFollow: onFollow,
+              onUnfollow: onUnfollow,
             );
           },
         );

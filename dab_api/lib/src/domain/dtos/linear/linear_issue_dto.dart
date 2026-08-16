@@ -87,9 +87,14 @@ class LinearIssueCommentDto with LinearIssueCommentDtoMappable {
 /// Issue snapshots and comments are separate rows (unique ids) that share
 /// [LinearIssueProvider.identifier] so Explorer stacks them like Phorge.
 extension OnLinearIssueDto on LinearIssueDto {
-  List<Activity> toActivities(List<User> users) {
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    String? senderUserId,
+  }) {
     final userById = {for (final u in users) u.id: u};
     final events = <Activity>[];
+    final fanOut = forUserIds != null;
 
     final key = identifier.trim();
     if (key.isEmpty) return const [];
@@ -106,32 +111,42 @@ extension OnLinearIssueDto on LinearIssueDto {
         : userById[issueOwnerId];
     final fallbackUser = issueOwner;
 
-    if (includeIssueSnapshot && issueOwner != null) {
-      final bodyParts = <String>[];
-      if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
-      if (urlTrim.isNotEmpty) bodyParts.add(urlTrim);
-      final id = _linearIssueActivityUuid.v5(
-        Namespace.url.value,
-        'linear|$fingerprint',
-      );
-      events.add(
-        Activity(
-          id: id,
-          userId: issueOwner.id,
-          provider: LinearIssueProvider(
-            identifier: key,
-            teamKey: teamKey.trim().isEmpty ? null : teamKey.trim(),
-            statusName: statusTrim.isEmpty ? null : statusTrim,
+    Iterable<String> snapshotTargets() {
+      if (fanOut) return forUserIds.where((id) => id.isNotEmpty);
+      if (issueOwner == null) return const [];
+      return [issueOwner.id];
+    }
+
+    if (includeIssueSnapshot) {
+      for (final targetId in snapshotTargets()) {
+        final owner = userById[targetId];
+        if (owner == null) continue;
+        final bodyParts = <String>[];
+        if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
+        if (urlTrim.isNotEmpty) bodyParts.add(urlTrim);
+        final idSeed = fanOut
+            ? 'linear|$fingerprint|$targetId'
+            : 'linear|$fingerprint';
+        events.add(
+          Activity(
+            id: _linearIssueActivityUuid.v5(Namespace.url.value, idSeed),
+            userId: owner.id,
+            senderUserId: senderUserId,
+            provider: LinearIssueProvider(
+              identifier: key,
+              teamKey: teamKey.trim().isEmpty ? null : teamKey.trim(),
+              statusName: statusTrim.isEmpty ? null : statusTrim,
+            ),
+            title: issueTitle,
+            content: bodyParts.join('\n\n'),
+            url: urlTrim.isEmpty ? null : urlTrim,
+            authorName: _authorLine(owner, authorDisplayName),
+            authorAvatarUrl: owner.avatarUrl,
+            commentCount: 0,
+            createdAt: updatedAt.toUtc(),
           ),
-          title: issueTitle,
-          content: bodyParts.join('\n\n'),
-          url: urlTrim.isEmpty ? null : urlTrim,
-          authorName: _authorLine(issueOwner, authorDisplayName),
-          authorAvatarUrl: issueOwner.avatarUrl,
-          commentCount: 0,
-          createdAt: updatedAt.toUtc(),
-        ),
-      );
+        );
+      }
     }
 
     for (final comment in comments) {
@@ -140,31 +155,39 @@ extension OnLinearIssueDto on LinearIssueDto {
           ? null
           : userById[commentUserId];
       final commentUser = mappedCommentUser ?? fallbackUser;
-      if (commentUser == null) continue;
-
-      final cid = _linearIssueActivityUuid.v5(
-        Namespace.url.value,
-        'linear|$key|comment|${comment.id}',
-      );
-      final commentBody = comment.body.trim();
-      events.add(
-        Activity(
-          id: cid,
-          userId: commentUser.id,
-          provider: LinearIssueProvider(
-            identifier: key,
-            teamKey: teamKey.trim().isEmpty ? null : teamKey.trim(),
-            statusName: statusTrim.isEmpty ? null : statusTrim,
+      final commentTargets = fanOut
+          ? forUserIds.where((id) => id.isNotEmpty)
+          : [if (commentUser != null) commentUser.id];
+      for (final targetId in commentTargets) {
+        final recipient = userById[targetId];
+        if (recipient == null) continue;
+        final cidSeed = fanOut
+            ? 'linear|$key|comment|${comment.id}|$targetId'
+            : 'linear|$key|comment|${comment.id}';
+        final commentBody = comment.body.trim();
+        events.add(
+          Activity(
+            id: _linearIssueActivityUuid.v5(Namespace.url.value, cidSeed),
+            userId: recipient.id,
+            senderUserId: senderUserId ?? comment.dabUserId,
+            provider: LinearIssueProvider(
+              identifier: key,
+              teamKey: teamKey.trim().isEmpty ? null : teamKey.trim(),
+              statusName: statusTrim.isEmpty ? null : statusTrim,
+            ),
+            title: issueTitle,
+            content: commentBody.isEmpty ? '(no comment body)' : commentBody,
+            url: urlTrim.isEmpty ? null : urlTrim,
+            authorName: _authorLine(
+              mappedCommentUser ?? recipient,
+              comment.authorDisplayName,
+            ),
+            authorAvatarUrl: (mappedCommentUser ?? recipient).avatarUrl,
+            commentCount: 1,
+            createdAt: comment.createdAt.toUtc(),
           ),
-          title: issueTitle,
-          content: commentBody.isEmpty ? '(no comment body)' : commentBody,
-          url: urlTrim.isEmpty ? null : urlTrim,
-          authorName: _authorLine(commentUser, comment.authorDisplayName),
-          authorAvatarUrl: commentUser.avatarUrl,
-          commentCount: 1,
-          createdAt: comment.createdAt.toUtc(),
-        ),
-      );
+        );
+      }
     }
 
     events.sort((a, b) => b.createdAt.compareTo(a.createdAt));

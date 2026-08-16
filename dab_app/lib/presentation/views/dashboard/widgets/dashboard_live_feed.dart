@@ -59,6 +59,9 @@ class DashboardLiveFeed extends ConsumerWidget {
         groups: groups,
         onArchive: (activity) => notifier.requestArchive(activity.id),
         onUnarchive: (activity) => notifier.requestUnarchive(activity.id),
+        isFollowing: state.isFollowing,
+        onFollow: notifier.follow,
+        onUnfollow: notifier.unfollow,
       );
     } else if (showEmpty) {
       body = _EmptyLivePlaceholder(
@@ -71,6 +74,9 @@ class DashboardLiveFeed extends ConsumerWidget {
         activities: visibleActivities,
         onArchive: (activity) => notifier.requestArchive(activity.id),
         onUnarchive: (activity) => notifier.requestUnarchive(activity.id),
+        isFollowing: state.isFollowing,
+        onFollow: notifier.follow,
+        onUnfollow: notifier.unfollow,
       );
     }
 

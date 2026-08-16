@@ -1,11 +1,14 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/git_watch_scope.dart';
+import '../../../domain/core/gitlab_scope.dart';
 import '../../../domain/dtos/gitlab/gitlab_commit_dto.dart';
 import '../../../domain/dtos/gitlab/gitlab_commit_mapping.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/contracts/ports/i_credential_resolver.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
@@ -30,6 +33,7 @@ class IngestGitLabWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final ICredentialResolver? _credentials;
 
   IngestGitLabWebhook(
     this._userRepository,
@@ -39,7 +43,9 @@ class IngestGitLabWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    ICredentialResolver? credentials,
+  }) : _credentials = credentials,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -108,6 +114,17 @@ class IngestGitLabWebhook {
       );
     }
 
+    final allowedProjects = {
+      for (final item in gitLabProjects(gitlabConfig.settings))
+        item.toLowerCase(),
+    };
+    if (allowedProjects.isNotEmpty &&
+        !allowedProjects.contains(project.toLowerCase())) {
+      return const Right(
+        GitLabWebhookIngestionResult.ignored('project_not_configured'),
+      );
+    }
+
     final usersResult = await _userRepository.getUsers();
     final users = usersResult.getOrElse((_) => const <User>[]);
     if (users.isEmpty) {
@@ -132,6 +149,13 @@ class IngestGitLabWebhook {
 
     var attributableCommits = 0;
     final toPersist = <Activity>[];
+    final instanceRepos = gitLabProjects(gitlabConfig.settings);
+    final settingsByUser =
+        await _credentials?.getUserSettingsForUsers(
+          userIds: users.map((u) => u.id),
+          providerId: 'gitlab',
+        ) ??
+        {for (final user in users) user.id: <String, dynamic>{}};
     for (final raw in commitsRaw) {
       if (raw is! Map<String, dynamic>) continue;
 
@@ -141,9 +165,23 @@ class IngestGitLabWebhook {
         branch: branch,
         emailToUser: emailToUser,
       );
-      if (dto == null || dto.userId == null) continue;
+      if (dto == null) continue;
+      final watchers = gitInboxWatchers(
+        userSettingsById: settingsByUser,
+        repo: project,
+        branch: branch,
+        instanceRepos: instanceRepos,
+        senderUserId: dto.userId,
+      );
+      if (watchers.isEmpty) continue;
       attributableCommits++;
-      toPersist.addAll(dto.toActivities(users));
+      toPersist.addAll(
+        dto.toActivities(
+          users,
+          forUserIds: watchers,
+          senderUserId: dto.userId,
+        ),
+      );
     }
 
     if (attributableCommits == 0) {

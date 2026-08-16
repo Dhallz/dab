@@ -1,8 +1,11 @@
 import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/system_usecases.dart';
+import 'package:dab_app/domain/containers/user_usecases.dart';
+import 'package:dab_app/domain/core/activity_follow_key.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
+import 'package:dab_app/domain/entities/user/activity_follow.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
@@ -44,6 +47,7 @@ class _TestAppNotifier extends AppNotifier {
 
 void main() {
   late _MockActivityRepository repository;
+  late _MockUserRepository userRepository;
 
   setUpAll(() {
     registerFallbackValue(const ActivitySearchQuery());
@@ -51,10 +55,19 @@ void main() {
 
   setUp(() {
     repository = _MockActivityRepository();
+    userRepository = _MockUserRepository();
     when(
       () => repository.watchActivities(),
     ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => userRepository.listMyActivityFollows(),
+    ).thenAnswer((_) async => const Right(<ActivityFollow>[]));
   });
+
+  DashboardNotifier createNotifier() => DashboardNotifier(
+    ActivityUseCases(repository),
+    UserUseCases(userRepository),
+  );
 
   ProviderContainer containerWithOverrides(
     DashboardNotifier Function() create,
@@ -90,10 +103,7 @@ void main() {
     );
 
     final container = containerWithOverrides(
-      () => DashboardNotifier(
-        ActivityUseCases(repository),
-        isPersonalDeployment: () => false,
-      ),
+        createNotifier,
     );
     final keepAlive = container.listen<DashboardState>(
       dashboardNotifierProvider,
@@ -145,10 +155,7 @@ void main() {
       );
 
       final container = containerWithOverrides(
-        () => DashboardNotifier(
-          ActivityUseCases(repository),
-          isPersonalDeployment: () => false,
-        ),
+        createNotifier,
       );
       final keepAlive = container.listen<DashboardState>(
         dashboardNotifierProvider,
@@ -191,13 +198,11 @@ void main() {
     },
   );
 
-  test(
-    'personal deployment hydrates the team wall with global scope',
-    () async {
+  test('always hydrates the user-scoped inbound inbox', () async {
       when(
         () => repository.getLiveActivities(
           limit: 50,
-          global: true,
+          global: false,
           includeArchived: true,
         ),
       ).thenAnswer(
@@ -216,10 +221,7 @@ void main() {
       );
 
       final container = containerWithOverrides(
-        () => DashboardNotifier(
-          ActivityUseCases(repository),
-          isPersonalDeployment: () => true,
-        ),
+        createNotifier,
       );
       final keepAlive = container.listen<DashboardState>(
         dashboardNotifierProvider,
@@ -235,7 +237,7 @@ void main() {
       verify(
         () => repository.getLiveActivities(
           limit: 50,
-          global: true,
+          global: false,
           includeArchived: true,
         ),
       ).called(1);
@@ -252,10 +254,7 @@ void main() {
     ).thenAnswer((_) async => Right(<Activity>[]));
 
     final container = containerWithOverrides(
-      () => DashboardNotifier(
-        ActivityUseCases(repository),
-        isPersonalDeployment: () => false,
-      ),
+        createNotifier,
     );
     final keepAlive = container.listen<DashboardState>(
       dashboardNotifierProvider,
@@ -290,5 +289,119 @@ void main() {
         includeArchived: true,
       ),
     ).called(1);
+  });
+
+  test('hydrates Follow pins and follow/unfollow updates local refs', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer(
+      (_) async => Right([
+        Activity(
+          id: 'a-1',
+          userId: 'u-1',
+          provider: const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1'),
+          title: '[T1] Task',
+          content: 'comment',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
+        ),
+      ]),
+    );
+    when(() => userRepository.listMyActivityFollows()).thenAnswer(
+      (_) async => const Right([
+        ActivityFollow(providerId: 'phorge', objectKey: 'PHID-TASK-1'),
+      ]),
+    );
+    when(
+      () => userRepository.deleteMyActivityFollow(
+        providerId: any(named: 'providerId'),
+        objectKey: any(named: 'objectKey'),
+      ),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => userRepository.saveMyActivityFollow(
+        providerId: any(named: 'providerId'),
+        objectKey: any(named: 'objectKey'),
+      ),
+    ).thenAnswer(
+      (_) async => const Right(
+        ActivityFollow(providerId: 'phorge', objectKey: 'PHID-TASK-1'),
+      ),
+    );
+
+    final container = containerWithOverrides(createNotifier);
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    final notifier = container.read(dashboardNotifierProvider.notifier);
+    var state = container.read(dashboardNotifierProvider);
+    expect(
+      state.followedObjectRefs,
+      [followObjectRef('phorge', 'PHID-TASK-1')],
+    );
+    expect(state.isFollowing(state.activities.first), isTrue);
+
+    await notifier.unfollow(state.activities.first);
+    state = container.read(dashboardNotifierProvider);
+    expect(state.isFollowing(state.activities.first), isFalse);
+
+    await notifier.follow(state.activities.first);
+    state = container.read(dashboardNotifierProvider);
+    expect(state.isFollowing(state.activities.first), isTrue);
+  });
+
+  test('follow is a no-op for git commit cards', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer(
+      (_) async => Right([
+        Activity(
+          id: 'commit-1',
+          userId: 'u-1',
+          provider: const GitHubCommitProvider(repo: 'acme/app', branch: 'main'),
+          title: 'Fix login',
+          content: 'sha',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
+        ),
+      ]),
+    );
+
+    final container = containerWithOverrides(createNotifier);
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+
+    final notifier = container.read(dashboardNotifierProvider.notifier);
+    final activity = container.read(dashboardNotifierProvider).activities.first;
+    expect(followObjectKeyFor(activity.provider), isNull);
+    await notifier.follow(activity);
+    verifyNever(
+      () => userRepository.saveMyActivityFollow(
+        providerId: any(named: 'providerId'),
+        objectKey: any(named: 'objectKey'),
+      ),
+    );
   });
 }

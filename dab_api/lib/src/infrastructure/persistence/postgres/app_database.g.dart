@@ -660,6 +660,17 @@ class $ActivitiesTableTable extends ActivitiesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _senderUserIdMeta = const VerificationMeta(
+    'senderUserId',
+  );
+  @override
+  late final GeneratedColumn<String> senderUserId = GeneratedColumn<String>(
+    'sender_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _providerNameMeta = const VerificationMeta(
     'providerName',
   );
@@ -750,6 +761,7 @@ class $ActivitiesTableTable extends ActivitiesTable
   List<GeneratedColumn> get $columns => [
     id,
     userId,
+    senderUserId,
     providerName,
     title,
     content,
@@ -783,6 +795,15 @@ class $ActivitiesTableTable extends ActivitiesTable
       );
     } else if (isInserting) {
       context.missing(_userIdMeta);
+    }
+    if (data.containsKey('sender_user_id')) {
+      context.handle(
+        _senderUserIdMeta,
+        senderUserId.isAcceptableOrUnknown(
+          data['sender_user_id']!,
+          _senderUserIdMeta,
+        ),
+      );
     }
     if (data.containsKey('provider_name')) {
       context.handle(
@@ -868,6 +889,10 @@ class $ActivitiesTableTable extends ActivitiesTable
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
+      senderUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sender_user_id'],
+      ),
       providerName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}provider_name'],
@@ -913,6 +938,7 @@ class ActivitiesTableData extends DataClass
     implements Insertable<ActivitiesTableData> {
   final String id;
   final String userId;
+  final String? senderUserId;
   final String providerName;
   final String title;
   final String content;
@@ -924,6 +950,7 @@ class ActivitiesTableData extends DataClass
   const ActivitiesTableData({
     required this.id,
     required this.userId,
+    this.senderUserId,
     required this.providerName,
     required this.title,
     required this.content,
@@ -938,6 +965,9 @@ class ActivitiesTableData extends DataClass
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['user_id'] = Variable<String>(userId);
+    if (!nullToAbsent || senderUserId != null) {
+      map['sender_user_id'] = Variable<String>(senderUserId);
+    }
     map['provider_name'] = Variable<String>(providerName);
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
@@ -960,6 +990,9 @@ class ActivitiesTableData extends DataClass
     return ActivitiesTableCompanion(
       id: Value(id),
       userId: Value(userId),
+      senderUserId: senderUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(senderUserId),
       providerName: Value(providerName),
       title: Value(title),
       content: Value(content),
@@ -981,6 +1014,7 @@ class ActivitiesTableData extends DataClass
     return ActivitiesTableData(
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String>(json['userId']),
+      senderUserId: serializer.fromJson<String?>(json['senderUserId']),
       providerName: serializer.fromJson<String>(json['providerName']),
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
@@ -997,6 +1031,7 @@ class ActivitiesTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String>(userId),
+      'senderUserId': serializer.toJson<String?>(senderUserId),
       'providerName': serializer.toJson<String>(providerName),
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
@@ -1011,6 +1046,7 @@ class ActivitiesTableData extends DataClass
   ActivitiesTableData copyWith({
     String? id,
     String? userId,
+    Value<String?> senderUserId = const Value.absent(),
     String? providerName,
     String? title,
     String? content,
@@ -1022,6 +1058,7 @@ class ActivitiesTableData extends DataClass
   }) => ActivitiesTableData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
+    senderUserId: senderUserId.present ? senderUserId.value : this.senderUserId,
     providerName: providerName ?? this.providerName,
     title: title ?? this.title,
     content: content ?? this.content,
@@ -1037,6 +1074,9 @@ class ActivitiesTableData extends DataClass
     return ActivitiesTableData(
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
+      senderUserId: data.senderUserId.present
+          ? data.senderUserId.value
+          : this.senderUserId,
       providerName: data.providerName.present
           ? data.providerName.value
           : this.providerName,
@@ -1061,6 +1101,7 @@ class ActivitiesTableData extends DataClass
     return (StringBuffer('ActivitiesTableData(')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
+          ..write('senderUserId: $senderUserId, ')
           ..write('providerName: $providerName, ')
           ..write('title: $title, ')
           ..write('content: $content, ')
@@ -1077,6 +1118,7 @@ class ActivitiesTableData extends DataClass
   int get hashCode => Object.hash(
     id,
     userId,
+    senderUserId,
     providerName,
     title,
     content,
@@ -1092,6 +1134,7 @@ class ActivitiesTableData extends DataClass
       (other is ActivitiesTableData &&
           other.id == this.id &&
           other.userId == this.userId &&
+          other.senderUserId == this.senderUserId &&
           other.providerName == this.providerName &&
           other.title == this.title &&
           other.content == this.content &&
@@ -1105,6 +1148,7 @@ class ActivitiesTableData extends DataClass
 class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   final Value<String> id;
   final Value<String> userId;
+  final Value<String?> senderUserId;
   final Value<String> providerName;
   final Value<String> title;
   final Value<String> content;
@@ -1117,6 +1161,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   const ActivitiesTableCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
+    this.senderUserId = const Value.absent(),
     this.providerName = const Value.absent(),
     this.title = const Value.absent(),
     this.content = const Value.absent(),
@@ -1130,6 +1175,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   ActivitiesTableCompanion.insert({
     required String id,
     required String userId,
+    this.senderUserId = const Value.absent(),
     required String providerName,
     required String title,
     required String content,
@@ -1149,6 +1195,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   static Insertable<ActivitiesTableData> custom({
     Expression<String>? id,
     Expression<String>? userId,
+    Expression<String>? senderUserId,
     Expression<String>? providerName,
     Expression<String>? title,
     Expression<String>? content,
@@ -1162,6 +1209,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
+      if (senderUserId != null) 'sender_user_id': senderUserId,
       if (providerName != null) 'provider_name': providerName,
       if (title != null) 'title': title,
       if (content != null) 'content': content,
@@ -1177,6 +1225,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
   ActivitiesTableCompanion copyWith({
     Value<String>? id,
     Value<String>? userId,
+    Value<String?>? senderUserId,
     Value<String>? providerName,
     Value<String>? title,
     Value<String>? content,
@@ -1190,6 +1239,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     return ActivitiesTableCompanion(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      senderUserId: senderUserId ?? this.senderUserId,
       providerName: providerName ?? this.providerName,
       title: title ?? this.title,
       content: content ?? this.content,
@@ -1210,6 +1260,9 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     }
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
+    }
+    if (senderUserId.present) {
+      map['sender_user_id'] = Variable<String>(senderUserId.value);
     }
     if (providerName.present) {
       map['provider_name'] = Variable<String>(providerName.value);
@@ -1249,6 +1302,7 @@ class ActivitiesTableCompanion extends UpdateCompanion<ActivitiesTableData> {
     return (StringBuffer('ActivitiesTableCompanion(')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
+          ..write('senderUserId: $senderUserId, ')
           ..write('providerName: $providerName, ')
           ..write('title: $title, ')
           ..write('content: $content, ')
@@ -6354,6 +6408,441 @@ class UserProviderCredentialsTableCompanion
   }
 }
 
+class $ActivityFollowsTableTable extends ActivityFollowsTable
+    with TableInfo<$ActivityFollowsTableTable, ActivityFollowsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityFollowsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES users(id) ON DELETE CASCADE',
+  );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  @override
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _objectKeyMeta = const VerificationMeta(
+    'objectKey',
+  );
+  @override
+  late final GeneratedColumn<String> objectKey = GeneratedColumn<String>(
+    'object_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+        defaultValue: now(),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    providerId,
+    objectKey,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_follows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityFollowsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerIdMeta);
+    }
+    if (data.containsKey('object_key')) {
+      context.handle(
+        _objectKeyMeta,
+        objectKey.isAcceptableOrUnknown(data['object_key']!, _objectKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_objectKeyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {userId, providerId, objectKey},
+  ];
+  @override
+  ActivityFollowsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityFollowsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      )!,
+      objectKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}object_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityFollowsTableTable createAlias(String alias) {
+    return $ActivityFollowsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityFollowsTableData extends DataClass
+    implements Insertable<ActivityFollowsTableData> {
+  final String id;
+  final String userId;
+  final String providerId;
+  final String objectKey;
+  final PgDateTime createdAt;
+  final PgDateTime? updatedAt;
+  const ActivityFollowsTableData({
+    required this.id,
+    required this.userId,
+    required this.providerId,
+    required this.objectKey,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['provider_id'] = Variable<String>(providerId);
+    map['object_key'] = Variable<String>(objectKey);
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    return map;
+  }
+
+  ActivityFollowsTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityFollowsTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      providerId: Value(providerId),
+      objectKey: Value(objectKey),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory ActivityFollowsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityFollowsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      providerId: serializer.fromJson<String>(json['providerId']),
+      objectKey: serializer.fromJson<String>(json['objectKey']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'providerId': serializer.toJson<String>(providerId),
+      'objectKey': serializer.toJson<String>(objectKey),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+    };
+  }
+
+  ActivityFollowsTableData copyWith({
+    String? id,
+    String? userId,
+    String? providerId,
+    String? objectKey,
+    PgDateTime? createdAt,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+  }) => ActivityFollowsTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    providerId: providerId ?? this.providerId,
+    objectKey: objectKey ?? this.objectKey,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  ActivityFollowsTableData copyWithCompanion(
+    ActivityFollowsTableCompanion data,
+  ) {
+    return ActivityFollowsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
+      objectKey: data.objectKey.present ? data.objectKey.value : this.objectKey,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityFollowsTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('providerId: $providerId, ')
+          ..write('objectKey: $objectKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, providerId, objectKey, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityFollowsTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.providerId == this.providerId &&
+          other.objectKey == this.objectKey &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ActivityFollowsTableCompanion
+    extends UpdateCompanion<ActivityFollowsTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> providerId;
+  final Value<String> objectKey;
+  final Value<PgDateTime> createdAt;
+  final Value<PgDateTime?> updatedAt;
+  final Value<int> rowid;
+  const ActivityFollowsTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.objectKey = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityFollowsTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String providerId,
+    required String objectKey,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       providerId = Value(providerId),
+       objectKey = Value(objectKey);
+  static Insertable<ActivityFollowsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? providerId,
+    Expression<String>? objectKey,
+    Expression<PgDateTime>? createdAt,
+    Expression<PgDateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (providerId != null) 'provider_id': providerId,
+      if (objectKey != null) 'object_key': objectKey,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityFollowsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? providerId,
+    Value<String>? objectKey,
+    Value<PgDateTime>? createdAt,
+    Value<PgDateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ActivityFollowsTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      providerId: providerId ?? this.providerId,
+      objectKey: objectKey ?? this.objectKey,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
+    if (objectKey.present) {
+      map['object_key'] = Variable<String>(objectKey.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityFollowsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('providerId: $providerId, ')
+          ..write('objectKey: $objectKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SystemSettingsTableTable extends SystemSettingsTable
     with TableInfo<$SystemSettingsTableTable, SystemSettingsTableData> {
   @override
@@ -6600,8 +7089,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $UserIdentitiesTableTable(this);
   late final $UserProviderCredentialsTableTable userProviderCredentialsTable =
       $UserProviderCredentialsTableTable(this);
+  late final $ActivityFollowsTableTable activityFollowsTable =
+      $ActivityFollowsTableTable(this);
   late final $SystemSettingsTableTable systemSettingsTable =
       $SystemSettingsTableTable(this);
+  late final Index idxActivityFollowsObject = Index(
+    'idx_activity_follows_object',
+    'CREATE INDEX idx_activity_follows_object ON activity_follows (provider_id, object_key)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6623,7 +7118,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     providerConfigsTable,
     userIdentitiesTable,
     userProviderCredentialsTable,
+    activityFollowsTable,
     systemSettingsTable,
+    idxActivityFollowsObject,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7122,6 +7619,7 @@ typedef $$ActivitiesTableTableCreateCompanionBuilder =
     ActivitiesTableCompanion Function({
       required String id,
       required String userId,
+      Value<String?> senderUserId,
       required String providerName,
       required String title,
       required String content,
@@ -7136,6 +7634,7 @@ typedef $$ActivitiesTableTableUpdateCompanionBuilder =
     ActivitiesTableCompanion Function({
       Value<String> id,
       Value<String> userId,
+      Value<String?> senderUserId,
       Value<String> providerName,
       Value<String> title,
       Value<String> content,
@@ -7400,6 +7899,11 @@ class $$ActivitiesTableTableFilterComposer
 
   ColumnFilters<String> get userId => $composableBuilder(
     column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get senderUserId => $composableBuilder(
+    column: $table.senderUserId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7680,6 +8184,11 @@ class $$ActivitiesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get senderUserId => $composableBuilder(
+    column: $table.senderUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get providerName => $composableBuilder(
     column: $table.providerName,
     builder: (column) => ColumnOrderings(column),
@@ -7735,6 +8244,11 @@ class $$ActivitiesTableTableAnnotationComposer
 
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get senderUserId => $composableBuilder(
+    column: $table.senderUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get providerName => $composableBuilder(
     column: $table.providerName,
@@ -8028,6 +8542,7 @@ class $$ActivitiesTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> userId = const Value.absent(),
+                Value<String?> senderUserId = const Value.absent(),
                 Value<String> providerName = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> content = const Value.absent(),
@@ -8040,6 +8555,7 @@ class $$ActivitiesTableTableTableManager
               }) => ActivitiesTableCompanion(
                 id: id,
                 userId: userId,
+                senderUserId: senderUserId,
                 providerName: providerName,
                 title: title,
                 content: content,
@@ -8054,6 +8570,7 @@ class $$ActivitiesTableTableTableManager
               ({
                 required String id,
                 required String userId,
+                Value<String?> senderUserId = const Value.absent(),
                 required String providerName,
                 required String title,
                 required String content,
@@ -8066,6 +8583,7 @@ class $$ActivitiesTableTableTableManager
               }) => ActivitiesTableCompanion.insert(
                 id: id,
                 userId: userId,
+                senderUserId: senderUserId,
                 providerName: providerName,
                 title: title,
                 content: content,
@@ -12621,6 +13139,243 @@ typedef $$UserProviderCredentialsTableTableProcessedTableManager =
       UserProviderCredentialsTableData,
       PrefetchHooks Function()
     >;
+typedef $$ActivityFollowsTableTableCreateCompanionBuilder =
+    ActivityFollowsTableCompanion Function({
+      required String id,
+      required String userId,
+      required String providerId,
+      required String objectKey,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ActivityFollowsTableTableUpdateCompanionBuilder =
+    ActivityFollowsTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> providerId,
+      Value<String> objectKey,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$ActivityFollowsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityFollowsTableTable> {
+  $$ActivityFollowsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get objectKey => $composableBuilder(
+    column: $table.objectKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ActivityFollowsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityFollowsTableTable> {
+  $$ActivityFollowsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get objectKey => $composableBuilder(
+    column: $table.objectKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ActivityFollowsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityFollowsTableTable> {
+  $$ActivityFollowsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get objectKey =>
+      $composableBuilder(column: $table.objectKey, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$ActivityFollowsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityFollowsTableTable,
+          ActivityFollowsTableData,
+          $$ActivityFollowsTableTableFilterComposer,
+          $$ActivityFollowsTableTableOrderingComposer,
+          $$ActivityFollowsTableTableAnnotationComposer,
+          $$ActivityFollowsTableTableCreateCompanionBuilder,
+          $$ActivityFollowsTableTableUpdateCompanionBuilder,
+          (
+            ActivityFollowsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $ActivityFollowsTableTable,
+              ActivityFollowsTableData
+            >,
+          ),
+          ActivityFollowsTableData,
+          PrefetchHooks Function()
+        > {
+  $$ActivityFollowsTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityFollowsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityFollowsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ActivityFollowsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityFollowsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> providerId = const Value.absent(),
+                Value<String> objectKey = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityFollowsTableCompanion(
+                id: id,
+                userId: userId,
+                providerId: providerId,
+                objectKey: objectKey,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String providerId,
+                required String objectKey,
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityFollowsTableCompanion.insert(
+                id: id,
+                userId: userId,
+                providerId: providerId,
+                objectKey: objectKey,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ActivityFollowsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityFollowsTableTable,
+      ActivityFollowsTableData,
+      $$ActivityFollowsTableTableFilterComposer,
+      $$ActivityFollowsTableTableOrderingComposer,
+      $$ActivityFollowsTableTableAnnotationComposer,
+      $$ActivityFollowsTableTableCreateCompanionBuilder,
+      $$ActivityFollowsTableTableUpdateCompanionBuilder,
+      (
+        ActivityFollowsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityFollowsTableTable,
+          ActivityFollowsTableData
+        >,
+      ),
+      ActivityFollowsTableData,
+      PrefetchHooks Function()
+    >;
 typedef $$SystemSettingsTableTableCreateCompanionBuilder =
     SystemSettingsTableCompanion Function({
       required String key,
@@ -12843,6 +13598,8 @@ class $AppDatabaseManager {
         _db,
         _db.userProviderCredentialsTable,
       );
+  $$ActivityFollowsTableTableTableManager get activityFollowsTable =>
+      $$ActivityFollowsTableTableTableManager(_db, _db.activityFollowsTable);
   $$SystemSettingsTableTableTableManager get systemSettingsTable =>
       $$SystemSettingsTableTableTableManager(_db, _db.systemSettingsTable);
 }

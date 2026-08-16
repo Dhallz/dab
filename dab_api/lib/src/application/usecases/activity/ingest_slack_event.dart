@@ -3,18 +3,22 @@ import 'dart:convert';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/live_inbox_targets.dart';
 import '../../../domain/dtos/slack/slack_message_dto.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -29,6 +33,7 @@ class IngestSlackEvent {
   final ILiveFeedStore _liveFeed;
   final http.Client _httpClient;
   final LiveIngestPersister _persister;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestSlackEvent(
     this._userRepository,
@@ -39,7 +44,9 @@ class IngestSlackEvent {
     http.Client? httpClient,
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
+    AbsIActivityFollowRepository? follows,
   }) : _httpClient = httpClient ?? http.Client(),
+       _follows = follows,
        _persister =
            persister ??
            LiveIngestPersister(
@@ -200,16 +207,40 @@ class IngestSlackEvent {
         usernamesBySlackId[normalizedSlackUserId] ??
         senderIdentity?.externalUsername?.trim() ??
         slackUserId;
+    final senderUserId = senderIdentity?.userId;
     final recipientUserIds = <String>{};
     final mentionedSlackIds = _extractSlackUserMentions(text);
-    for (final mentionedSlackId in mentionedSlackIds) {
-      final recipientIdentity = linkedIdentityBySlackId[mentionedSlackId];
-      if (recipientIdentity != null) {
-        recipientUserIds.add(recipientIdentity.userId);
-      }
-    }
+    recipientUserIds.addAll(
+      liveInboxTargets(
+        externalIds: mentionedSlackIds,
+        externalToUser: {
+          for (final entry in linkedIdentityBySlackId.entries)
+            entry.key: entry.value.userId,
+        },
+      ),
+    );
     if (_containsBroadcastMention(text)) {
-      recipientUserIds.addAll(linkedUserIds);
+      recipientUserIds.addAll(
+        liveInboxBroadcastTargets(
+          linkedUserIds: linkedUserIds,
+          senderUserId: senderUserId,
+        ),
+      );
+    }
+    final slackFollowKey = slackFollowObjectKey(
+      workspaceId: teamId,
+      channelId: channelId,
+      threadTs: threadTs,
+      messageTs: ts,
+    );
+    if (slackFollowKey != null) {
+      recipientUserIds.addAll(
+        await inboxFollowerUserIds(
+          _follows,
+          providerId: 'slack',
+          objectKeys: [slackFollowKey],
+        ),
+      );
     }
     if (recipientUserIds.isEmpty) {
       return const Right(
@@ -240,6 +271,7 @@ class IngestSlackEvent {
       activities: dto.toActivities(
         users,
         forUserIds: recipientUserIds,
+        senderUserId: senderUserId,
       ),
       providerId: 'slack',
       emptyReason: 'duplicate_activity',

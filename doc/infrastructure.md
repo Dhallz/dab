@@ -51,7 +51,7 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 ### Schema Overview
 
 ```
-activities                  ← Base table: id, userId, providerName, title, content, author, createdAt
+activities                  ← Base table: id, userId (recipient), senderUserId, providerName, title, content, author, createdAt
   └── activity_phorge            ← Phorge metadata: taskPhid, revisionId, tags
   └── activity_github_commit    ← GitHub commit metadata: repo, branch
   └── activity_gitlab_commit    ← GitLab commit metadata: project, branch
@@ -60,6 +60,8 @@ activities                  ← Base table: id, userId, providerName, title, con
   └── activity_linear_issue     ← Linear issue metadata: identifier, teamKey, status
   └── activity_slack_message    ← Slack metadata: workspaceId, channelId, threadTs, messageTs
   └── activity_discord_message  ← Discord metadata: guildId, channelId, messageId, replyToId
+
+activity_follows            ← Per-user Follow pins: userId, providerId, objectKey
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -82,6 +84,7 @@ activities                  ← Base table: id, userId, providerName, title, con
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
+| `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Indexed `(provider_id, object_key)` for ingest lookup. Schema version 19. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |
@@ -124,15 +127,19 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 
 | Redis Key | Type | Use Case |
 |---|---|---|
-| `activities:global` | LIST | Rolling dashboard feed (last 500 items) |
-| `activities:user:{id}` | LIST | Personal activity feed (last 100 items) |
+| `activities:global` | LIST | Rolling ingest copy (not used by Dashboard hydrate) |
+| `activities:user:{id}` | LIST | Personal inbound inbox (last 100 items); Dashboard hydrate + archive flags |
 | `activities:date:{yyyy-mm-dd}` | ZSET | Temporal sharding for date-range queries |
 | `insights:stats:{yyyy-mm-dd}` | HASH | Real-time counts per provider category |
 | `insights:rankings:{yyyy-mm-dd}:{category}` | ZSET | Category leaderboard by contribution |
 | `insights:rankings:{yyyy-mm-dd}:total` | ZSET | Global team leaderboard by contribution |
 | `dab:stream:events` | STREAM | Raw provider event ingestion stream |
 
-The **dashboard** `GET /activities/live` response is built exclusively from Redis live keys (`activities:global` and `activities:user:{id}`); it never queries Postgres. Explorer uses **`GET /activities/search`**, which aggregates **provider APIs via `UnifiedActivityFetcher`** (no Postgres in that handler).
+The **dashboard** `GET /activities/live` response is built exclusively from the
+signed-in user's Redis inbox (`activities:user:{id}`); it never queries Postgres
+and does not use `scope=global`. Explorer uses **`GET /activities/search`**,
+which aggregates **provider APIs via `UnifiedActivityFetcher`** (no Postgres in
+that handler).
 
 Live events reach these keys through provider push receivers: Slack Events API
 (`POST /integrations/slack/events`), signed push webhooks for GitHub, GitLab,

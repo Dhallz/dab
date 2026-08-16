@@ -6,6 +6,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
@@ -26,6 +27,8 @@ class _MockProviderConfigRepository extends Mock
 class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
+
+class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
 
 void main() {
   late _MockUserRepository userRepository;
@@ -73,8 +76,8 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  test('ingests linked Slack message callback', () async {
-    final user = User(
+  test('ingests linked Slack mention for a recipient other than the sender', () async {
+    final sender = User(
       id: 'u-1',
       name: 'Alice',
       email: 'alice@example.com',
@@ -82,12 +85,29 @@ void main() {
       role: UserRole.standard,
       createdAt: DateTime.utc(2026, 1, 1),
     );
-    final identity = UserIdentity(
+    final recipient = User(
+      id: 'u-2',
+      name: 'Bob',
+      email: 'bob@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final senderIdentity = UserIdentity(
       id: 'i-1',
       userId: 'u-1',
       providerId: 'slack',
       externalId: 'U123',
       externalUsername: 'alice.slack',
+      status: UserIdentityStatus.linked,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final recipientIdentity = UserIdentity(
+      id: 'i-2',
+      userId: 'u-2',
+      providerId: 'slack',
+      externalId: 'U456',
+      externalUsername: 'bob.slack',
       status: UserIdentityStatus.linked,
       createdAt: DateTime.utc(2026, 1, 1),
     );
@@ -107,10 +127,10 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([sender, recipient]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), 'slack'),
-    ).thenAnswer((_) async => Right([identity]));
+    ).thenAnswer((_) async => Right([senderIdentity, recipientIdentity]));
     when(
       () => activityRepository.createActivity(any()),
     ).thenAnswer((_) async => const Right(null));
@@ -125,7 +145,7 @@ void main() {
         'type': 'message',
         'user': 'U123',
         'channel': 'C1',
-        'text': '<@U123> hello',
+        'text': '<@U456> hello',
         'ts': '1712950000.100000',
       },
     });
@@ -138,17 +158,90 @@ void main() {
     final captured =
         verify(() => activityRepository.createActivity(captureAny())).captured
             .single as Activity;
-    expect(captured.userId, 'u-1');
+    expect(captured.userId, 'u-2');
+    expect(captured.senderUserId, 'u-1');
     expect(
       captured.id,
       const Uuid().v5(
         Namespace.url.value,
-        'slack-T1-C1-1712950000.100000-u-1',
+        'slack-T1-C1-1712950000.100000-u-2',
       ),
     );
     expect(captured.url, 'https://slack.com/archives/C1/p1712950000100000');
     expect(captured.authorName, 'Alice');
     verify(() => redisService.fanOutActivity(any())).called(1);
+  });
+
+  test('ingests a self-mention so the sender still receives the inbox row', () async {
+    final sender = User(
+      id: 'u-1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final senderIdentity = UserIdentity(
+      id: 'i-1',
+      userId: 'u-1',
+      providerId: 'slack',
+      externalId: 'U123',
+      externalUsername: 'alice.slack',
+      status: UserIdentityStatus.linked,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final config = ProviderConfig(
+      id: 'slack',
+      name: 'Slack',
+      baseUrl: 'https://slack.com',
+      isActive: true,
+      settings: const {'signingSecret': 'secret'},
+    );
+
+    when(
+      () => redisService.reserveSlackEventId('EvSelf'),
+    ).thenAnswer((_) async => true);
+    when(
+      () => providerConfigRepository.getConfigs(),
+    ).thenAnswer((_) async => Right([config]));
+    when(
+      () => userRepository.getUsers(),
+    ).thenAnswer((_) async => Right([sender]));
+    when(
+      () => userRepository.getIdentitiesForUsersAndProvider(any(), 'slack'),
+    ).thenAnswer((_) async => Right([senderIdentity]));
+    when(
+      () => activityRepository.createActivity(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => redisService.incrementVersion()).thenAnswer((_) async => 1);
+    when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
+
+    final result = await useCase.execute({
+      'type': 'event_callback',
+      'event_id': 'EvSelf',
+      'team_id': 'T1',
+      'event': {
+        'type': 'message',
+        'user': 'U123',
+        'channel': 'C1',
+        'text': '<@U123> note to self',
+        'ts': '1712950000.500000',
+      },
+    });
+
+    expect(result.isRight(), isTrue);
+    final summary = result.getOrElse(
+      (_) => const SlackEventIngestionResult.ignored('x'),
+    );
+    expect(summary.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny())).captured
+            .single as Activity;
+    expect(captured.userId, 'u-1');
+    expect(captured.senderUserId, 'u-1');
+    verify(
+      () => presenceService.broadcastToUser('u-1', 'ACTIVITY_RECEIVED', any()),
+    ).called(1);
   });
 
   test('ignores duplicate event id', () async {
@@ -288,7 +381,7 @@ void main() {
       'team_id': 'T1',
       'event': {
         'type': 'message',
-        'user': 'U123',
+        'user': 'U999',
         'channel': 'C9',
         'text': '<@U123> case-insensitive id match',
         'ts': '1712950000.300000',
@@ -307,7 +400,7 @@ void main() {
             ).captured.single
             as Activity;
     expect(capturedActivity.userId, user.id);
-    expect(capturedActivity.authorName, 'Bob');
+    expect(capturedActivity.senderUserId, isNull);
   });
 
   test('broadcast mention fans out to all linked users', () async {
@@ -392,24 +485,105 @@ void main() {
     final captured = verify(
       () => activityRepository.createActivity(captureAny()),
     ).captured.cast<Activity>();
-    expect(captured, hasLength(2));
-    expect(captured.map((a) => a.userId).toSet(), {'u-1', 'u-2'});
+    expect(captured, hasLength(1));
+    expect(captured.map((a) => a.userId).toSet(), {'u-2'});
+    expect(captured.single.senderUserId, 'u-1');
     expect(
       captured.map((a) => a.id).toSet(),
       {
-        const Uuid().v5(
-          Namespace.url.value,
-          'slack-T1-C9-1712950000.400000-u-1',
-        ),
         const Uuid().v5(
           Namespace.url.value,
           'slack-T1-C9-1712950000.400000-u-2',
         ),
       },
     );
-    verify(() => redisService.fanOutActivity(any())).called(2);
+    verify(() => redisService.fanOutActivity(any())).called(1);
     verify(
       () => presenceService.broadcastToUser(any(), any(), any()),
-    ).called(2);
+    ).called(1);
+  });
+
+  test('persists an untagged thread message for followers including the sender', () async {
+    final sender = User(
+      id: 'u-1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final senderIdentity = UserIdentity(
+      id: 'i-1',
+      userId: 'u-1',
+      providerId: 'slack',
+      externalId: 'U123',
+      externalUsername: 'alice.slack',
+      status: UserIdentityStatus.linked,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final config = ProviderConfig(
+      id: 'slack',
+      name: 'Slack',
+      baseUrl: 'https://slack.com',
+      isActive: true,
+      settings: const {'signingSecret': 'secret'},
+    );
+    final follows = _MockFollows();
+    when(
+      () => follows.userIdsFor(
+        providerId: 'slack',
+        objectKey: 'T1|C1|1712950000.900000',
+      ),
+    ).thenAnswer((_) async => const Right(['u-1']));
+    useCase = IngestSlackEvent(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+      follows: follows,
+    );
+    when(
+      () => redisService.reserveSlackEventId('EvFollow'),
+    ).thenAnswer((_) async => true);
+    when(
+      () => providerConfigRepository.getConfigs(),
+    ).thenAnswer((_) async => Right([config]));
+    when(
+      () => userRepository.getUsers(),
+    ).thenAnswer((_) async => Right([sender]));
+    when(
+      () => userRepository.getIdentitiesForUsersAndProvider(any(), 'slack'),
+    ).thenAnswer((_) async => Right([senderIdentity]));
+    when(
+      () => activityRepository.createActivity(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => redisService.incrementVersion()).thenAnswer((_) async => 1);
+    when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
+
+    final result = await useCase.execute({
+      'type': 'event_callback',
+      'event_id': 'EvFollow',
+      'team_id': 'T1',
+      'event': {
+        'type': 'message',
+        'user': 'U123',
+        'channel': 'C1',
+        'text': 'Working on this',
+        'ts': '1712950000.900000',
+      },
+    });
+
+    expect(result.isRight(), isTrue);
+    final summary = result.getOrElse(
+      (_) => const SlackEventIngestionResult.ignored('x'),
+    );
+    expect(summary.ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-1');
+    expect(captured.senderUserId, 'u-1');
   });
 }

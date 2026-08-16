@@ -1,4 +1,5 @@
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activities_table.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_follows_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_bitbucket_commit_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_discord_message_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_github_commit_table.dart';
@@ -39,6 +40,7 @@ part 'app_database.g.dart';
     ProviderConfigsTable,
     UserIdentitiesTable,
     UserProviderCredentialsTable,
+    ActivityFollowsTable,
     SystemSettingsTable,
   ],
 )
@@ -46,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -218,6 +220,12 @@ ON CONFLICT (id) DO NOTHING;
       }
       if (from < 17) {
         await m.createTable(userProviderCredentialsTable);
+      }
+      if (from < 18) {
+        await m.addColumn(activitiesTable, activitiesTable.senderUserId);
+      }
+      if (from < 19) {
+        await m.createTable(activityFollowsTable);
       }
     },
     beforeOpen: (details) async {

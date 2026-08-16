@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/containers/activity_usecases.dart';
+import '../../../domain/containers/user_usecases.dart';
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../services/service_locator.dart';
@@ -17,7 +19,7 @@ import 'models/dashboard_provider_health.dart';
 /// CONTRACT: Subscribes to the activity WS stream; delegates I/O to use cases.
 final dashboardNotifierProvider =
     NotifierProvider.autoDispose<DashboardNotifier, DashboardState>(
-      () => DashboardNotifier(sl.activityUseCases),
+      () => DashboardNotifier(sl.activityUseCases, sl.userUseCases),
     );
 
 /// [ARCH: PRESENTATION]
@@ -25,15 +27,14 @@ final dashboardNotifierProvider =
 /// data sources directly.
 class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   DashboardNotifier(
-    this._activityUseCases, {
+    this._activityUseCases,
+    this._userUseCases, {
     DateTime Function()? now,
-    bool Function()? isPersonalDeployment,
-  }) : _now = now ?? DateTime.now,
-       _isPersonalDeployment = isPersonalDeployment;
+  }) : _now = now ?? DateTime.now;
 
   final ActivityUseCases _activityUseCases;
+  final UserUseCases _userUseCases;
   final DateTime Function() _now;
-  final bool Function()? _isPersonalDeployment;
 
   StreamSubscription<ActivityLiveEvent>? _activitySubscription;
   Timer? _streamHealthTimer;
@@ -74,20 +75,24 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     _reconnectNoticeTimer?.cancel();
     state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
 
-    final isPersonal =
-        _isPersonalDeployment?.call() ??
-        ref.read(appNotifierProvider).isPersonalDeployment;
-    final liveResult = await _activityUseCases.getLiveActivities.execute(
+    final liveFuture = _activityUseCases.getLiveActivities.execute(
       limit: 50,
       includeArchived: true,
-      global: isPersonal,
     );
+    final followsFuture = _userUseCases.listMyActivityFollows.execute();
+    final liveResult = await liveFuture;
+    final followsResult = await followsFuture;
+    final followedObjectRefs = followsResult
+        .getOrElse((_) => const [])
+        .map((follow) => follow.objectRef)
+        .toList();
 
     liveResult.fold(
       (failure) {
         state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
+          followedObjectRefs: followedObjectRefs,
           lastSyncedAt: now,
           reconnectNoticeAt: null,
           providerHealth: _providerHealthFor(state.activities),
@@ -98,6 +103,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
           status: ViewStatus.success,
           errorMessage: null,
           activities: activities,
+          followedObjectRefs: followedObjectRefs,
           providerHealth: _providerHealthFor(activities),
           lastSyncedAt: now,
           reconnectNoticeAt: null,
@@ -198,6 +204,52 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     );
     result.fold((_) {
       _updateArchiveFlag(activityId, archived: previouslyArchived);
+    }, (_) {});
+  }
+
+  Future<void> follow(Activity activity) async {
+    final providerId = followProviderIdFor(activity.provider);
+    final objectKey = followObjectKeyFor(activity.provider);
+    if (providerId == null || objectKey == null) return;
+    final ref = followObjectRef(providerId, objectKey);
+    if (state.followedObjectRefs.contains(ref)) return;
+    state = state.copyWith(
+      followedObjectRefs: [...state.followedObjectRefs, ref],
+    );
+    final result = await _userUseCases.saveMyActivityFollow.execute(
+      providerId: providerId,
+      objectKey: objectKey,
+    );
+    result.fold((_) {
+      state = state.copyWith(
+        followedObjectRefs: [
+          for (final item in state.followedObjectRefs)
+            if (item != ref) item,
+        ],
+      );
+    }, (_) {});
+  }
+
+  Future<void> unfollow(Activity activity) async {
+    final providerId = followProviderIdFor(activity.provider);
+    final objectKey = followObjectKeyFor(activity.provider);
+    if (providerId == null || objectKey == null) return;
+    final ref = followObjectRef(providerId, objectKey);
+    if (!state.followedObjectRefs.contains(ref)) return;
+    state = state.copyWith(
+      followedObjectRefs: [
+        for (final item in state.followedObjectRefs)
+          if (item != ref) item,
+      ],
+    );
+    final result = await _userUseCases.deleteMyActivityFollow.execute(
+      providerId: providerId,
+      objectKey: objectKey,
+    );
+    result.fold((_) {
+      state = state.copyWith(
+        followedObjectRefs: [...state.followedObjectRefs, ref],
+      );
     }, (_) {});
   }
 

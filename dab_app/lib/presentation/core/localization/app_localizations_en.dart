@@ -773,6 +773,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityTooltipArchive => 'Archive';
 
   @override
+  String get activityTooltipFollow => 'Follow';
+
+  @override
+  String get activityTooltipFollowing => 'Following';
+
+  @override
   String get activityTooltipUnarchive => 'Unarchive';
 
   @override
@@ -943,7 +949,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsConnectedAccountsSubtitle =>
-      'Connect the providers you use. DAB never asks for your password — you sign in at the provider.';
+      'Connect the providers you use so DAB can deliver a personal inbound inbox. Mentions, assignments, and git watches require a linked identity. DAB never asks for your password — you sign in at the provider.';
 
   @override
   String get settingsBotTokenHint =>
@@ -1065,6 +1071,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLinearTeamsSave => 'Save teams';
+
+  @override
+  String get settingsGitWatchesTitle => 'Inbox repos';
+
+  @override
+  String get settingsGitWatchesSubtitle =>
+      'Choose which repos land in your Dashboard inbox. Saving none means no git inbox. Your own commits are excluded.';
+
+  @override
+  String get settingsGitWatchesEmpty =>
+      'No repos are on the instance allow-list yet. Ask an admin to add them in Admin → Providers.';
+
+  @override
+  String get settingsGitWatchesSave => 'Save watches';
+
+  @override
+  String get settingsGitWatchesBranchesHint =>
+      'Optional branches (comma-separated). Leave blank for all branches.';
 
   @override
   String get adminPublicApiUrlTitle => 'Public API URL';

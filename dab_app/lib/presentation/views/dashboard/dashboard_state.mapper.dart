@@ -81,6 +81,15 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     _$errorMessage,
     opt: true,
   );
+  static List<String> _$followedObjectRefs(DashboardState v) =>
+      v.followedObjectRefs;
+  static const Field<DashboardState, List<String>> _f$followedObjectRefs =
+      Field(
+        'followedObjectRefs',
+        _$followedObjectRefs,
+        opt: true,
+        def: const [],
+      );
   static List<Activity> _$visibleActivities(DashboardState v) =>
       v.visibleActivities;
   static const Field<DashboardState, List<Activity>> _f$visibleActivities =
@@ -102,6 +111,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     #lastSyncedAt: _f$lastSyncedAt,
     #reconnectNoticeAt: _f$reconnectNoticeAt,
     #errorMessage: _f$errorMessage,
+    #followedObjectRefs: _f$followedObjectRefs,
     #visibleActivities: _f$visibleActivities,
     #archivedCount: _f$archivedCount,
   };
@@ -116,6 +126,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       lastSyncedAt: data.dec(_f$lastSyncedAt),
       reconnectNoticeAt: data.dec(_f$reconnectNoticeAt),
       errorMessage: data.dec(_f$errorMessage),
+      followedObjectRefs: data.dec(_f$followedObjectRefs),
     );
   }
 
@@ -193,6 +204,8 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     >
   >
   get providerHealth;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get followedObjectRefs;
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
@@ -202,6 +215,7 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     DateTime? lastSyncedAt,
     DateTime? reconnectNoticeAt,
     String? errorMessage,
+    List<String>? followedObjectRefs,
   });
   DashboardStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -239,6 +253,13 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     (v) => call(providerHealth: v),
   );
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get followedObjectRefs => ListCopyWith(
+    $value.followedObjectRefs,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(followedObjectRefs: v),
+  );
+  @override
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
@@ -248,6 +269,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     Object? lastSyncedAt = $none,
     Object? reconnectNoticeAt = $none,
     Object? errorMessage = $none,
+    List<String>? followedObjectRefs,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -259,6 +281,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       if (lastSyncedAt != $none) #lastSyncedAt: lastSyncedAt,
       if (reconnectNoticeAt != $none) #reconnectNoticeAt: reconnectNoticeAt,
       if (errorMessage != $none) #errorMessage: errorMessage,
+      if (followedObjectRefs != null) #followedObjectRefs: followedObjectRefs,
     }),
   );
   @override
@@ -277,6 +300,10 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       or: $value.reconnectNoticeAt,
     ),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
+    followedObjectRefs: data.get(
+      #followedObjectRefs,
+      or: $value.followedObjectRefs,
+    ),
   );
 
   @override

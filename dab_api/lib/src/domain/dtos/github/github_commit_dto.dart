@@ -43,45 +43,55 @@ class GitHubCommitDto with GitHubCommitDtoMappable {
 /// ROLE: Maps a [`GitHubCommitDto`] into persisted [`Activity`] rows (polling + webhook paths).
 /// CONSTRAINTS: Pure logic; no I/O.
 extension OnGitHubCommitDto on GitHubCommitDto {
-  /// Resolves [`userId`] against [users] and returns at most one github-commit activity.
-  List<Activity> toActivities(List<User> users) {
-    final uid = userId;
-    if (uid == null || uid.isEmpty) {
-      return const [];
-    }
+  /// Resolves recipients against [users]. Explorer poll uses [userId]; live
+  /// ingest passes [forUserIds] (watchers).
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    String? senderUserId,
+  }) {
+    final targets = forUserIds == null
+        ? [if (userId != null && userId!.isNotEmpty) userId!]
+        : forUserIds.where((id) => id.isNotEmpty).toList();
+    if (targets.isEmpty) return const [];
 
-    final user = users.where((u) => u.id == uid).firstOrNull;
-    if (user == null) {
-      return const [];
-    }
-
+    final usersById = {for (final u in users) u.id: u};
     final (subject, body) = gitCommitSubjectAndBody;
-
     final branchTag = branch?.trim();
     final title = branchTag != null && branchTag.isNotEmpty
         ? '[$branchTag] $subject'
         : subject;
+    final fanOut = forUserIds != null;
 
-    final displayAuthorName = authorName?.trim().isNotEmpty == true ? authorName!.trim() : user.name;
-    final login = authorLogin?.trim();
-    final authorLine = login != null && login.isNotEmpty
-        ? '$displayAuthorName (@$login)'
-        : displayAuthorName;
-
-    return [
-      Activity(
-        id: _gitHubCommitUuid.v5(Namespace.url.value, 'github-$repo-$sha'),
-        userId: user.id,
-        provider: GitHubCommitProvider(repo: repo, branch: branch),
-        title: title,
-        content: body,
-        url: url,
-        authorName: authorLine,
-        authorAvatarUrl: authorAvatarUrl ?? user.avatarUrl,
-        commentCount: 0,
-        createdAt: committedAt,
-      ),
-    ];
+    final activities = <Activity>[];
+    for (final targetId in targets) {
+      final user = usersById[targetId];
+      if (user == null) continue;
+      final displayAuthorName = authorName?.trim().isNotEmpty == true
+          ? authorName!.trim()
+          : user.name;
+      final login = authorLogin?.trim();
+      final authorLine = login != null && login.isNotEmpty
+          ? '$displayAuthorName (@$login)'
+          : displayAuthorName;
+      final stable = fanOut ? 'github-$repo-$sha-$targetId' : 'github-$repo-$sha';
+      activities.add(
+        Activity(
+          id: _gitHubCommitUuid.v5(Namespace.url.value, stable),
+          userId: user.id,
+          senderUserId: senderUserId ?? this.userId,
+          provider: GitHubCommitProvider(repo: repo, branch: branch),
+          title: title,
+          content: body,
+          url: url,
+          authorName: authorLine,
+          authorAvatarUrl: authorAvatarUrl ?? user.avatarUrl,
+          commentCount: 0,
+          createdAt: committedAt,
+        ),
+      );
+    }
+    return activities;
   }
 
   /// [ARCH: DOMAIN]

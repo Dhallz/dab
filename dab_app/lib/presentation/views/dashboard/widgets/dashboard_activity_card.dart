@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../domain/core/activity_follow_key.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../presentation/core/extensions/activity_category_l10n.dart';
 import '../../../../presentation/core/extensions/activity_extensions.dart';
@@ -23,11 +24,24 @@ class DashboardActivityCard extends StatefulWidget {
   /// Callback fired when the user requests to un-archive this activity.
   final VoidCallback? onUnarchive;
 
+  /// Callback fired when the user Follows this object. Hidden when the
+  /// activity is not followable (git commits).
+  final VoidCallback? onFollow;
+
+  /// Callback fired when the user Unfollows this object.
+  final VoidCallback? onUnfollow;
+
+  /// Whether this object is already Follow-pinned.
+  final bool isFollowing;
+
   const DashboardActivityCard({
     super.key,
     required this.activity,
     this.onArchive,
     this.onUnarchive,
+    this.onFollow,
+    this.onUnfollow,
+    this.isFollowing = false,
   });
 
   @override
@@ -42,7 +56,10 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
     final style = widget.activity.style(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final showsTriage = widget.onArchive != null || widget.onUnarchive != null;
+    final showsTriage =
+        widget.onArchive != null ||
+        widget.onUnarchive != null ||
+        _canFollow;
     final trimmedContent = widget.activity.content.trim();
     final showSenderLine =
         widget.activity.authorName.trim().isNotEmpty &&
@@ -190,26 +207,45 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
     );
   }
 
+  bool get _canFollow =>
+      followObjectKeyFor(widget.activity.provider) != null &&
+      (widget.onFollow != null || widget.onUnfollow != null);
+
   Widget _buildTriageAction(BuildContext context) {
     final l10n = context.l10n;
     final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
-    if (widget.activity.archived && widget.onUnarchive != null) {
-      return IconButton(
-        tooltip: l10n.activityTooltipUnarchive,
-        icon: Icon(AppIcons.refresh),
-        color: iconColor,
-        onPressed: widget.onUnarchive,
-      );
-    }
-    if (!widget.activity.archived && widget.onArchive != null) {
-      return IconButton(
-        tooltip: l10n.activityTooltipArchive,
-        icon: Icon(AppIcons.delete),
-        color: iconColor,
-        onPressed: widget.onArchive,
-      );
-    }
-    return const SizedBox(width: 0);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_canFollow)
+          IconButton(
+            tooltip: widget.isFollowing
+                ? l10n.activityTooltipFollowing
+                : l10n.activityTooltipFollow,
+            icon: Icon(
+              widget.isFollowing ? AppIcons.following : AppIcons.follow,
+            ),
+            color: widget.isFollowing
+                ? Theme.of(context).colorScheme.primary
+                : iconColor,
+            onPressed: widget.isFollowing ? widget.onUnfollow : widget.onFollow,
+          ),
+        if (widget.activity.archived && widget.onUnarchive != null)
+          IconButton(
+            tooltip: l10n.activityTooltipUnarchive,
+            icon: Icon(AppIcons.refresh),
+            color: iconColor,
+            onPressed: widget.onUnarchive,
+          )
+        else if (!widget.activity.archived && widget.onArchive != null)
+          IconButton(
+            tooltip: l10n.activityTooltipArchive,
+            icon: Icon(AppIcons.delete),
+            color: iconColor,
+            onPressed: widget.onArchive,
+          ),
+      ],
+    );
   }
 
   String _formatDate(AppLocalizations l10n) {

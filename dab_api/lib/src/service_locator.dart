@@ -59,12 +59,17 @@ import 'package:dab_api/src/application/usecases/metadata/save_provider_config.d
 import 'package:dab_api/src/application/usecases/metadata/test_provider_config.dart';
 import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.dart';
 import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
+import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
+import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
+import 'package:dab_api/src/application/usecases/user/delete_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/get_jira_project_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_linear_team_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
 import 'package:dab_api/src/application/usecases/user/get_users.dart';
 import 'package:dab_api/src/application/usecases/user/get_users_by_group.dart';
 import 'package:dab_api/src/application/usecases/user/list_user_provider_credentials.dart';
+import 'package:dab_api/src/application/usecases/user/save_git_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/save_jira_project_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/save_linear_team_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/save_user_provider_credential.dart';
@@ -89,6 +94,7 @@ import 'package:dab_api/src/domain/contracts/ports/i_oauth_state_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_oauth_token_client.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_webhook_request_authenticator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 // domain
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_auth_repository.dart';
@@ -131,6 +137,7 @@ import 'package:dab_api/src/infrastructure/persistence/repositories/auth_reposit
 import 'package:dab_api/src/infrastructure/persistence/repositories/provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_provider_credential_repository.dart';
+import 'package:dab_api/src/infrastructure/persistence/repositories/activity_follow_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/credential_resolver.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/oauth_client_credential_resolver.dart';
@@ -211,6 +218,9 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<SettingsCipher>(SettingsCipher(config.credentialsKey));
   sl.registerSingleton<AbsIUserProviderCredentialRepository>(
     UserProviderCredentialRepository(db, sl<SettingsCipher>()),
+  );
+  sl.registerSingleton<AbsIActivityFollowRepository>(
+    ActivityFollowRepository(db),
   );
   sl.registerSingleton<ICredentialResolver>(
     CredentialResolver(sl<AbsIUserProviderCredentialRepository>()),
@@ -371,7 +381,6 @@ Future<void> serviceLocator() async {
     ActivityLivePublisher(
       sl<ILiveFeedStore>(),
       sl<IPresenceBroadcaster>(),
-      sl<ISystemSettingsRepository>(),
     ),
   );
   sl.registerSingleton<LiveIngestPersister>(
@@ -491,6 +500,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      credentials: sl<ICredentialResolver>(),
     ),
   );
   sl.registerSingleton<IngestSlackEvent>(
@@ -503,6 +513,7 @@ Future<void> serviceLocator() async {
       httpClient: sl<http.Client>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestPhorgeWebhook>(
@@ -515,6 +526,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestJiraWebhook>(
@@ -526,6 +538,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestLinearWebhook>(
@@ -537,6 +550,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestGitLabWebhook>(
@@ -548,6 +562,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      credentials: sl<ICredentialResolver>(),
     ),
   );
   sl.registerSingleton<IngestBitbucketWebhook>(
@@ -559,6 +574,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      credentials: sl<ICredentialResolver>(),
     ),
   );
   sl.registerSingleton<IngestDiscordMessage>(
@@ -570,6 +586,7 @@ Future<void> serviceLocator() async {
       sl<IPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IDiscordLiveIngestor>(sl<IngestDiscordMessage>());
@@ -668,6 +685,18 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<IJiraProjectCatalog>(
     JiraProjectCatalog(jsonRestProtocol),
   );
+  sl.registerSingleton<GetGitWatchList>(
+    GetGitWatchList(
+      sl<ICredentialResolver>(),
+      sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<SaveGitWatchList>(
+    SaveGitWatchList(
+      sl<GetGitWatchList>(),
+      sl<AbsIUserProviderCredentialRepository>(),
+    ),
+  );
   sl.registerSingleton<GetJiraProjectWatchList>(
     GetJiraProjectWatchList(
       sl<ICredentialResolver>(),
@@ -697,6 +726,15 @@ Future<void> serviceLocator() async {
       sl<GetLinearTeamWatchList>(),
       sl<AbsIProviderConfigRepository>(),
     ),
+  );
+  sl.registerSingleton<ListMyActivityFollows>(
+    ListMyActivityFollows(sl<AbsIActivityFollowRepository>()),
+  );
+  sl.registerSingleton<SaveActivityFollow>(
+    SaveActivityFollow(sl<AbsIActivityFollowRepository>()),
+  );
+  sl.registerSingleton<DeleteActivityFollow>(
+    DeleteActivityFollow(sl<AbsIActivityFollowRepository>()),
   );
 
   // Group
@@ -822,10 +860,15 @@ Future<void> serviceLocator() async {
       deleteUserProviderCredential: sl<DeleteUserProviderCredential>(),
       testUserProviderCredential: sl<TestUserProviderCredential>(),
       startProviderOauth: sl<StartProviderOauth>(),
+      getGitWatchList: sl<GetGitWatchList>(),
+      saveGitWatchList: sl<SaveGitWatchList>(),
       getJiraProjectWatchList: sl<GetJiraProjectWatchList>(),
       saveJiraProjectWatchList: sl<SaveJiraProjectWatchList>(),
       getLinearTeamWatchList: sl<GetLinearTeamWatchList>(),
       saveLinearTeamWatchList: sl<SaveLinearTeamWatchList>(),
+      listMyActivityFollows: sl<ListMyActivityFollows>(),
+      saveActivityFollow: sl<SaveActivityFollow>(),
+      deleteActivityFollow: sl<DeleteActivityFollow>(),
     ),
   );
 

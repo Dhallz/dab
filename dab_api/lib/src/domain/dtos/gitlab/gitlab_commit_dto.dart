@@ -52,42 +52,51 @@ class GitLabCommitDto with GitLabCommitDtoMappable {
 /// (polling + webhook paths).
 /// CONSTRAINTS: Pure logic; no I/O; skips rows without attributable users.
 extension OnGitLabCommitDto on GitLabCommitDto {
-  List<Activity> toActivities(List<User> users) {
-    final uid = userId;
-    if (uid == null || uid.isEmpty) {
-      return const [];
-    }
+  List<Activity> toActivities(
+    List<User> users, {
+    Iterable<String>? forUserIds,
+    String? senderUserId,
+  }) {
+    final targets = forUserIds == null
+        ? [if (userId != null && userId!.isNotEmpty) userId!]
+        : forUserIds.where((id) => id.isNotEmpty).toList();
+    if (targets.isEmpty) return const [];
 
-    final user = users.where((u) => u.id == uid).firstOrNull;
-    if (user == null) {
-      return const [];
-    }
-
+    final usersById = {for (final u in users) u.id: u};
     final (subject, body) = _gitLabCommitSubjectAndBody(message);
-
     final branchTag = branch?.trim();
     final title = branchTag != null && branchTag.isNotEmpty
         ? '[$branchTag] $subject'
         : subject;
+    final fanOut = forUserIds != null;
 
-    final displayAuthorName = authorName?.trim().isNotEmpty == true
-        ? authorName!.trim()
-        : user.name;
-
-    return [
-      Activity(
-        id: _gitLabCommitUuid.v5(Namespace.url.value, 'gitlab-$project-$sha'),
-        userId: user.id,
-        provider: GitLabCommitProvider(project: project, branch: branch),
-        title: title,
-        content: body,
-        url: url,
-        authorName: displayAuthorName,
-        authorAvatarUrl: user.avatarUrl,
-        commentCount: 0,
-        createdAt: committedAt.toUtc(),
-      ),
-    ];
+    final activities = <Activity>[];
+    for (final targetId in targets) {
+      final user = usersById[targetId];
+      if (user == null) continue;
+      final displayAuthorName = authorName?.trim().isNotEmpty == true
+          ? authorName!.trim()
+          : user.name;
+      final stable = fanOut
+          ? 'gitlab-$project-$sha-$targetId'
+          : 'gitlab-$project-$sha';
+      activities.add(
+        Activity(
+          id: _gitLabCommitUuid.v5(Namespace.url.value, stable),
+          userId: user.id,
+          senderUserId: senderUserId ?? this.userId,
+          provider: GitLabCommitProvider(project: project, branch: branch),
+          title: title,
+          content: body,
+          url: url,
+          authorName: displayAuthorName,
+          authorAvatarUrl: user.avatarUrl,
+          commentCount: 0,
+          createdAt: committedAt.toUtc(),
+        ),
+      );
+    }
+    return activities;
   }
 }
 

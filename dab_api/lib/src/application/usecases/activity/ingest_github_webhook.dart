@@ -3,9 +3,11 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/github_scope.dart';
+import '../../../domain/core/git_watch_scope.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/contracts/ports/i_credential_resolver.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
@@ -26,6 +28,7 @@ class IngestGitHubWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final ICredentialResolver? _credentials;
 
   IngestGitHubWebhook(
     this._userRepository,
@@ -35,7 +38,9 @@ class IngestGitHubWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    ICredentialResolver? credentials,
+  }) : _credentials = credentials,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -162,6 +167,14 @@ class IngestGitHubWebhook {
       );
     }
 
+    final instanceRepos = extractConfiguredGithubRepos(githubConfig.settings);
+    final settingsByUser =
+        await _credentials?.getUserSettingsForUsers(
+          userIds: users.map((u) => u.id),
+          providerId: 'github',
+        ) ??
+        {for (final user in users) user.id: <String, dynamic>{}};
+
     final commitsRaw = payload['commits'];
     if (commitsRaw is! List<dynamic>) {
       return const Right(
@@ -196,14 +209,18 @@ class IngestGitHubWebhook {
                   '')
               .toString()
               .trim();
-      if (loginCandidate.isEmpty) {
-        continue;
-      }
+      final userIdForLogin = loginCandidate.isEmpty
+          ? null
+          : userIdByLogin[loginCandidate.toLowerCase()];
 
-      final userIdForLogin = userIdByLogin[loginCandidate.toLowerCase()];
-      if (userIdForLogin == null) {
-        continue;
-      }
+      final watchers = gitInboxWatchers(
+        userSettingsById: settingsByUser,
+        repo: fullNameRaw,
+        branch: branch,
+        instanceRepos: instanceRepos,
+        senderUserId: userIdForLogin,
+      );
+      if (watchers.isEmpty) continue;
 
       final commitMessage =
           (raw['message'] ??
@@ -273,9 +290,13 @@ class IngestGitHubWebhook {
         userId: userIdForLogin,
       );
 
-      final activities = dto.toActivities(users);
-      if (activities.isEmpty) continue;
-      toPersist.add(activities.first);
+      toPersist.addAll(
+        dto.toActivities(
+          users,
+          forUserIds: watchers,
+          senderUserId: userIdForLogin,
+        ),
+      );
     }
 
     return _persister.persist(

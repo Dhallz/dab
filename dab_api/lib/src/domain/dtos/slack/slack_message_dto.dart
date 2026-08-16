@@ -56,6 +56,7 @@ extension OnSlackMessageDto on SlackMessageDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    String? senderUserId,
   }) {
     final targets = forUserIds == null
         ? [if (dabUserId != null && dabUserId!.isNotEmpty) dabUserId!]
@@ -86,6 +87,7 @@ extension OnSlackMessageDto on SlackMessageDto {
         Activity(
           id: _slackMessageUuid.v5(Namespace.url.value, 'slack-$stableIdentity'),
           userId: targetUserId,
+          senderUserId: senderUserId ?? dabUserId,
           provider: SlackMessageProvider(
             workspaceId: workspaceId,
             channelId: channelId,

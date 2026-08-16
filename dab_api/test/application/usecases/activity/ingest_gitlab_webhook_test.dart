@@ -41,12 +41,25 @@ void main() {
     createdAt: DateTime.utc(2026, 1, 1),
   );
 
+  final watcher = User(
+    id: 'u-bob',
+    name: 'Bob',
+    email: 'bob@example.com',
+    passwordHash: 'hash',
+    role: UserRole.standard,
+    createdAt: DateTime.utc(2026, 1, 1),
+  );
+
   final config = ProviderConfig(
     id: 'gitlab',
     name: 'GitLab',
     baseUrl: 'https://gitlab.example.com',
     isActive: true,
-    settings: const {'apiToken': 't', 'webhookSecret': 's'},
+    settings: const {
+      'apiToken': 't',
+      'webhookSecret': 's',
+      'projects': ['group/project'],
+    },
   );
 
   Map<String, dynamic> pushPayload({String authorEmail = 'ada@example.com'}) {
@@ -110,7 +123,7 @@ void main() {
     ).thenAnswer((_) async => Right([config]));
     when(
       () => userRepository.getUsers(),
-    ).thenAnswer((_) async => Right([user]));
+    ).thenAnswer((_) async => Right([user, watcher]));
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), any()),
     ).thenAnswer((_) async => const Right([]));
@@ -121,7 +134,7 @@ void main() {
     when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
   });
 
-  test('ingests push commits attributed by author email', () async {
+  test('ingests push commits for watchers, excluding the committer', () async {
     final out = await useCase.execute(payload: pushPayload());
 
     final result = out.getOrElse((_) => throw StateError('left'));
@@ -130,7 +143,8 @@ void main() {
         verify(() => activityRepository.createActivity(captureAny()))
             .captured
             .single as Activity;
-    expect(captured.userId, 'u-gitlab');
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-gitlab');
     expect(captured.title, '[main] Fix login bug');
     final provider = captured.provider as GitLabCommitProvider;
     expect(provider.project, 'group/project');
@@ -138,7 +152,7 @@ void main() {
     verify(() => redisService.fanOutActivity(any())).called(1);
     verify(
       () => presenceService.broadcastToUser(
-        'u-gitlab',
+        'u-bob',
         'ACTIVITY_RECEIVED',
         any(),
       ),
@@ -167,15 +181,18 @@ void main() {
     verifyNever(() => activityRepository.createActivity(any()));
   });
 
-  test('drops commits from unknown author emails', () async {
+  test('unknown author emails still fan out to watchers', () async {
     final out = await useCase.execute(
       payload: pushPayload(authorEmail: 'stranger@example.com'),
     );
 
     final result = out.getOrElse((_) => throw StateError('left'));
-    expect(result.ingested, isFalse);
-    expect(result.reason, 'no_attributable_users');
-    verifyNever(() => activityRepository.createActivity(any()));
+    expect(result.ingested, isTrue);
+    final captured = verify(
+      () => activityRepository.createActivity(captureAny()),
+    ).captured.cast<Activity>();
+    expect(captured.map((a) => a.userId).toSet(), {'u-gitlab', 'u-bob'});
+    expect(captured.every((a) => a.senderUserId == null), isTrue);
   });
 
   test('ignores payloads when gitlab provider is inactive', () async {

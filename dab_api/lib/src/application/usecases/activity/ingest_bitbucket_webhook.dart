@@ -1,11 +1,14 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/bitbucket_scope.dart';
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/git_watch_scope.dart';
 import '../../../domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import '../../../domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
+import '../../../domain/contracts/ports/i_credential_resolver.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
@@ -31,6 +34,7 @@ class IngestBitbucketWebhook {
   final AbsIProviderConfigRepository _providerConfigRepository;
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
+  final ICredentialResolver? _credentials;
 
   IngestBitbucketWebhook(
     this._userRepository,
@@ -40,7 +44,9 @@ class IngestBitbucketWebhook {
     IPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-  }) : _persister =
+    ICredentialResolver? credentials,
+  }) : _credentials = credentials,
+       _persister =
            persister ??
            LiveIngestPersister(
              activities: activityRepository,
@@ -103,6 +109,16 @@ class IngestBitbucketWebhook {
       );
     }
 
+    final allowedRepos = {
+      for (final item in bitbucketRepos(bitbucketConfig.settings))
+        item.toLowerCase(),
+    };
+    if (allowedRepos.isNotEmpty && !allowedRepos.contains(repo.toLowerCase())) {
+      return const Right(
+        BitbucketWebhookIngestionResult.ignored('repo_not_configured'),
+      );
+    }
+
     final usersResult = await _userRepository.getUsers();
     final users = usersResult.getOrElse((_) => const <User>[]);
     if (users.isEmpty) {
@@ -127,6 +143,13 @@ class IngestBitbucketWebhook {
 
     var attributableCommits = 0;
     final toPersist = <Activity>[];
+    final instanceRepos = bitbucketRepos(bitbucketConfig.settings);
+    final settingsByUser =
+        await _credentials?.getUserSettingsForUsers(
+          userIds: users.map((u) => u.id),
+          providerId: 'bitbucket',
+        ) ??
+        {for (final user in users) user.id: <String, dynamic>{}};
     for (final change in changes) {
       if (change is! Map<String, dynamic>) continue;
       final newState = change['new'];
@@ -148,9 +171,23 @@ class IngestBitbucketWebhook {
           accountToUser: accountToUser,
           emailToUser: emailToUser,
         );
-        if (dto == null || dto.userId == null) continue;
+        if (dto == null) continue;
+        final watchers = gitInboxWatchers(
+          userSettingsById: settingsByUser,
+          repo: repo,
+          branch: branch?.isEmpty == true ? null : branch,
+          instanceRepos: instanceRepos,
+          senderUserId: dto.userId,
+        );
+        if (watchers.isEmpty) continue;
         attributableCommits++;
-        toPersist.addAll(dto.toActivities(users));
+        toPersist.addAll(
+          dto.toActivities(
+            users,
+            forUserIds: watchers,
+            senderUserId: dto.userId,
+          ),
+        );
       }
     }
 

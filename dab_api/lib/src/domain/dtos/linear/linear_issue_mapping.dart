@@ -93,7 +93,52 @@ LinearIssueCommentDto? mapLinearCommentNode(
   );
 }
 
-/// Extracts a Linear user UUID from an embedded person node.
+/// Extracts Linear user ids from `@[Name](uuid)` markdown and `mentionedUserIds`.
+List<String> extractLinearMentionUserIds({
+  Object? body,
+  Object? mentionedUserIds,
+}) {
+  final ids = <String>{};
+  if (mentionedUserIds is List) {
+    for (final item in mentionedUserIds) {
+      if (item is Map) {
+        final id = (item['id'] ?? '').toString().trim();
+        if (id.isNotEmpty) ids.add(id);
+      } else {
+        final id = item.toString().trim();
+        if (id.isNotEmpty) ids.add(id);
+      }
+    }
+  }
+  final text = (body ?? '').toString();
+  for (final match in _linearMentionPattern.allMatches(text)) {
+    final id = match.group(1)?.trim();
+    if (id != null && id.isNotEmpty) ids.add(id);
+  }
+  return ids.toList();
+}
+
+final _linearMentionPattern = RegExp(r'@\[[^\]]*\]\(([A-Za-z0-9-]+)\)');
+
+/// Linear user id that became the assignee, or null when assignee did not change.
+String? extractLinearAssigneeBecameId({
+  required String action,
+  required Map<String, dynamic> payload,
+  required Map<String, dynamic> data,
+}) {
+  final current =
+      linearPersonId(data['assignee']) ??
+      (data['assigneeId'] ?? '').toString().trim();
+  if (current.isEmpty) return null;
+  if (action == 'create') return current;
+  final updatedFrom = payload['updatedFrom'];
+  if (updatedFrom is! Map) return null;
+  if (!updatedFrom.containsKey('assigneeId') &&
+      !updatedFrom.containsKey('assignee')) {
+    return null;
+  }
+  return current;
+}
 String? linearPersonId(Object? person) {
   if (person is! Map<String, dynamic>) return null;
   final raw = person['id']?.toString().trim();

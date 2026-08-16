@@ -1,6 +1,8 @@
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Resolves per-user provider secrets overlaid on org [ProviderConfig.settings].
-/// CONTRACT: User secrets win; watch lists and non-secret fields stay org-owned.
+/// CONTRACT: User secrets win. Git inbox watches live on credential settings
+/// (`watchedRepos` / `watchedBranches`); Jira/Linear ingest allow-lists stay
+/// on org [ProviderConfig.settings].
 library;
 
 /// Looks up encrypted user credentials and merges them onto org settings.

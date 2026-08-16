@@ -16,8 +16,13 @@ class Activity with ActivityMappable {
   /// Unique identifier (usually UUID v5 derived from the source ID).
   final String id;
   
-  /// The internal DAB User ID associated with this activity.
+  /// Inbox owner (recipient DAB user). Live ingest fans out one row per target.
   final String userId;
+
+  /// Linked DAB user who caused the event, when known. Null when the actor
+  /// has no linked identity. Broadcasts and git watches omit this user from
+  /// recipients; an explicit @mention of themselves still lands in their inbox.
+  final String? senderUserId;
   
   /// Platform-specific metadata (Phorge Task, Jira Issue, etc.).
   final ActivityProvider provider;
@@ -53,6 +58,7 @@ class Activity with ActivityMappable {
   Activity({
     required this.id,
     required this.userId,
+    this.senderUserId,
     required this.provider,
     required this.title,
     required this.content,

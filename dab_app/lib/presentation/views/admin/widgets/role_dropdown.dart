@@ -25,6 +25,7 @@ class RoleDropdown extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<UserRole>(
           value: user.role,
+          isDense: true,
           dropdownColor: cs.surfaceContainerHigh,
           style: TextStyle(
             color: cs.onSurface,

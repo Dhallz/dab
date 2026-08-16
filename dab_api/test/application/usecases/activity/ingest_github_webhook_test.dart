@@ -73,11 +73,19 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  test('ingests push webhook for linked github author', () async {
-    final user = User(
+  test('ingests push webhook for watchers, excluding the committer', () async {
+    final author = User(
       id: 'u-gh',
       name: 'Ada',
       email: 'ada@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final watcher = User(
+      id: 'u-bob',
+      name: 'Bob',
+      email: 'bob@example.com',
       passwordHash: 'hash',
       role: UserRole.standard,
       createdAt: DateTime.utc(2026, 1, 1),
@@ -121,7 +129,9 @@ void main() {
     when(() => redisService.reserveGitHubDeliveryId(any())).thenAnswer(
       (_) async => true,
     );
-    when(() => userRepository.getUsers()).thenAnswer((_) async => Right([user]));
+    when(() => userRepository.getUsers()).thenAnswer(
+      (_) async => Right([author, watcher]),
+    );
     when(
       () => userRepository.getIdentitiesForUsersAndProvider(any(), 'github'),
     ).thenAnswer((_) async => Right([identity]));
@@ -148,10 +158,15 @@ void main() {
       ).ingested,
       isTrue,
     );
-    verify(() => activityRepository.createActivity(any())).called(1);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-bob');
+    expect(captured.senderUserId, 'u-gh');
     verify(() => redisService.fanOutActivity(any())).called(1);
     verify(
-      () => presenceService.broadcastToUser('u-gh', 'ACTIVITY_RECEIVED', any()),
+      () => presenceService.broadcastToUser('u-bob', 'ACTIVITY_RECEIVED', any()),
     ).called(1);
   });
 

@@ -35,6 +35,7 @@ class ActivityRepository implements AbsIActivityRepository {
               ActivitiesTableCompanion.insert(
                 id: activity.id,
                 userId: activity.userId,
+                senderUserId: Value(activity.senderUserId),
                 providerName: activity.provider.name,
                 title: activity.title,
                 content: activity.content,
@@ -415,6 +416,7 @@ class ActivityRepository implements AbsIActivityRepository {
     return Activity(
       id: activityData.id,
       userId: activityData.userId,
+      senderUserId: activityData.senderUserId,
       provider: provider,
       title: activityData.title,
       content: activityData.content,

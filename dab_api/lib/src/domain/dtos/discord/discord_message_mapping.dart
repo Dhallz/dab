@@ -46,6 +46,16 @@ DiscordMessageDto? mapDiscordMessageJson(
   final displayName =
       ((author['global_name'] ?? author['username']) ?? '').toString().trim();
 
+  final mentionIds = <String>[];
+  final mentionsRaw = json['mentions'];
+  if (mentionsRaw is List) {
+    for (final item in mentionsRaw) {
+      if (item is! Map) continue;
+      final id = (item['id'] ?? '').toString().trim();
+      if (id.isNotEmpty) mentionIds.add(id);
+    }
+  }
+
   return DiscordMessageDto(
     messageId: messageId,
     channelId: channelId,
@@ -57,5 +67,7 @@ DiscordMessageDto? mapDiscordMessageJson(
     authorAvatarUrl: avatarUrl,
     replyToId: replyToId.isEmpty ? null : replyToId,
     dabUserId: externalToUser[authorId],
+    mentionIds: mentionIds,
+    mentionEveryone: json['mention_everyone'] == true,
   );
 }
