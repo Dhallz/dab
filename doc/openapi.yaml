@@ -1149,6 +1149,35 @@ paths:
         '200':
           description: Updated watch list
         '400':
+          description: Unsupported provider, invalid body, or not connected
+  /users/me/credentials/{provider}/branches:
+    get:
+      summary: List unique git branch names for inbox watches
+      description: |
+        GitHub, GitLab, or Bitbucket only. Unions branch names on the
+        caller's selected inbox repos, or on `?repos=owner/repo,owner/other`
+        (must already be on the instance allow-list). Empty `available` when
+        no repos are selected. `truncated` is true when the catalog hit its
+        name cap. Requires a connected credential. Never returns tokens.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [github, gitlab, bitbucket]
+        - name: repos
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated repo keys to list. Defaults to saved watches.
+      responses:
+        '200':
+          description: '`{ available: ["main"], truncated: false }`'
+        '400':
           description: Unsupported provider, or the account is not connected
   /users/me/follows:
     get:

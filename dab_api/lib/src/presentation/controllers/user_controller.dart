@@ -219,6 +219,43 @@ class UserController {
     );
   }
 
+  Future<Response> getMyGitBranches(Request request) async {
+    final userId = userIdProperty.get(request);
+    final provider = (request.pathParameters.raw[#provider] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+    if (provider != 'github' &&
+        provider != 'gitlab' &&
+        provider != 'bitbucket') {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error':
+                'Branch picker is only available for GitHub, GitLab, and Bitbucket',
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    final reposParam = request.url.queryParameters['repos'];
+    List<String>? repos;
+    if (reposParam != null) {
+      repos = [
+        for (final part in reposParam.split(','))
+          if (part.trim().isNotEmpty) part.trim(),
+      ];
+    }
+    return _watchListResponse(
+      await _user.getGitBranchList.execute(
+        userId: userId,
+        providerId: provider,
+        repos: repos,
+      ),
+      'git_branch_list',
+    );
+  }
+
   Future<Response> saveMyJiraProjects(Request request) async {
     final userId = userIdProperty.get(request);
     final provider = (request.pathParameters.raw[#provider] ?? '')
@@ -508,9 +545,7 @@ class UserController {
     if (body == null) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({
-            'error': 'Body must include providerId and objectKey',
-          }),
+          jsonEncode({'error': 'Body must include providerId and objectKey'}),
           mimeType: MimeType.json,
         ),
       );
@@ -558,9 +593,7 @@ class UserController {
     if (body == null) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({
-            'error': 'Body must include providerId and objectKey',
-          }),
+          jsonEncode({'error': 'Body must include providerId and objectKey'}),
           mimeType: MimeType.json,
         ),
       );

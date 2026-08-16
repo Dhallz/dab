@@ -93,6 +93,7 @@ dab_app/lib/
 | `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer ingest allow-list (not Dashboard targeting). |
 | `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
 | `GitWatchList` | Per-user git inbox watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. |
+| `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
 | `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`) for Phorge, Jira, Linear, Slack, and Discord. Git stays on `GitWatchList`. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
@@ -279,7 +280,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
 | `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
-| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, and Dashboard object Follow pins (`/users/me/follows`) |
+| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, and Dashboard object Follow pins (`/users/me/follows`) |
 
 ---
 

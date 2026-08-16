@@ -1285,6 +1285,18 @@
   "settingsGitWatchesEmpty": "No repos are on the instance allow-list yet. Ask an admin to add them in Admin → Providers.",
   "settingsGitWatchesSave": "Save watches",
   "settingsGitWatchesBranchesHint": "Optional branches (comma-separated). Leave blank for all branches.",
+  "settingsGitWatchesBranchesTitle": "Inbox branches",
+  "settingsGitWatchesBranchesSubtitle": "Add branches to watch. With none selected, every branch on the chosen repos is included.",
+  "settingsGitWatchesBranchesSearch": "Search branches",
+  "settingsGitWatchesBranchesNeedRepos": "Select at least one repo before choosing branches.",
+  "settingsGitWatchesBranchesTruncated": "Not all branches could be loaded ({count} shown). Type to search this list.",
+  "@settingsGitWatchesBranchesTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminPublicApiUrlTitle": "Public API URL",
   "adminPublicApiUrlSubtitle": "Reachable base URL for OAuth callbacks and webhook defaults (no trailing slash).",
   "adminPublicApiUrlLabel": "https://your-dab-api.example",

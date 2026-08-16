@@ -58,8 +58,7 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
               busy: state.busyProviderId == id,
               onConnect: () => notifier.startOauth(id),
               onDisconnect: () => notifier.disconnect(id),
-              jiraPicker:
-                  _watchPickerFor(id, state, notifier, l10n),
+              jiraPicker: _watchPickerFor(id, state, notifier, l10n),
             ),
           for (final id in _tokenProviders)
             _PhorgeTokenCard(
@@ -141,10 +140,10 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
         errorMessage: draft.error,
         onToggle: (key) => notifier.toggleGitRepo(id, key),
         onSave: () => notifier.saveGitWatches(id),
-        extra: _GitBranchesField(
-          value: draft.draftBranches,
-          hint: l10n.settingsGitWatchesBranchesHint,
-          onChanged: (value) => notifier.setGitDraftBranches(id, value),
+        extra: _GitBranchPicker(
+          draft: draft,
+          onAdd: (branch) => notifier.addGitBranch(id, branch),
+          onRemove: (branch) => notifier.removeGitBranch(id, branch),
         ),
       );
     }
@@ -484,15 +483,15 @@ class _WatchListPicker extends StatelessWidget {
                 color: Theme.of(context).colorScheme.error,
               ),
             ),
-          )
-        else if (items.isEmpty)
+          ),
+        if (items.isEmpty && errorMessage == null)
           Text(
             empty,
             style: AppTextStyles.bodySmall.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           )
-        else
+        else if (items.isNotEmpty)
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -525,55 +524,119 @@ class _WatchListPicker extends StatelessWidget {
   }
 }
 
-class _GitBranchesField extends StatefulWidget {
-  final String value;
-  final String hint;
-  final ValueChanged<String> onChanged;
+class _GitBranchPicker extends StatefulWidget {
+  final GitWatchDraft draft;
+  final ValueChanged<String> onAdd;
+  final ValueChanged<String> onRemove;
 
-  const _GitBranchesField({
-    required this.value,
-    required this.hint,
-    required this.onChanged,
+  const _GitBranchPicker({
+    required this.draft,
+    required this.onAdd,
+    required this.onRemove,
   });
 
   @override
-  State<_GitBranchesField> createState() => _GitBranchesFieldState();
+  State<_GitBranchPicker> createState() => _GitBranchPickerState();
 }
 
-class _GitBranchesFieldState extends State<_GitBranchesField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.value);
-  }
-
-  @override
-  void didUpdateWidget(covariant _GitBranchesField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value && _controller.text != widget.value) {
-      _controller.text = widget.value;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _GitBranchPickerState extends State<_GitBranchPicker> {
+  int _menuEpoch = 0;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final draft = widget.draft;
+    final selectedLower = {
+      for (final name in draft.draftBranches) name.toLowerCase(),
+    };
+    final choices = [
+      for (final name in draft.availableBranches)
+        if (!selectedLower.contains(name.toLowerCase())) name,
+    ];
+
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: TextField(
-        controller: _controller,
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: widget.hint,
-        ),
-        onChanged: widget.onChanged,
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.settingsGitWatchesBranchesTitle,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.settingsGitWatchesBranchesSubtitle,
+            style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+          ),
+          if (draft.draftRepos.isEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.settingsGitWatchesBranchesNeedRepos,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ] else ...[
+            if (draft.draftBranches.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final branch in draft.draftBranches)
+                    InputChip(
+                      label: Text(branch),
+                      onDeleted: draft.saving
+                          ? null
+                          : () => widget.onRemove(branch),
+                    ),
+                ],
+              ),
+            ],
+            if (draft.branchesError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                draft.branchesError!,
+                style: AppTextStyles.bodySmall.copyWith(color: cs.error),
+              ),
+            ],
+            const SizedBox(height: 8),
+            if (draft.branchesLoading)
+              const LinearProgressIndicator()
+            else
+              DropdownMenu<String>(
+                key: ValueKey(_menuEpoch),
+                expandedInsets: EdgeInsets.zero,
+                requestFocusOnTap: true,
+                enableFilter: true,
+                enabled: !draft.saving && choices.isNotEmpty,
+                hintText: l10n.settingsGitWatchesBranchesSearch,
+                dropdownMenuEntries: [
+                  for (final name in choices)
+                    DropdownMenuEntry<String>(value: name, label: name),
+                ],
+                onSelected: (value) {
+                  if (value == null || value.trim().isEmpty) return;
+                  widget.onAdd(value);
+                  setState(() => _menuEpoch++);
+                },
+              ),
+            if (draft.branchesTruncated) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.settingsGitWatchesBranchesTruncated(
+                  draft.availableBranches.length,
+                ),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ],
       ),
     );
   }

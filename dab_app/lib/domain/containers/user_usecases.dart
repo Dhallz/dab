@@ -8,6 +8,7 @@ import '../usecases/user/get_users.dart';
 import '../usecases/user/list_my_credentials.dart';
 import '../usecases/user/delete_my_activity_follow.dart';
 import '../usecases/user/list_my_activity_follows.dart';
+import '../usecases/user/list_my_git_branches.dart';
 import '../usecases/user/list_my_git_watches.dart';
 import '../usecases/user/list_my_jira_projects.dart';
 import '../usecases/user/list_my_linear_teams.dart';
@@ -37,6 +38,7 @@ class UserUseCases {
   final ListMyLinearTeams listMyLinearTeams;
   final SaveMyLinearTeams saveMyLinearTeams;
   final ListMyGitWatches listMyGitWatches;
+  final ListMyGitBranches listMyGitBranches;
   final SaveMyGitWatches saveMyGitWatches;
   final ListMyActivityFollows listMyActivityFollows;
   final SaveMyActivityFollow saveMyActivityFollow;
@@ -59,6 +61,7 @@ class UserUseCases {
       listMyLinearTeams = ListMyLinearTeams(repository),
       saveMyLinearTeams = SaveMyLinearTeams(repository),
       listMyGitWatches = ListMyGitWatches(repository),
+      listMyGitBranches = ListMyGitBranches(repository),
       saveMyGitWatches = SaveMyGitWatches(repository),
       listMyActivityFollows = ListMyActivityFollows(repository),
       saveMyActivityFollow = SaveMyActivityFollow(repository),

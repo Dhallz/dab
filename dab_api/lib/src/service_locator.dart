@@ -59,6 +59,7 @@ import 'package:dab_api/src/application/usecases/metadata/save_provider_config.d
 import 'package:dab_api/src/application/usecases/metadata/test_provider_config.dart';
 import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.dart';
 import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
+import 'package:dab_api/src/application/usecases/user/get_git_branch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
 import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
@@ -85,6 +86,9 @@ import 'package:dab_api/src/domain/contracts/ports/i_live_feed_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_presence_broadcaster.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_provider_identity_probe.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_bitbucket_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_github_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/i_gitlab_branch_catalog.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_linear_team_catalog.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_oauth_client_credential_resolver.dart';
@@ -146,10 +150,13 @@ import 'package:dab_api/src/infrastructure/core/adapters/oauth_state_store.dart'
 import 'package:dab_api/src/infrastructure/core/adapters/oauth_token_client.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/provider_identity_probe.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/webhook_request_authenticator.dart';
+import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
+import 'package:dab_api/src/infrastructure/sources/github/github_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_project_catalog.dart';
@@ -685,10 +692,30 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<IJiraProjectCatalog>(
     JiraProjectCatalog(jsonRestProtocol),
   );
+  sl.registerSingleton<IGitHubBranchCatalog>(
+    GitHubBranchCatalog(jsonRestProtocol),
+  );
+  sl.registerSingleton<IGitLabBranchCatalog>(
+    GitLabBranchCatalog(jsonRestProtocol),
+  );
+  sl.registerSingleton<IBitbucketBranchCatalog>(
+    BitbucketBranchCatalog(jsonRestProtocol),
+  );
   sl.registerSingleton<GetGitWatchList>(
     GetGitWatchList(
       sl<ICredentialResolver>(),
       sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<GetGitBranchList>(
+    GetGitBranchList(
+      sl<GetGitWatchList>(),
+      sl<ICredentialResolver>(),
+      sl<IGitHubBranchCatalog>(),
+      sl<IGitLabBranchCatalog>(),
+      sl<IBitbucketBranchCatalog>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<IOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveGitWatchList>(
@@ -861,6 +888,7 @@ Future<void> serviceLocator() async {
       testUserProviderCredential: sl<TestUserProviderCredential>(),
       startProviderOauth: sl<StartProviderOauth>(),
       getGitWatchList: sl<GetGitWatchList>(),
+      getGitBranchList: sl<GetGitBranchList>(),
       saveGitWatchList: sl<SaveGitWatchList>(),
       getJiraProjectWatchList: sl<GetJiraProjectWatchList>(),
       saveJiraProjectWatchList: sl<SaveJiraProjectWatchList>(),

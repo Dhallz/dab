@@ -7,6 +7,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../../domain/entities/user/linear_team_watch_list.dart';
@@ -109,6 +110,12 @@ abstract class IUserRepository {
     required String providerId,
     required List<String> repos,
     List<String> branches = const [],
+  });
+
+  /// Self-serve: unique branch names on [repos] for the git inbox picker.
+  Future<Either<AppFailure, GitBranchList>> listMyGitBranches({
+    required String providerId,
+    List<String> repos = const [],
   });
 
   /// Self-serve: Dashboard object Follow pins for the caller.

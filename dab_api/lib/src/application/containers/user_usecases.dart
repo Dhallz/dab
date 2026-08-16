@@ -1,4 +1,5 @@
 import '../usecases/user/delete_user_provider_credential.dart';
+import '../usecases/user/get_git_branch_list.dart';
 import '../usecases/user/get_git_watch_list.dart';
 import '../usecases/user/get_jira_project_watch_list.dart';
 import '../usecases/user/get_linear_team_watch_list.dart';
@@ -28,6 +29,7 @@ class UserUseCases {
   final TestUserProviderCredential testUserProviderCredential;
   final StartProviderOauth startProviderOauth;
   final GetGitWatchList getGitWatchList;
+  final GetGitBranchList getGitBranchList;
   final SaveGitWatchList saveGitWatchList;
   final GetJiraProjectWatchList getJiraProjectWatchList;
   final SaveJiraProjectWatchList saveJiraProjectWatchList;
@@ -48,6 +50,7 @@ class UserUseCases {
     required this.testUserProviderCredential,
     required this.startProviderOauth,
     required this.getGitWatchList,
+    required this.getGitBranchList,
     required this.saveGitWatchList,
     required this.getJiraProjectWatchList,
     required this.saveJiraProjectWatchList,

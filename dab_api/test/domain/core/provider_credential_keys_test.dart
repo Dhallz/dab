@@ -19,6 +19,13 @@ void main() {
     expect(token, 'org-pat');
   });
 
+  test('GitHub falls back to accessToken when api.token is absent', () {
+    expect(
+      extractProviderToken('github', {'accessToken': 'gho_oauth'}),
+      'gho_oauth',
+    );
+  });
+
   test('oauthAccessTokenNeedsRefresh is true near expiry', () {
     final now = DateTime.utc(2026, 8, 14, 20);
     expect(

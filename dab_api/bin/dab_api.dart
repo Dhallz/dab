@@ -117,6 +117,10 @@ Future<void> main() async {
       '/users/me/credentials/:provider/projects',
       UserController().getMyJiraProjects,
     )
+    ..get(
+      '/users/me/credentials/:provider/branches',
+      UserController().getMyGitBranches,
+    )
     ..put(
       '/users/me/credentials/:provider/projects',
       UserController().saveMyJiraProjects,

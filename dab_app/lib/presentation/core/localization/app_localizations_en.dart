@@ -1091,6 +1091,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional branches (comma-separated). Leave blank for all branches.';
 
   @override
+  String get settingsGitWatchesBranchesTitle => 'Inbox branches';
+
+  @override
+  String get settingsGitWatchesBranchesSubtitle =>
+      'Add branches to watch. With none selected, every branch on the chosen repos is included.';
+
+  @override
+  String get settingsGitWatchesBranchesSearch => 'Search branches';
+
+  @override
+  String get settingsGitWatchesBranchesNeedRepos =>
+      'Select at least one repo before choosing branches.';
+
+  @override
+  String settingsGitWatchesBranchesTruncated(int count) {
+    return 'Not all branches could be loaded ($count shown). Type to search this list.';
+  }
+
+  @override
   String get adminPublicApiUrlTitle => 'Public API URL';
 
   @override

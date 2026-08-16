@@ -52,4 +52,18 @@ void main() {
     expect(watch.selected, isEmpty);
     expect(watch.available, ['Acme/app']);
   });
+
+  test('maps unexpected throws to a validation failure', () async {
+    when(() => configs.getConfigs()).thenThrow(StateError('boom'));
+    when(
+      () => resolver.getUserSettings(userId: 'u-1', providerId: 'github'),
+    ).thenAnswer((_) async => <String, dynamic>{});
+
+    final out = await useCase.execute(userId: 'u-1', providerId: 'github');
+    expect(out.isLeft(), isTrue);
+    expect(
+      out.getLeft().toNullable()?.message,
+      'Could not load git inbox watches',
+    );
+  });
 }

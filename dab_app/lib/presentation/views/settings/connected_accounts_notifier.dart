@@ -23,18 +23,26 @@ final connectedAccountsNotifierProvider =
 class GitWatchDraft {
   final GitWatchList? watch;
   final List<String> draftRepos;
-  final String draftBranches;
+  final List<String> draftBranches;
+  final List<String> availableBranches;
+  final bool branchesTruncated;
+  final bool branchesLoading;
   final bool loading;
   final bool saving;
   final String? error;
+  final String? branchesError;
 
   const GitWatchDraft({
     this.watch,
     this.draftRepos = const [],
-    this.draftBranches = '',
+    this.draftBranches = const [],
+    this.availableBranches = const [],
+    this.branchesTruncated = false,
+    this.branchesLoading = false,
     this.loading = false,
     this.saving = false,
     this.error,
+    this.branchesError,
   });
 
   bool get hasLoaded => watch != null;
@@ -42,29 +50,50 @@ class GitWatchDraft {
   bool get dirty {
     final savedRepos = {...(watch?.selected ?? const <String>[])};
     final draft = {...draftRepos};
-    final savedBranches = (watch?.branches ?? const []).join(', ');
+    final savedBranches = {...(watch?.branches ?? const <String>[])};
+    final draftBranchSet = {...draftBranches};
     return savedRepos.length != draft.length ||
         !savedRepos.containsAll(draft) ||
-        savedBranches != draftBranches.trim();
+        savedBranches.length != draftBranchSet.length ||
+        !savedBranches.containsAll(draftBranchSet);
   }
 
   GitWatchDraft copyWith({
     GitWatchList? watch,
     List<String>? draftRepos,
-    String? draftBranches,
+    List<String>? draftBranches,
+    List<String>? availableBranches,
+    bool? branchesTruncated,
+    bool? branchesLoading,
     bool? loading,
     bool? saving,
     String? error,
+    String? branchesError,
     bool clearWatch = false,
     bool clearError = false,
+    bool clearBranchesError = false,
   }) {
     return GitWatchDraft(
       watch: clearWatch ? null : (watch ?? this.watch),
       draftRepos: clearWatch ? const [] : (draftRepos ?? this.draftRepos),
-      draftBranches: clearWatch ? '' : (draftBranches ?? this.draftBranches),
+      draftBranches: clearWatch
+          ? const []
+          : (draftBranches ?? this.draftBranches),
+      availableBranches: clearWatch
+          ? const []
+          : (availableBranches ?? this.availableBranches),
+      branchesTruncated: clearWatch
+          ? false
+          : (branchesTruncated ?? this.branchesTruncated),
+      branchesLoading: clearWatch
+          ? false
+          : (branchesLoading ?? this.branchesLoading),
       loading: loading ?? this.loading,
       saving: saving ?? this.saving,
       error: clearWatch || clearError ? null : (error ?? this.error),
+      branchesError: clearWatch || clearBranchesError
+          ? null
+          : (branchesError ?? this.branchesError),
     );
   }
 }
@@ -183,6 +212,7 @@ class ConnectedAccountsState {
 class ConnectedAccountsNotifier
     extends AutoDisposeNotifier<ConnectedAccountsState> {
   UserUseCases get _users => sl.userUseCases;
+  final Map<String, int> _branchLoadGen = {};
 
   @override
   ConnectedAccountsState build() {
@@ -424,9 +454,7 @@ class ConnectedAccountsNotifier
   }
 
   void _patchGit(String providerId, GitWatchDraft draft) {
-    state = state.copyWith(
-      git: {...state.git, providerId: draft},
-    );
+    state = state.copyWith(git: {...state.git, providerId: draft});
   }
 
   void _clearGit(String providerId) {
@@ -437,17 +465,24 @@ class ConnectedAccountsNotifier
   Future<void> loadGitWatches(String providerId) async {
     _patchGit(
       providerId,
-      state.gitDraft(providerId).copyWith(loading: true, clearError: true),
+      state
+          .gitDraft(providerId)
+          .copyWith(
+            loading: true,
+            clearError: true,
+            clearBranchesError: true,
+          ),
     );
-    final result = await _users.listMyGitWatches.execute(providerId: providerId);
+    final result = await _users.listMyGitWatches.execute(
+      providerId: providerId,
+    );
     result.fold(
       (failure) {
         _patchGit(
           providerId,
-          state.gitDraft(providerId).copyWith(
-            loading: false,
-            error: failure.message,
-          ),
+          state
+              .gitDraft(providerId)
+              .copyWith(loading: false, error: failure.message),
         );
       },
       (watch) {
@@ -456,9 +491,10 @@ class ConnectedAccountsNotifier
           GitWatchDraft(
             watch: watch,
             draftRepos: List<String>.from(watch.selected),
-            draftBranches: watch.branches.join(', '),
+            draftBranches: List<String>.from(watch.branches),
           ),
         );
+        unawaited(loadGitBranches(providerId));
       },
     );
   }
@@ -472,33 +508,107 @@ class ConnectedAccountsNotifier
       next.add(key);
     }
     _patchGit(providerId, current.copyWith(draftRepos: next));
+    unawaited(loadGitBranches(providerId));
   }
 
-  void setGitDraftBranches(String providerId, String value) {
+  void addGitBranch(String providerId, String branch) {
+    final name = branch.trim();
+    if (name.isEmpty) return;
     final current = state.gitDraft(providerId);
-    _patchGit(providerId, current.copyWith(draftBranches: value));
+    if (current.draftBranches.any(
+      (b) => b.toLowerCase() == name.toLowerCase(),
+    )) {
+      return;
+    }
+    _patchGit(
+      providerId,
+      current.copyWith(draftBranches: [...current.draftBranches, name]),
+    );
+  }
+
+  void removeGitBranch(String providerId, String branch) {
+    final current = state.gitDraft(providerId);
+    _patchGit(
+      providerId,
+      current.copyWith(
+        draftBranches: [
+          for (final item in current.draftBranches)
+            if (item.toLowerCase() != branch.trim().toLowerCase()) item,
+        ],
+      ),
+    );
+  }
+
+  Future<void> loadGitBranches(String providerId) async {
+    final gen = (_branchLoadGen[providerId] ?? 0) + 1;
+    _branchLoadGen[providerId] = gen;
+    final current = state.gitDraft(providerId);
+    final repos = current.draftRepos;
+    if (repos.isEmpty) {
+      _patchGit(
+        providerId,
+        current.copyWith(
+          availableBranches: const [],
+          branchesTruncated: false,
+          branchesLoading: false,
+          clearBranchesError: true,
+        ),
+      );
+      return;
+    }
+    _patchGit(
+      providerId,
+      current.copyWith(branchesLoading: true, clearBranchesError: true),
+    );
+    final result = await _users.listMyGitBranches.execute(
+      providerId: providerId,
+      repos: repos,
+    );
+    if (gen != _branchLoadGen[providerId]) return;
+    result.fold(
+      (failure) {
+        _patchGit(
+          providerId,
+          state
+              .gitDraft(providerId)
+              .copyWith(
+                branchesLoading: false,
+                availableBranches: const [],
+                branchesTruncated: false,
+                branchesError: failure.message,
+              ),
+        );
+      },
+      (list) {
+        final draft = state.gitDraft(providerId);
+        _patchGit(
+          providerId,
+          draft.copyWith(
+            availableBranches: list.available,
+            branchesTruncated: list.truncated,
+            branchesLoading: false,
+            clearBranchesError: true,
+          ),
+        );
+      },
+    );
   }
 
   Future<String?> saveGitWatches(String providerId) async {
     final current = state.gitDraft(providerId);
     _patchGit(providerId, current.copyWith(saving: true));
-    final branches = [
-      for (final part in current.draftBranches.split(RegExp(r'[\n,]+')))
-        if (part.trim().isNotEmpty) part.trim(),
-    ];
     final result = await _users.saveMyGitWatches.execute(
       providerId: providerId,
       repos: current.draftRepos,
-      branches: branches,
+      branches: current.draftBranches,
     );
     return result.fold(
       (failure) {
         _patchGit(
           providerId,
-          state.gitDraft(providerId).copyWith(
-            saving: false,
-            error: failure.message,
-          ),
+          state
+              .gitDraft(providerId)
+              .copyWith(saving: false, error: failure.message),
         );
         return failure.message;
       },
@@ -508,7 +618,9 @@ class ConnectedAccountsNotifier
           GitWatchDraft(
             watch: watch,
             draftRepos: List<String>.from(watch.selected),
-            draftBranches: watch.branches.join(', '),
+            draftBranches: List<String>.from(watch.branches),
+            availableBranches: state.gitDraft(providerId).availableBranches,
+            branchesTruncated: state.gitDraft(providerId).branchesTruncated,
           ),
         );
         unawaitedRefreshHealth();
@@ -613,7 +725,8 @@ class ConnectedAccountsNotifier
           clearBusy: true,
           clearJiraProjects: providerId == 'jira',
           clearLinearTeams: providerId == 'linear',
-          git: providerId == 'github' ||
+          git:
+              providerId == 'github' ||
                   providerId == 'gitlab' ||
                   providerId == 'bitbucket'
               ? ({...state.git}..remove(providerId))

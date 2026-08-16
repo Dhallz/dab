@@ -2072,6 +2072,36 @@ abstract class AppLocalizations {
   /// **'Optional branches (comma-separated). Leave blank for all branches.'**
   String get settingsGitWatchesBranchesHint;
 
+  /// No description provided for @settingsGitWatchesBranchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox branches'**
+  String get settingsGitWatchesBranchesTitle;
+
+  /// No description provided for @settingsGitWatchesBranchesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add branches to watch. With none selected, every branch on the chosen repos is included.'**
+  String get settingsGitWatchesBranchesSubtitle;
+
+  /// No description provided for @settingsGitWatchesBranchesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search branches'**
+  String get settingsGitWatchesBranchesSearch;
+
+  /// No description provided for @settingsGitWatchesBranchesNeedRepos.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one repo before choosing branches.'**
+  String get settingsGitWatchesBranchesNeedRepos;
+
+  /// No description provided for @settingsGitWatchesBranchesTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not all branches could be loaded ({count} shown). Type to search this list.'**
+  String settingsGitWatchesBranchesTruncated(int count);
+
   /// No description provided for @adminPublicApiUrlTitle.
   ///
   /// In en, this message translates to:

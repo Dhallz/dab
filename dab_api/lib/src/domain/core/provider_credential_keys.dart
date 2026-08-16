@@ -72,13 +72,17 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
   final id = providerId.trim().toLowerCase();
   switch (id) {
     case 'github':
-      return (settings['api.token'] ?? settings['token'] ?? '')
+      return (settings['api.token'] ??
+              settings['token'] ??
+              settings['accessToken'] ??
+              '')
           .toString()
           .trim();
     case 'gitlab':
       return (settings['api.token'] ??
               settings['apiToken'] ??
               settings['token'] ??
+              settings['accessToken'] ??
               '')
           .toString()
           .trim();
@@ -123,6 +127,7 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
       return (settings['apiToken'] ??
               settings['appPassword'] ??
               settings['token'] ??
+              settings['accessToken'] ??
               '')
           .toString()
           .trim();

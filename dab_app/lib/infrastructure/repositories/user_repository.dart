@@ -9,6 +9,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
 import '../../domain/entities/user/linear_team_watch_list.dart';
@@ -362,6 +363,21 @@ class UserRepository extends Repository implements IUserRepository {
   }
 
   @override
+  Future<Either<AppFailure, GitBranchList>> listMyGitBranches({
+    required String providerId,
+    List<String> repos = const [],
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get(
+        '/users/me/credentials/$providerId/branches',
+        queryParameters: {'repos': repos.join(',')},
+      );
+      final data = _getEnvelopeData(response);
+      return GitBranchList.fromMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
   Future<Either<AppFailure, List<ActivityFollow>>> listMyActivityFollows() {
     return guardedCall(() async {
       final response = await _client.get('/users/me/follows');
@@ -370,9 +386,7 @@ class UserRepository extends Repository implements IUserRepository {
       final follows = <ActivityFollow>[];
       for (final item in data) {
         if (item is! Map) continue;
-        follows.add(
-          ActivityFollow.fromMap(Map<String, dynamic>.from(item)),
-        );
+        follows.add(ActivityFollow.fromMap(Map<String, dynamic>.from(item)));
       }
       return follows;
     });

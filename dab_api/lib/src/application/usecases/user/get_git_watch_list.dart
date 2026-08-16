@@ -22,6 +22,20 @@ class GetGitWatchList {
     required String userId,
     required String providerId,
   }) async {
+    try {
+      return await _execute(
+        userId: userId,
+        providerId: providerId,
+      );
+    } catch (_) {
+      return const Left(ValidationFailure('Could not load git inbox watches'));
+    }
+  }
+
+  Future<Either<Failure, GitWatchList>> _execute({
+    required String userId,
+    required String providerId,
+  }) async {
     final id = providerId.trim().toLowerCase();
     if (id != 'github' && id != 'gitlab' && id != 'bitbucket') {
       return const Left(ValidationFailure('Git watches are for GitHub, GitLab, or Bitbucket'));
