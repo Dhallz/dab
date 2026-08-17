@@ -1,4 +1,5 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/git_watch_scope.dart';
 import 'package:dab_api/src/domain/core/gitlab_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_dto.dart';
@@ -82,36 +83,46 @@ class GitLabCommitSource
 
     for (final project in projects) {
       final encodedProject = Uri.encodeComponent(project);
-      final uri = Uri.parse(
-        '$apiBase/projects/$encodedProject/repository/commits',
-      ).replace(
-        queryParameters: {
-          'since': start.toUtc().toIso8601String(),
-          'until': end.toUtc().toIso8601String(),
-          'per_page': '100',
-          if (branch.isNotEmpty) 'ref_name': branch,
-        },
+      final refs = gitExplorerPollRefs(
+        repo: project,
+        instanceRepos: projects,
+        configuredBranch: branch,
+        userSettingsById: userSettings,
       );
+      for (final ref in refs) {
+        final refName = (ref ?? '').trim();
+        final uri =
+            Uri.parse(
+              '$apiBase/projects/$encodedProject/repository/commits',
+            ).replace(
+              queryParameters: {
+                'since': start.toUtc().toIso8601String(),
+                'until': end.toUtc().toIso8601String(),
+                'per_page': '100',
+                if (refName.isNotEmpty) 'ref_name': refName,
+              },
+            );
 
-      List<dynamic> items;
-      try {
-        items = await _jsonRest.getJsonList(uri, headers: headers);
-      } catch (_) {
-        continue;
-      }
+        List<dynamic> items;
+        try {
+          items = await _jsonRest.getJsonList(uri, headers: headers);
+        } catch (_) {
+          continue;
+        }
 
-      for (final raw in items) {
-        if (raw is! Map<String, dynamic>) continue;
-        final dto = mapGitLabCommitJson(
-          raw,
-          project: project,
-          branch: branch.isEmpty ? null : branch,
-          emailToUser: emailToUser,
-        );
-        if (dto == null) continue;
-        if (dto.userId == null) continue;
-        if (!seen.add('${dto.project}:${dto.sha}')) continue;
-        commits.add(dto);
+        for (final raw in items) {
+          if (raw is! Map<String, dynamic>) continue;
+          final dto = mapGitLabCommitJson(
+            raw,
+            project: project,
+            branch: refName.isEmpty ? null : refName,
+            emailToUser: emailToUser,
+          );
+          if (dto == null) continue;
+          if (dto.userId == null) continue;
+          if (!seen.add('${dto.project}:${dto.sha}')) continue;
+          commits.add(dto);
+        }
       }
     }
 
@@ -132,8 +143,9 @@ class GitLabCommitSource
     final query = email.trim().isNotEmpty ? email.trim() : name.trim();
     if (query.isEmpty) return const Right(null);
 
-    final uri = Uri.parse('${gitLabApiBase(cfg.settings, cfg.baseUrl)}/users')
-        .replace(queryParameters: {'search': query});
+    final uri = Uri.parse(
+      '${gitLabApiBase(cfg.settings, cfg.baseUrl)}/users',
+    ).replace(queryParameters: {'search': query});
 
     try {
       final list = await _jsonRest.getJsonList(

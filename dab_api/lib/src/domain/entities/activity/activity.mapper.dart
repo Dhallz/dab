@@ -15,6 +15,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ActivityMapper._());
       ActivityProviderMapper.ensureInitialized();
+      ActivityInboxLaneMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -73,6 +74,13 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     opt: true,
     def: false,
   );
+  static ActivityInboxLane _$inboxLane(Activity v) => v.inboxLane;
+  static const Field<Activity, ActivityInboxLane> _f$inboxLane = Field(
+    'inboxLane',
+    _$inboxLane,
+    opt: true,
+    def: ActivityInboxLane.directed,
+  );
 
   @override
   final MappableFields<Activity> fields = const {
@@ -88,6 +96,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
     #commentCount: _f$commentCount,
     #createdAt: _f$createdAt,
     #archived: _f$archived,
+    #inboxLane: _f$inboxLane,
   };
 
   static Activity _instantiate(DecodingData data) {
@@ -104,6 +113,7 @@ class ActivityMapper extends ClassMapperBase<Activity> {
       commentCount: data.dec(_f$commentCount),
       createdAt: data.dec(_f$createdAt),
       archived: data.dec(_f$archived),
+      inboxLane: data.dec(_f$inboxLane),
     );
   }
 
@@ -177,6 +187,7 @@ abstract class ActivityCopyWith<$R, $In extends Activity, $Out>
     int? commentCount,
     DateTime? createdAt,
     bool? archived,
+    ActivityInboxLane? inboxLane,
   });
   ActivityCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -203,6 +214,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     int? commentCount,
     DateTime? createdAt,
     bool? archived,
+    ActivityInboxLane? inboxLane,
   }) => $apply(
     FieldCopyWithData({
       if (id != null) #id: id,
@@ -217,6 +229,7 @@ class _ActivityCopyWithImpl<$R, $Out>
       if (commentCount != null) #commentCount: commentCount,
       if (createdAt != null) #createdAt: createdAt,
       if (archived != null) #archived: archived,
+      if (inboxLane != null) #inboxLane: inboxLane,
     }),
   );
   @override
@@ -233,6 +246,7 @@ class _ActivityCopyWithImpl<$R, $Out>
     commentCount: data.get(#commentCount, or: $value.commentCount),
     createdAt: data.get(#createdAt, or: $value.createdAt),
     archived: data.get(#archived, or: $value.archived),
+    inboxLane: data.get(#inboxLane, or: $value.inboxLane),
   );
 
   @override

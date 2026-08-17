@@ -10,7 +10,7 @@ import '../widgets/dashboard_sidebar_content.dart';
 /// [ARCH: PRESENTATION_LAYOUT]
 /// ROLE: Desktop rendering of the Activity Dashboard.
 /// CONTRACT: Two-column shell — [AppSidebar] plus main column with toolbar
-/// and [DashboardLiveFeed].
+/// and two always-visible inbox panes ([DashboardLiveFeedScope]).
 class DashboardViewDesktop extends StatelessWidget {
   const DashboardViewDesktop({super.key});
 
@@ -31,6 +31,7 @@ class DashboardViewDesktop extends StatelessWidget {
                 const DashboardIslandBarContent(showCounts: false),
                 const Expanded(
                   child: DashboardLiveFeedScope(
+                    axis: Axis.horizontal,
                     padding: EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                   ),
                 ),
@@ -55,6 +56,7 @@ class _DashboardSidebarPane extends ConsumerWidget {
           providerHealth: s.providerHealth,
           activities: s.activities,
           showArchived: s.showArchivedActivities,
+          follows: s.follows,
         ),
       ),
     );

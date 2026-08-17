@@ -1,30 +1,37 @@
+import 'package:dart_mappable/dart_mappable.dart';
+
 import '../../core/activity_follow_key.dart';
+
+part 'activity_follow.mapper.dart';
 
 /// [ARCH: DOMAIN_ENTITY]
 /// ROLE: One Follow pin: this user wants every later update on [objectKey].
 /// CONTRACT: [providerId] is an ingest id (`phorge`, `jira`, `linear`,
 /// `slack`, `discord`). [objectKey] is the stable object identity from
-/// [followObjectKeyFor]. Git is not represented.
-class ActivityFollow {
+/// [followObjectKeyFor]. [title] / [url] snapshot the Followed card so
+/// Dashboard can show a watching row immediately. Git is not represented.
+@MappableClass()
+class ActivityFollow with ActivityFollowMappable {
   final String providerId;
   final String objectKey;
+  final String? title;
+  final String? url;
 
   const ActivityFollow({
     required this.providerId,
     required this.objectKey,
+    this.title,
+    this.url,
   });
 
-  factory ActivityFollow.fromMap(Map<String, dynamic> map) {
-    return ActivityFollow(
-      providerId: (map['providerId'] ?? '').toString().trim(),
-      objectKey: (map['objectKey'] ?? '').toString().trim(),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'providerId': providerId,
-    'objectKey': objectKey,
-  };
+  factory ActivityFollow.fromMap(Map<String, dynamic> map) =>
+      ActivityFollowMapper.fromMap(map);
 
   String get objectRef => followObjectRef(providerId, objectKey);
+
+  /// Title for a watching row; falls back to [objectKey] when unset.
+  String get displayTitle {
+    final value = title?.trim() ?? '';
+    return value.isEmpty ? objectKey : value;
+  }
 }

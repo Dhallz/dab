@@ -585,5 +585,6 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-1');
     expect(captured.senderUserId, 'u-1');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
   });
 }

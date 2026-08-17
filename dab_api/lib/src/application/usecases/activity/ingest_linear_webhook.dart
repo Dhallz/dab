@@ -209,14 +209,12 @@ class IngestLinearWebhook {
         externalToUser: externalToUser,
       );
     }
-    inboxTargets.addAll(
-      await inboxFollowerUserIds(
-        _follows,
-        providerId: 'linear',
-        objectKeys: [dto.identifier],
-      ),
+    final followers = await inboxFollowerUserIds(
+      _follows,
+      providerId: 'linear',
+      objectKeys: [dto.identifier],
     );
-    if (inboxTargets.isEmpty) {
+    if (inboxTargets.isEmpty && followers.isEmpty) {
       return const Right(
         LinearWebhookIngestionResult.ignored('no_target_mentions'),
       );
@@ -225,6 +223,7 @@ class IngestLinearWebhook {
     final activities = hydrated.toActivities(
       users,
       forUserIds: inboxTargets,
+      followerUserIds: followers,
       senderUserId: senderUserId,
     );
     if (activities.isEmpty) {

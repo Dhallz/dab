@@ -56,11 +56,14 @@ extension OnSlackMessageDto on SlackMessageDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
-    final targets = forUserIds == null
-        ? [if (dabUserId != null && dabUserId!.isNotEmpty) dabUserId!]
-        : forUserIds.where((id) => id.isNotEmpty).toList();
+    final targets = resolveInboxLaneTargets(
+      forUserIds: forUserIds,
+      followerUserIds: followerUserIds,
+      fallbackUserId: dabUserId,
+    );
     if (targets.isEmpty) {
       return const [];
     }
@@ -72,20 +75,26 @@ extension OnSlackMessageDto on SlackMessageDto {
         ? '[$conversationLabel] Slack message'
         : '[$conversationLabel] ${_truncateSlackPreview(trimmedText)}';
     final content = trimmedText.isEmpty ? '(no message text)' : trimmedText;
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
 
     final activities = <Activity>[];
-    for (final targetUserId in targets) {
+    for (final (targetUserId, lane) in targets) {
       final user = usersById[targetUserId];
       if (user == null) continue;
 
       final stableIdentity = fanOut
-          ? '${workspaceId ?? 'workspace'}-$channelId-$ts-$targetUserId'
+          ? withInboxLaneId(
+              '${workspaceId ?? 'workspace'}-$channelId-$ts-$targetUserId',
+              lane,
+            )
           : '${workspaceId ?? 'workspace'}-$channelId-${threadTs ?? ts}-$ts';
 
       activities.add(
         Activity(
-          id: _slackMessageUuid.v5(Namespace.url.value, 'slack-$stableIdentity'),
+          id: _slackMessageUuid.v5(
+            Namespace.url.value,
+            'slack-$stableIdentity',
+          ),
           userId: targetUserId,
           senderUserId: senderUserId ?? dabUserId,
           provider: SlackMessageProvider(
@@ -104,6 +113,7 @@ extension OnSlackMessageDto on SlackMessageDto {
               ? userAvatarUrl
               : (userAvatarUrl ?? user.avatarUrl),
           createdAt: createdAt,
+          inboxLane: lane,
         ),
       );
     }

@@ -3,6 +3,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
+import '../../../domain/entities/user/activity_follow.dart';
 import 'models/dashboard_feed_group.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
@@ -24,7 +25,7 @@ class DashboardState with DashboardStateMappable {
   final DateTime? lastSyncedAt;
   final DateTime? reconnectNoticeAt;
   final String? errorMessage;
-  final List<String> followedObjectRefs;
+  final List<ActivityFollow> follows;
 
   const DashboardState({
     this.status = ViewStatus.initial,
@@ -35,7 +36,7 @@ class DashboardState with DashboardStateMappable {
     this.lastSyncedAt,
     this.reconnectNoticeAt,
     this.errorMessage,
-    this.followedObjectRefs = const [],
+    this.follows = const [],
   });
 
   factory DashboardState.initial() => const DashboardState();
@@ -45,6 +46,33 @@ class DashboardState with DashboardStateMappable {
   List<Activity> get visibleActivities {
     if (showArchivedActivities) return activities;
     return activities.where((activity) => !activity.archived).toList();
+  }
+
+  /// Directed pane: mentions, assignments, CCs, git watches.
+  /// Legacy live JSON without [Activity.inboxLane] is treated as directed.
+  List<Activity> get directedVisible =>
+      visibleActivities.where((activity) => !activity.isFollowLane).toList();
+
+  /// Follow pane: later updates on Follow-pinned objects.
+  List<Activity> get followedVisible =>
+      visibleActivities.where((activity) => activity.isFollowLane).toList();
+
+  /// Stable Follow refs for the current [follows] pins.
+  List<String> get followedObjectRefs => [
+    for (final follow in follows) follow.objectRef,
+  ];
+
+  /// Quiet watching rows: Follow pins that do not already have a Follow-lane
+  /// live card in the pane.
+  List<ActivityFollow> get watchingPins {
+    final covered = <String>{
+      for (final activity in followedVisible)
+        ?followObjectRefFor(activity.provider),
+    };
+    return [
+      for (final follow in follows)
+        if (!covered.contains(follow.objectRef)) follow,
+    ];
   }
 
   int get archivedCount =>
@@ -68,4 +96,15 @@ extension OnDashboardState on DashboardState {
     visible: visibleActivities,
     providerHealth: providerHealth,
   );
+
+  /// Category containers for a pane's visible subset.
+  List<DashboardFeedGroup> categoryGroupsFor(List<Activity> visible) =>
+      deriveCategoryFeedGroups(visible);
+
+  /// Provider containers for a pane's visible subset.
+  List<DashboardFeedGroup> providerGroupsFor(List<Activity> visible) =>
+      deriveProviderFeedGroups(
+        visible: visible,
+        providerHealth: providerHealth,
+      );
 }

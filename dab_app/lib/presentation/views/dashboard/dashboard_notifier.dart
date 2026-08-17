@@ -7,6 +7,7 @@ import '../../../domain/containers/user_usecases.dart';
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
+import '../../../domain/entities/user/activity_follow.dart';
 import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
 import '../../features/app/app_notifier.dart';
@@ -82,17 +83,14 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     final followsFuture = _userUseCases.listMyActivityFollows.execute();
     final liveResult = await liveFuture;
     final followsResult = await followsFuture;
-    final followedObjectRefs = followsResult
-        .getOrElse((_) => const [])
-        .map((follow) => follow.objectRef)
-        .toList();
+    final follows = followsResult.getOrElse((_) => const <ActivityFollow>[]);
 
     liveResult.fold(
       (failure) {
         state = state.copyWith(
           status: ViewStatus.failure,
           errorMessage: failure.message,
-          followedObjectRefs: followedObjectRefs,
+          follows: follows,
           lastSyncedAt: now,
           reconnectNoticeAt: null,
           providerHealth: _providerHealthFor(state.activities),
@@ -103,7 +101,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
           status: ViewStatus.success,
           errorMessage: null,
           activities: activities,
-          followedObjectRefs: followedObjectRefs,
+          follows: follows,
           providerHealth: _providerHealthFor(activities),
           lastSyncedAt: now,
           reconnectNoticeAt: null,
@@ -213,43 +211,64 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     if (providerId == null || objectKey == null) return;
     final ref = followObjectRef(providerId, objectKey);
     if (state.followedObjectRefs.contains(ref)) return;
-    state = state.copyWith(
-      followedObjectRefs: [...state.followedObjectRefs, ref],
+    final pin = ActivityFollow(
+      providerId: providerId,
+      objectKey: objectKey,
+      title: activity.title,
+      url: activity.url,
     );
+    state = state.copyWith(follows: [...state.follows, pin]);
     final result = await _userUseCases.saveMyActivityFollow.execute(
       providerId: providerId,
       objectKey: objectKey,
+      title: activity.title,
+      url: activity.url,
     );
-    result.fold((_) {
-      state = state.copyWith(
-        followedObjectRefs: [
-          for (final item in state.followedObjectRefs)
-            if (item != ref) item,
-        ],
-      );
-    }, (_) {});
+    result.fold(
+      (_) {
+        state = state.copyWith(
+          follows: [
+            for (final item in state.follows)
+              if (item.objectRef != ref) item,
+          ],
+        );
+      },
+      (saved) {
+        state = state.copyWith(
+          follows: [
+            for (final item in state.follows)
+              if (item.objectRef == ref) saved else item,
+          ],
+        );
+      },
+    );
   }
 
   Future<void> unfollow(Activity activity) async {
     final providerId = followProviderIdFor(activity.provider);
     final objectKey = followObjectKeyFor(activity.provider);
     if (providerId == null || objectKey == null) return;
-    final ref = followObjectRef(providerId, objectKey);
+    await unfollowPin(
+      ActivityFollow(providerId: providerId, objectKey: objectKey),
+    );
+  }
+
+  Future<void> unfollowPin(ActivityFollow follow) async {
+    final ref = follow.objectRef;
     if (!state.followedObjectRefs.contains(ref)) return;
+    final previous = state.follows;
     state = state.copyWith(
-      followedObjectRefs: [
-        for (final item in state.followedObjectRefs)
-          if (item != ref) item,
+      follows: [
+        for (final item in state.follows)
+          if (item.objectRef != ref) item,
       ],
     );
     final result = await _userUseCases.deleteMyActivityFollow.execute(
-      providerId: providerId,
-      objectKey: objectKey,
+      providerId: follow.providerId,
+      objectKey: follow.objectKey,
     );
     result.fold((_) {
-      state = state.copyWith(
-        followedObjectRefs: [...state.followedObjectRefs, ref],
-      );
+      state = state.copyWith(follows: previous);
     }, (_) {});
   }
 

@@ -85,16 +85,16 @@ dab_app/lib/
 
 | Entity | Description |
 |---|---|
-| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow. |
+| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow, and `inboxLane` (`directed` \| `follow`) so Dashboard can show two independent rows when a user is both a directed recipient and a follower. Missing/legacy JSON is treated as directed. |
 | `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, …) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), optional `linkedProviderIds` (non-secret Directory hint) |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
 | `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. Jira/Linear OAuth access tokens are refreshed from the stored refresh token when expired. |
 | `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer ingest allow-list (not Dashboard targeting). |
 | `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
-| `GitWatchList` | Per-user git inbox watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. |
+| `GitWatchList` | Per-user git watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. Watched branches also feed Explorer git polling refs. |
 | `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
-| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`) for Phorge, Jira, Linear, Slack, and Discord. Git stays on `GitWatchList`. |
+| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, and Discord. Git stays on `GitWatchList`. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -165,9 +165,13 @@ The polling flow above powers Explorer (historical backfill). Dashboard is a
 `activities:user:{id}`. `ActivityLivePollScheduler` does **not** refill the
 inbox with authored poll rows; inbound rows come from webhooks / Gateway.
 Identity linking is required — unlinked mentions are dropped. Followable
-providers (Phorge, Jira, Linear, Slack, Discord) also union users who Follow
-that object key, so untagged later updates and the follower's own actions land
-until Unfollow. Standing ownership or channel membership is not automatic.
+providers (Phorge, Jira, Linear, Slack, Discord) emit a **second** live row
+for users who Follow that object key (`inboxLane: follow`, id seed suffixed
+`|follow`) instead of unioning followers into the directed recipient set.
+A user who is mentioned **and** Follows the object gets two inbox items with
+independent archive flags. Untagged later updates and the follower's own
+actions land on the Follow pane until Unfollow. Git watches stay directed
+only. Standing ownership or channel membership is not automatic.
 Jira issue
 activities include `updatedAt` in their id so a status move is a new live
 event; Jira comments use a stable `jira|{host}|{issueKey}|comment|{commentId}`

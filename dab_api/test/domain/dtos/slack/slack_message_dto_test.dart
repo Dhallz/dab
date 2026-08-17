@@ -1,4 +1,5 @@
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:test/test.dart';
 
@@ -65,5 +66,34 @@ void main() {
       ),
       isTrue,
     );
+    expect(
+      activities.every((a) => a.inboxLane == ActivityInboxLane.directed),
+      isTrue,
+    );
+  });
+
+  test('mention plus Follow emits two independent rows', () {
+    final alice = TestData.user(id: 'u-1', name: 'Alice');
+    final activities = SlackMessageDto(
+      channelId: 'C123',
+      channelLabel: '#eng',
+      workspaceId: 'T123',
+      text: '<@U1> hello',
+      userId: 'U123',
+      ts: '1712523471.0123',
+      dabUserId: 'u-1',
+      createdAt: DateTime.utc(2026, 1, 1),
+    ).toActivities(
+      [alice],
+      forUserIds: ['u-1'],
+      followerUserIds: ['u-1'],
+    );
+
+    expect(activities, hasLength(2));
+    expect(activities.map((a) => a.inboxLane).toSet(), {
+      ActivityInboxLane.directed,
+      ActivityInboxLane.follow,
+    });
+    expect(activities[0].id, isNot(activities[1].id));
   });
 }

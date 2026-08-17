@@ -27,6 +27,7 @@ class DashboardIslandBarContent extends ConsumerWidget {
           showArchived: s.showArchivedActivities,
           lastSyncedAt: s.lastSyncedAt,
           feedMode: s.feedMode,
+          follows: s.follows,
         ),
       ),
     );
@@ -65,8 +66,14 @@ class DashboardIslandBarContent extends ConsumerWidget {
           DabIslandStat(
             compact: true,
             icon: AppIcons.dashboard,
-            title: l10n.dashboardIslandLive,
-            value: '${state.visibleActivities.length}',
+            title: l10n.dashboardIslandDirected,
+            value: '${state.directedVisible.length}',
+          ),
+          DabIslandStat(
+            compact: true,
+            icon: AppIcons.following,
+            title: l10n.dashboardIslandFollowing,
+            value: '${state.followedVisible.length + state.watchingPins.length}',
           ),
           DabIslandStat(
             compact: true,

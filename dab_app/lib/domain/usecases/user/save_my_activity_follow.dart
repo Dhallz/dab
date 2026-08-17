@@ -14,8 +14,12 @@ class SaveMyActivityFollow {
   Future<Either<AppFailure, ActivityFollow>> execute({
     required String providerId,
     required String objectKey,
+    String? title,
+    String? url,
   }) => repository.saveMyActivityFollow(
     providerId: providerId,
     objectKey: objectKey,
+    title: title,
+    url: url,
   );
 }

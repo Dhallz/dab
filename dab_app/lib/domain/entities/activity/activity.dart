@@ -1,7 +1,9 @@
 import 'package:dart_mappable/dart_mappable.dart';
+import '../../core/activity_inbox_lane.dart';
 import 'activity_category.dart';
 import 'activity_provider.dart';
 export 'activity_provider.dart';
+export '../../core/activity_inbox_lane.dart';
 
 part 'activity.mapper.dart';
 
@@ -27,6 +29,9 @@ class Activity with ActivityMappable {
   /// at midnight. Only meaningful for live-feed activities.
   final bool archived;
 
+  /// Dashboard pane. Legacy live JSON without this field is directed.
+  final ActivityInboxLane inboxLane;
+
   Activity({
     required this.id,
     required this.userId,
@@ -40,9 +45,13 @@ class Activity with ActivityMappable {
     this.url,
     required this.createdAt,
     this.archived = false,
+    this.inboxLane = ActivityInboxLane.directed,
   });
 }
 
 extension OnActivity on Activity {
   ActivityCategory get type => provider.category;
+
+  /// Follow subscription copy for the right-hand Dashboard pane.
+  bool get isFollowLane => inboxLane == ActivityInboxLane.follow;
 }

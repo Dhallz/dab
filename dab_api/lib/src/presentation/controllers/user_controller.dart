@@ -554,6 +554,8 @@ class UserController {
       userId: userId,
       providerId: body.providerId,
       objectKey: body.objectKey,
+      title: body.title,
+      url: body.url,
     );
     return result.fold(
       (failure) {
@@ -635,9 +637,8 @@ class UserController {
     );
   }
 
-  Future<({String providerId, String objectKey})?> _readFollowBody(
-    Request request,
-  ) async {
+  Future<({String providerId, String objectKey, String? title, String? url})?>
+  _readFollowBody(Request request) async {
     try {
       final bodyStr = await request.readAsString();
       final data = bodyStr.trim().isEmpty
@@ -647,7 +648,14 @@ class UserController {
       final providerId = (data['providerId'] ?? '').toString().trim();
       final objectKey = (data['objectKey'] ?? '').toString().trim();
       if (providerId.isEmpty || objectKey.isEmpty) return null;
-      return (providerId: providerId, objectKey: objectKey);
+      final title = (data['title'] ?? '').toString().trim();
+      final url = (data['url'] ?? '').toString().trim();
+      return (
+        providerId: providerId,
+        objectKey: objectKey,
+        title: title.isEmpty ? null : title,
+        url: url.isEmpty ? null : url,
+      );
     } catch (_) {
       return null;
     }

@@ -157,19 +157,17 @@ class IngestDiscordMessage implements IDiscordLiveIngestor {
         ),
       );
     }
-    recipientUserIds.addAll(
-      await inboxFollowerUserIds(
-        _follows,
-        providerId: 'discord',
-        objectKeys: discordFollowLookupKeys(
-          guildId: dto.guildId,
-          channelId: dto.channelId,
-          messageId: dto.messageId,
-          replyToId: dto.replyToId,
-        ),
+    final followers = await inboxFollowerUserIds(
+      _follows,
+      providerId: 'discord',
+      objectKeys: discordFollowLookupKeys(
+        guildId: dto.guildId,
+        channelId: dto.channelId,
+        messageId: dto.messageId,
+        replyToId: dto.replyToId,
       ),
     );
-    if (recipientUserIds.isEmpty) {
+    if (recipientUserIds.isEmpty && followers.isEmpty) {
       return const Right(
         DiscordMessageIngestionResult.ignored('no_target_mentions'),
       );
@@ -178,6 +176,7 @@ class IngestDiscordMessage implements IDiscordLiveIngestor {
     final activities = dto.toActivities(
       users,
       forUserIds: recipientUserIds,
+      followerUserIds: followers,
       senderUserId: senderUserId,
     );
     if (activities.isEmpty) {

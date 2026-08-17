@@ -233,16 +233,14 @@ class IngestSlackEvent {
       threadTs: threadTs,
       messageTs: ts,
     );
-    if (slackFollowKey != null) {
-      recipientUserIds.addAll(
-        await inboxFollowerUserIds(
-          _follows,
-          providerId: 'slack',
-          objectKeys: [slackFollowKey],
-        ),
-      );
-    }
-    if (recipientUserIds.isEmpty) {
+    final followers = slackFollowKey == null
+        ? <String>{}
+        : await inboxFollowerUserIds(
+            _follows,
+            providerId: 'slack',
+            objectKeys: [slackFollowKey],
+          );
+    if (recipientUserIds.isEmpty && followers.isEmpty) {
       return const Right(
         SlackEventIngestionResult.ignored('no_target_mentions'),
       );
@@ -271,6 +269,7 @@ class IngestSlackEvent {
       activities: dto.toActivities(
         users,
         forUserIds: recipientUserIds,
+        followerUserIds: followers,
         senderUserId: senderUserId,
       ),
       providerId: 'slack',

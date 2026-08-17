@@ -358,5 +358,6 @@ void main() {
             .captured
             .single as Activity;
     expect(captured.userId, 'u-linear');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
   });
 }

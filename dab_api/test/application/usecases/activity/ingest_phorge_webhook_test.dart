@@ -218,6 +218,7 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-ph');
     expect(captured.senderUserId, 'u-ph');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
   });
 
   test('ignores Herald test events without hydrating', () async {

@@ -90,11 +90,12 @@ extension OnLinearIssueDto on LinearIssueDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
     final userById = {for (final u in users) u.id: u};
     final events = <Activity>[];
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
 
     final key = identifier.trim();
     if (key.isEmpty) return const [];
@@ -111,21 +112,20 @@ extension OnLinearIssueDto on LinearIssueDto {
         : userById[issueOwnerId];
     final fallbackUser = issueOwner;
 
-    Iterable<String> snapshotTargets() {
-      if (fanOut) return forUserIds.where((id) => id.isNotEmpty);
-      if (issueOwner == null) return const [];
-      return [issueOwner.id];
-    }
-
     if (includeIssueSnapshot) {
-      for (final targetId in snapshotTargets()) {
+      final snapshotTargets = resolveInboxLaneTargets(
+        forUserIds: forUserIds,
+        followerUserIds: followerUserIds,
+        fallbackUserId: issueOwner?.id,
+      );
+      for (final (targetId, lane) in snapshotTargets) {
         final owner = userById[targetId];
         if (owner == null) continue;
         final bodyParts = <String>[];
         if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
         if (urlTrim.isNotEmpty) bodyParts.add(urlTrim);
         final idSeed = fanOut
-            ? 'linear|$fingerprint|$targetId'
+            ? withInboxLaneId('linear|$fingerprint|$targetId', lane)
             : 'linear|$fingerprint';
         events.add(
           Activity(
@@ -144,6 +144,7 @@ extension OnLinearIssueDto on LinearIssueDto {
             authorAvatarUrl: owner.avatarUrl,
             commentCount: 0,
             createdAt: updatedAt.toUtc(),
+            inboxLane: lane,
           ),
         );
       }
@@ -155,14 +156,19 @@ extension OnLinearIssueDto on LinearIssueDto {
           ? null
           : userById[commentUserId];
       final commentUser = mappedCommentUser ?? fallbackUser;
-      final commentTargets = fanOut
-          ? forUserIds.where((id) => id.isNotEmpty)
-          : [if (commentUser != null) commentUser.id];
-      for (final targetId in commentTargets) {
+      final commentTargets = resolveInboxLaneTargets(
+        forUserIds: forUserIds,
+        followerUserIds: followerUserIds,
+        fallbackUserId: commentUser?.id,
+      );
+      for (final (targetId, lane) in commentTargets) {
         final recipient = userById[targetId];
         if (recipient == null) continue;
         final cidSeed = fanOut
-            ? 'linear|$key|comment|${comment.id}|$targetId'
+            ? withInboxLaneId(
+                'linear|$key|comment|${comment.id}|$targetId',
+                lane,
+              )
             : 'linear|$key|comment|${comment.id}';
         final commentBody = comment.body.trim();
         events.add(
@@ -185,6 +191,7 @@ extension OnLinearIssueDto on LinearIssueDto {
             authorAvatarUrl: (mappedCommentUser ?? recipient).avatarUrl,
             commentCount: 1,
             createdAt: comment.createdAt.toUtc(),
+            inboxLane: lane,
           ),
         );
       }

@@ -125,6 +125,8 @@ abstract class IUserRepository {
   Future<Either<AppFailure, ActivityFollow>> saveMyActivityFollow({
     required String providerId,
     required String objectKey,
+    String? title,
+    String? url,
   });
 
   /// Self-serve: remove a Dashboard object Follow pin.

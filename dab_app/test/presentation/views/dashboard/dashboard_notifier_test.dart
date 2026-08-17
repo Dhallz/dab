@@ -102,9 +102,7 @@ void main() {
       ]),
     );
 
-    final container = containerWithOverrides(
-        createNotifier,
-    );
+    final container = containerWithOverrides(createNotifier);
     final keepAlive = container.listen<DashboardState>(
       dashboardNotifierProvider,
       (_, _) {},
@@ -154,9 +152,7 @@ void main() {
         ]),
       );
 
-      final container = containerWithOverrides(
-        createNotifier,
-      );
+      final container = containerWithOverrides(createNotifier);
       final keepAlive = container.listen<DashboardState>(
         dashboardNotifierProvider,
         (_, _) {},
@@ -199,50 +195,47 @@ void main() {
   );
 
   test('always hydrates the user-scoped inbound inbox', () async {
-      when(
-        () => repository.getLiveActivities(
-          limit: 50,
-          global: false,
-          includeArchived: true,
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer(
+      (_) async => Right([
+        Activity(
+          id: 'bob-push',
+          userId: 'bob',
+          provider: const GenericProvider(name: 'github'),
+          title: 'Bob push',
+          content: 'sha',
+          authorName: 'Bob',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 1, 1, 10),
         ),
-      ).thenAnswer(
-        (_) async => Right([
-          Activity(
-            id: 'bob-push',
-            userId: 'bob',
-            provider: const GenericProvider(name: 'github'),
-            title: 'Bob push',
-            content: 'sha',
-            authorName: 'Bob',
-            commentCount: 0,
-            createdAt: DateTime.utc(2026, 1, 1, 10),
-          ),
-        ]),
-      );
+      ]),
+    );
 
-      final container = containerWithOverrides(
-        createNotifier,
-      );
-      final keepAlive = container.listen<DashboardState>(
-        dashboardNotifierProvider,
-        (_, _) {},
-      );
-      addTearDown(keepAlive.close);
-      addTearDown(container.dispose);
+    final container = containerWithOverrides(createNotifier);
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
 
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+    await Future<void>.delayed(const Duration(milliseconds: 120));
 
-      final state = container.read(dashboardNotifierProvider);
-      expect(state.activities.map((a) => a.id), ['bob-push']);
-      verify(
-        () => repository.getLiveActivities(
-          limit: 50,
-          global: false,
-          includeArchived: true,
-        ),
-      ).called(1);
-    },
-  );
+    final state = container.read(dashboardNotifierProvider);
+    expect(state.activities.map((a) => a.id), ['bob-push']);
+    verify(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).called(1);
+  });
 
   test('setFeedMode changes layout without refetching', () async {
     when(
@@ -253,9 +246,7 @@ void main() {
       ),
     ).thenAnswer((_) async => Right(<Activity>[]));
 
-    final container = containerWithOverrides(
-        createNotifier,
-    );
+    final container = containerWithOverrides(createNotifier);
     final keepAlive = container.listen<DashboardState>(
       dashboardNotifierProvider,
       (_, _) {},
@@ -309,6 +300,7 @@ void main() {
           authorName: 'Alice',
           commentCount: 0,
           createdAt: DateTime.utc(2026, 1, 1, 10),
+          url: '/T1',
         ),
       ]),
     );
@@ -327,10 +319,17 @@ void main() {
       () => userRepository.saveMyActivityFollow(
         providerId: any(named: 'providerId'),
         objectKey: any(named: 'objectKey'),
+        title: any(named: 'title'),
+        url: any(named: 'url'),
       ),
     ).thenAnswer(
       (_) async => const Right(
-        ActivityFollow(providerId: 'phorge', objectKey: 'PHID-TASK-1'),
+        ActivityFollow(
+          providerId: 'phorge',
+          objectKey: 'PHID-TASK-1',
+          title: '[T1] Task',
+          url: '/T1',
+        ),
       ),
     );
 
@@ -346,10 +345,9 @@ void main() {
 
     final notifier = container.read(dashboardNotifierProvider.notifier);
     var state = container.read(dashboardNotifierProvider);
-    expect(
-      state.followedObjectRefs,
-      [followObjectRef('phorge', 'PHID-TASK-1')],
-    );
+    expect(state.followedObjectRefs, [
+      followObjectRef('phorge', 'PHID-TASK-1'),
+    ]);
     expect(state.isFollowing(state.activities.first), isTrue);
 
     await notifier.unfollow(state.activities.first);
@@ -359,6 +357,15 @@ void main() {
     await notifier.follow(state.activities.first);
     state = container.read(dashboardNotifierProvider);
     expect(state.isFollowing(state.activities.first), isTrue);
+    expect(state.watchingPins.single.displayTitle, '[T1] Task');
+    verify(
+      () => userRepository.saveMyActivityFollow(
+        providerId: 'phorge',
+        objectKey: 'PHID-TASK-1',
+        title: '[T1] Task',
+        url: '/T1',
+      ),
+    ).called(1);
   });
 
   test('follow is a no-op for git commit cards', () async {
@@ -373,7 +380,10 @@ void main() {
         Activity(
           id: 'commit-1',
           userId: 'u-1',
-          provider: const GitHubCommitProvider(repo: 'acme/app', branch: 'main'),
+          provider: const GitHubCommitProvider(
+            repo: 'acme/app',
+            branch: 'main',
+          ),
           title: 'Fix login',
           content: 'sha',
           authorName: 'Alice',
@@ -401,6 +411,8 @@ void main() {
       () => userRepository.saveMyActivityFollow(
         providerId: any(named: 'providerId'),
         objectKey: any(named: 'objectKey'),
+        title: any(named: 'title'),
+        url: any(named: 'url'),
       ),
     );
   });

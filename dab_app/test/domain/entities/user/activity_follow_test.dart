@@ -12,6 +12,18 @@ void main() {
     expect(follow.providerId, 'jira');
     expect(follow.objectKey, 'DAB-7');
     expect(follow.objectRef, followObjectRef('jira', 'DAB-7'));
+    expect(follow.displayTitle, 'DAB-7');
+  });
+
+  test('uses the stored title for watching-row copy', () {
+    final follow = ActivityFollow.fromMap({
+      'providerId': 'phorge',
+      'objectKey': 'PHID-TASK-1',
+      'title': '[T123] Fix login',
+      'url': '/T123',
+    });
+    expect(follow.displayTitle, '[T123] Fix login');
+    expect(follow.url, '/T123');
   });
 
   test('git commit cards have no Follow object key', () {

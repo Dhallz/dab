@@ -8,6 +8,14 @@
   "@dashboardIslandLive": {
     "description": "Toolbar/sidebar label for visible live activity count."
   },
+  "dashboardIslandDirected": "Directed",
+  "@dashboardIslandDirected": {
+    "description": "Toolbar/sidebar count for the directed-at-you inbox pane."
+  },
+  "dashboardIslandFollowing": "Following",
+  "@dashboardIslandFollowing": {
+    "description": "Toolbar/sidebar count for the Follow inbox pane."
+  },
   "dashboardIslandArchived": "Archived",
   "@dashboardIslandArchived": {
     "description": "Toolbar/sidebar label for archived activity count."
@@ -931,6 +939,18 @@
   "@dashboardLiveNowTitle": {
     "description": "dashboardLiveNowTitle: Live Now"
   },
+  "dashboardDirectedTitle": "Directed at you",
+  "@dashboardDirectedTitle": {
+    "description": "Dashboard left/top pane title for mentions, assignments, CCs, and git watches."
+  },
+  "dashboardFollowingTitle": "Following",
+  "@dashboardFollowingTitle": {
+    "description": "Dashboard right/bottom pane title for Follow-pinned object updates."
+  },
+  "dashboardWatchingPinLabel": "Watching",
+  "@dashboardWatchingPinLabel": {
+    "description": "Compact label on a Follow pin row before that object has a live Follow-lane update."
+  },
   "dashboardLiveUpdated": "Live · updated {relativeTime}",
   "@dashboardLiveUpdated": {
     "description": "dashboardLiveUpdated: Live · updated {relativeTime}",
@@ -970,6 +990,22 @@
   "dashboardEmptyLiveNoActivities": "No live activities yet.",
   "@dashboardEmptyLiveNoActivities": {
     "description": "dashboardEmptyLiveNoActivities: No live activities yet."
+  },
+  "dashboardEmptyDirectedCaughtUp": "All caught up — enable \"Show archived\" to review directed items.",
+  "@dashboardEmptyDirectedCaughtUp": {
+    "description": "Empty directed pane when remaining items are archived."
+  },
+  "dashboardEmptyDirectedNone": "No mentions or assignments yet.",
+  "@dashboardEmptyDirectedNone": {
+    "description": "Empty directed pane when this lane has no live rows."
+  },
+  "dashboardEmptyFollowingCaughtUp": "All caught up on followed items.",
+  "@dashboardEmptyFollowingCaughtUp": {
+    "description": "Empty Follow pane when remaining items are archived."
+  },
+  "dashboardEmptyFollowingNone": "No updates on followed items yet.",
+  "@dashboardEmptyFollowingNone": {
+    "description": "Empty Follow pane until pinned objects move."
   },
   "dashboardArchiveShow": "Show archived",
   "@dashboardArchiveShow": {

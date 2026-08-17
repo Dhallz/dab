@@ -118,6 +118,18 @@ abstract class AppLocalizations {
   /// **'Live'**
   String get dashboardIslandLive;
 
+  /// Toolbar/sidebar count for the directed-at-you inbox pane.
+  ///
+  /// In en, this message translates to:
+  /// **'Directed'**
+  String get dashboardIslandDirected;
+
+  /// Toolbar/sidebar count for the Follow inbox pane.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get dashboardIslandFollowing;
+
   /// Toolbar/sidebar label for archived activity count.
   ///
   /// In en, this message translates to:
@@ -1466,6 +1478,24 @@ abstract class AppLocalizations {
   /// **'Live Now'**
   String get dashboardLiveNowTitle;
 
+  /// Dashboard left/top pane title for mentions, assignments, CCs, and git watches.
+  ///
+  /// In en, this message translates to:
+  /// **'Directed at you'**
+  String get dashboardDirectedTitle;
+
+  /// Dashboard right/bottom pane title for Follow-pinned object updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get dashboardFollowingTitle;
+
+  /// Compact label on a Follow pin row before that object has a live Follow-lane update.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching'**
+  String get dashboardWatchingPinLabel;
+
   /// dashboardLiveUpdated: Live · updated {relativeTime}
   ///
   /// In en, this message translates to:
@@ -1507,6 +1537,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No live activities yet.'**
   String get dashboardEmptyLiveNoActivities;
+
+  /// Empty directed pane when remaining items are archived.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up — enable \"Show archived\" to review directed items.'**
+  String get dashboardEmptyDirectedCaughtUp;
+
+  /// Empty directed pane when this lane has no live rows.
+  ///
+  /// In en, this message translates to:
+  /// **'No mentions or assignments yet.'**
+  String get dashboardEmptyDirectedNone;
+
+  /// Empty Follow pane when remaining items are archived.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up on followed items.'**
+  String get dashboardEmptyFollowingCaughtUp;
+
+  /// Empty Follow pane until pinned objects move.
+  ///
+  /// In en, this message translates to:
+  /// **'No updates on followed items yet.'**
+  String get dashboardEmptyFollowingNone;
 
   /// dashboardArchiveShow: Show archived
   ///

@@ -426,5 +426,6 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-jira');
     expect(captured.senderUserId, 'u-jira');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
   });
 }

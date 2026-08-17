@@ -23,8 +23,14 @@ class DashboardSidebarContent extends StatelessWidget {
         children: [
           DabIslandStat(
             icon: AppIcons.dashboard,
-            title: l10n.dashboardIslandLive,
-            value: '${state.visibleActivities.length}',
+            title: l10n.dashboardIslandDirected,
+            value: '${state.directedVisible.length}',
+          ),
+          const SizedBox(height: AppSpacing.s),
+          DabIslandStat(
+            icon: AppIcons.following,
+            title: l10n.dashboardIslandFollowing,
+            value: '${state.followedVisible.length + state.watchingPins.length}',
           ),
           const SizedBox(height: AppSpacing.s),
           DabIslandStat(

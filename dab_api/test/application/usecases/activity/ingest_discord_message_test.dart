@@ -302,5 +302,6 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-discord');
     expect(captured.senderUserId, 'u-discord');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
   });
 }

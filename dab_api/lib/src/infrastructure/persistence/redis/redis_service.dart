@@ -70,27 +70,30 @@ class RedisService implements ILiveFeedStore {
       activityJson,
     ]);
 
-    // 4. Insights (HINCRBY)
-    await _cmd.send_object([
-      'HINCRBY',
-      'insights:stats:$dateKey',
-      activity.provider.category,
-      1,
-    ]);
+    // Follow-lane copies must not double Insights ingest stats.
+    if (!activity.isFollowLane) {
+      // 4. Insights (HINCRBY)
+      await _cmd.send_object([
+        'HINCRBY',
+        'insights:stats:$dateKey',
+        activity.provider.category,
+        1,
+      ]);
 
-    // 5. Leaderboards (ZINCRBY)
-    await _cmd.send_object([
-      'ZINCRBY',
-      'insights:rankings:$dateKey:${activity.provider.category}',
-      1,
-      activity.userId,
-    ]);
-    await _cmd.send_object([
-      'ZINCRBY',
-      'insights:rankings:$dateKey:total',
-      1,
-      activity.userId,
-    ]);
+      // 5. Leaderboards (ZINCRBY)
+      await _cmd.send_object([
+        'ZINCRBY',
+        'insights:rankings:$dateKey:${activity.provider.category}',
+        1,
+        activity.userId,
+      ]);
+      await _cmd.send_object([
+        'ZINCRBY',
+        'insights:rankings:$dateKey:total',
+        1,
+        activity.userId,
+      ]);
+    }
 
     print(
       '[SLACK_PIPELINE] redis_fanout activity_id=${activity.id} user_id=${activity.userId} global_len=$globalLen user_len=$userLen',
@@ -166,12 +169,7 @@ class RedisService implements ILiveFeedStore {
       if (activity == null || activity.id != activityId) continue;
 
       final updated = activity.copyWith(archived: archived);
-      await _cmd.send_object([
-        'LSET',
-        key,
-        index,
-        _encodeActivity(updated),
-      ]);
+      await _cmd.send_object(['LSET', key, index, _encodeActivity(updated)]);
       print(
         '[TRIAGE_PIPELINE] redis_flag activity_id=$activityId user_id=$userId archived=$archived position=$index',
       );
@@ -179,17 +177,18 @@ class RedisService implements ILiveFeedStore {
     }
 
     if (archived) {
-      final globalRaw = await _cmd.send_object(['LRANGE', 'activities:global', 0, -1]);
+      final globalRaw = await _cmd.send_object([
+        'LRANGE',
+        'activities:global',
+        0,
+        -1,
+      ]);
       if (globalRaw is List) {
         for (final entry in globalRaw) {
           final activity = _decodeActivity(entry);
           if (activity == null || activity.id != activityId) continue;
           final updated = activity.copyWith(archived: true);
-          await _cmd.send_object([
-            'LPUSH',
-            key,
-            _encodeActivity(updated),
-          ]);
+          await _cmd.send_object(['LPUSH', key, _encodeActivity(updated)]);
           await _cmd.send_object(['LTRIM', key, 0, 99]);
           return updated;
         }
@@ -242,7 +241,10 @@ class RedisService implements ILiveFeedStore {
       }
     }
 
-    final global = await _purgeLiveFeedListKey('activities:global', startOfTodayUtc);
+    final global = await _purgeLiveFeedListKey(
+      'activities:global',
+      startOfTodayUtc,
+    );
     if (global.dropped > 0) {
       removed['activities:global'] = global.dropped;
       totalArchived += global.archived;
@@ -270,10 +272,12 @@ class RedisService implements ILiveFeedStore {
   static DateTime liveFeedStartOfTodayForTimezone(
     String orgTimezoneId, [
     DateTime? now,
-  ]) =>
-      org_calendar.liveFeedStartOfTodayUtc(orgTimezoneId, now);
+  ]) => org_calendar.liveFeedStartOfTodayUtc(orgTimezoneId, now);
 
-  static bool shouldRemoveFromLiveFeed(Activity activity, DateTime startOfTodayUtc) {
+  static bool shouldRemoveFromLiveFeed(
+    Activity activity,
+    DateTime startOfTodayUtc,
+  ) {
     return activity.archived || activity.createdAt.isBefore(startOfTodayUtc);
   }
 

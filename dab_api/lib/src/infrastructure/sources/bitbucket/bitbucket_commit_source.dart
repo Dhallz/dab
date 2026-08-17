@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dab_api/src/domain/core/bitbucket_scope.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/git_watch_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
@@ -88,49 +89,65 @@ class BitbucketCommitSource
     };
     if (accountToUser.isEmpty && emailToUser.isEmpty) return const [];
 
+    final instanceBranch = (cfg.settings['branch'] ?? '').toString().trim();
     final commits = <BitbucketCommitDto>[];
     final seen = <String>{};
 
     for (final repo in repos) {
       final fullRepo = repo.contains('/') ? repo : '$workspace/$repo';
-      var uri = Uri.parse('$_apiBase/repositories/$fullRepo/commits').replace(
-        queryParameters: {'pagelen': '100'},
+      final refs = gitExplorerPollRefs(
+        repo: fullRepo,
+        instanceRepos: [
+          for (final item in repos)
+            item.contains('/') ? item : '$workspace/$item',
+        ],
+        configuredBranch: instanceBranch,
+        userSettingsById: userSettings,
       );
+      for (final ref in refs) {
+        final revision = (ref ?? '').trim();
+        final commitsPath = revision.isEmpty
+            ? '$_apiBase/repositories/$fullRepo/commits'
+            : '$_apiBase/repositories/$fullRepo/commits/${Uri.encodeComponent(revision)}';
+        var uri = Uri.parse(
+          commitsPath,
+        ).replace(queryParameters: {'pagelen': '100'});
 
-      for (var page = 0; page < 10; page++) {
-        Map<String, dynamic> body;
-        try {
-          body = await _jsonRest.getJsonMap(uri, headers: auth);
-        } catch (_) {
-          break;
-        }
-
-        final values = body['values'];
-        if (values is! List || values.isEmpty) break;
-
-        var reachedOlderThanWindow = false;
-        for (final raw in values) {
-          if (raw is! Map<String, dynamic>) continue;
-          final dto = mapBitbucketCommitJson(
-            raw,
-            repo: fullRepo,
-            accountToUser: accountToUser,
-            emailToUser: emailToUser,
-          );
-          if (dto == null) continue;
-          if (dto.committedAt.isBefore(start.toUtc())) {
-            reachedOlderThanWindow = true;
-            continue;
+        for (var page = 0; page < 10; page++) {
+          Map<String, dynamic> body;
+          try {
+            body = await _jsonRest.getJsonMap(uri, headers: auth);
+          } catch (_) {
+            break;
           }
-          if (dto.committedAt.isAfter(end.toUtc())) continue;
-          if (dto.userId == null) continue;
-          if (!seen.add('${dto.repo}:${dto.sha}')) continue;
-          commits.add(dto);
-        }
 
-        final next = body['next']?.toString();
-        if (reachedOlderThanWindow || next == null || next.isEmpty) break;
-        uri = Uri.parse(next);
+          final values = body['values'];
+          if (values is! List || values.isEmpty) break;
+
+          var reachedOlderThanWindow = false;
+          for (final raw in values) {
+            if (raw is! Map<String, dynamic>) continue;
+            final dto = mapBitbucketCommitJson(
+              raw,
+              repo: fullRepo,
+              accountToUser: accountToUser,
+              emailToUser: emailToUser,
+            );
+            if (dto == null) continue;
+            if (dto.committedAt.isBefore(start.toUtc())) {
+              reachedOlderThanWindow = true;
+              continue;
+            }
+            if (dto.committedAt.isAfter(end.toUtc())) continue;
+            if (dto.userId == null) continue;
+            if (!seen.add('${dto.repo}:${dto.sha}')) continue;
+            commits.add(dto);
+          }
+
+          final next = body['next']?.toString();
+          if (reachedOlderThanWindow || next == null || next.isEmpty) break;
+          uri = Uri.parse(next);
+        }
       }
     }
 
@@ -152,9 +169,9 @@ class BitbucketCommitSource
     final query = name.trim().toLowerCase();
     if (query.isEmpty) return const Right(null);
 
-    final uri = Uri.parse('$_apiBase/workspaces/$workspace/members').replace(
-      queryParameters: {'pagelen': '100'},
-    );
+    final uri = Uri.parse(
+      '$_apiBase/workspaces/$workspace/members',
+    ).replace(queryParameters: {'pagelen': '100'});
 
     try {
       final body = await _jsonRest.getJsonMap(uri, headers: auth);

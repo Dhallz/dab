@@ -2,6 +2,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dt
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
+import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
 import 'package:test/test.dart';
@@ -165,5 +166,21 @@ void main() {
 
     expect(activities.single.userId, 'u-ada');
     expect(activities.single.senderUserId, 'u-ada');
+    expect(activities.single.inboxLane, ActivityInboxLane.follow);
+  });
+
+  test('mention plus Follow emits two independent rows', () {
+    final activities = bundle(
+      ownerPhid: 'PHID-USER-bob',
+      tx: tx(type: 'comment', commentText: 'Please look @bob'),
+    ).toActivities(users, inbound: true, followerUserIds: ['u-bob']);
+
+    expect(activities, hasLength(2));
+    expect(activities.map((a) => a.userId).toSet(), {'u-bob'});
+    expect(activities.map((a) => a.inboxLane).toSet(), {
+      ActivityInboxLane.directed,
+      ActivityInboxLane.follow,
+    });
+    expect(activities[0].id, isNot(activities[1].id));
   });
 }

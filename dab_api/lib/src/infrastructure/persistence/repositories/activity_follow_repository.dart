@@ -40,11 +40,19 @@ class ActivityFollowRepository implements AbsIActivityFollowRepository {
               userId: follow.userId,
               providerId: follow.providerId,
               objectKey: follow.objectKey,
+              title: Value(follow.title),
+              url: Value(follow.url),
               createdAt: Value(toPgDateTime(follow.createdAt)),
               updatedAt: Value(toPgDateTime(now)),
             ),
             onConflict: DoUpdate(
               (_) => ActivityFollowsTableCompanion(
+                title: follow.title == null
+                    ? const Value.absent()
+                    : Value(follow.title),
+                url: follow.url == null
+                    ? const Value.absent()
+                    : Value(follow.url),
                 updatedAt: Value(toPgDateTime(now)),
               ),
               target: [
@@ -105,6 +113,8 @@ class ActivityFollowRepository implements AbsIActivityFollowRepository {
       userId: row.userId,
       providerId: row.providerId,
       objectKey: row.objectKey,
+      title: row.title,
+      url: row.url,
       createdAt: row.createdAt.dateTime,
       updatedAt: row.updatedAt?.dateTime,
     );

@@ -6455,6 +6455,24 @@ class $ActivityFollowsTableTable extends ActivityFollowsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6486,6 +6504,8 @@ class $ActivityFollowsTableTable extends ActivityFollowsTable
     userId,
     providerId,
     objectKey,
+    title,
+    url,
     createdAt,
     updatedAt,
   ];
@@ -6529,6 +6549,18 @@ class $ActivityFollowsTableTable extends ActivityFollowsTable
       );
     } else if (isInserting) {
       context.missing(_objectKeyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -6574,6 +6606,14 @@ class $ActivityFollowsTableTable extends ActivityFollowsTable
         DriftSqlType.string,
         data['${effectivePrefix}object_key'],
       )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         PgTypes.timestampWithTimezone,
         data['${effectivePrefix}created_at'],
@@ -6597,6 +6637,8 @@ class ActivityFollowsTableData extends DataClass
   final String userId;
   final String providerId;
   final String objectKey;
+  final String? title;
+  final String? url;
   final PgDateTime createdAt;
   final PgDateTime? updatedAt;
   const ActivityFollowsTableData({
@@ -6604,6 +6646,8 @@ class ActivityFollowsTableData extends DataClass
     required this.userId,
     required this.providerId,
     required this.objectKey,
+    this.title,
+    this.url,
     required this.createdAt,
     this.updatedAt,
   });
@@ -6614,6 +6658,12 @@ class ActivityFollowsTableData extends DataClass
     map['user_id'] = Variable<String>(userId);
     map['provider_id'] = Variable<String>(providerId);
     map['object_key'] = Variable<String>(objectKey);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || url != null) {
+      map['url'] = Variable<String>(url);
+    }
     map['created_at'] = Variable<PgDateTime>(
       createdAt,
       PgTypes.timestampWithTimezone,
@@ -6633,6 +6683,10 @@ class ActivityFollowsTableData extends DataClass
       userId: Value(userId),
       providerId: Value(providerId),
       objectKey: Value(objectKey),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      url: url == null && nullToAbsent ? const Value.absent() : Value(url),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
@@ -6650,6 +6704,8 @@ class ActivityFollowsTableData extends DataClass
       userId: serializer.fromJson<String>(json['userId']),
       providerId: serializer.fromJson<String>(json['providerId']),
       objectKey: serializer.fromJson<String>(json['objectKey']),
+      title: serializer.fromJson<String?>(json['title']),
+      url: serializer.fromJson<String?>(json['url']),
       createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
     );
@@ -6662,6 +6718,8 @@ class ActivityFollowsTableData extends DataClass
       'userId': serializer.toJson<String>(userId),
       'providerId': serializer.toJson<String>(providerId),
       'objectKey': serializer.toJson<String>(objectKey),
+      'title': serializer.toJson<String?>(title),
+      'url': serializer.toJson<String?>(url),
       'createdAt': serializer.toJson<PgDateTime>(createdAt),
       'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
     };
@@ -6672,6 +6730,8 @@ class ActivityFollowsTableData extends DataClass
     String? userId,
     String? providerId,
     String? objectKey,
+    Value<String?> title = const Value.absent(),
+    Value<String?> url = const Value.absent(),
     PgDateTime? createdAt,
     Value<PgDateTime?> updatedAt = const Value.absent(),
   }) => ActivityFollowsTableData(
@@ -6679,6 +6739,8 @@ class ActivityFollowsTableData extends DataClass
     userId: userId ?? this.userId,
     providerId: providerId ?? this.providerId,
     objectKey: objectKey ?? this.objectKey,
+    title: title.present ? title.value : this.title,
+    url: url.present ? url.value : this.url,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -6692,6 +6754,8 @@ class ActivityFollowsTableData extends DataClass
           ? data.providerId.value
           : this.providerId,
       objectKey: data.objectKey.present ? data.objectKey.value : this.objectKey,
+      title: data.title.present ? data.title.value : this.title,
+      url: data.url.present ? data.url.value : this.url,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -6704,6 +6768,8 @@ class ActivityFollowsTableData extends DataClass
           ..write('userId: $userId, ')
           ..write('providerId: $providerId, ')
           ..write('objectKey: $objectKey, ')
+          ..write('title: $title, ')
+          ..write('url: $url, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6711,8 +6777,16 @@ class ActivityFollowsTableData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, userId, providerId, objectKey, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    providerId,
+    objectKey,
+    title,
+    url,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6721,6 +6795,8 @@ class ActivityFollowsTableData extends DataClass
           other.userId == this.userId &&
           other.providerId == this.providerId &&
           other.objectKey == this.objectKey &&
+          other.title == this.title &&
+          other.url == this.url &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -6731,6 +6807,8 @@ class ActivityFollowsTableCompanion
   final Value<String> userId;
   final Value<String> providerId;
   final Value<String> objectKey;
+  final Value<String?> title;
+  final Value<String?> url;
   final Value<PgDateTime> createdAt;
   final Value<PgDateTime?> updatedAt;
   final Value<int> rowid;
@@ -6739,6 +6817,8 @@ class ActivityFollowsTableCompanion
     this.userId = const Value.absent(),
     this.providerId = const Value.absent(),
     this.objectKey = const Value.absent(),
+    this.title = const Value.absent(),
+    this.url = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6748,6 +6828,8 @@ class ActivityFollowsTableCompanion
     required String userId,
     required String providerId,
     required String objectKey,
+    this.title = const Value.absent(),
+    this.url = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6760,6 +6842,8 @@ class ActivityFollowsTableCompanion
     Expression<String>? userId,
     Expression<String>? providerId,
     Expression<String>? objectKey,
+    Expression<String>? title,
+    Expression<String>? url,
     Expression<PgDateTime>? createdAt,
     Expression<PgDateTime>? updatedAt,
     Expression<int>? rowid,
@@ -6769,6 +6853,8 @@ class ActivityFollowsTableCompanion
       if (userId != null) 'user_id': userId,
       if (providerId != null) 'provider_id': providerId,
       if (objectKey != null) 'object_key': objectKey,
+      if (title != null) 'title': title,
+      if (url != null) 'url': url,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -6780,6 +6866,8 @@ class ActivityFollowsTableCompanion
     Value<String>? userId,
     Value<String>? providerId,
     Value<String>? objectKey,
+    Value<String?>? title,
+    Value<String?>? url,
     Value<PgDateTime>? createdAt,
     Value<PgDateTime?>? updatedAt,
     Value<int>? rowid,
@@ -6789,6 +6877,8 @@ class ActivityFollowsTableCompanion
       userId: userId ?? this.userId,
       providerId: providerId ?? this.providerId,
       objectKey: objectKey ?? this.objectKey,
+      title: title ?? this.title,
+      url: url ?? this.url,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -6809,6 +6899,12 @@ class ActivityFollowsTableCompanion
     }
     if (objectKey.present) {
       map['object_key'] = Variable<String>(objectKey.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<PgDateTime>(
@@ -6835,6 +6931,8 @@ class ActivityFollowsTableCompanion
           ..write('userId: $userId, ')
           ..write('providerId: $providerId, ')
           ..write('objectKey: $objectKey, ')
+          ..write('title: $title, ')
+          ..write('url: $url, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -13145,6 +13243,8 @@ typedef $$ActivityFollowsTableTableCreateCompanionBuilder =
       required String userId,
       required String providerId,
       required String objectKey,
+      Value<String?> title,
+      Value<String?> url,
       Value<PgDateTime> createdAt,
       Value<PgDateTime?> updatedAt,
       Value<int> rowid,
@@ -13155,6 +13255,8 @@ typedef $$ActivityFollowsTableTableUpdateCompanionBuilder =
       Value<String> userId,
       Value<String> providerId,
       Value<String> objectKey,
+      Value<String?> title,
+      Value<String?> url,
       Value<PgDateTime> createdAt,
       Value<PgDateTime?> updatedAt,
       Value<int> rowid,
@@ -13186,6 +13288,16 @@ class $$ActivityFollowsTableTableFilterComposer
 
   ColumnFilters<String> get objectKey => $composableBuilder(
     column: $table.objectKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13229,6 +13341,16 @@ class $$ActivityFollowsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -13262,6 +13384,12 @@ class $$ActivityFollowsTableTableAnnotationComposer
 
   GeneratedColumn<String> get objectKey =>
       $composableBuilder(column: $table.objectKey, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
 
   GeneratedColumn<PgDateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -13317,6 +13445,8 @@ class $$ActivityFollowsTableTableTableManager
                 Value<String> userId = const Value.absent(),
                 Value<String> providerId = const Value.absent(),
                 Value<String> objectKey = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> url = const Value.absent(),
                 Value<PgDateTime> createdAt = const Value.absent(),
                 Value<PgDateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -13325,6 +13455,8 @@ class $$ActivityFollowsTableTableTableManager
                 userId: userId,
                 providerId: providerId,
                 objectKey: objectKey,
+                title: title,
+                url: url,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -13335,6 +13467,8 @@ class $$ActivityFollowsTableTableTableManager
                 required String userId,
                 required String providerId,
                 required String objectKey,
+                Value<String?> title = const Value.absent(),
+                Value<String?> url = const Value.absent(),
                 Value<PgDateTime> createdAt = const Value.absent(),
                 Value<PgDateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -13343,6 +13477,8 @@ class $$ActivityFollowsTableTableTableManager
                 userId: userId,
                 providerId: providerId,
                 objectKey: objectKey,
+                title: title,
+                url: url,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

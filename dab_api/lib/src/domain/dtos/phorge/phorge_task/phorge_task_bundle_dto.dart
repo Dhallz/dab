@@ -125,24 +125,25 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
       }
       if (activity == null) continue;
 
-      if (!inbound && forUserIds == null) {
+      if (!inbound && forUserIds == null && followerUserIds == null) {
         activities.add(activity);
         continue;
       }
 
       final author = userMap[tx.authorPHID];
-      final recipients = <String>{
-        if (forUserIds != null) ...forUserIds.where((id) => id.isNotEmpty),
-        if (forUserIds == null) ..._inboxRecipientsFor(tx, users),
-        if (forUserIds == null)
-          ...?followerUserIds?.where((id) => id.isNotEmpty),
-      };
-      for (final targetId in recipients) {
+      final directed = forUserIds != null
+          ? forUserIds.where((id) => id.isNotEmpty)
+          : _inboxRecipientsFor(tx, users);
+      final targets = inboxLaneTargets(
+        directedUserIds: directed,
+        followerUserIds: followerUserIds ?? const [],
+      );
+      for (final (targetId, lane) in targets) {
         final recipient = users.where((u) => u.id == targetId).firstOrNull;
         if (recipient == null) continue;
         activities.add(
           Activity(
-            id: 'phorge-tx-${tx.id}-$targetId'.v5Uuid,
+            id: withInboxLaneId('phorge-tx-${tx.id}-$targetId', lane).v5Uuid,
             userId: recipient.id,
             senderUserId: senderUserId ?? author?.id,
             authorName: activity.authorName,
@@ -152,6 +153,7 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
             content: activity.content,
             url: activity.url,
             createdAt: activity.createdAt,
+            inboxLane: lane,
           ),
         );
       }
@@ -201,10 +203,7 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
 
   /// Mentions, new assignee, and newly added CC/reviewers. Standing owner is
   /// not automatic — Follow supplies extra recipients at ingest.
-  Set<String> _inboxRecipientsFor(
-    PhorgeTransactionDto tx,
-    List<User> users,
-  ) {
+  Set<String> _inboxRecipientsFor(PhorgeTransactionDto tx, List<User> users) {
     final phidToUser = {
       for (final user in users)
         if ((user.phorgePhid ?? '').isNotEmpty) user.phorgePhid!: user.id,

@@ -15,6 +15,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardIslandLive => 'Live';
 
   @override
+  String get dashboardIslandDirected => 'Directed';
+
+  @override
+  String get dashboardIslandFollowing => 'Following';
+
+  @override
   String get dashboardIslandArchived => 'Archived';
 
   @override
@@ -729,6 +735,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardLiveNowTitle => 'Live Now';
 
   @override
+  String get dashboardDirectedTitle => 'Directed at you';
+
+  @override
+  String get dashboardFollowingTitle => 'Following';
+
+  @override
+  String get dashboardWatchingPinLabel => 'Watching';
+
+  @override
   String dashboardLiveUpdated(Object relativeTime) {
     return 'Live · updated $relativeTime';
   }
@@ -757,6 +772,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardEmptyLiveNoActivities => 'No live activities yet.';
+
+  @override
+  String get dashboardEmptyDirectedCaughtUp =>
+      'All caught up — enable \"Show archived\" to review directed items.';
+
+  @override
+  String get dashboardEmptyDirectedNone => 'No mentions or assignments yet.';
+
+  @override
+  String get dashboardEmptyFollowingCaughtUp =>
+      'All caught up on followed items.';
+
+  @override
+  String get dashboardEmptyFollowingNone => 'No updates on followed items yet.';
 
   @override
   String get dashboardArchiveShow => 'Show archived';

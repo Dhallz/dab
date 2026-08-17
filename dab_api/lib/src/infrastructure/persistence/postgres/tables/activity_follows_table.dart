@@ -16,12 +16,14 @@ class ActivityFollowsTable extends Table {
       .customConstraint('NOT NULL REFERENCES users(id) ON DELETE CASCADE')();
   TextColumn get providerId => text().named('provider_id')();
   TextColumn get objectKey => text().named('object_key')();
-  TimestampColumn get createdAt => customType(PgTypes.timestampWithTimezone)
-      .named('created_at')
-      .withDefault(now())();
-  TimestampColumn get updatedAt => customType(PgTypes.timestampWithTimezone)
-      .nullable()
-      .named('updated_at')();
+  TextColumn get title => text().nullable()();
+  TextColumn get url => text().nullable()();
+  TimestampColumn get createdAt => customType(
+    PgTypes.timestampWithTimezone,
+  ).named('created_at').withDefault(now())();
+  TimestampColumn get updatedAt => customType(
+    PgTypes.timestampWithTimezone,
+  ).nullable().named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};

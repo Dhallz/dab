@@ -1183,7 +1183,9 @@ paths:
     get:
       summary: List Dashboard object Follow pins
       description: |
-        Returns `{ providerId, objectKey }` pins for the authenticated user.
+        Returns `{ providerId, objectKey, title?, url? }` pins for the
+        authenticated user. `title` / `url` are a display snapshot from the
+        Followed card so Dashboard can show a watching row immediately.
         Followable providers: phorge, jira, linear, slack, discord. Git stays
         on personal repo/branch watches.
       security:
@@ -1194,9 +1196,10 @@ paths:
     put:
       summary: Follow a Dashboard inbox object
       description: |
-        Upserts a Follow pin. Later updates on that object land in the inbox,
-        including untagged progress and the caller's own actions.
-        Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+        Upserts a Follow pin. Later updates on that object land in the Follow
+        inbox lane. Optional `title` and `url` snapshot the Followed card for
+        an immediate watching row.
+        Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1212,9 +1215,14 @@ paths:
                   enum: [phorge, jira, linear, slack, discord]
                 objectKey:
                   type: string
+                title:
+                  type: string
+                url:
+                  type: string
             example:
               providerId: phorge
               objectKey: PHID-TASK-1
+              title: '[T123] Fix login'
       responses:
         '200':
           description: Saved Follow pin

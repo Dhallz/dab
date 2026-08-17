@@ -213,8 +213,7 @@ class IngestJiraWebhook {
 
     final actorAccountId = hasComment
         ? jiraPersonAccountId(commentRaw['author'])
-        : jiraPersonAccountId(payload['user']) ??
-              jiraPersonAccountId(creator);
+        : jiraPersonAccountId(payload['user']) ?? jiraPersonAccountId(creator);
     final senderUserId = actorAccountId == null
         ? commentSenderUserId
         : accountToUser[actorAccountId];
@@ -232,14 +231,12 @@ class IngestJiraWebhook {
         externalToUser: accountToUser,
       );
     }
-    inboxTargets.addAll(
-      await inboxFollowerUserIds(
-        _follows,
-        providerId: 'jira',
-        objectKeys: [issueKey],
-      ),
+    final followers = await inboxFollowerUserIds(
+      _follows,
+      providerId: 'jira',
+      objectKeys: [issueKey],
     );
-    if (inboxTargets.isEmpty) {
+    if (inboxTargets.isEmpty && followers.isEmpty) {
       return const Right(
         JiraWebhookIngestionResult.ignored('no_target_mentions'),
       );
@@ -265,6 +262,7 @@ class IngestJiraWebhook {
     final activities = dto.toActivities(
       users,
       forUserIds: inboxTargets,
+      followerUserIds: followers,
       senderUserId: senderUserId,
     );
     if (activities.isEmpty) {

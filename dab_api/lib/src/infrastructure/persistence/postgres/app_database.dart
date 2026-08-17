@@ -48,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -226,6 +226,10 @@ ON CONFLICT (id) DO NOTHING;
       }
       if (from < 19) {
         await m.createTable(activityFollowsTable);
+      }
+      if (from < 20) {
+        await m.addColumn(activityFollowsTable, activityFollowsTable.title);
+        await m.addColumn(activityFollowsTable, activityFollowsTable.url);
       }
     },
     beforeOpen: (details) async {

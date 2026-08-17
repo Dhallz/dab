@@ -41,11 +41,13 @@ void main() {
       userId: 'u-1',
       providerId: 'Phorge',
       objectKey: ' PHID-TASK-1 ',
+      title: ' [T123] Fix login ',
     );
     final follow = ok.getOrElse((_) => throw StateError('left'));
     expect(follow.userId, 'u-1');
     expect(follow.providerId, 'phorge');
     expect(follow.objectKey, 'PHID-TASK-1');
+    expect(follow.title, '[T123] Fix login');
 
     final rejected = await save.execute(
       userId: 'u-1',

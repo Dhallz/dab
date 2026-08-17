@@ -18,6 +18,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       ActivityMapper.ensureInitialized();
       DashboardFeedModeMapper.ensureInitialized();
       DashboardProviderHealthMapper.ensureInitialized();
+      ActivityFollowMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -81,19 +82,39 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     _$errorMessage,
     opt: true,
   );
-  static List<String> _$followedObjectRefs(DashboardState v) =>
-      v.followedObjectRefs;
-  static const Field<DashboardState, List<String>> _f$followedObjectRefs =
-      Field(
-        'followedObjectRefs',
-        _$followedObjectRefs,
-        opt: true,
-        def: const [],
-      );
+  static List<ActivityFollow> _$follows(DashboardState v) => v.follows;
+  static const Field<DashboardState, List<ActivityFollow>> _f$follows = Field(
+    'follows',
+    _$follows,
+    opt: true,
+    def: const [],
+  );
   static List<Activity> _$visibleActivities(DashboardState v) =>
       v.visibleActivities;
   static const Field<DashboardState, List<Activity>> _f$visibleActivities =
       Field('visibleActivities', _$visibleActivities, mode: FieldMode.member);
+  static List<Activity> _$directedVisible(DashboardState v) =>
+      v.directedVisible;
+  static const Field<DashboardState, List<Activity>> _f$directedVisible = Field(
+    'directedVisible',
+    _$directedVisible,
+    mode: FieldMode.member,
+  );
+  static List<Activity> _$followedVisible(DashboardState v) =>
+      v.followedVisible;
+  static const Field<DashboardState, List<Activity>> _f$followedVisible = Field(
+    'followedVisible',
+    _$followedVisible,
+    mode: FieldMode.member,
+  );
+  static List<String> _$followedObjectRefs(DashboardState v) =>
+      v.followedObjectRefs;
+  static const Field<DashboardState, List<String>> _f$followedObjectRefs =
+      Field('followedObjectRefs', _$followedObjectRefs, mode: FieldMode.member);
+  static List<ActivityFollow> _$watchingPins(DashboardState v) =>
+      v.watchingPins;
+  static const Field<DashboardState, List<ActivityFollow>> _f$watchingPins =
+      Field('watchingPins', _$watchingPins, mode: FieldMode.member);
   static int _$archivedCount(DashboardState v) => v.archivedCount;
   static const Field<DashboardState, int> _f$archivedCount = Field(
     'archivedCount',
@@ -111,8 +132,12 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
     #lastSyncedAt: _f$lastSyncedAt,
     #reconnectNoticeAt: _f$reconnectNoticeAt,
     #errorMessage: _f$errorMessage,
-    #followedObjectRefs: _f$followedObjectRefs,
+    #follows: _f$follows,
     #visibleActivities: _f$visibleActivities,
+    #directedVisible: _f$directedVisible,
+    #followedVisible: _f$followedVisible,
+    #followedObjectRefs: _f$followedObjectRefs,
+    #watchingPins: _f$watchingPins,
     #archivedCount: _f$archivedCount,
   };
 
@@ -126,7 +151,7 @@ class DashboardStateMapper extends ClassMapperBase<DashboardState> {
       lastSyncedAt: data.dec(_f$lastSyncedAt),
       reconnectNoticeAt: data.dec(_f$reconnectNoticeAt),
       errorMessage: data.dec(_f$errorMessage),
-      followedObjectRefs: data.dec(_f$followedObjectRefs),
+      follows: data.dec(_f$follows),
     );
   }
 
@@ -204,8 +229,12 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     >
   >
   get providerHealth;
-  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
-  get followedObjectRefs;
+  ListCopyWith<
+    $R,
+    ActivityFollow,
+    ActivityFollowCopyWith<$R, ActivityFollow, ActivityFollow>
+  >
+  get follows;
   $R call({
     ViewStatus? status,
     List<Activity>? activities,
@@ -215,7 +244,7 @@ abstract class DashboardStateCopyWith<$R, $In extends DashboardState, $Out>
     DateTime? lastSyncedAt,
     DateTime? reconnectNoticeAt,
     String? errorMessage,
-    List<String>? followedObjectRefs,
+    List<ActivityFollow>? follows,
   });
   DashboardStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
@@ -253,11 +282,15 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     (v) => call(providerHealth: v),
   );
   @override
-  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
-  get followedObjectRefs => ListCopyWith(
-    $value.followedObjectRefs,
-    (v, t) => ObjectCopyWith(v, $identity, t),
-    (v) => call(followedObjectRefs: v),
+  ListCopyWith<
+    $R,
+    ActivityFollow,
+    ActivityFollowCopyWith<$R, ActivityFollow, ActivityFollow>
+  >
+  get follows => ListCopyWith(
+    $value.follows,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(follows: v),
   );
   @override
   $R call({
@@ -269,7 +302,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
     Object? lastSyncedAt = $none,
     Object? reconnectNoticeAt = $none,
     Object? errorMessage = $none,
-    List<String>? followedObjectRefs,
+    List<ActivityFollow>? follows,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -281,7 +314,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       if (lastSyncedAt != $none) #lastSyncedAt: lastSyncedAt,
       if (reconnectNoticeAt != $none) #reconnectNoticeAt: reconnectNoticeAt,
       if (errorMessage != $none) #errorMessage: errorMessage,
-      if (followedObjectRefs != null) #followedObjectRefs: followedObjectRefs,
+      if (follows != null) #follows: follows,
     }),
   );
   @override
@@ -300,10 +333,7 @@ class _DashboardStateCopyWithImpl<$R, $Out>
       or: $value.reconnectNoticeAt,
     ),
     errorMessage: data.get(#errorMessage, or: $value.errorMessage),
-    followedObjectRefs: data.get(
-      #followedObjectRefs,
-      or: $value.followedObjectRefs,
-    ),
+    follows: data.get(#follows, or: $value.follows),
   );
 
   @override

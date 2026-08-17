@@ -82,11 +82,12 @@ extension OnJiraIssueDto on JiraIssueDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
     final userById = {for (final u in users) u.id: u};
     final events = <Activity>[];
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
 
     final fingerprint =
         '${siteHost.trim().toLowerCase()}|$issueKey|${updatedAt.toUtc().millisecondsSinceEpoch}';
@@ -100,20 +101,21 @@ extension OnJiraIssueDto on JiraIssueDto {
         : userById[issueOwnerId];
     final fallbackUser = issueOwner;
 
-    Iterable<String> snapshotTargets() {
-      if (fanOut) return forUserIds.where((id) => id.isNotEmpty);
-      if (issueOwner == null) return const [];
-      return [issueOwner.id];
-    }
-
     if (includeIssueSnapshot) {
-      for (final targetId in snapshotTargets()) {
+      final snapshotTargets = resolveInboxLaneTargets(
+        forUserIds: forUserIds,
+        followerUserIds: followerUserIds,
+        fallbackUserId: issueOwner?.id,
+      );
+      for (final (targetId, lane) in snapshotTargets) {
         final owner = userById[targetId];
         if (owner == null) continue;
         final bodyParts = <String>[];
         if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
         if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
-        final idSeed = fanOut ? '$fingerprint|$targetId' : fingerprint;
+        final idSeed = fanOut
+            ? withInboxLaneId('$fingerprint|$targetId', lane)
+            : fingerprint;
         events.add(
           Activity(
             id: _jiraIssueActivityUuid.v5(Namespace.url.value, idSeed),
@@ -131,6 +133,7 @@ extension OnJiraIssueDto on JiraIssueDto {
             authorAvatarUrl: owner.avatarUrl,
             commentCount: 0,
             createdAt: updatedAt.toUtc(),
+            inboxLane: lane,
           ),
         );
       }
@@ -142,14 +145,19 @@ extension OnJiraIssueDto on JiraIssueDto {
           ? null
           : userById[commentUserId];
       final commentUser = mappedCommentUser ?? fallbackUser;
-      final commentTargets = fanOut
-          ? forUserIds.where((id) => id.isNotEmpty)
-          : [if (commentUser != null) commentUser.id];
-      for (final targetId in commentTargets) {
+      final commentTargets = resolveInboxLaneTargets(
+        forUserIds: forUserIds,
+        followerUserIds: followerUserIds,
+        fallbackUserId: commentUser?.id,
+      );
+      for (final (targetId, lane) in commentTargets) {
         final recipient = userById[targetId];
         if (recipient == null) continue;
         final cidSeed = fanOut
-            ? 'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}|$targetId'
+            ? withInboxLaneId(
+                'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}|$targetId',
+                lane,
+              )
             : 'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}';
         final cid = _jiraIssueActivityUuid.v5(Namespace.url.value, cidSeed);
         final commentBody = comment.body.trim();
@@ -173,6 +181,7 @@ extension OnJiraIssueDto on JiraIssueDto {
             authorAvatarUrl: (mappedCommentUser ?? recipient).avatarUrl,
             commentCount: 1,
             createdAt: comment.createdAt.toUtc(),
+            inboxLane: lane,
           ),
         );
       }

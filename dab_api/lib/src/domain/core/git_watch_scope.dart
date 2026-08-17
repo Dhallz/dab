@@ -1,7 +1,8 @@
 /// [ARCH: DOMAIN]
 /// ROLE: Parses per-user git inbox watches from credential settings.
 /// CONTRACT: Instance Admin `repos` / `projects` stay an ingest allow-list.
-/// User `watchedRepos` / `watchedBranches` target Dashboard rows.
+/// User `watchedRepos` / `watchedBranches` target Dashboard rows and Explorer
+/// poll refs.
 /// Missing `watchedRepos` means inherit [instanceRepos]; an empty list means
 /// no git inbox for that user. Empty `watchedBranches` means all branches.
 library;
@@ -33,6 +34,46 @@ List<String> effectiveWatchedRepos({
     ];
   }
   return parseWatchedRepos(settings);
+}
+
+/// Refs Explorer should poll for [repo].
+///
+/// Starts from the instance [configuredBranch] when set, otherwise a `null`
+/// slot meaning the host default. Adds each watching user's `watchedBranches`.
+List<String?> gitExplorerPollRefs({
+  required String repo,
+  required Iterable<String> instanceRepos,
+  String configuredBranch = '',
+  required Map<String, Map<String, dynamic>> userSettingsById,
+}) {
+  final named = <String>[];
+  final seen = <String>{};
+  void addNamed(String raw) {
+    final name = raw.trim();
+    if (name.isEmpty) return;
+    if (!seen.add(name.toLowerCase())) return;
+    named.add(name);
+  }
+
+  final instance = configuredBranch.trim();
+  if (instance.isNotEmpty) addNamed(instance);
+
+  final repoKey = repo.trim().toLowerCase();
+  userSettingsById.forEach((_, settings) {
+    final watching = effectiveWatchedRepos(
+      settings: settings,
+      instanceRepos: instanceRepos,
+    ).any((item) => item.trim().toLowerCase() == repoKey);
+    if (!watching) return;
+    for (final branch in parseWatchedBranches(settings)) {
+      addNamed(branch);
+    }
+  });
+
+  if (instance.isEmpty) {
+    return <String?>[null, ...named];
+  }
+  return named;
 }
 
 /// True when this user should receive a commit on [repo]/[branch].

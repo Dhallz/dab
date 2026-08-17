@@ -61,7 +61,7 @@ activities                  ← Base table: id, userId (recipient), senderUserId
   └── activity_slack_message    ← Slack metadata: workspaceId, channelId, threadTs, messageTs
   └── activity_discord_message  ← Discord metadata: guildId, channelId, messageId, replyToId
 
-activity_follows            ← Per-user Follow pins: userId, providerId, objectKey
+activity_follows            ← Per-user Follow pins: userId, providerId, objectKey, title, url
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -84,7 +84,7 @@ activity_follows            ← Per-user Follow pins: userId, providerId, object
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
-| `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Indexed `(provider_id, object_key)` for ingest lookup. Schema version 19. |
+| `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Optional `title` / `url` display snapshot. Indexed `(provider_id, object_key)` for ingest lookup. Schema version 20. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |

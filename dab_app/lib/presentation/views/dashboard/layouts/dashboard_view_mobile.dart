@@ -15,7 +15,10 @@ class DashboardViewMobile extends StatelessWidget {
         children: [
           const DashboardIslandBarContent(),
           const Expanded(
-            child: DashboardLiveFeedScope(padding: EdgeInsets.all(16)),
+            child: DashboardLiveFeedScope(
+              axis: Axis.vertical,
+              padding: EdgeInsets.all(16),
+            ),
           ),
         ],
       ),

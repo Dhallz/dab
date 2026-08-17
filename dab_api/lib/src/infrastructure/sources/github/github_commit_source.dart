@@ -1,3 +1,4 @@
+import 'package:dab_api/src/domain/core/git_watch_scope.dart';
 import 'package:dab_api/src/domain/core/github_scope.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
@@ -12,7 +13,8 @@ import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dar
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Fetches read-only commit activity from GitHub REST API.
-/// CONTRACT: Returns commit DTOs scoped by configured repos and linked users.
+/// CONTRACT: Returns commit DTOs scoped by configured repos, linked users,
+/// and watched branches (plus the instance/default ref).
 /// CONSTRAINTS: Must not mutate remote state. Auth: user PAT overlay, else org token.
 class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
   final AbsIProviderConfigRepository _configRepository;
@@ -86,55 +88,65 @@ class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
     final commits = <GitHubCommitDto>[];
     final seen = <String>{};
     for (final repo in repos) {
-      if (useOrgWide) {
-        final rawCommits = await _fetchCommits(
-          apiBaseUrl: apiBaseUrl,
-          token: orgToken,
-          repo: repo,
-          start: start,
-          end: end,
-          branch: configuredBranch,
-        );
-        _appendDtos(
-          commits: commits,
-          seen: seen,
-          rawCommits: rawCommits,
-          repo: repo,
-          branch: configuredBranch.isEmpty ? null : configuredBranch,
-          userIdByLogin: userIdByLogin,
-        );
-        continue;
-      }
+      final refs = gitExplorerPollRefs(
+        repo: repo,
+        instanceRepos: repos,
+        configuredBranch: configuredBranch,
+        userSettingsById: userSettings,
+      );
+      for (final ref in refs) {
+        final branch = (ref ?? '').trim();
+        final branchForDto = branch.isEmpty ? null : branch;
+        if (useOrgWide) {
+          final rawCommits = await _fetchCommits(
+            apiBaseUrl: apiBaseUrl,
+            token: orgToken,
+            repo: repo,
+            start: start,
+            end: end,
+            branch: branch,
+          );
+          _appendDtos(
+            commits: commits,
+            seen: seen,
+            rawCommits: rawCommits,
+            repo: repo,
+            branch: branchForDto,
+            userIdByLogin: userIdByLogin,
+          );
+          continue;
+        }
 
-      for (final author in authors) {
-        final userId = userIdByLogin[author];
-        if (userId == null) continue;
-        final merged = _credentials.overlay(
-          orgSettings: orgSettings,
-          userSettings: userSettings[userId],
-        );
-        final token = extractProviderToken('github', merged);
-        if (token.isEmpty) continue;
-        final rawCommits = await _fetchCommits(
-          apiBaseUrl: apiBaseUrl,
-          token: token,
-          repo: repo,
-          start: start,
-          end: end,
-          author: author,
-          branch: configuredBranch,
-        );
-        _appendDtos(
-          commits: commits,
-          seen: seen,
-          rawCommits: rawCommits,
-          repo: repo,
-          branch: configuredBranch.isEmpty ? null : configuredBranch,
-          userIdByLogin: userIdByLogin,
-          fallbackUserId: userId,
-          fallbackAuthorName: userById[userId]?.name,
-          fallbackAuthorAvatarUrl: userById[userId]?.avatarUrl,
-        );
+        for (final author in authors) {
+          final userId = userIdByLogin[author];
+          if (userId == null) continue;
+          final merged = _credentials.overlay(
+            orgSettings: orgSettings,
+            userSettings: userSettings[userId],
+          );
+          final token = extractProviderToken('github', merged);
+          if (token.isEmpty) continue;
+          final rawCommits = await _fetchCommits(
+            apiBaseUrl: apiBaseUrl,
+            token: token,
+            repo: repo,
+            start: start,
+            end: end,
+            author: author,
+            branch: branch,
+          );
+          _appendDtos(
+            commits: commits,
+            seen: seen,
+            rawCommits: rawCommits,
+            repo: repo,
+            branch: branchForDto,
+            userIdByLogin: userIdByLogin,
+            fallbackUserId: userId,
+            fallbackAuthorName: userById[userId]?.name,
+            fallbackAuthorAvatarUrl: userById[userId]?.avatarUrl,
+          );
+        }
       }
     }
 

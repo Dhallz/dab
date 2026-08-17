@@ -21,13 +21,6 @@ class ActivityFollowMapper extends ClassMapperBase<ActivityFollow> {
   @override
   final String id = 'ActivityFollow';
 
-  static String _$id(ActivityFollow v) => v.id;
-  static const Field<ActivityFollow, String> _f$id = Field('id', _$id);
-  static String _$userId(ActivityFollow v) => v.userId;
-  static const Field<ActivityFollow, String> _f$userId = Field(
-    'userId',
-    _$userId,
-  );
   static String _$providerId(ActivityFollow v) => v.providerId;
   static const Field<ActivityFollow, String> _f$providerId = Field(
     'providerId',
@@ -50,40 +43,35 @@ class ActivityFollowMapper extends ClassMapperBase<ActivityFollow> {
     _$url,
     opt: true,
   );
-  static DateTime _$createdAt(ActivityFollow v) => v.createdAt;
-  static const Field<ActivityFollow, DateTime> _f$createdAt = Field(
-    'createdAt',
-    _$createdAt,
+  static String _$objectRef(ActivityFollow v) => v.objectRef;
+  static const Field<ActivityFollow, String> _f$objectRef = Field(
+    'objectRef',
+    _$objectRef,
+    mode: FieldMode.member,
   );
-  static DateTime? _$updatedAt(ActivityFollow v) => v.updatedAt;
-  static const Field<ActivityFollow, DateTime> _f$updatedAt = Field(
-    'updatedAt',
-    _$updatedAt,
-    opt: true,
+  static String _$displayTitle(ActivityFollow v) => v.displayTitle;
+  static const Field<ActivityFollow, String> _f$displayTitle = Field(
+    'displayTitle',
+    _$displayTitle,
+    mode: FieldMode.member,
   );
 
   @override
   final MappableFields<ActivityFollow> fields = const {
-    #id: _f$id,
-    #userId: _f$userId,
     #providerId: _f$providerId,
     #objectKey: _f$objectKey,
     #title: _f$title,
     #url: _f$url,
-    #createdAt: _f$createdAt,
-    #updatedAt: _f$updatedAt,
+    #objectRef: _f$objectRef,
+    #displayTitle: _f$displayTitle,
   };
 
   static ActivityFollow _instantiate(DecodingData data) {
     return ActivityFollow(
-      id: data.dec(_f$id),
-      userId: data.dec(_f$userId),
       providerId: data.dec(_f$providerId),
       objectKey: data.dec(_f$objectKey),
       title: data.dec(_f$title),
       url: data.dec(_f$url),
-      createdAt: data.dec(_f$createdAt),
-      updatedAt: data.dec(_f$updatedAt),
     );
   }
 
@@ -149,16 +137,7 @@ extension ActivityFollowValueCopy<$R, $Out>
 
 abstract class ActivityFollowCopyWith<$R, $In extends ActivityFollow, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({
-    String? id,
-    String? userId,
-    String? providerId,
-    String? objectKey,
-    String? title,
-    String? url,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  });
+  $R call({String? providerId, String? objectKey, String? title, String? url});
   ActivityFollowCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   );
@@ -174,36 +153,24 @@ class _ActivityFollowCopyWithImpl<$R, $Out>
       ActivityFollowMapper.ensureInitialized();
   @override
   $R call({
-    String? id,
-    String? userId,
     String? providerId,
     String? objectKey,
     Object? title = $none,
     Object? url = $none,
-    DateTime? createdAt,
-    Object? updatedAt = $none,
   }) => $apply(
     FieldCopyWithData({
-      if (id != null) #id: id,
-      if (userId != null) #userId: userId,
       if (providerId != null) #providerId: providerId,
       if (objectKey != null) #objectKey: objectKey,
       if (title != $none) #title: title,
       if (url != $none) #url: url,
-      if (createdAt != null) #createdAt: createdAt,
-      if (updatedAt != $none) #updatedAt: updatedAt,
     }),
   );
   @override
   ActivityFollow $make(CopyWithData data) => ActivityFollow(
-    id: data.get(#id, or: $value.id),
-    userId: data.get(#userId, or: $value.userId),
     providerId: data.get(#providerId, or: $value.providerId),
     objectKey: data.get(#objectKey, or: $value.objectKey),
     title: data.get(#title, or: $value.title),
     url: data.get(#url, or: $value.url),
-    createdAt: data.get(#createdAt, or: $value.createdAt),
-    updatedAt: data.get(#updatedAt, or: $value.updatedAt),
   );
 
   @override

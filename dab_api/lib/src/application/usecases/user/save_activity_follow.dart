@@ -18,6 +18,8 @@ class SaveActivityFollow {
     required String userId,
     required String providerId,
     required String objectKey,
+    String? title,
+    String? url,
   }) async {
     final parsed = _parseFollowTarget(providerId, objectKey);
     if (parsed == null) {
@@ -36,10 +38,19 @@ class SaveActivityFollow {
       userId: userId,
       providerId: parsed.providerId,
       objectKey: parsed.objectKey,
+      title: _clipSnapshot(title, 200),
+      url: _clipSnapshot(url, 500),
       createdAt: now,
     );
     return _follows.upsert(follow);
   }
+}
+
+String? _clipSnapshot(String? raw, int max) {
+  final value = raw?.trim() ?? '';
+  if (value.isEmpty) return null;
+  if (value.length <= max) return value;
+  return value.substring(0, max);
 }
 
 ({String providerId, String objectKey})? _parseFollowTarget(

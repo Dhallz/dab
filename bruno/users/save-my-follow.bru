@@ -6,7 +6,8 @@ meta {
 
 docs {
   Upserts a Dashboard object Follow pin for the caller.
-  Body: `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+  Body: `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
+  Optional `title` and `url` are a display snapshot for the Following pane.
   Allowed provider ids: phorge, jira, linear, slack, discord.
 }
 
@@ -19,7 +20,8 @@ put {
 body:json {
   {
     "providerId": "phorge",
-    "objectKey": "PHID-TASK-1"
+    "objectKey": "PHID-TASK-1",
+    "title": "[T123] Fix login"
   }
 }
 

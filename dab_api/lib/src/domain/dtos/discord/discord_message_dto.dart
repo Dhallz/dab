@@ -72,11 +72,14 @@ extension OnDiscordMessageDto on DiscordMessageDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
-    final targets = forUserIds == null
-        ? [if (dabUserId != null && dabUserId!.isNotEmpty) dabUserId!]
-        : forUserIds.where((id) => id.isNotEmpty).toList();
+    final targets = resolveInboxLaneTargets(
+      forUserIds: forUserIds,
+      followerUserIds: followerUserIds,
+      fallbackUserId: dabUserId,
+    );
     if (targets.isEmpty) return const [];
 
     final usersById = {for (final u in users) u.id: u};
@@ -90,13 +93,15 @@ extension OnDiscordMessageDto on DiscordMessageDto {
     final url = (gid == null || gid.isEmpty)
         ? null
         : 'https://discord.com/channels/$gid/$channelId/$messageId';
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
 
     final activities = <Activity>[];
-    for (final targetUserId in targets) {
+    for (final (targetUserId, lane) in targets) {
       final owner = usersById[targetUserId];
       if (owner == null) continue;
-      final stableId = fanOut ? '$messageId-$targetUserId' : messageId;
+      final stableId = fanOut
+          ? withInboxLaneId('$messageId-$targetUserId', lane)
+          : messageId;
       activities.add(
         Activity(
           id: _discordMessageUuid.v5(Namespace.url.value, 'discord-$stableId'),
@@ -109,13 +114,16 @@ extension OnDiscordMessageDto on DiscordMessageDto {
             replyToId: replyToId,
           ),
           title: title,
-          content: trimmedContent.isEmpty ? '(no message text)' : trimmedContent,
+          content: trimmedContent.isEmpty
+              ? '(no message text)'
+              : trimmedContent,
           url: url,
           authorName: authorDisplayName?.trim().isNotEmpty == true
               ? authorDisplayName!.trim()
               : owner.name,
           authorAvatarUrl: authorAvatarUrl ?? owner.avatarUrl,
           createdAt: createdAt.toUtc(),
+          inboxLane: lane,
         ),
       );
     }

@@ -113,7 +113,7 @@ Thin entry points only. No business logic.
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
 | `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs (includes `deploymentMode`), provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test (`POST /admin/configs/test` returns Core/Live/Polling section report; Live green = Redis `live:last_ingest:{providerId}` within 7 days), system settings (domain validation toggle + allowed domain + `public_api_url` for OAuth callbacks and webhooks + `deployment_mode`) |
-| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear,github,gitlab,bitbucket}/projects` for Jira/Linear instance allow-lists and personal git inbox watches, `GET /users/me/credentials/{github,gitlab,bitbucket}/branches` for the Settings branch picker) and Dashboard object Follow pins (`GET/PUT/DELETE /users/me/follows` with `{ providerId, objectKey }` for Phorge, Jira, Linear, Slack, Discord). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
+| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear,github,gitlab,bitbucket}/projects` for Jira/Linear instance allow-lists and personal git inbox watches, `GET /users/me/credentials/{github,gitlab,bitbucket}/branches` for the Settings branch picker) and Dashboard object Follow pins (`GET/PUT/DELETE /users/me/follows` with `{ providerId, objectKey, title?, url? }` for Phorge, Jira, Linear, Slack, Discord). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
 
 #### Middleware
 
@@ -182,8 +182,9 @@ gates which repositories may deliver push events into DAB. Dashboard git inbox
 rows fan out to users who **watch** that repo/branch on their credential
 (`watchedRepos` / `watchedBranches`), excluding the committer. Missing
 `watchedRepos` inherits the instance allow-list; an empty list means no git
-inbox. The unified fetcher continues to backfill commits via polling when
-configured.
+inbox. Explorer/Insights polling also requests those watched branch refs
+(plus the instance `branch` or host default). The unified fetcher continues
+to backfill commits via polling when configured.
 
 **Bruno — GitHub historical polling:** run the `bruno/github-polling-flow/` folder in order (login → load config → pick linked user → test polling → search → optional direct GitHub API probe). Set `githubSearchStartDate` / `githubSearchEndDate` in the environment to a window with known commits. Step **07 Probe GitHub API Direct** calls `GET https://api.github.com/repos/{owner}/{repo}/commits` with the same `since`/`until`/`sha`/`author` params DAB uses — use it to tell whether empty search results come from GitHub or from DAB mapping.
 
@@ -226,8 +227,9 @@ broadcast mentions (`@all`, `<!channel>`, `<!here>`, `<!everyone>`), or Slack
 user-group mention tokens (`<!subteam^...>`). An explicit user mention, including
 a self-@, still creates a row for that recipient. Broadcast mentions
 (`@channel` / `@here` / `@everyone`) omit the sender. Users who **Follow** that
-thread (`workspaceId|channelId|thread root ts`) also receive later messages,
-including their own. Messages without target mentions and without followers
+thread (`workspaceId|channelId|thread root ts`) also receive a **Follow-lane**
+copy of later messages, including their own (separate activity id; Insights
+ingest stats count only the directed row). Messages without target mentions and without followers
 are ignored for live-feed ingestion. `Activity.userId` is the
 recipient; `senderUserId` is the linked actor.
 
@@ -241,8 +243,9 @@ so `IngestPhorgeWebhook` hydrates the object via Conduit before mapping.
 Recipients are subscribers/CC, reviewers, new assignee/owner, and Remarkup
 `@username` / `{@PHID}` mentions. Standing task owner is **not** automatic.
 An explicit self-@, self-assign, or adding yourself as CC/reviewer still
-creates a Dashboard row. Users who **Follow** the task PHID also receive later
-updates, including untagged comments and their own actions. Signature is
+creates a Dashboard row. Users who **Follow** the task PHID also receive a
+Follow-lane copy of later updates, including untagged comments and their own
+actions. Signature is
 HMAC-SHA256 of the raw body in `X-Phabricator-Webhook-Signature`, keyed by the
 provider setting **`webhookHmacKey`**; dedup is per transaction PHID via Redis.
 
@@ -257,7 +260,7 @@ fallback. Comment events are distinct activity ids
 (`jira|{host}|{issueKey}|comment|{commentId}|{recipient}`) so Dashboard live-publishes them;
 Explorer still groups by issue key. Live comments fan out only to **linked ADF
 mentions**; issue updates fan out only when changelog **assignee became me**.
-Users who **Follow** the issue key also receive untagged comments and later
+Users who **Follow** the issue key also receive a Follow-lane copy of untagged comments and later
 status updates, including their own. Unlinked mentions are dropped. When instance **`projectKeys`** is set (Settings
 project picker after Connect, seeded from whoami), both polling and live
 webhooks skip other projects — that list is an ingest allow-list, not inbox
@@ -275,7 +278,7 @@ handles `Issue` and `Comment` create/update payloads, verifying the
 `linear-signature` HMAC-SHA256 header against **`webhookSecret`** and deduping
 on the `linear-delivery` id. Live comments fan out to **linked `@[Name](userId)`
 mentions**; issue updates fan out only when **assignee became me**. Users who
-**Follow** the issue identifier (`ENG-123`) also receive untagged comments and
+**Follow** the issue identifier (`ENG-123`) also receive a Follow-lane copy of untagged comments and
 later updates, including their own. Each
 comment is a distinct activity id (`linear|{issue}|comment|{commentId}|{recipient}`)
 so Dashboard live-publishes it; Explorer still groups by issue identifier.
@@ -289,8 +292,8 @@ pipeline. Live messages fan out like Slack: Gateway `mentions[].id` and
 `@everyone`/`@here` (when `mention_everyone`) to linked Discord identities.
 An explicit user mention, including a self-@, still lands for that recipient;
 `@everyone`/`@here` omit the author. Users who **Follow** the conversation
-(`guildId|channelId|root message id`) also receive later replies, including
-their own. Unmentioned messages without followers are ignored. The service
+(`guildId|channelId|root message id`) also receive a Follow-lane copy of later
+replies, including their own. Unmentioned messages without followers are ignored. The service
 starts on boot when the Discord config is active and reloads on config save.
 Explorer backfill polls `GET /channels/{id}/messages` per configured
 **`channels`** id; attribution requires linked identities

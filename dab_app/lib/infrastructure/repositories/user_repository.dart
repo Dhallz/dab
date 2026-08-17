@@ -396,11 +396,18 @@ class UserRepository extends Repository implements IUserRepository {
   Future<Either<AppFailure, ActivityFollow>> saveMyActivityFollow({
     required String providerId,
     required String objectKey,
+    String? title,
+    String? url,
   }) {
     return guardedCall(() async {
       final response = await _client.put(
         '/users/me/follows',
-        data: {'providerId': providerId, 'objectKey': objectKey},
+        data: {
+          'providerId': providerId,
+          'objectKey': objectKey,
+          if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+          if (url != null && url.trim().isNotEmpty) 'url': url.trim(),
+        },
       );
       final data = _getEnvelopeData(response);
       return ActivityFollow.fromMap(Map<String, dynamic>.from(data as Map));
