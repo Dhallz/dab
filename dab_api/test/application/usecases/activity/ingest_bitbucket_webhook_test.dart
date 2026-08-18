@@ -176,7 +176,7 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-bob');
     expect(captured.senderUserId, 'u-bb');
-    expect(captured.title, '[main] Fix login bug');
+    expect(captured.title, 'Fix login bug');
     final provider = captured.provider as BitbucketCommitProvider;
     expect(provider.repo, 'acme/widget');
     expect(provider.branch, 'main');

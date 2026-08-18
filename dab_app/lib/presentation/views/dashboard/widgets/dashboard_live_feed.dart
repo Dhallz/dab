@@ -26,6 +26,7 @@ class DashboardLiveFeed extends ConsumerWidget {
   final bool hasAnyInLane;
   final List<ActivityFollow> watchingPins;
   final bool showFollowSearch;
+  final bool compact;
   final EdgeInsetsGeometry padding;
 
   const DashboardLiveFeed({
@@ -39,6 +40,7 @@ class DashboardLiveFeed extends ConsumerWidget {
     required this.hasAnyInLane,
     this.watchingPins = const [],
     this.showFollowSearch = false,
+    this.compact = false,
     this.padding = EdgeInsets.zero,
   });
 
@@ -63,6 +65,7 @@ class DashboardLiveFeed extends ConsumerWidget {
         isFollowing: state.isFollowing,
         onFollow: notifier.follow,
         onUnfollow: notifier.unfollow,
+        compact: compact,
       );
     } else if (showEmpty) {
       feedBody = _EmptyLivePlaceholder(
@@ -81,6 +84,7 @@ class DashboardLiveFeed extends ConsumerWidget {
         isFollowing: state.isFollowing,
         onFollow: notifier.follow,
         onUnfollow: notifier.unfollow,
+        compact: compact,
       );
     }
 

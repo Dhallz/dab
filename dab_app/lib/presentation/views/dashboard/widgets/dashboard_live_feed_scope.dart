@@ -94,6 +94,7 @@ class DashboardLiveFeedScope extends ConsumerWidget {
               hasAnyInLane: state.activities.any((a) => a.isFollowLane),
               watchingPins: state.watchingPins,
               showFollowSearch: true,
+              compact: true,
             ),
           ),
         ],

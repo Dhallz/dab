@@ -8,8 +8,10 @@ import '../../../../presentation/core/extensions/activity_extensions.dart';
 import '../../../../presentation/core/localization/app_localizations.dart';
 import '../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../presentation/core/styles/app_icons.dart';
+import '../../../../presentation/core/styles/app_spacing.dart';
 import '../../../../presentation/core/widgets/activity_provider_icon.dart';
 import '../../../../presentation/core/widgets/dab_glass_surface.dart';
+import '../models/dashboard_activity_copy.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Visual card displaying a single activity with provider info and
@@ -34,6 +36,12 @@ class DashboardActivityCard extends StatefulWidget {
   /// Whether this object is already Follow-pinned.
   final bool isFollowing;
 
+  /// Tighter chrome for the narrow Following pane.
+  final bool compact;
+
+  /// When set (Following timeline), replaces relative "just now" with HH:mm.
+  final String? clockLabel;
+
   const DashboardActivityCard({
     super.key,
     required this.activity,
@@ -42,6 +50,8 @@ class DashboardActivityCard extends StatefulWidget {
     this.onFollow,
     this.onUnfollow,
     this.isFollowing = false,
+    this.compact = false,
+    this.clockLabel,
   });
 
   @override
@@ -61,16 +71,21 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
         widget.onUnarchive != null ||
         _canFollow;
     final trimmedContent = widget.activity.content.trim();
+    final headline = dashboardActivityHeadline(widget.activity);
+    final branch = gitBranchLabelFor(widget.activity.provider);
     final showSenderLine =
         widget.activity.authorName.trim().isNotEmpty &&
         (widget.activity.provider is SlackMessageProvider ||
             widget.activity.provider is GitHubCommitProvider);
+    final metaLine = _metaLine(branch: branch, showSender: showSenderLine);
+    final pad = widget.compact ? AppSpacing.s : AppSpacing.m;
+    final iconGap = widget.compact ? AppSpacing.xs : AppSpacing.m;
 
     final l10n = context.l10n;
     return Semantics(
       label: widget.activity.archived
-          ? l10n.activitySemanticsArchived(widget.activity.title)
-          : l10n.activitySemanticsActive(widget.activity.title),
+          ? l10n.activitySemanticsArchived(headline)
+          : l10n.activitySemanticsActive(headline),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
@@ -96,7 +111,7 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                 onTap: _launchUrl,
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(pad),
                   child: IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -104,9 +119,9 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                         ActivityProviderIcon(
                           activity: widget.activity,
                           color: style.color,
-                          padded: true,
+                          padded: !widget.compact,
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: iconGap),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,16 +137,16 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                                       letterSpacing: 1.2,
                                     ),
                                   ),
+                                  const Spacer(),
                                   if (widget.activity.archived) ...[
-                                    const SizedBox(width: 8),
                                     _ArchivedBadge(
                                       color: style.color,
                                       label: l10n.dashboardCardArchivedBadge,
                                     ),
+                                    const SizedBox(width: 8),
                                   ],
-                                  const Spacer(),
                                   Text(
-                                    _formatDate(l10n),
+                                    widget.clockLabel ?? _formatDate(l10n),
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
@@ -140,28 +155,34 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                widget.activity.title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.2,
-                                  color: scheme.onSurface,
-                                ),
-                                maxLines: 1,
+                                headline,
+                                style:
+                                    (widget.compact
+                                            ? theme.textTheme.titleSmall
+                                            : theme.textTheme.titleMedium)
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          height: 1.2,
+                                          color: scheme.onSurface,
+                                        ),
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (showSenderLine) ...[
+                              if (metaLine != null) ...[
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(
-                                      AppIcons.user,
-                                      size: 14,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(width: 6),
+                                    if (showSenderLine) ...[
+                                      Icon(
+                                        AppIcons.user,
+                                        size: 14,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 6),
+                                    ],
                                     Expanded(
                                       child: Text(
-                                        'From ${widget.activity.authorName}',
+                                        metaLine,
                                         style: theme.textTheme.labelSmall
                                             ?.copyWith(
                                               color: scheme.onSurfaceVariant,
@@ -181,20 +202,23 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                   ),
-                                  maxLines: 4,
+                                  maxLines: widget.compact ? 2 : 4,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        if (showsTriage) _buildTriageAction(context),
-                        Icon(
-                          AppIcons.chevronRight,
-                          color: style.color.withValues(alpha: 0.5),
-                          size: 20,
-                        ),
+                        if (showsTriage) ...[
+                          const SizedBox(width: 4),
+                          _buildTriageAction(context),
+                        ],
+                        if (!widget.compact)
+                          Icon(
+                            AppIcons.chevronRight,
+                            color: style.color.withValues(alpha: 0.5),
+                            size: 20,
+                          ),
                       ],
                     ),
                   ),
@@ -211,9 +235,30 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
       followObjectKeyFor(widget.activity.provider) != null &&
       (widget.onFollow != null || widget.onUnfollow != null);
 
+  String? _metaLine({required String? branch, required bool showSender}) {
+    final from = showSender
+        ? context.l10n.dashboardActivityFromAuthor(widget.activity.authorName)
+        : '';
+    if (branch != null && from.isNotEmpty) return '$branch · $from';
+    if (branch != null) return branch;
+    if (from.isNotEmpty) return from;
+    return null;
+  }
+
   Widget _buildTriageAction(BuildContext context) {
     final l10n = context.l10n;
     final iconColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final density = widget.compact
+        ? VisualDensity.compact
+        : VisualDensity.standard;
+    final buttonStyle = widget.compact
+        ? IconButton.styleFrom(
+            visualDensity: density,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            minimumSize: const Size(32, 32),
+            padding: EdgeInsets.zero,
+          )
+        : null;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -222,6 +267,8 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
             tooltip: widget.isFollowing
                 ? l10n.activityTooltipFollowing
                 : l10n.activityTooltipFollow,
+            style: buttonStyle,
+            visualDensity: density,
             icon: Icon(
               widget.isFollowing ? AppIcons.following : AppIcons.follow,
             ),
@@ -233,6 +280,8 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
         if (widget.activity.archived && widget.onUnarchive != null)
           IconButton(
             tooltip: l10n.activityTooltipUnarchive,
+            style: buttonStyle,
+            visualDensity: density,
             icon: Icon(AppIcons.refresh),
             color: iconColor,
             onPressed: widget.onUnarchive,
@@ -240,6 +289,8 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
         else if (!widget.activity.archived && widget.onArchive != null)
           IconButton(
             tooltip: l10n.activityTooltipArchive,
+            style: buttonStyle,
+            visualDensity: density,
             icon: Icon(AppIcons.delete),
             color: iconColor,
             onPressed: widget.onArchive,

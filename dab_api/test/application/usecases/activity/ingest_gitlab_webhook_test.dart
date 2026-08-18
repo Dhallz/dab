@@ -145,7 +145,7 @@ void main() {
             .single as Activity;
     expect(captured.userId, 'u-bob');
     expect(captured.senderUserId, 'u-gitlab');
-    expect(captured.title, '[main] Fix login bug');
+    expect(captured.title, 'Fix login bug');
     final provider = captured.provider as GitLabCommitProvider;
     expect(provider.project, 'group/project');
     expect(provider.branch, 'main');

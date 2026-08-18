@@ -19,6 +19,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
   final bool Function(Activity activity) isFollowing;
   final void Function(Activity activity) onFollow;
   final void Function(Activity activity) onUnfollow;
+  final bool compact;
 
   const DashboardTimelineFeed({
     super.key,
@@ -28,6 +29,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
     required this.isFollowing,
     required this.onFollow,
     required this.onUnfollow,
+    this.compact = false,
   });
 
   @override
@@ -60,17 +62,25 @@ class DashboardTimelineFeed extends ConsumerWidget {
                   bottom: AppSpacing.xs,
                   top: index == 0 ? 0 : AppSpacing.s,
                 ),
-                child: SizedBox(
-                  width: DashboardTimelineRow.timeColumnWidth,
-                  child: Text(
-                    dayFormat.format(local),
-                    textAlign: TextAlign.end,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: compact
+                    ? Text(
+                        dayFormat.format(local),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : SizedBox(
+                        width: DashboardTimelineRow.timeColumnWidth,
+                        child: Text(
+                          dayFormat.format(local),
+                          textAlign: TextAlign.end,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
               ),
             DashboardTimelineRow(
               activity: activity,
@@ -83,6 +93,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
               isFollowing: isFollowing(activity),
               onFollow: () => onFollow(activity),
               onUnfollow: () => onUnfollow(activity),
+              compact: compact,
             ),
           ],
         );

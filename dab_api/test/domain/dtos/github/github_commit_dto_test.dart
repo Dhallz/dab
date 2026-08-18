@@ -35,7 +35,7 @@ void main() {
     expect(activity.userId, 'u-1');
     expect(activity.provider.name, 'GitHub');
     expect(activity.provider.category, 'commit');
-    expect(activity.title, '[main] feat: add flow');
+    expect(activity.title, 'feat: add flow');
     expect(activity.content, 'Body paragraph.');
     expect(activity.authorName, 'Alice (@alicegh)');
   });

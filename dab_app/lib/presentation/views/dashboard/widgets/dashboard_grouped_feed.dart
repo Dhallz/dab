@@ -32,6 +32,7 @@ class DashboardGroupedFeed extends StatelessWidget {
   final bool Function(Activity activity) isFollowing;
   final void Function(Activity activity) onFollow;
   final void Function(Activity activity) onUnfollow;
+  final bool compact;
 
   const DashboardGroupedFeed({
     super.key,
@@ -41,6 +42,7 @@ class DashboardGroupedFeed extends StatelessWidget {
     required this.isFollowing,
     required this.onFollow,
     required this.onUnfollow,
+    this.compact = false,
   });
 
   @override
@@ -64,6 +66,7 @@ class DashboardGroupedFeed extends StatelessWidget {
               isFollowing: isFollowing,
               onFollow: onFollow,
               onUnfollow: onUnfollow,
+              compact: compact,
             );
           },
         );

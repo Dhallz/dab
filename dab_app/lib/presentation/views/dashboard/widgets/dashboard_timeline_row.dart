@@ -16,6 +16,7 @@ class DashboardTimelineRow extends StatelessWidget {
   final bool isFollowing;
   final VoidCallback? onFollow;
   final VoidCallback? onUnfollow;
+  final bool compact;
 
   const DashboardTimelineRow({
     super.key,
@@ -27,6 +28,7 @@ class DashboardTimelineRow extends StatelessWidget {
     this.isFollowing = false,
     this.onFollow,
     this.onUnfollow,
+    this.compact = false,
   });
 
   static const double timeColumnWidth = 72;
@@ -42,22 +44,23 @@ class DashboardTimelineRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: timeColumnWidth,
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xxs),
-                child: Text(
-                  timeLabel,
-                  textAlign: TextAlign.end,
-                  style: AppTextStyles.monospaced.copyWith(
-                    fontSize: AppTextStyles.labelMedium.fontSize,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+            if (!compact)
+              SizedBox(
+                width: timeColumnWidth,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xxs),
+                  child: Text(
+                    timeLabel,
+                    textAlign: TextAlign.end,
+                    style: AppTextStyles.monospaced.copyWith(
+                      fontSize: AppTextStyles.labelMedium.fontSize,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
+            if (!compact) const SizedBox(width: AppSpacing.xs),
             SizedBox(
               width: _railWidth,
               child: Column(
@@ -91,6 +94,8 @@ class DashboardTimelineRow extends StatelessWidget {
                 isFollowing: isFollowing,
                 onFollow: onFollow,
                 onUnfollow: onUnfollow,
+                compact: compact,
+                clockLabel: compact ? timeLabel : null,
               ),
             ),
           ],

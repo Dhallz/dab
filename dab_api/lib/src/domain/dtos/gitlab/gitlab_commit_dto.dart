@@ -60,10 +60,6 @@ extension OnGitLabCommitDto on GitLabCommitDto {
   }) {
     final usersById = {for (final u in users) u.id: u};
     final (subject, body) = _gitLabCommitSubjectAndBody(message);
-    final branchTag = branch?.trim();
-    final title = branchTag != null && branchTag.isNotEmpty
-        ? '[$branchTag] $subject'
-        : subject;
     final fanOut = forUserIds != null || followerUserIds != null;
     final targets = resolveInboxLaneTargets(
       forUserIds: forUserIds,
@@ -91,7 +87,7 @@ extension OnGitLabCommitDto on GitLabCommitDto {
           userId: user.id,
           senderUserId: senderUserId ?? userId,
           provider: GitLabCommitProvider(project: project, branch: branch),
-          title: title,
+          title: subject,
           content: body,
           url: url,
           authorName: displayAuthorName,

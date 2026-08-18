@@ -64,10 +64,6 @@ extension OnBitbucketCommitDto on BitbucketCommitDto {
   }) {
     final usersById = {for (final u in users) u.id: u};
     final (subject, body) = _bitbucketCommitSubjectAndBody(message);
-    final branchTag = branch?.trim();
-    final title = branchTag != null && branchTag.isNotEmpty
-        ? '[$branchTag] $subject'
-        : subject;
     final fanOut = forUserIds != null || followerUserIds != null;
     final targets = resolveInboxLaneTargets(
       forUserIds: forUserIds,
@@ -95,7 +91,7 @@ extension OnBitbucketCommitDto on BitbucketCommitDto {
           userId: user.id,
           senderUserId: senderUserId ?? userId,
           provider: BitbucketCommitProvider(repo: repo, branch: branch),
-          title: title,
+          title: subject,
           content: body,
           url: url,
           authorName: displayAuthorName,

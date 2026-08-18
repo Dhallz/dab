@@ -54,10 +54,6 @@ extension OnGitHubCommitDto on GitHubCommitDto {
   }) {
     final usersById = {for (final u in users) u.id: u};
     final (subject, body) = gitCommitSubjectAndBody;
-    final branchTag = branch?.trim();
-    final title = branchTag != null && branchTag.isNotEmpty
-        ? '[$branchTag] $subject'
-        : subject;
     final fanOut = forUserIds != null || followerUserIds != null;
     final targets = resolveInboxLaneTargets(
       forUserIds: forUserIds,
@@ -87,7 +83,7 @@ extension OnGitHubCommitDto on GitHubCommitDto {
           userId: user.id,
           senderUserId: senderUserId ?? userId,
           provider: GitHubCommitProvider(repo: repo, branch: branch),
-          title: title,
+          title: subject,
           content: body,
           url: url,
           authorName: authorLine,
