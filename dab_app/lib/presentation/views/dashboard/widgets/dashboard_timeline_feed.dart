@@ -8,6 +8,7 @@ import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../features/app/app_notifier.dart';
 import '../models/dashboard_timeline_markers.dart';
+import '../models/dashboard_watching_placeholder.dart';
 import 'dashboard_timeline_row.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -52,6 +53,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
           activities: activities,
           index: index,
           orgTimezoneId: orgTimezoneId,
+          skip: isDashboardWatchingPlaceholder,
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +88,10 @@ class DashboardTimelineFeed extends ConsumerWidget {
               activity: activity,
               timeLabel: timeFormat.format(local),
               isLast: index == activities.length - 1,
-              onArchive: activity.archived ? null : () => onArchive(activity),
+              onArchive:
+                  activity.archived || isDashboardWatchingPlaceholder(activity)
+                  ? null
+                  : () => onArchive(activity),
               onUnarchive: activity.archived
                   ? () => onUnarchive(activity)
                   : null,

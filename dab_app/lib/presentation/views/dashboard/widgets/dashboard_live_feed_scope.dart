@@ -61,7 +61,7 @@ class DashboardLiveFeedScope extends ConsumerWidget {
       );
     } else {
       final directed = state.directedVisible;
-      final followed = state.followedVisible;
+      final followed = state.followedFeed;
       final gap = axis == Axis.horizontal
           ? const SizedBox(width: AppSpacing.sectionGap)
           : const SizedBox(height: AppSpacing.sectionGap);
@@ -92,7 +92,6 @@ class DashboardLiveFeedScope extends ConsumerWidget {
               emptyCaughtUp: l10n.dashboardEmptyFollowingCaughtUp,
               emptyNone: l10n.dashboardEmptyFollowingNone,
               hasAnyInLane: state.activities.any((a) => a.isFollowLane),
-              watchingPins: state.watchingPins,
               showFollowSearch: true,
               compact: true,
             ),

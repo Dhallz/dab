@@ -180,8 +180,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
 
   Future<void> _notifyInbox(Activity activity) async {
     final settings = ref.read(appNotifierProvider).settings;
-    final focused =
-        ref.read(appLifecycleProvider) == AppLifecycleState.resumed;
+    final focused = ref.read(appLifecycleProvider) == AppLifecycleState.resumed;
     final locale = settings.resolvedLocale ?? const Locale('en');
     final l10n = lookupAppLocalizations(locale);
     await _activityUseCases.notifyInboxActivity.execute(
@@ -289,21 +288,16 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   }
 
   ActivityProvider _providerForCandidate(FollowCandidate candidate) {
-    final git = parseGitFollowObjectKey(candidate.objectKey);
-    return switch (candidate.providerId) {
-      'jira' => JiraIssueProvider(issueKey: candidate.objectKey),
-      'linear' => LinearIssueProvider(identifier: candidate.objectKey),
-      'phorge' => PhorgeTaskProvider(taskPhid: candidate.objectKey),
-      'github' => GitHubCommitProvider(repo: git?.repo, branch: git?.branch),
-      'gitlab' => GitLabCommitProvider(project: git?.repo, branch: git?.branch),
-      'bitbucket' =>
-        BitbucketCommitProvider(repo: git?.repo, branch: git?.branch),
-      _ => GenericProvider(name: candidate.providerId),
-    };
+    return activityProviderForFollow(
+      providerId: candidate.providerId,
+      objectKey: candidate.objectKey,
+    );
   }
 
   void setFollowSearchQuery(String query) {
-    state = state.copyWith(followSearchQuery: query);
+    if (state.followSearchQuery != query) {
+      state = state.copyWith(followSearchQuery: query);
+    }
     _followSearchTimer?.cancel();
     _followSearchTimer = Timer(const Duration(milliseconds: 350), () {
       unawaited(_refreshFollowCandidates());

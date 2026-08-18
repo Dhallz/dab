@@ -57,4 +57,43 @@ void main() {
       isTrue,
     );
   });
+
+  test('skips date crumbs on watching placeholders', () {
+    final placeholder = Activity(
+      id: 'watching:phorge\u001fPHID-TASK-1',
+      userId: '',
+      provider: const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1'),
+      title: '[T1] Task',
+      content: '',
+      authorName: '',
+      commentCount: 0,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      inboxLane: ActivityInboxLane.follow,
+    );
+    final live = _activity(
+      id: 'live',
+      createdAt: DateTime.utc(2026, 7, 3, 18, 0),
+    );
+    final activities = [placeholder, live];
+    bool skip(Activity activity) => activity.id.startsWith('watching:');
+
+    expect(
+      dashboardTimelineShowsDayCrumb(
+        activities: activities,
+        index: 0,
+        orgTimezoneId: tz,
+        skip: skip,
+      ),
+      isFalse,
+    );
+    expect(
+      dashboardTimelineShowsDayCrumb(
+        activities: activities,
+        index: 1,
+        orgTimezoneId: tz,
+        skip: skip,
+      ),
+      isTrue,
+    );
+  });
 }

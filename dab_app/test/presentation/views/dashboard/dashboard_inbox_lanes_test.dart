@@ -2,6 +2,7 @@ import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/user/activity_follow.dart';
 import 'package:dab_app/domain/entities/user/follow_candidate.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
+import 'package:dab_app/presentation/views/dashboard/models/dashboard_watching_placeholder.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Activity _activity({
@@ -62,7 +63,7 @@ void main() {
   });
 
   test(
-    'watchingPins show the Followed title until a Follow-lane card exists',
+    'watchingPins become Following feed cards until a Follow-lane card exists',
     () {
       const pin = ActivityFollow(
         providerId: 'phorge',
@@ -81,6 +82,8 @@ void main() {
       );
       var state = DashboardState(activities: [directed], follows: [pin]);
       expect(state.watchingPins.single.displayTitle, '[T1] Task');
+      expect(state.followedFeed.single.title, '[T1] Task');
+      expect(isDashboardWatchingPlaceholder(state.followedFeed.single), isTrue);
 
       final followLane = Activity(
         id: 'f-1',
@@ -95,6 +98,7 @@ void main() {
       );
       state = state.copyWith(activities: [directed, followLane]);
       expect(state.watchingPins, isEmpty);
+      expect(state.followedFeed.single.id, 'f-1');
     },
   );
 
@@ -117,30 +121,73 @@ void main() {
     expect(state.followPickerVisible.map((row) => row.objectKey), ['DAB-8']);
   });
 
-  test('git branch pins appear as watching rows until a Follow-lane card exists', () {
-    const pin = ActivityFollow(
-      providerId: 'github',
-      objectKey: 'acme/app|feature/foo',
-      title: 'acme/app · feature/foo',
-    );
-    var state = const DashboardState(follows: [pin]);
-    expect(state.watchingPins.single.displayTitle, 'acme/app · feature/foo');
+  test(
+    'git branch pins appear as Following cards until a Follow-lane card exists',
+    () {
+      const pin = ActivityFollow(
+        providerId: 'github',
+        objectKey: 'acme/app|feature/foo',
+        title: 'acme/app · feature/foo',
+      );
+      var state = const DashboardState(follows: [pin]);
+      expect(state.watchingPins.single.displayTitle, 'acme/app · feature/foo');
+      expect(state.followedFeed.single.title, 'acme/app · feature/foo');
+      expect(isDashboardWatchingPlaceholder(state.followedFeed.single), isTrue);
 
-    final followLane = Activity(
-      id: 'f-git',
-      userId: 'u-1',
-      provider: const GitHubCommitProvider(
-        repo: 'acme/app',
-        branch: 'feature/foo',
-      ),
-      title: '[feature/foo] push',
-      content: 'sha',
-      authorName: 'Alice',
-      commentCount: 0,
-      createdAt: DateTime.utc(2026, 1, 1, 11),
-      inboxLane: ActivityInboxLane.follow,
-    );
-    state = state.copyWith(activities: [followLane]);
-    expect(state.watchingPins, isEmpty);
-  });
+      final followLane = Activity(
+        id: 'f-git',
+        userId: 'u-1',
+        provider: const GitHubCommitProvider(
+          repo: 'acme/app',
+          branch: 'feature/foo',
+        ),
+        title: '[feature/foo] push',
+        content: 'sha',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 1, 1, 11),
+        inboxLane: ActivityInboxLane.follow,
+      );
+      state = state.copyWith(activities: [followLane]);
+      expect(state.watchingPins, isEmpty);
+      expect(state.followedFeed.single.id, 'f-git');
+    },
+  );
+
+  test(
+    'quiet pins sit in the Following feed above live cards for other objects',
+    () {
+      const quiet = ActivityFollow(
+        providerId: 'phorge',
+        objectKey: 'PHID-TASK-1',
+        title: '[T1] Quiet',
+      );
+      const livePin = ActivityFollow(
+        providerId: 'phorge',
+        objectKey: 'PHID-TASK-2',
+        title: '[T2] Live',
+      );
+      final live = Activity(
+        id: 'f-2',
+        userId: 'u-1',
+        provider: const PhorgeTaskProvider(taskPhid: 'PHID-TASK-2'),
+        title: '[T2] later',
+        content: 'update',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 1, 1, 11),
+        inboxLane: ActivityInboxLane.follow,
+      );
+      final state = DashboardState(
+        activities: [live],
+        follows: const [quiet, livePin],
+      );
+      expect(state.followedFeed.map((a) => a.title), [
+        '[T1] Quiet',
+        '[T2] later',
+      ]);
+      expect(isDashboardWatchingPlaceholder(state.followedFeed.first), isTrue);
+      expect(isDashboardWatchingPlaceholder(state.followedFeed.last), isFalse);
+    },
+  );
 }

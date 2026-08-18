@@ -9,8 +9,9 @@ part 'activity_follow.mapper.dart';
 /// CONTRACT: [providerId] is an ingest id (`phorge`, `jira`, `linear`,
 /// `slack`, `discord`, `github`, `gitlab`, `bitbucket`). [objectKey] is the
 /// stable object identity from [followObjectKeyFor] (git is `owner/repo|branch`).
-/// [title] / [url] snapshot the Followed card so Dashboard can show a watching
-/// row immediately. Settings git watches stay Directed.
+/// [title] / [url] snapshot the Followed card so Dashboard can show a
+/// placeholder in the Following feed until the first Follow-lane event.
+/// Settings git watches stay Directed.
 @MappableClass()
 class ActivityFollow with ActivityFollowMappable {
   final String providerId;
@@ -30,7 +31,7 @@ class ActivityFollow with ActivityFollowMappable {
 
   String get objectRef => followObjectRef(providerId, objectKey);
 
-  /// Title for a watching row; falls back to [objectKey] when unset.
+  /// Title for a quiet Following placeholder; falls back to [objectKey].
   String get displayTitle {
     final value = title?.trim() ?? '';
     return value.isEmpty ? objectKey : value;

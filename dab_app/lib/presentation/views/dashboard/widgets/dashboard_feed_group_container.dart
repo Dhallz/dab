@@ -10,6 +10,7 @@ import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/provider_icon_resolver.dart';
 import '../../../core/widgets/dab_glass_surface.dart';
 import '../models/dashboard_feed_group.dart';
+import '../models/dashboard_watching_placeholder.dart';
 import 'dashboard_activity_card.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -96,7 +97,9 @@ class DashboardFeedGroupContainer extends StatelessWidget {
             for (final activity in group.activities)
               DashboardActivityCard(
                 activity: activity,
-                onArchive: activity.archived
+                onArchive:
+                    activity.archived ||
+                        isDashboardWatchingPlaceholder(activity)
                     ? null
                     : () => onArchive?.call(activity),
                 onUnarchive: activity.archived

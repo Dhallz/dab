@@ -1538,7 +1538,7 @@ abstract class AppLocalizations {
   /// **'Following'**
   String get dashboardFollowingTitle;
 
-  /// Compact label on a Follow pin row before that object has a live Follow-lane update.
+  /// Clock/meta label on a Following placeholder card before that object has a live Follow-lane update.
   ///
   /// In en, this message translates to:
   /// **'Watching'**

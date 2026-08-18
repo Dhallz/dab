@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/styles/app_icons.dart';
 import '../../../../domain/entities/activity/activity.dart';
-import '../../../../domain/entities/user/activity_follow.dart';
 import '../dashboard_notifier.dart';
 import '../dashboard_state.dart';
 import '../models/dashboard_feed_group.dart';
 import '../models/dashboard_feed_mode.dart';
 import 'dashboard_follow_search.dart';
-import 'dashboard_following_pins.dart';
 import 'dashboard_grouped_feed.dart';
 import 'dashboard_timeline_feed.dart';
 
@@ -24,7 +22,6 @@ class DashboardLiveFeed extends ConsumerWidget {
   final String emptyCaughtUp;
   final String emptyNone;
   final bool hasAnyInLane;
-  final List<ActivityFollow> watchingPins;
   final bool showFollowSearch;
   final bool compact;
   final EdgeInsetsGeometry padding;
@@ -38,7 +35,6 @@ class DashboardLiveFeed extends ConsumerWidget {
     required this.emptyCaughtUp,
     required this.emptyNone,
     required this.hasAnyInLane,
-    this.watchingPins = const [],
     this.showFollowSearch = false,
     this.compact = false,
     this.padding = EdgeInsets.zero,
@@ -49,8 +45,7 @@ class DashboardLiveFeed extends ConsumerWidget {
     final notifier = ref.read(dashboardNotifierProvider.notifier);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final showPins = watchingPins.isNotEmpty;
-    final showEmpty = activities.isEmpty && !showPins;
+    final showEmpty = activities.isEmpty;
     final showGrouped =
         activities.isNotEmpty &&
         state.feedMode != DashboardFeedMode.timeline &&
@@ -74,8 +69,6 @@ class DashboardLiveFeed extends ConsumerWidget {
         caughtUpMessage: emptyCaughtUp,
         noneMessage: emptyNone,
       );
-    } else if (activities.isEmpty) {
-      feedBody = const SizedBox.shrink();
     } else {
       feedBody = DashboardTimelineFeed(
         activities: activities,
@@ -110,11 +103,6 @@ class DashboardLiveFeed extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
           ],
-          if (showPins)
-            DashboardFollowingPins(
-              pins: watchingPins,
-              onUnfollow: notifier.unfollowPin,
-            ),
           Expanded(child: feedBody),
         ],
       ),

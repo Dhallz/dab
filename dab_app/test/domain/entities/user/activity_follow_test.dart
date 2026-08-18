@@ -15,7 +15,7 @@ void main() {
     expect(follow.displayTitle, 'DAB-7');
   });
 
-  test('uses the stored title for watching-row copy', () {
+  test('uses the stored title for Following placeholder copy', () {
     final follow = ActivityFollow.fromMap({
       'providerId': 'phorge',
       'objectKey': 'PHID-TASK-1',
@@ -41,5 +41,38 @@ void main() {
       ),
       'acme/app|feature/foo',
     );
+  });
+
+  test('activityProviderForFollow round-trips stored Follow keys', () {
+    const cases = <ActivityProvider>[
+      PhorgeTaskProvider(taskPhid: 'PHID-TASK-1'),
+      PhorgeRevisionProvider(revisionId: 'PHID-DREV-1'),
+      JiraIssueProvider(issueKey: 'DAB-7'),
+      LinearIssueProvider(identifier: 'ENG-42'),
+      SlackMessageProvider(
+        workspaceId: 'T1',
+        channelId: 'C1',
+        threadTs: '100.1',
+        messageTs: '100.1',
+      ),
+      DiscordMessageProvider(
+        guildId: 'G1',
+        channelId: 'C1',
+        messageId: 'm-root',
+      ),
+      GitHubCommitProvider(repo: 'acme/app', branch: 'feature/foo'),
+    ];
+    for (final provider in cases) {
+      final providerId = followProviderIdFor(provider);
+      final objectKey = followObjectKeyFor(provider);
+      expect(providerId, isNotNull, reason: '$provider');
+      expect(objectKey, isNotNull, reason: '$provider');
+      final rebuilt = activityProviderForFollow(
+        providerId: providerId!,
+        objectKey: objectKey!,
+      );
+      expect(followObjectKeyFor(rebuilt), objectKey, reason: '$provider');
+      expect(followProviderIdFor(rebuilt), providerId, reason: '$provider');
+    }
   });
 }

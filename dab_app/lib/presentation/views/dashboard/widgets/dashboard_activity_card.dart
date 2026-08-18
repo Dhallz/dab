@@ -12,6 +12,7 @@ import '../../../../presentation/core/styles/app_spacing.dart';
 import '../../../../presentation/core/widgets/activity_provider_icon.dart';
 import '../../../../presentation/core/widgets/dab_glass_surface.dart';
 import '../models/dashboard_activity_copy.dart';
+import '../models/dashboard_watching_placeholder.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Visual card displaying a single activity with provider info and
@@ -67,9 +68,7 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final showsTriage =
-        widget.onArchive != null ||
-        widget.onUnarchive != null ||
-        _canFollow;
+        widget.onArchive != null || widget.onUnarchive != null || _canFollow;
     final trimmedContent = widget.activity.content.trim();
     final headline = dashboardActivityHeadline(widget.activity);
     final branch = gitBranchLabelFor(widget.activity.provider);
@@ -146,7 +145,12 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
                                     const SizedBox(width: 8),
                                   ],
                                   Text(
-                                    widget.clockLabel ?? _formatDate(l10n),
+                                    isDashboardWatchingPlaceholder(
+                                          widget.activity,
+                                        )
+                                        ? l10n.dashboardWatchingPinLabel
+                                        : widget.clockLabel ??
+                                              _formatDate(l10n),
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),

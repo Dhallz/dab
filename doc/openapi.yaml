@@ -1207,7 +1207,8 @@ paths:
       description: |
         Returns `{ providerId, objectKey, title?, url? }` pins for the
         authenticated user. `title` / `url` are a display snapshot from the
-        Followed card so Dashboard can show a watching row immediately.
+        Followed card so Dashboard can show a Following placeholder card
+        until the first Follow-lane event.
         Followable providers: phorge, jira, linear, slack, discord, github,
         gitlab, bitbucket. Git `objectKey` is `owner/repo|branch`. Settings
         `watchedRepos` / `watchedBranches` stay Directed.
@@ -1221,7 +1222,7 @@ paths:
       description: |
         Upserts a Follow pin. Later updates on that object land in the Follow
         inbox lane. Optional `title` and `url` snapshot the Followed card for
-        an immediate watching row.
+        an immediate Following placeholder card.
         Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
         Git pins use `{ "providerId": "github", "objectKey": "acme/app|feature/foo" }`.
       security:

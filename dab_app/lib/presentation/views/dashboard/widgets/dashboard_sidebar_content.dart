@@ -30,7 +30,7 @@ class DashboardSidebarContent extends StatelessWidget {
           DabIslandStat(
             icon: AppIcons.following,
             title: l10n.dashboardIslandFollowing,
-            value: '${state.followedVisible.length + state.watchingPins.length}',
+            value: '${state.followedFeed.length}',
           ),
           const SizedBox(height: AppSpacing.s),
           DabIslandStat(

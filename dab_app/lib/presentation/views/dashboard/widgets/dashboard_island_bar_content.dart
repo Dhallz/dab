@@ -7,6 +7,7 @@ import '../../../core/widgets/dab_island_stat.dart';
 import '../../../core/widgets/dab_toggle_chip.dart';
 import '../../../core/widgets/view_toolbar.dart';
 import '../dashboard_notifier.dart';
+import '../dashboard_state.dart';
 import '../models/dashboard_feed_mode.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -73,7 +74,7 @@ class DashboardIslandBarContent extends ConsumerWidget {
             compact: true,
             icon: AppIcons.following,
             title: l10n.dashboardIslandFollowing,
-            value: '${state.followedVisible.length + state.watchingPins.length}',
+            value: '${state.followedFeed.length}',
           ),
           DabIslandStat(
             compact: true,

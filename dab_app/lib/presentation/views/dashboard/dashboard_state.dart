@@ -8,6 +8,7 @@ import '../../../domain/entities/user/follow_candidate.dart';
 import 'models/dashboard_feed_group.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
+import 'models/dashboard_watching_placeholder.dart';
 
 part 'dashboard_state.mapper.dart';
 
@@ -69,8 +70,7 @@ class DashboardState with DashboardStateMappable {
     for (final follow in follows) follow.objectRef,
   ];
 
-  /// Quiet watching rows: Follow pins that do not already have a Follow-lane
-  /// live card in the pane.
+  /// Quiet Follow pins that do not already have a Follow-lane live card.
   List<ActivityFollow> get watchingPins {
     final covered = <String>{
       for (final activity in followedVisible)
@@ -100,6 +100,12 @@ class DashboardState with DashboardStateMappable {
 
 /// Derived feed projections so widgets stay layout-only.
 extension OnDashboardState on DashboardState {
+  /// Following pane items: quiet pin cards first, then Follow-lane live cards.
+  List<Activity> get followedFeed => [
+    for (final pin in watchingPins) watchingPlaceholderActivity(pin),
+    ...followedVisible,
+  ];
+
   /// Category containers for the current [visibleActivities] subset.
   List<DashboardFeedGroup> get categoryGroups =>
       deriveCategoryFeedGroups(visibleActivities);

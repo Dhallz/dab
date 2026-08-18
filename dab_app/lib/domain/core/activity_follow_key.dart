@@ -73,12 +73,18 @@ String? followObjectKeyFor(ActivityProvider provider) {
         channelId: channelId ?? '',
         messageId: (replyToId ?? '').trim().isNotEmpty ? replyToId : messageId,
       ),
-    GitHubCommitProvider(:final repo, :final branch) =>
-      gitFollowObjectKey(repo, branch),
-    GitLabCommitProvider(:final project, :final branch) =>
-      gitFollowObjectKey(project, branch),
-    BitbucketCommitProvider(:final repo, :final branch) =>
-      gitFollowObjectKey(repo, branch),
+    GitHubCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
+      repo,
+      branch,
+    ),
+    GitLabCommitProvider(:final project, :final branch) => gitFollowObjectKey(
+      project,
+      branch,
+    ),
+    BitbucketCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
+      repo,
+      branch,
+    ),
     GenericProvider() => null,
   };
 }
@@ -174,6 +180,66 @@ String? followObjectRefFor(ActivityProvider provider) {
   final objectKey = followObjectKeyFor(provider);
   if (providerId == null || objectKey == null) return null;
   return followObjectRef(providerId, objectKey);
+}
+
+/// Rebuilds a followable [ActivityProvider] from a stored pin key.
+///
+/// Round-trips [followObjectKeyFor] so Dashboard can unfollow a quiet
+/// watching placeholder with the same bookmark as a live card.
+ActivityProvider activityProviderForFollow({
+  required String providerId,
+  required String objectKey,
+}) {
+  final id = providerId.trim().toLowerCase();
+  final git = parseGitFollowObjectKey(objectKey);
+  return switch (id) {
+    'phorge' => _phorgeProviderForFollow(objectKey),
+    'jira' => JiraIssueProvider(issueKey: objectKey),
+    'linear' => LinearIssueProvider(identifier: objectKey),
+    'slack' => _slackProviderForFollow(objectKey),
+    'discord' => _discordProviderForFollow(objectKey),
+    'github' => GitHubCommitProvider(repo: git?.repo, branch: git?.branch),
+    'gitlab' => GitLabCommitProvider(project: git?.repo, branch: git?.branch),
+    'bitbucket' => BitbucketCommitProvider(
+      repo: git?.repo,
+      branch: git?.branch,
+    ),
+    _ => GenericProvider(name: providerId),
+  };
+}
+
+ActivityProvider _phorgeProviderForFollow(String objectKey) {
+  final key = objectKey.trim();
+  final upper = key.toUpperCase();
+  if (upper.startsWith('PHID-DREV') || RegExp(r'^D\d+$').hasMatch(key)) {
+    return PhorgeRevisionProvider(revisionId: key);
+  }
+  return PhorgeTaskProvider(taskPhid: key);
+}
+
+SlackMessageProvider _slackProviderForFollow(String objectKey) {
+  final parts = objectKey.split('|');
+  final workspaceId = parts.isNotEmpty ? parts[0] : '';
+  final channelId = parts.length > 1 ? parts[1] : '';
+  final ts = parts.length > 2 ? parts.sublist(2).join('|') : '';
+  return SlackMessageProvider(
+    workspaceId: workspaceId,
+    channelId: channelId,
+    threadTs: ts,
+    messageTs: ts,
+  );
+}
+
+DiscordMessageProvider _discordProviderForFollow(String objectKey) {
+  final parts = objectKey.split('|');
+  final guildId = parts.isNotEmpty ? parts[0] : '';
+  final channelId = parts.length > 1 ? parts[1] : '';
+  final messageId = parts.length > 2 ? parts.sublist(2).join('|') : '';
+  return DiscordMessageProvider(
+    guildId: guildId,
+    channelId: channelId,
+    messageId: messageId,
+  );
 }
 
 String? _nonEmpty(String? raw) {
