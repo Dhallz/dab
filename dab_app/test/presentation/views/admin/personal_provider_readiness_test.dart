@@ -58,4 +58,23 @@ void main() {
     );
     expect(personalProviderReadiness(complete).status, ViewStatus.success);
   });
+
+  test('Phorge is ready when a real instance URL is saved', () {
+    const placeholder = ProviderConfig(
+      id: 'phorge',
+      name: 'Phorge',
+      baseUrl: 'https://phorge.example.com',
+      isActive: true,
+    );
+    expect(personalProviderReadiness(placeholder).status, ViewStatus.failure);
+
+    const configured = ProviderConfig(
+      id: 'phorge',
+      name: 'Phorge',
+      baseUrl: 'https://phorge.example.com',
+      isActive: true,
+      settings: {'instanceUrl': 'https://secure.phorge.internal'},
+    );
+    expect(personalProviderReadiness(configured).status, ViewStatus.success);
+  });
 }

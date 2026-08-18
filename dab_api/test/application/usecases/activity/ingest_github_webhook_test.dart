@@ -6,11 +6,13 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/core/realtime/presence_service.dart';
+import '../../../fakes/fake_credential_resolver.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -25,6 +27,8 @@ class _MockProviderConfigRepository extends Mock
 class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
+
+class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
 
 void main() {
   late _MockUserRepository userRepository;
@@ -216,5 +220,116 @@ void main() {
     final r = out.getOrElse((_) => throw StateError('expected right'));
     expect(r.reason, 'repo_not_configured');
     verifyNever(() => activityRepository.createActivity(any()));
+  });
+
+  test('persists a Follow-lane copy for a branch pin without Settings watches', () async {
+    final author = User(
+      id: 'u-gh',
+      name: 'Ada',
+      email: 'ada@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final follower = User(
+      id: 'u-bob',
+      name: 'Bob',
+      email: 'bob@example.com',
+      passwordHash: 'hash',
+      role: UserRole.standard,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final identity = UserIdentity(
+      id: 'ig-1',
+      userId: 'u-gh',
+      providerId: 'github',
+      externalId: 'adal',
+      externalUsername: 'adal',
+      status: UserIdentityStatus.linked,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    final config = ProviderConfig(
+      id: 'github',
+      name: 'GitHub',
+      baseUrl: 'https://github.com',
+      isActive: true,
+      settings: const {
+        'owner': 'Acme',
+        'repo': 'app',
+        'webhookSecret': 'x',
+      },
+    );
+    final follows = _MockFollows();
+    when(
+      () => follows.userIdsFor(
+        providerId: any(named: 'providerId'),
+        objectKey: any(named: 'objectKey'),
+      ),
+    ).thenAnswer((_) async => const Right(['u-bob']));
+
+    final followerUseCase = IngestGitHubWebhook(
+      userRepository,
+      activityRepository,
+      providerConfigRepository,
+      redisService,
+      presenceService,
+      credentials: FakeCredentialResolver(const {
+        'u-gh': {'watchedRepos': <String>[]},
+        'u-bob': {'watchedRepos': <String>[]},
+      }),
+      follows: follows,
+    );
+
+    when(() => redisService.reserveGitHubDeliveryId(any())).thenAnswer(
+      (_) async => true,
+    );
+    when(() => userRepository.getUsers()).thenAnswer(
+      (_) async => Right([author, follower]),
+    );
+    when(
+      () => userRepository.getIdentitiesForUsersAndProvider(any(), 'github'),
+    ).thenAnswer((_) async => Right([identity]));
+    when(
+      () => activityRepository.createActivity(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => redisService.incrementVersion()).thenAnswer((_) async => 42);
+    when(() => redisService.fanOutActivity(any())).thenAnswer((_) async {});
+    when(() => providerConfigRepository.getConfigs()).thenAnswer(
+      (_) async => Right([config]),
+    );
+
+    final out = await followerUseCase.execute(
+      payload: <String, dynamic>{
+        'repository': {'full_name': 'Acme/app'},
+        'ref': 'refs/heads/feature/foo',
+        'commits': [
+          {
+            'id': 'abcd1234',
+            'distinct': true,
+            'message': 'fix it',
+            'timestamp': '2026-03-01T12:00:00Z',
+            'url': 'https://github.com/Acme/app/commit/abcd1234',
+            'author': {'name': 'Ada', 'username': 'adal'},
+          },
+        ],
+      },
+      deliveryId: 'del-follow',
+      event: 'push',
+    );
+
+    expect(out.isRight(), isTrue);
+    expect(out.getOrElse((_) => throw StateError('left')).ingested, isTrue);
+    final captured =
+        verify(() => activityRepository.createActivity(captureAny()))
+            .captured
+            .single as Activity;
+    expect(captured.userId, 'u-bob');
+    expect(captured.inboxLane, ActivityInboxLane.follow);
+    verify(
+      () => follows.userIdsFor(
+        providerId: 'github',
+        objectKey: 'acme/app|feature/foo',
+      ),
+    ).called(1);
   });
 }

@@ -55,23 +55,25 @@ extension OnGitLabCommitDto on GitLabCommitDto {
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
-    final targets = forUserIds == null
-        ? [if (userId != null && userId!.isNotEmpty) userId!]
-        : forUserIds.where((id) => id.isNotEmpty).toList();
-    if (targets.isEmpty) return const [];
-
     final usersById = {for (final u in users) u.id: u};
     final (subject, body) = _gitLabCommitSubjectAndBody(message);
     final branchTag = branch?.trim();
     final title = branchTag != null && branchTag.isNotEmpty
         ? '[$branchTag] $subject'
         : subject;
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
+    final targets = resolveInboxLaneTargets(
+      forUserIds: forUserIds,
+      followerUserIds: followerUserIds,
+      fallbackUserId: userId,
+    );
+    if (targets.isEmpty) return const [];
 
     final activities = <Activity>[];
-    for (final targetId in targets) {
+    for (final (targetId, lane) in targets) {
       final user = usersById[targetId];
       if (user == null) continue;
       final displayAuthorName = authorName?.trim().isNotEmpty == true
@@ -82,9 +84,12 @@ extension OnGitLabCommitDto on GitLabCommitDto {
           : 'gitlab-$project-$sha';
       activities.add(
         Activity(
-          id: _gitLabCommitUuid.v5(Namespace.url.value, stable),
+          id: _gitLabCommitUuid.v5(
+            Namespace.url.value,
+            withInboxLaneId(stable, lane),
+          ),
           userId: user.id,
-          senderUserId: senderUserId ?? this.userId,
+          senderUserId: senderUserId ?? userId,
           provider: GitLabCommitProvider(project: project, branch: branch),
           title: title,
           content: body,
@@ -93,6 +98,7 @@ extension OnGitLabCommitDto on GitLabCommitDto {
           authorAvatarUrl: user.avatarUrl,
           commentCount: 0,
           createdAt: committedAt.toUtc(),
+          inboxLane: lane,
         ),
       );
     }

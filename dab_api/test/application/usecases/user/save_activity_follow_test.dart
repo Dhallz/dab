@@ -32,7 +32,7 @@ void main() {
     delete = DeleteActivityFollow(follows);
   });
 
-  test('saves a followable pin and rejects git', () async {
+  test('saves a followable pin and rejects git without a branch', () async {
     when(() => follows.upsert(any())).thenAnswer((invocation) async {
       return Right(invocation.positionalArguments.first as ActivityFollow);
     });
@@ -55,6 +55,16 @@ void main() {
       objectKey: 'acme/app',
     );
     expect(rejected.getLeft().toNullable(), isA<ValidationFailure>());
+
+    final git = await save.execute(
+      userId: 'u-1',
+      providerId: 'github',
+      objectKey: 'Acme/app|feature/foo',
+      title: 'acme/app · feature/foo',
+    );
+    final gitFollow = git.getOrElse((_) => throw StateError('left'));
+    expect(gitFollow.providerId, 'github');
+    expect(gitFollow.objectKey, 'acme/app|feature/foo');
   });
 
   test('deletes a followable pin and rejects empty keys', () async {

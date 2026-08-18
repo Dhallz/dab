@@ -729,6 +729,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'URL istanza GitLab (es. gitlab.com)';
 
   @override
+  String get adminFieldPhorgeInstanceUrl => 'URL istanza Phorge';
+
+  @override
   String get adminFieldApiTokenOrSecret => 'Token API / secret';
 
   @override
@@ -742,6 +745,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get dashboardWatchingPinLabel => 'Watching';
+
+  @override
+  String get dashboardFollowSearchHint => 'Follow a task or branch…';
+
+  @override
+  String get dashboardFollowSearchEmpty => 'No matching tasks or branches.';
 
   @override
   String dashboardLiveUpdated(Object relativeTime) {
@@ -1048,7 +1057,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get adminPersonalProvidersHint =>
-      'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.';
+      'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Phorge needs the instance URL here; teammates paste a Conduit token in Settings. Slack and Discord use a workspace bot, not per-user login.';
 
   @override
   String get adminPersonalLiveWebhookHint =>

@@ -1,5 +1,6 @@
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/user/activity_follow.dart';
+import 'package:dab_app/domain/entities/user/follow_candidate.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -96,4 +97,50 @@ void main() {
       expect(state.watchingPins, isEmpty);
     },
   );
+
+  test('followPickerVisible hides already Followed objects', () {
+    const pin = ActivityFollow(providerId: 'jira', objectKey: 'DAB-7');
+    const open = FollowCandidate(
+      providerId: 'jira',
+      objectKey: 'DAB-8',
+      title: '[DAB-8] Other',
+    );
+    const followed = FollowCandidate(
+      providerId: 'jira',
+      objectKey: 'DAB-7',
+      title: '[DAB-7] Inbox',
+    );
+    final state = DashboardState(
+      follows: const [pin],
+      followCandidates: const [open, followed],
+    );
+    expect(state.followPickerVisible.map((row) => row.objectKey), ['DAB-8']);
+  });
+
+  test('git branch pins appear as watching rows until a Follow-lane card exists', () {
+    const pin = ActivityFollow(
+      providerId: 'github',
+      objectKey: 'acme/app|feature/foo',
+      title: 'acme/app · feature/foo',
+    );
+    var state = const DashboardState(follows: [pin]);
+    expect(state.watchingPins.single.displayTitle, 'acme/app · feature/foo');
+
+    final followLane = Activity(
+      id: 'f-git',
+      userId: 'u-1',
+      provider: const GitHubCommitProvider(
+        repo: 'acme/app',
+        branch: 'feature/foo',
+      ),
+      title: '[feature/foo] push',
+      content: 'sha',
+      authorName: 'Alice',
+      commentCount: 0,
+      createdAt: DateTime.utc(2026, 1, 1, 11),
+      inboxLane: ActivityInboxLane.follow,
+    );
+    state = state.copyWith(activities: [followLane]);
+    expect(state.watchingPins, isEmpty);
+  });
 }

@@ -6,6 +6,7 @@ import 'package:dab_app/domain/core/activity_follow_key.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/entities/user/activity_follow.dart';
+import 'package:dab_app/domain/entities/user/follow_candidate.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
@@ -62,6 +63,11 @@ void main() {
     when(
       () => userRepository.listMyActivityFollows(),
     ).thenAnswer((_) async => const Right(<ActivityFollow>[]));
+    when(
+      () => userRepository.listMyFollowCandidates(
+        query: any(named: 'query'),
+      ),
+    ).thenAnswer((_) async => const Right(<FollowCandidate>[]));
   });
 
   DashboardNotifier createNotifier() => DashboardNotifier(
@@ -368,7 +374,7 @@ void main() {
     ).called(1);
   });
 
-  test('follow is a no-op for git commit cards', () async {
+  test('follow is a no-op for git commits without a branch', () async {
     when(
       () => repository.getLiveActivities(
         limit: 50,
@@ -380,10 +386,7 @@ void main() {
         Activity(
           id: 'commit-1',
           userId: 'u-1',
-          provider: const GitHubCommitProvider(
-            repo: 'acme/app',
-            branch: 'main',
-          ),
+          provider: const GitHubCommitProvider(repo: 'acme/app'),
           title: 'Fix login',
           content: 'sha',
           authorName: 'Alice',
@@ -415,5 +418,104 @@ void main() {
         url: any(named: 'url'),
       ),
     );
+  });
+
+  test('followCandidate pins an issue from the Following picker', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => userRepository.saveMyActivityFollow(
+        providerId: any(named: 'providerId'),
+        objectKey: any(named: 'objectKey'),
+        title: any(named: 'title'),
+        url: any(named: 'url'),
+      ),
+    ).thenAnswer(
+      (_) async => const Right(
+        ActivityFollow(
+          providerId: 'jira',
+          objectKey: 'DAB-7',
+          title: '[DAB-7] Inbox',
+        ),
+      ),
+    );
+
+    final container = containerWithOverrides(createNotifier);
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    final notifier = container.read(dashboardNotifierProvider.notifier);
+    await notifier.followCandidate(
+      const FollowCandidate(
+        providerId: 'jira',
+        objectKey: 'DAB-7',
+        title: '[DAB-7] Inbox',
+        url: 'https://example.com/browse/DAB-7',
+      ),
+    );
+
+    final state = container.read(dashboardNotifierProvider);
+    expect(state.followedObjectRefs, [followObjectRef('jira', 'DAB-7')]);
+    verify(
+      () => userRepository.saveMyActivityFollow(
+        providerId: 'jira',
+        objectKey: 'DAB-7',
+        title: '[DAB-7] Inbox',
+        url: 'https://example.com/browse/DAB-7',
+      ),
+    ).called(1);
+  });
+
+  test('setFollowSearchQuery debounces candidate refresh', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => userRepository.listMyFollowCandidates(query: 'foo'),
+    ).thenAnswer(
+      (_) async => const Right([
+        FollowCandidate(
+          providerId: 'github',
+          objectKey: 'acme/app|feature/foo',
+          title: 'acme/app · feature/foo',
+          kind: 'gitBranch',
+        ),
+      ]),
+    );
+
+    final container = containerWithOverrides(createNotifier);
+    final keepAlive = container.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(keepAlive.close);
+    addTearDown(container.dispose);
+
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    final notifier = container.read(dashboardNotifierProvider.notifier);
+    notifier.setFollowSearchQuery('foo');
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+
+    final state = container.read(dashboardNotifierProvider);
+    expect(state.followSearchQuery, 'foo');
+    expect(state.followPickerVisible, hasLength(1));
+    expect(state.followPickerVisible.single.objectKey, 'acme/app|feature/foo');
+    verify(() => userRepository.listMyFollowCandidates(query: 'foo')).called(1);
   });
 }

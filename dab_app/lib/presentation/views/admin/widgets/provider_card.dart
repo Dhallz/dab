@@ -173,6 +173,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     if (field.key == 'webhookUrl') {
       return _displayWebhookUrl(config, systemSettings);
     }
+    if (field.key == 'instanceUrl') {
+      final fromSettings = rawValue?.toString().trim() ?? '';
+      if (fromSettings.isNotEmpty) return fromSettings;
+      return config.baseUrl.trim();
+    }
 
     return rawValue?.toString() ?? '';
   }

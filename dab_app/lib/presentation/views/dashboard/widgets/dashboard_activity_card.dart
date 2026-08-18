@@ -25,7 +25,7 @@ class DashboardActivityCard extends StatefulWidget {
   final VoidCallback? onUnarchive;
 
   /// Callback fired when the user Follows this object. Hidden when the
-  /// activity is not followable (git commits).
+  /// activity is not followable.
   final VoidCallback? onFollow;
 
   /// Callback fired when the user Unfollows this object.

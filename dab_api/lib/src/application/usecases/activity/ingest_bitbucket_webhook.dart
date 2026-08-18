@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/bitbucket_scope.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/git_watch_scope.dart';
@@ -11,11 +12,13 @@ import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_credential_resolver.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -35,6 +38,7 @@ class IngestBitbucketWebhook {
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
   final ICredentialResolver? _credentials;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestBitbucketWebhook(
     this._userRepository,
@@ -45,7 +49,9 @@ class IngestBitbucketWebhook {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
     ICredentialResolver? credentials,
+    AbsIActivityFollowRepository? follows,
   }) : _credentials = credentials,
+       _follows = follows,
        _persister =
            persister ??
            LiveIngestPersister(
@@ -179,12 +185,22 @@ class IngestBitbucketWebhook {
           instanceRepos: instanceRepos,
           senderUserId: dto.userId,
         );
-        if (watchers.isEmpty) continue;
+        final followKey = gitFollowObjectKey(
+          repo,
+          branch?.isEmpty == true ? null : branch,
+        );
+        final followers = await inboxFollowerUserIds(
+          _follows,
+          providerId: 'bitbucket',
+          objectKeys: [?followKey],
+        );
+        if (watchers.isEmpty && followers.isEmpty) continue;
         attributableCommits++;
         toPersist.addAll(
           dto.toActivities(
             users,
             forUserIds: watchers,
+            followerUserIds: followers,
             senderUserId: dto.userId,
           ),
         );

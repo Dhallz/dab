@@ -1179,6 +1179,28 @@ paths:
           description: '`{ available: ["main"], truncated: false }`'
         '400':
           description: Unsupported provider, or the account is not connected
+  /users/me/follows/candidates:
+    get:
+      summary: List Follow picker rows
+      description: |
+        Returns objects the caller can Follow from the Dashboard Following
+        search. Empty `q` lists open Phorge/Jira/Linear issues where the
+        caller is assignee, watcher/subscriber, or reporter. A typed `q`
+        also includes GitHub/GitLab/Bitbucket branches on Admin-allow-listed
+        repos whose repo or branch name matches. Git rows use
+        `objectKey` `owner/repo|branch` and `kind` `gitBranch`. This is not
+        `GET /activities/search`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of Follow candidates
   /users/me/follows:
     get:
       summary: List Dashboard object Follow pins
@@ -1186,8 +1208,9 @@ paths:
         Returns `{ providerId, objectKey, title?, url? }` pins for the
         authenticated user. `title` / `url` are a display snapshot from the
         Followed card so Dashboard can show a watching row immediately.
-        Followable providers: phorge, jira, linear, slack, discord. Git stays
-        on personal repo/branch watches.
+        Followable providers: phorge, jira, linear, slack, discord, github,
+        gitlab, bitbucket. Git `objectKey` is `owner/repo|branch`. Settings
+        `watchedRepos` / `watchedBranches` stay Directed.
       security:
         - bearerAuth: []
       responses:
@@ -1200,6 +1223,7 @@ paths:
         inbox lane. Optional `title` and `url` snapshot the Followed card for
         an immediate watching row.
         Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
+        Git pins use `{ "providerId": "github", "objectKey": "acme/app|feature/foo" }`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1212,7 +1236,7 @@ paths:
               properties:
                 providerId:
                   type: string
-                  enum: [phorge, jira, linear, slack, discord]
+                  enum: [phorge, jira, linear, slack, discord, github, gitlab, bitbucket]
                 objectKey:
                   type: string
                 title:

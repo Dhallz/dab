@@ -59,6 +59,22 @@ PersonalProviderReadiness personalProviderReadiness(ProviderConfig config) {
     );
   }
 
+  if (id.contains('phorge') || id.contains('phabricator')) {
+    final url = _setting(settings, const ['instanceUrl']).isNotEmpty
+        ? _setting(settings, const ['instanceUrl'])
+        : config.baseUrl.trim();
+    if (_isUsablePhorgeInstanceUrl(url)) {
+      return const PersonalProviderReadiness(
+        status: ViewStatus.success,
+        message: 'Phorge instance URL is saved',
+      );
+    }
+    return const PersonalProviderReadiness(
+      status: ViewStatus.failure,
+      message: 'Add the Phorge instance URL',
+    );
+  }
+
   final clientId = _setting(settings, const ['clientId', 'oauthClientId']);
   final clientSecret = _setting(settings, const [
     'clientSecret',
@@ -74,4 +90,13 @@ PersonalProviderReadiness personalProviderReadiness(ProviderConfig config) {
     status: ViewStatus.failure,
     message: 'Add OAuth client ID and secret',
   );
+}
+
+bool _isUsablePhorgeInstanceUrl(String url) {
+  final trimmed = url.trim().replaceAll(RegExp(r'/+$'), '');
+  if (trimmed.isEmpty) return false;
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) return false;
+  if (uri.host == 'phorge.example.com') return false;
+  return true;
 }

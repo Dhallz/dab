@@ -15,6 +15,7 @@ import '../usecases/user/start_provider_oauth.dart';
 import '../usecases/user/sync_phorge_users.dart';
 import '../usecases/user/test_user_provider_credential.dart';
 import '../usecases/user/delete_activity_follow.dart';
+import '../usecases/user/list_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/save_activity_follow.dart';
 
@@ -36,6 +37,7 @@ class UserUseCases {
   final GetLinearTeamWatchList getLinearTeamWatchList;
   final SaveLinearTeamWatchList saveLinearTeamWatchList;
   final ListMyActivityFollows listMyActivityFollows;
+  final ListFollowCandidates listFollowCandidates;
   final SaveActivityFollow saveActivityFollow;
   final DeleteActivityFollow deleteActivityFollow;
 
@@ -57,6 +59,7 @@ class UserUseCases {
     required this.getLinearTeamWatchList,
     required this.saveLinearTeamWatchList,
     required this.listMyActivityFollows,
+    required this.listFollowCandidates,
     required this.saveActivityFollow,
     required this.deleteActivityFollow,
   });

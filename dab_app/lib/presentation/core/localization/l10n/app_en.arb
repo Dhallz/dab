@@ -931,6 +931,10 @@
   "@adminFieldGitLabInstanceUrl": {
     "description": "adminFieldGitLabInstanceUrl: GitLab Instance URL (e.g. gitlab.com)"
   },
+  "adminFieldPhorgeInstanceUrl": "Phorge instance URL",
+  "@adminFieldPhorgeInstanceUrl": {
+    "description": "Admin Core field for the HTTPS origin of the Phorge site."
+  },
   "adminFieldApiTokenOrSecret": "API Token / Secret",
   "@adminFieldApiTokenOrSecret": {
     "description": "adminFieldApiTokenOrSecret: API Token / Secret"
@@ -950,6 +954,14 @@
   "dashboardWatchingPinLabel": "Watching",
   "@dashboardWatchingPinLabel": {
     "description": "Compact label on a Follow pin row before that object has a live Follow-lane update."
+  },
+  "dashboardFollowSearchHint": "Follow a task or branch…",
+  "@dashboardFollowSearchHint": {
+    "description": "Search field hint at the top of the Following pane."
+  },
+  "dashboardFollowSearchEmpty": "No matching tasks or branches.",
+  "@dashboardFollowSearchEmpty": {
+    "description": "Empty state when Following search returns no picker rows."
   },
   "dashboardLiveUpdated": "Live · updated {relativeTime}",
   "@dashboardLiveUpdated": {
@@ -1295,7 +1307,7 @@
   },
   "adminFieldOauthClientSecret": "OAuth client secret",
   "adminFieldInstanceUrl": "Instance URL",
-  "adminPersonalProvidersHint": "Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.",
+  "adminPersonalProvidersHint": "Register DAB as an OAuth app once per provider. Teammates connect from Settings. Phorge needs the instance URL here; teammates paste a Conduit token in Settings. Slack and Discord use a workspace bot, not per-user login.",
   "adminPersonalLiveWebhookHint": "Instant Dashboard uses this webhook; otherwise the poller runs about every 45s.",
   "settingsConnectWithProvider": "Connect with {provider}",
   "@settingsConnectWithProvider": {

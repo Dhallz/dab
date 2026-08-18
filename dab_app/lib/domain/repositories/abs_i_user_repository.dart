@@ -7,6 +7,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/follow_candidate.dart';
 import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
@@ -116,6 +117,11 @@ abstract class IUserRepository {
   Future<Either<AppFailure, GitBranchList>> listMyGitBranches({
     required String providerId,
     List<String> repos = const [],
+  });
+
+  /// Self-serve: objects the caller can Follow from the Dashboard picker.
+  Future<Either<AppFailure, List<FollowCandidate>>> listMyFollowCandidates({
+    String query = '',
   });
 
   /// Self-serve: Dashboard object Follow pins for the caller.

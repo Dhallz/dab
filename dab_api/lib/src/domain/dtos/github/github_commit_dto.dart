@@ -44,27 +44,30 @@ class GitHubCommitDto with GitHubCommitDtoMappable {
 /// CONSTRAINTS: Pure logic; no I/O.
 extension OnGitHubCommitDto on GitHubCommitDto {
   /// Resolves recipients against [users]. Explorer poll uses [userId]; live
-  /// ingest passes [forUserIds] (watchers).
+  /// ingest passes [forUserIds] (Settings watchers) and [followerUserIds]
+  /// (branch Follow pins).
   List<Activity> toActivities(
     List<User> users, {
     Iterable<String>? forUserIds,
+    Iterable<String>? followerUserIds,
     String? senderUserId,
   }) {
-    final targets = forUserIds == null
-        ? [if (userId != null && userId!.isNotEmpty) userId!]
-        : forUserIds.where((id) => id.isNotEmpty).toList();
-    if (targets.isEmpty) return const [];
-
     final usersById = {for (final u in users) u.id: u};
     final (subject, body) = gitCommitSubjectAndBody;
     final branchTag = branch?.trim();
     final title = branchTag != null && branchTag.isNotEmpty
         ? '[$branchTag] $subject'
         : subject;
-    final fanOut = forUserIds != null;
+    final fanOut = forUserIds != null || followerUserIds != null;
+    final targets = resolveInboxLaneTargets(
+      forUserIds: forUserIds,
+      followerUserIds: followerUserIds,
+      fallbackUserId: userId,
+    );
+    if (targets.isEmpty) return const [];
 
     final activities = <Activity>[];
-    for (final targetId in targets) {
+    for (final (targetId, lane) in targets) {
       final user = usersById[targetId];
       if (user == null) continue;
       final displayAuthorName = authorName?.trim().isNotEmpty == true
@@ -77,9 +80,12 @@ extension OnGitHubCommitDto on GitHubCommitDto {
       final stable = fanOut ? 'github-$repo-$sha-$targetId' : 'github-$repo-$sha';
       activities.add(
         Activity(
-          id: _gitHubCommitUuid.v5(Namespace.url.value, stable),
+          id: _gitHubCommitUuid.v5(
+            Namespace.url.value,
+            withInboxLaneId(stable, lane),
+          ),
           userId: user.id,
-          senderUserId: senderUserId ?? this.userId,
+          senderUserId: senderUserId ?? userId,
           provider: GitHubCommitProvider(repo: repo, branch: branch),
           title: title,
           content: body,
@@ -88,6 +94,7 @@ extension OnGitHubCommitDto on GitHubCommitDto {
           authorAvatarUrl: authorAvatarUrl ?? user.avatarUrl,
           commentCount: 0,
           createdAt: committedAt,
+          inboxLane: lane,
         ),
       );
     }

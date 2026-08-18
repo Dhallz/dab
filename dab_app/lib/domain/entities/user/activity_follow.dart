@@ -7,9 +7,10 @@ part 'activity_follow.mapper.dart';
 /// [ARCH: DOMAIN_ENTITY]
 /// ROLE: One Follow pin: this user wants every later update on [objectKey].
 /// CONTRACT: [providerId] is an ingest id (`phorge`, `jira`, `linear`,
-/// `slack`, `discord`). [objectKey] is the stable object identity from
-/// [followObjectKeyFor]. [title] / [url] snapshot the Followed card so
-/// Dashboard can show a watching row immediately. Git is not represented.
+/// `slack`, `discord`, `github`, `gitlab`, `bitbucket`). [objectKey] is the
+/// stable object identity from [followObjectKeyFor] (git is `owner/repo|branch`).
+/// [title] / [url] snapshot the Followed card so Dashboard can show a watching
+/// row immediately. Settings git watches stay Directed.
 @MappableClass()
 class ActivityFollow with ActivityFollowMappable {
   final String providerId;

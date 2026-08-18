@@ -8,6 +8,7 @@ import '../dashboard_notifier.dart';
 import '../dashboard_state.dart';
 import '../models/dashboard_feed_group.dart';
 import '../models/dashboard_feed_mode.dart';
+import 'dashboard_follow_search.dart';
 import 'dashboard_following_pins.dart';
 import 'dashboard_grouped_feed.dart';
 import 'dashboard_timeline_feed.dart';
@@ -24,6 +25,7 @@ class DashboardLiveFeed extends ConsumerWidget {
   final String emptyNone;
   final bool hasAnyInLane;
   final List<ActivityFollow> watchingPins;
+  final bool showFollowSearch;
   final EdgeInsetsGeometry padding;
 
   const DashboardLiveFeed({
@@ -36,6 +38,7 @@ class DashboardLiveFeed extends ConsumerWidget {
     required this.emptyNone,
     required this.hasAnyInLane,
     this.watchingPins = const [],
+    this.showFollowSearch = false,
     this.padding = EdgeInsets.zero,
   });
 
@@ -95,6 +98,14 @@ class DashboardLiveFeed extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
+          if (showFollowSearch) ...[
+            DashboardFollowSearch(
+              state: state,
+              onQueryChanged: notifier.setFollowSearchQuery,
+              onFollow: notifier.followCandidate,
+            ),
+            const SizedBox(height: 8),
+          ],
           if (showPins)
             DashboardFollowingPins(
               pins: watchingPins,

@@ -26,7 +26,7 @@ void main() {
     expect(follow.url, '/T123');
   });
 
-  test('git commit cards have no Follow object key', () {
+  test('git Follow keys require a repo and a branch', () {
     expect(
       followObjectKeyFor(const GitHubCommitProvider(repo: 'acme/app')),
       isNull,
@@ -34,6 +34,12 @@ void main() {
     expect(
       followObjectRefFor(const GitHubCommitProvider(repo: 'acme/app')),
       isNull,
+    );
+    expect(
+      followObjectKeyFor(
+        const GitHubCommitProvider(repo: 'Acme/app', branch: 'feature/foo'),
+      ),
+      'acme/app|feature/foo',
     );
   });
 }

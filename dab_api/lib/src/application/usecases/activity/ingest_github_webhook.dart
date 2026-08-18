@@ -1,6 +1,7 @@
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/github_scope.dart';
 import '../../../domain/core/git_watch_scope.dart';
@@ -10,11 +11,13 @@ import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/contracts/ports/i_credential_resolver.dart';
 import '../../../domain/contracts/ports/i_live_feed_store.dart';
 import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../services/activity_live_publisher.dart';
 import '../../services/live_ingest_persister.dart';
+import 'inbox_followers.dart';
 import 'ingestion_result.dart';
 
 export 'ingestion_result.dart';
@@ -29,6 +32,7 @@ class IngestGitHubWebhook {
   final ILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
   final ICredentialResolver? _credentials;
+  final AbsIActivityFollowRepository? _follows;
 
   IngestGitHubWebhook(
     this._userRepository,
@@ -39,7 +43,9 @@ class IngestGitHubWebhook {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
     ICredentialResolver? credentials,
+    AbsIActivityFollowRepository? follows,
   }) : _credentials = credentials,
+       _follows = follows,
        _persister =
            persister ??
            LiveIngestPersister(
@@ -175,6 +181,13 @@ class IngestGitHubWebhook {
         ) ??
         {for (final user in users) user.id: <String, dynamic>{}};
 
+    final followKey = gitFollowObjectKey(fullNameRaw, branch);
+    final followers = await inboxFollowerUserIds(
+      _follows,
+      providerId: 'github',
+      objectKeys: [?followKey],
+    );
+
     final commitsRaw = payload['commits'];
     if (commitsRaw is! List<dynamic>) {
       return const Right(
@@ -220,7 +233,7 @@ class IngestGitHubWebhook {
         instanceRepos: instanceRepos,
         senderUserId: userIdForLogin,
       );
-      if (watchers.isEmpty) continue;
+      if (watchers.isEmpty && followers.isEmpty) continue;
 
       final commitMessage =
           (raw['message'] ??
@@ -294,6 +307,7 @@ class IngestGitHubWebhook {
         dto.toActivities(
           users,
           forUserIds: watchers,
+          followerUserIds: followers,
           senderUserId: userIdForLogin,
         ),
       );

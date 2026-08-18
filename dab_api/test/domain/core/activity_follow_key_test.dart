@@ -60,14 +60,24 @@ void main() {
     );
   });
 
-  test('git and generic providers have no Follow control', () {
+  test('git Follow keys require a repo and a branch', () {
     expect(
       followObjectKeyFor(const GitHubCommitProvider(repo: 'acme/app')),
       isNull,
     );
     expect(
       followProviderIdFor(const GitLabCommitProvider(project: 'acme/app')),
-      isNull,
+      'gitlab',
+    );
+    expect(
+      followObjectKeyFor(
+        const GitHubCommitProvider(repo: 'Acme/app', branch: 'refs/heads/feature/foo'),
+      ),
+      'acme/app|feature/foo',
+    );
+    expect(
+      parseGitFollowObjectKey('Acme/app|feature/foo')?.repo,
+      'acme/app',
     );
     expect(
       followObjectKeyFor(const BitbucketCommitProvider(repo: 'acme/app')),

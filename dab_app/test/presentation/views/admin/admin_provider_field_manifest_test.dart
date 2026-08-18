@@ -104,4 +104,26 @@ void main() {
       containsAll(['webhookUrl', 'webhookSecret']),
     );
   });
+
+  test('Phorge Core includes instance URL in org and personal Admin', () {
+    final org = ProviderFieldManifest.forProvider('phorge', l10n);
+    expect(
+      org[ProviderConfigSection.core]!.map((f) => f.key),
+      containsAll(['instanceUrl', 'api.token']),
+    );
+
+    final personal = ProviderFieldManifest.forProvider(
+      'phorge',
+      l10n,
+      personal: true,
+    );
+    expect(
+      personal[ProviderConfigSection.core]!.map((f) => f.key),
+      ['instanceUrl'],
+    );
+    expect(
+      personal[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookHmacKey']),
+    );
+  });
 }

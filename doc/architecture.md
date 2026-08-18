@@ -94,7 +94,8 @@ dab_app/lib/
 | `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
 | `GitWatchList` | Per-user git watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. Watched branches also feed Explorer git polling refs. |
 | `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
-| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, and Discord. Git stays on `GitWatchList`. |
+| `FollowCandidate` | One Dashboard Following-picker row (`providerId`, `objectKey`, `title`, optional `url`, `kind` `issue` \| `gitBranch`). |
+| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -165,13 +166,15 @@ The polling flow above powers Explorer (historical backfill). Dashboard is a
 `activities:user:{id}`. `ActivityLivePollScheduler` does **not** refill the
 inbox with authored poll rows; inbound rows come from webhooks / Gateway.
 Identity linking is required — unlinked mentions are dropped. Followable
-providers (Phorge, Jira, Linear, Slack, Discord) emit a **second** live row
+providers (Phorge, Jira, Linear, Slack, Discord, and git **repo+branch** pins)
+emit a **second** live row
 for users who Follow that object key (`inboxLane: follow`, id seed suffixed
 `|follow`) instead of unioning followers into the directed recipient set.
 A user who is mentioned **and** Follows the object gets two inbox items with
 independent archive flags. Untagged later updates and the follower's own
-actions land on the Follow pane until Unfollow. Git watches stay directed
-only. Standing ownership or channel membership is not automatic.
+actions land on the Follow pane until Unfollow. Settings git watches stay
+Directed; an explicit branch Follow is the only git path onto Following.
+Standing ownership or channel membership is not automatic.
 Jira issue
 activities include `updatedAt` in their id so a status move is a new live
 event; Jira comments use a stable `jira|{host}|{issueKey}|comment|{commentId}`
@@ -284,7 +287,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
 | `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
-| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, and Dashboard object Follow pins (`/users/me/follows`) |
+| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, Dashboard object Follow pins (`/users/me/follows`), and Follow picker rows (`GET /users/me/follows/candidates`) |
 
 ---
 

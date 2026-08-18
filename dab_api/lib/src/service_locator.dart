@@ -61,6 +61,7 @@ import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.da
 import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_branch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/list_follow_candidates.dart';
 import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
 import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/delete_activity_follow.dart';
@@ -86,6 +87,7 @@ import 'package:dab_api/src/domain/contracts/ports/i_live_feed_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_presence_broadcaster.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_provider_identity_probe.dart';
+import 'package:dab_api/src/domain/core/phorge_scope.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_bitbucket_branch_catalog.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_github_branch_catalog.dart';
 import 'package:dab_api/src/domain/contracts/ports/i_gitlab_branch_catalog.dart';
@@ -159,9 +161,12 @@ import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.d
 import 'package:dab_api/src/infrastructure/sources/github/github_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
+import 'package:dab_api/src/infrastructure/sources/jira/jira_follow_candidate_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_project_catalog.dart';
+import 'package:dab_api/src/infrastructure/sources/linear/linear_follow_candidate_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_team_catalog.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_follow_candidate_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_gateway.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
@@ -192,9 +197,6 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<RedisClient>(redisClient);
 
   // clients
-  final conduitProtocol = HttpConduitProtocol();
-  sl.registerSingleton<ConduitProtocol>(conduitProtocol);
-
   final jsonRestProtocol = HttpJsonRestProtocol();
   sl.registerSingleton<JsonRestProtocol>(jsonRestProtocol);
 
@@ -222,6 +224,21 @@ Future<void> serviceLocator() async {
 
   final userRepository = UserRepository(db);
   final providerConfigRepository = ProviderConfigRepository(db);
+  final conduitProtocol = HttpConduitProtocol(
+    resolveBaseUrl: () async {
+      final listed = await providerConfigRepository.getConfigs();
+      final configs = listed.getOrElse((_) => const []);
+      for (final c in configs) {
+        if (c.id.trim().toLowerCase() != 'phorge') continue;
+        return phorgeInstanceUrl(
+          instanceUrl: (c.settings['instanceUrl'] ?? '').toString(),
+          baseUrl: c.baseUrl,
+        );
+      }
+      return null;
+    },
+  );
+  sl.registerSingleton<ConduitProtocol>(conduitProtocol);
   sl.registerSingleton<SettingsCipher>(SettingsCipher(config.credentialsKey));
   sl.registerSingleton<AbsIUserProviderCredentialRepository>(
     UserProviderCredentialRepository(db, sl<SettingsCipher>()),
@@ -385,10 +402,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
   sl.registerSingleton<ActivityLivePublisher>(
-    ActivityLivePublisher(
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
-    ),
+    ActivityLivePublisher(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
   );
   sl.registerSingleton<LiveIngestPersister>(
     LiveIngestPersister(
@@ -508,6 +522,7 @@ Future<void> serviceLocator() async {
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       credentials: sl<ICredentialResolver>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestSlackEvent>(
@@ -570,6 +585,7 @@ Future<void> serviceLocator() async {
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       credentials: sl<ICredentialResolver>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestBitbucketWebhook>(
@@ -582,6 +598,7 @@ Future<void> serviceLocator() async {
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       credentials: sl<ICredentialResolver>(),
+      follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
   sl.registerSingleton<IngestDiscordMessage>(
@@ -619,7 +636,10 @@ Future<void> serviceLocator() async {
     UnarchiveLiveActivity(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
   );
   sl.registerSingleton<ActivityPurgeScheduler>(
-    ActivityPurgeScheduler(sl<ILiveFeedStore>(), sl<ISystemSettingsRepository>()),
+    ActivityPurgeScheduler(
+      sl<ILiveFeedStore>(),
+      sl<ISystemSettingsRepository>(),
+    ),
   );
   sl.registerSingleton<ActivityLivePollScheduler>(
     ActivityLivePollScheduler(
@@ -752,6 +772,31 @@ Future<void> serviceLocator() async {
     SaveLinearTeamWatchList(
       sl<GetLinearTeamWatchList>(),
       sl<AbsIProviderConfigRepository>(),
+    ),
+  );
+  sl.registerSingleton<ListFollowCandidates>(
+    ListFollowCandidates(
+      [
+        JiraFollowCandidateCatalog(
+          sl<AbsIProviderConfigRepository>(),
+          sl<ICredentialResolver>(),
+          jsonRestProtocol,
+        ),
+        LinearFollowCandidateCatalog(
+          sl<AbsIProviderConfigRepository>(),
+          sl<ICredentialResolver>(),
+          sl<GraphqlProtocol>(),
+          sl<IUserRepository>(),
+        ),
+        PhorgeFollowCandidateCatalog(
+          sl<AbsIProviderConfigRepository>(),
+          sl<ICredentialResolver>(),
+          sl<IUserRepository>(),
+          sl<ConduitProtocol>(),
+        ),
+      ],
+      sl<GetGitWatchList>(),
+      sl<GetGitBranchList>(),
     ),
   );
   sl.registerSingleton<ListMyActivityFollows>(
@@ -895,6 +940,7 @@ Future<void> serviceLocator() async {
       getLinearTeamWatchList: sl<GetLinearTeamWatchList>(),
       saveLinearTeamWatchList: sl<SaveLinearTeamWatchList>(),
       listMyActivityFollows: sl<ListMyActivityFollows>(),
+      listFollowCandidates: sl<ListFollowCandidates>(),
       saveActivityFollow: sl<SaveActivityFollow>(),
       deleteActivityFollow: sl<DeleteActivityFollow>(),
     ),

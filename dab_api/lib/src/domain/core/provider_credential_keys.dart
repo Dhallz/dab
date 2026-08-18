@@ -20,11 +20,7 @@ const kProviderSecretSettingKeys = {
 };
 
 /// Non-secret OAuth metadata that must overlay onto org settings for fetches.
-const kProviderOauthMetaKeys = {
-  'tokenType',
-  'tokenExpiresAt',
-  'cloudId',
-};
+const kProviderOauthMetaKeys = {'tokenType', 'tokenExpiresAt', 'cloudId'};
 
 /// Providers that use personal access tokens / API keys (per-user storage).
 const kPatProviderIds = {
@@ -56,7 +52,8 @@ Map<String, dynamic> overlayProviderSecrets({
   if (userSettings == null || userSettings.isEmpty) return out;
   userSettings.forEach((key, value) {
     if (value == null) return;
-    final isOverlay = kProviderSecretSettingKeys.contains(key) ||
+    final isOverlay =
+        kProviderSecretSettingKeys.contains(key) ||
         key.startsWith('api.') ||
         kProviderOauthMetaKeys.contains(key);
     if (!isOverlay) return;
@@ -90,6 +87,7 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
       return (settings['apiKey'] ??
               settings['api.key'] ??
               settings['token'] ??
+              settings['accessToken'] ??
               '')
           .toString()
           .trim();
@@ -132,7 +130,10 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
           .toString()
           .trim();
     default:
-      return (settings['token'] ?? settings['api.token'] ?? settings['apiKey'] ?? '')
+      return (settings['token'] ??
+              settings['api.token'] ??
+              settings['apiKey'] ??
+              '')
           .toString()
           .trim();
   }
@@ -160,10 +161,7 @@ bool oauthAccessTokenNeedsRefresh(
 }
 
 /// True when [tokenExpiresAt] is in the past (or unparseable) for an OAuth row.
-bool oauthAccessTokenIsExpired(
-  Map<String, dynamic> settings, {
-  DateTime? now,
-}) {
+bool oauthAccessTokenIsExpired(Map<String, dynamic> settings, {DateTime? now}) {
   if (!isOauthCredential(settings)) return false;
   final raw = (settings['tokenExpiresAt'] ?? '').toString().trim();
   if (raw.isEmpty) return false;
@@ -185,15 +183,17 @@ bool hasRequiredProviderSecrets(
         return cloudId.isNotEmpty &&
             extractProviderToken(id, settings).isNotEmpty;
       }
-      final email =
-          (settings['email'] ?? settings['api.email'] ?? '').toString().trim();
+      final email = (settings['email'] ?? settings['api.email'] ?? '')
+          .toString()
+          .trim();
       return email.isNotEmpty && extractProviderToken(id, settings).isNotEmpty;
     case 'bitbucket':
       if (isOauthCredential(settings)) {
         return extractProviderToken(id, settings).isNotEmpty;
       }
       final username = (settings['username'] ?? '').toString().trim();
-      return username.isNotEmpty && extractProviderToken(id, settings).isNotEmpty;
+      return username.isNotEmpty &&
+          extractProviderToken(id, settings).isNotEmpty;
     default:
       return extractProviderToken(id, settings).isNotEmpty;
   }

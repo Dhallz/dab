@@ -26,28 +26,29 @@ void main() {
     );
   });
 
+  test('Linear falls back to accessToken when apiKey is absent', () {
+    expect(
+      extractProviderToken('linear', {'accessToken': 'lin_oauth'}),
+      'lin_oauth',
+    );
+  });
+
   test('oauthAccessTokenNeedsRefresh is true near expiry', () {
     final now = DateTime.utc(2026, 8, 14, 20);
     expect(
-      oauthAccessTokenNeedsRefresh(
-        {
-          'tokenType': 'oauth',
-          'refreshToken': 'r',
-          'tokenExpiresAt': DateTime.utc(2026, 8, 14, 20, 1).toIso8601String(),
-        },
-        now: now,
-      ),
+      oauthAccessTokenNeedsRefresh({
+        'tokenType': 'oauth',
+        'refreshToken': 'r',
+        'tokenExpiresAt': DateTime.utc(2026, 8, 14, 20, 1).toIso8601String(),
+      }, now: now),
       isTrue,
     );
     expect(
-      oauthAccessTokenNeedsRefresh(
-        {
-          'tokenType': 'oauth',
-          'refreshToken': 'r',
-          'tokenExpiresAt': DateTime.utc(2026, 8, 14, 22).toIso8601String(),
-        },
-        now: now,
-      ),
+      oauthAccessTokenNeedsRefresh({
+        'tokenType': 'oauth',
+        'refreshToken': 'r',
+        'tokenExpiresAt': DateTime.utc(2026, 8, 14, 22).toIso8601String(),
+      }, now: now),
       isFalse,
     );
   });

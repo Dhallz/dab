@@ -14,17 +14,23 @@ import '../../core/config/config.dart';
 /// CONTRACT: Form-urlencoded bodies with flattened params; `api.token` in body.
 /// CONSTRAINTS: Read-only; never log tokens or response bodies.
 class HttpConduitProtocol implements ConduitProtocol {
-  final String _baseUrl;
+  final String _fallbackBaseUrl;
   final String _apiToken;
   final http.Client _client;
+  final Future<String?> Function()? _resolveBaseUrl;
 
-  HttpConduitProtocol({http.Client? client, String? baseUrl, String? apiToken})
-    : _baseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(
-        RegExp(r'/+$'),
-        '',
-      ),
-      _apiToken = (apiToken ?? Config().phorgeApiToken).trim(),
-      _client = client ?? _createInsecureClient();
+  HttpConduitProtocol({
+    http.Client? client,
+    String? baseUrl,
+    String? apiToken,
+    Future<String?> Function()? resolveBaseUrl,
+  }) : _fallbackBaseUrl = (baseUrl ?? Config().phorgeUrl).trim().replaceAll(
+         RegExp(r'/+$'),
+         '',
+       ),
+       _apiToken = (apiToken ?? Config().phorgeApiToken).trim(),
+       _client = client ?? _createInsecureClient(),
+       _resolveBaseUrl = resolveBaseUrl;
 
   /// Accept self-signed or internal corporate certificates (matches legacy client).
   static http.Client _createInsecureClient() {
@@ -34,13 +40,22 @@ class HttpConduitProtocol implements ConduitProtocol {
     return IOClient(ioClient);
   }
 
+  Future<String> _effectiveBaseUrl() async {
+    final resolved = (await _resolveBaseUrl?.call())?.trim() ?? '';
+    if (resolved.isNotEmpty) {
+      return resolved.replaceAll(RegExp(r'/+$'), '');
+    }
+    return _fallbackBaseUrl;
+  }
+
   @override
   Future<Map<String, dynamic>> call(
     String method,
     Map<String, dynamic> params, {
     String? apiToken,
   }) async {
-    final url = Uri.parse('$_baseUrl/api/$method');
+    final root = await _effectiveBaseUrl();
+    final url = Uri.parse('$root/api/$method');
 
     final token = (apiToken ?? _apiToken).trim();
     final body = {...params, 'api.token': token};

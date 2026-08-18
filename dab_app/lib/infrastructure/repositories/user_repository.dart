@@ -9,6 +9,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/follow_candidate.dart';
 import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
 import '../../domain/entities/user/jira_project_watch_list.dart';
@@ -374,6 +375,26 @@ class UserRepository extends Repository implements IUserRepository {
       );
       final data = _getEnvelopeData(response);
       return GitBranchList.fromMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<FollowCandidate>>> listMyFollowCandidates({
+    String query = '',
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get(
+        '/users/me/follows/candidates',
+        queryParameters: {if (query.trim().isNotEmpty) 'q': query.trim()},
+      );
+      final data = _getEnvelopeData(response);
+      if (data is! List) return const <FollowCandidate>[];
+      final rows = <FollowCandidate>[];
+      for (final item in data) {
+        if (item is! Map) continue;
+        rows.add(FollowCandidate.fromMap(Map<String, dynamic>.from(item)));
+      }
+      return rows;
     });
   }
 

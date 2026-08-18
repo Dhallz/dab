@@ -54,14 +54,7 @@ class ProvidersTab extends ConsumerWidget {
     );
     final state = ref.read(adminNotifierProvider);
     final sorted = _sortedProviderConfigs(state.configs, state);
-    final visible = isPersonal
-        ? sorted
-              .where((c) {
-                final id = c.id.toLowerCase();
-                return id != 'phorge' && id != 'phabricator';
-              })
-              .toList()
-        : sorted;
+    final visible = sorted;
     final cs = Theme.of(context).colorScheme;
     return ListView.builder(
       itemCount: visible.length + (isPersonal ? 1 : 0),

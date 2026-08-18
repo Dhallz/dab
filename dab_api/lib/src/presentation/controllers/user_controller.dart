@@ -514,6 +514,35 @@ class UserController {
     );
   }
 
+  Future<Response> listMyFollowCandidates(Request request) async {
+    final userId = userIdProperty.get(request);
+    final query = (request.url.queryParameters['q'] ?? '').trim();
+    final result = await _user.listFollowCandidates.execute(
+      userId: userId,
+      query: query,
+    );
+    return result.fold(
+      (failure) => Response.internalServerError(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (list) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': list.map((row) => row.toApiMap()).toList(),
+            'meta': {
+              'dataType': 'list:follow_candidate',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
   Future<Response> listMyFollows(Request request) async {
     final userId = userIdProperty.get(request);
     final result = await _user.listMyActivityFollows.execute(userId: userId);

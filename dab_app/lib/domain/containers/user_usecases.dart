@@ -7,6 +7,7 @@ import '../usecases/user/get_user.dart';
 import '../usecases/user/get_users.dart';
 import '../usecases/user/list_my_credentials.dart';
 import '../usecases/user/delete_my_activity_follow.dart';
+import '../usecases/user/list_my_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/list_my_git_branches.dart';
 import '../usecases/user/list_my_git_watches.dart';
@@ -41,6 +42,7 @@ class UserUseCases {
   final ListMyGitBranches listMyGitBranches;
   final SaveMyGitWatches saveMyGitWatches;
   final ListMyActivityFollows listMyActivityFollows;
+  final ListMyFollowCandidates listMyFollowCandidates;
   final SaveMyActivityFollow saveMyActivityFollow;
   final DeleteMyActivityFollow deleteMyActivityFollow;
 
@@ -64,6 +66,7 @@ class UserUseCases {
       listMyGitBranches = ListMyGitBranches(repository),
       saveMyGitWatches = SaveMyGitWatches(repository),
       listMyActivityFollows = ListMyActivityFollows(repository),
+      listMyFollowCandidates = ListMyFollowCandidates(repository),
       saveMyActivityFollow = SaveMyActivityFollow(repository),
       deleteMyActivityFollow = DeleteMyActivityFollow(repository);
 }

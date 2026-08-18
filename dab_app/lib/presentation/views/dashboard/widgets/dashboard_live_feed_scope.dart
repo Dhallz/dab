@@ -40,6 +40,9 @@ class DashboardLiveFeedScope extends ConsumerWidget {
           errorMessage: s.errorMessage,
           followedObjectRefs: s.followedObjectRefs,
           follows: s.follows,
+          followSearchQuery: s.followSearchQuery,
+          followCandidates: s.followCandidates,
+          followSearchStatus: s.followSearchStatus,
         ),
       ),
     );
@@ -90,6 +93,7 @@ class DashboardLiveFeedScope extends ConsumerWidget {
               emptyNone: l10n.dashboardEmptyFollowingNone,
               hasAnyInLane: state.activities.any((a) => a.isFollowLane),
               watchingPins: state.watchingPins,
+              showFollowSearch: true,
             ),
           ),
         ],

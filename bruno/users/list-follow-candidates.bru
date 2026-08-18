@@ -1,0 +1,27 @@
+meta {
+  name: List Follow Candidates
+  type: http
+  seq: 14
+}
+
+docs {
+  Lists Follow picker rows for the caller: open Phorge/Jira/Linear issues
+  they are assigned, watching, or reporting, plus GitHub/GitLab/Bitbucket
+  branches matching `q` (`owner/repo|branch`). Empty `q` skips git rows.
+}
+
+get {
+  url: {{baseUrl}}/users/me/follows/candidates?q=
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns a candidate list envelope", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

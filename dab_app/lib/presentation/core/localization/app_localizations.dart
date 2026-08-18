@@ -1466,6 +1466,12 @@ abstract class AppLocalizations {
   /// **'GitLab Instance URL (e.g. gitlab.com)'**
   String get adminFieldGitLabInstanceUrl;
 
+  /// Admin Core field for the HTTPS origin of the Phorge site.
+  ///
+  /// In en, this message translates to:
+  /// **'Phorge instance URL'**
+  String get adminFieldPhorgeInstanceUrl;
+
   /// adminFieldApiTokenOrSecret: API Token / Secret
   ///
   /// In en, this message translates to:
@@ -1495,6 +1501,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watching'**
   String get dashboardWatchingPinLabel;
+
+  /// Search field hint at the top of the Following pane.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow a task or branch…'**
+  String get dashboardFollowSearchHint;
+
+  /// Empty state when Following search returns no picker rows.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tasks or branches.'**
+  String get dashboardFollowSearchEmpty;
 
   /// dashboardLiveUpdated: Live · updated {relativeTime}
   ///
@@ -2015,7 +2033,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminPersonalProvidersHint.
   ///
   /// In en, this message translates to:
-  /// **'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Slack and Discord use a workspace bot, not per-user login.'**
+  /// **'Register DAB as an OAuth app once per provider. Teammates connect from Settings. Phorge needs the instance URL here; teammates paste a Conduit token in Settings. Slack and Discord use a workspace bot, not per-user login.'**
   String get adminPersonalProvidersHint;
 
   /// No description provided for @adminPersonalLiveWebhookHint.

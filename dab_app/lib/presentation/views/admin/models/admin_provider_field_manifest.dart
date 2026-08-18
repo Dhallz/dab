@@ -33,6 +33,10 @@ class ProviderFieldManifest {
       return {
         ProviderConfigSection.core: [
           AdminConfigField(
+            key: 'instanceUrl',
+            label: l10n.adminFieldPhorgeInstanceUrl,
+          ),
+          AdminConfigField(
             key: 'api.token',
             label: l10n.adminFieldApiTokenOrSecret,
             isSecret: true,
@@ -361,6 +365,25 @@ class ProviderFieldManifest {
               : null,
         ),
         ProviderConfigSection.live: liveWebhook,
+        ProviderConfigSection.polling: const [],
+      };
+    }
+    if (lowerId.contains('phorge') || lowerId.contains('phabricator')) {
+      return {
+        ProviderConfigSection.core: [
+          AdminConfigField(
+            key: 'instanceUrl',
+            label: l10n.adminFieldPhorgeInstanceUrl,
+          ),
+        ],
+        ProviderConfigSection.live: [
+          webhookEndpointField(l10n, hint: l10n.adminPersonalLiveWebhookHint),
+          AdminConfigField(
+            key: 'webhookHmacKey',
+            label: 'Webhook HMAC Key',
+            isSecret: true,
+          ),
+        ],
         ProviderConfigSection.polling: const [],
       };
     }

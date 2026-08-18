@@ -21,8 +21,14 @@ class DeleteActivityFollow {
     if (!isFollowableProviderId(id) || key.isEmpty) {
       return const Left(
         ValidationFailure(
-          'Follow is only available for Phorge, Jira, Linear, Slack, and Discord',
+          'Follow is only available for Phorge, Jira, Linear, Slack, Discord, '
+          'and a GitHub/GitLab/Bitbucket repo branch',
         ),
+      );
+    }
+    if (isGitFollowProviderId(id) && parseGitFollowObjectKey(key) == null) {
+      return const Left(
+        ValidationFailure('Git Follow requires owner/repo and a branch'),
       );
     }
     return _follows.delete(

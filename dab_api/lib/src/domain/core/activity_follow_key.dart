@@ -2,7 +2,8 @@ import '../entities/activity/activity_provider.dart';
 
 /// [ARCH: DOMAIN]
 /// ROLE: Stable Follow object keys shared by ingest and Dashboard.
-/// CONTRACT: Git and generic providers return null (no Follow control).
+/// CONTRACT: Generic providers return null. Git Follow is one repo + one
+/// branch (`owner/repo|branch`); Settings git watches stay Directed.
 
 /// Ingest provider ids that support per-object Follow.
 const kFollowableProviderIds = {
@@ -11,11 +12,21 @@ const kFollowableProviderIds = {
   'linear',
   'slack',
   'discord',
+  'github',
+  'gitlab',
+  'bitbucket',
 };
+
+/// Git hosts that pin a single repo + branch on Following.
+const kGitFollowProviderIds = {'github', 'gitlab', 'bitbucket'};
 
 /// Whether [providerId] can be stored on `activity_follows`.
 bool isFollowableProviderId(String providerId) =>
     kFollowableProviderIds.contains(providerId.trim().toLowerCase());
+
+/// Whether [providerId] uses `repo|branch` Follow keys.
+bool isGitFollowProviderId(String providerId) =>
+    kGitFollowProviderIds.contains(providerId.trim().toLowerCase());
 
 /// Ingest provider id for [provider], or null when Follow does not apply.
 String? followProviderIdFor(ActivityProvider provider) {
@@ -25,9 +36,9 @@ String? followProviderIdFor(ActivityProvider provider) {
     LinearIssueProvider() => 'linear',
     SlackMessageProvider() => 'slack',
     DiscordMessageProvider() => 'discord',
-    GitHubCommitProvider() ||
-    GitLabCommitProvider() ||
-    BitbucketCommitProvider() ||
+    GitHubCommitProvider() => 'github',
+    GitLabCommitProvider() => 'gitlab',
+    BitbucketCommitProvider() => 'bitbucket',
     GenericProvider() => null,
   };
 }
@@ -62,9 +73,12 @@ String? followObjectKeyFor(ActivityProvider provider) {
         channelId: channelId ?? '',
         messageId: (replyToId ?? '').trim().isNotEmpty ? replyToId : messageId,
       ),
-    GitHubCommitProvider() ||
-    GitLabCommitProvider() ||
-    BitbucketCommitProvider() ||
+    GitHubCommitProvider(:final repo, :final branch) =>
+      gitFollowObjectKey(repo, branch),
+    GitLabCommitProvider(:final project, :final branch) =>
+      gitFollowObjectKey(project, branch),
+    BitbucketCommitProvider(:final repo, :final branch) =>
+      gitFollowObjectKey(repo, branch),
     GenericProvider() => null,
   };
 }
@@ -121,6 +135,33 @@ List<String> discordFollowLookupKeys({
     if (parent != null) keys.add(parent);
   }
   return keys.toList();
+}
+
+/// One git Follow pin: lowercase `owner/repo` plus the branch name.
+String? gitFollowObjectKey(String? repo, String? branch) {
+  final repoKey = (repo ?? '').trim().toLowerCase();
+  var name = (branch ?? '').trim();
+  const heads = 'refs/heads/';
+  if (name.toLowerCase().startsWith(heads)) {
+    name = name.substring(heads.length);
+  }
+  if (repoKey.isEmpty || name.isEmpty) return null;
+  return '$repoKey|$name';
+}
+
+/// Parses a git Follow [objectKey] into repo + branch.
+({String repo, String branch})? parseGitFollowObjectKey(String objectKey) {
+  final key = gitFollowObjectKey(
+    objectKey.contains('|')
+        ? objectKey.substring(0, objectKey.indexOf('|'))
+        : '',
+    objectKey.contains('|')
+        ? objectKey.substring(objectKey.indexOf('|') + 1)
+        : '',
+  );
+  if (key == null) return null;
+  final split = key.indexOf('|');
+  return (repo: key.substring(0, split), branch: key.substring(split + 1));
 }
 
 /// Stable Dashboard state key: ingest provider id plus object key.

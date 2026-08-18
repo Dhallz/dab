@@ -8,6 +8,7 @@ import '../../domain/core/discord_scope.dart';
 import '../../domain/core/failures/failure.dart';
 import '../../domain/core/github_scope.dart';
 import '../../domain/core/gitlab_scope.dart';
+import '../../domain/core/phorge_scope.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
 import '../../infrastructure/protocols/conduit/http_conduit_protocol.dart';
@@ -287,15 +288,19 @@ class ProviderConfigConnectivityService {
     ProviderConfig config,
   ) async {
     final apiToken = _setting(config, ['api.token', 'apiToken', 'token']);
+    final instanceUrl = phorgeInstanceUrl(
+      instanceUrl: _setting(config, ['instanceUrl']),
+      baseUrl: config.baseUrl,
+    );
     if (apiToken.isEmpty) {
       return Left(ValidationFailure('API Token is missing'));
     }
-    if (config.baseUrl.trim().isEmpty) {
-      return Left(ValidationFailure('Base URL is missing'));
+    if (instanceUrl == null || instanceUrl.isEmpty) {
+      return Left(ValidationFailure('Phorge instance URL is required'));
     }
 
     final core = await _phorgeCore(
-      baseUrl: config.baseUrl.trim(),
+      baseUrl: instanceUrl,
       apiToken: apiToken,
     );
     if (core.status == ConnectivitySectionStatus.failure) {
@@ -309,7 +314,7 @@ class ProviderConfigConnectivityService {
     }
 
     final polling = await _phorgePolling(
-      baseUrl: config.baseUrl.trim(),
+      baseUrl: instanceUrl,
       apiToken: apiToken,
     );
     final live = await _resolveLive(config, 'phorge');

@@ -25,7 +25,8 @@ class SaveActivityFollow {
     if (parsed == null) {
       return const Left(
         ValidationFailure(
-          'Follow is only available for Phorge, Jira, Linear, Slack, and Discord',
+          'Follow is only available for Phorge, Jira, Linear, Slack, Discord, '
+          'and a GitHub/GitLab/Bitbucket repo branch',
         ),
       );
     }
@@ -59,6 +60,14 @@ String? _clipSnapshot(String? raw, int max) {
 ) {
   final id = providerId.trim().toLowerCase();
   final key = objectKey.trim();
+  if (isGitFollowProviderId(id)) {
+    final parsed = parseGitFollowObjectKey(key);
+    if (parsed == null) return null;
+    return (
+      providerId: id,
+      objectKey: gitFollowObjectKey(parsed.repo, parsed.branch)!,
+    );
+  }
   if (!isFollowableProviderId(id) || key.isEmpty) return null;
   return (providerId: id, objectKey: key);
 }

@@ -8,6 +8,7 @@ import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
 import '../../../domain/entities/user/activity_follow.dart';
+import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../services/service_locator.dart';
 import '../../core/models/view_status.dart';
 import '../../features/app/app_notifier.dart';
@@ -40,6 +41,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   StreamSubscription<ActivityLiveEvent>? _activitySubscription;
   Timer? _streamHealthTimer;
   Timer? _reconnectNoticeTimer;
+  Timer? _followSearchTimer;
   DateTime? _lastLivePulseAt;
   bool _awaitingReconnectNotice = false;
 
@@ -49,6 +51,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
       _activitySubscription?.cancel();
       _streamHealthTimer?.cancel();
       _reconnectNoticeTimer?.cancel();
+      _followSearchTimer?.cancel();
     });
     ref.listen(
       appNotifierProvider.select(
@@ -108,6 +111,8 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
         );
       },
     );
+
+    unawaited(_refreshFollowCandidates());
 
     _activitySubscription?.cancel();
     _activitySubscription = _activityUseCases.watchActivities.execute().listen((
@@ -239,6 +244,67 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
             for (final item in state.follows)
               if (item.objectRef == ref) saved else item,
           ],
+        );
+      },
+    );
+  }
+
+  Future<void> followCandidate(FollowCandidate candidate) async {
+    await follow(
+      Activity(
+        id: 'follow-candidate',
+        userId: '',
+        provider: _providerForCandidate(candidate),
+        title: candidate.title,
+        content: '',
+        url: candidate.url,
+        authorName: '',
+        commentCount: 0,
+        createdAt: _now().toUtc(),
+      ),
+    );
+  }
+
+  ActivityProvider _providerForCandidate(FollowCandidate candidate) {
+    final git = parseGitFollowObjectKey(candidate.objectKey);
+    return switch (candidate.providerId) {
+      'jira' => JiraIssueProvider(issueKey: candidate.objectKey),
+      'linear' => LinearIssueProvider(identifier: candidate.objectKey),
+      'phorge' => PhorgeTaskProvider(taskPhid: candidate.objectKey),
+      'github' => GitHubCommitProvider(repo: git?.repo, branch: git?.branch),
+      'gitlab' => GitLabCommitProvider(project: git?.repo, branch: git?.branch),
+      'bitbucket' =>
+        BitbucketCommitProvider(repo: git?.repo, branch: git?.branch),
+      _ => GenericProvider(name: candidate.providerId),
+    };
+  }
+
+  void setFollowSearchQuery(String query) {
+    state = state.copyWith(followSearchQuery: query);
+    _followSearchTimer?.cancel();
+    _followSearchTimer = Timer(const Duration(milliseconds: 350), () {
+      unawaited(_refreshFollowCandidates());
+    });
+  }
+
+  Future<void> _refreshFollowCandidates() async {
+    final query = state.followSearchQuery;
+    state = state.copyWith(followSearchStatus: ViewStatus.loading);
+    final result = await _userUseCases.listMyFollowCandidates.execute(
+      query: query,
+    );
+    if (state.followSearchQuery != query) return;
+    result.fold(
+      (_) {
+        state = state.copyWith(
+          followSearchStatus: ViewStatus.failure,
+          followCandidates: const [],
+        );
+      },
+      (rows) {
+        state = state.copyWith(
+          followSearchStatus: ViewStatus.success,
+          followCandidates: rows,
         );
       },
     );

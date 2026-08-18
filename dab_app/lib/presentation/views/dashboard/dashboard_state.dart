@@ -4,6 +4,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/activity_follow.dart';
+import '../../../domain/entities/user/follow_candidate.dart';
 import 'models/dashboard_feed_group.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
@@ -26,6 +27,9 @@ class DashboardState with DashboardStateMappable {
   final DateTime? reconnectNoticeAt;
   final String? errorMessage;
   final List<ActivityFollow> follows;
+  final String followSearchQuery;
+  final List<FollowCandidate> followCandidates;
+  final ViewStatus followSearchStatus;
 
   const DashboardState({
     this.status = ViewStatus.initial,
@@ -37,6 +41,9 @@ class DashboardState with DashboardStateMappable {
     this.reconnectNoticeAt,
     this.errorMessage,
     this.follows = const [],
+    this.followSearchQuery = '',
+    this.followCandidates = const [],
+    this.followSearchStatus = ViewStatus.initial,
   });
 
   factory DashboardState.initial() => const DashboardState();
@@ -74,6 +81,12 @@ class DashboardState with DashboardStateMappable {
         if (!covered.contains(follow.objectRef)) follow,
     ];
   }
+
+  /// Picker rows that are not already Follow-pinned.
+  List<FollowCandidate> get followPickerVisible => [
+    for (final row in followCandidates)
+      if (!followedObjectRefs.contains(row.objectRef)) row,
+  ];
 
   int get archivedCount =>
       activities.where((activity) => activity.archived).length;

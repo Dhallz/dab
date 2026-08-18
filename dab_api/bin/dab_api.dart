@@ -106,6 +106,7 @@ Future<void> main() async {
     ..get('/metadata/capabilities', MetadataController().getCapabilities)
     ..use('/users', AuthMiddleware().call)
     ..get('/users/me/credentials', UserController().listMyCredentials)
+    ..get('/users/me/follows/candidates', UserController().listMyFollowCandidates)
     ..get('/users/me/follows', UserController().listMyFollows)
     ..put('/users/me/follows', UserController().saveMyFollow)
     ..delete('/users/me/follows', UserController().deleteMyFollow)
