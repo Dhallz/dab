@@ -4,13 +4,13 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/linear_team.dart';
-import '../../../domain/contracts/ports/i_linear_team_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_linear_team_catalog.dart';
 import '../../protocols/graphql/graphql_protocol.dart';
 import '../../protocols/protocol_exceptions.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: GraphQL `teams` listing for the Linear watch-list picker. Read-only.
-class LinearTeamCatalog implements ILinearTeamCatalog {
+class LinearTeamCatalog implements AbsILinearTeamCatalog {
   LinearTeamCatalog(this._graphql);
 
   final GraphqlProtocol _graphql;

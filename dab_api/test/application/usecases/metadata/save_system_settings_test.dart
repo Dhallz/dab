@@ -5,7 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class _MockSettings extends Mock implements ISystemSettingsRepository {}
+class _MockSettings extends Mock implements AbsISystemSettingsRepository {}
 
 void main() {
   late _MockSettings repo;

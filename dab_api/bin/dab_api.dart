@@ -15,7 +15,7 @@ import 'package:dab_api/src/presentation/middlewares/admin_middleware.dart';
 import 'package:dab_api/src/presentation/middlewares/auth_middleware.dart';
 import 'package:dab_api/src/application/services/activity_live_poll_scheduler.dart';
 import 'package:dab_api/src/application/services/activity_purge_scheduler.dart';
-import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_client.dart';
 import 'package:dab_api/src/presentation/middlewares/error_handler.dart';
 import 'package:dab_api/src/presentation/middlewares/vegas_middleware.dart';
 import 'package:dab_api/src/service_locator.dart';
@@ -37,7 +37,7 @@ Future<void> main() async {
 
   // 3. Start the Discord Gateway client (live Dashboard ingestion) when the
   //    Discord provider is active. No-op otherwise.
-  await sl<DiscordGatewayService>().start();
+  await sl<DiscordGatewayClient>().start();
 
   final app = RelicApp()
     ..use('/', GlobalErrorHandler().call)
@@ -91,10 +91,7 @@ Future<void> main() async {
       '/integrations/bitbucket/webhook',
       ActivityController().receiveBitbucketWebhook,
     )
-    ..get(
-      '/integrations/:provider/oauth/callback',
-      OauthController().callback,
-    )
+    ..get('/integrations/:provider/oauth/callback', OauthController().callback)
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
@@ -106,7 +103,10 @@ Future<void> main() async {
     ..get('/metadata/capabilities', MetadataController().getCapabilities)
     ..use('/users', AuthMiddleware().call)
     ..get('/users/me/credentials', UserController().listMyCredentials)
-    ..get('/users/me/follows/candidates', UserController().listMyFollowCandidates)
+    ..get(
+      '/users/me/follows/candidates',
+      UserController().listMyFollowCandidates,
+    )
     ..get('/users/me/follows', UserController().listMyFollows)
     ..put('/users/me/follows', UserController().saveMyFollow)
     ..delete('/users/me/follows', UserController().deleteMyFollow)
@@ -126,10 +126,7 @@ Future<void> main() async {
       '/users/me/credentials/:provider/projects',
       UserController().saveMyJiraProjects,
     )
-    ..put(
-      '/users/me/credentials/:provider',
-      UserController().saveMyCredential,
-    )
+    ..put('/users/me/credentials/:provider', UserController().saveMyCredential)
     ..post(
       '/users/me/credentials/:provider/test',
       UserController().testMyCredential,

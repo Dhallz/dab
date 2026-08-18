@@ -6,15 +6,15 @@ import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_follow_candidate_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists the caller's open Phorge tasks for the Follow picker. Read-only.
-class PhorgeFollowCandidateCatalog implements IFollowCandidateCatalog {
+class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   PhorgeFollowCandidateCatalog(
     this._configs,
     this._credentials,
@@ -23,7 +23,7 @@ class PhorgeFollowCandidateCatalog implements IFollowCandidateCatalog {
   );
 
   final AbsIProviderConfigRepository _configs;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
   final IUserRepository _users;
   final ConduitProtocol _conduit;
 

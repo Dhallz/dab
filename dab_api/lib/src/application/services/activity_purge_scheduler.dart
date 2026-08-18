@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import '../../domain/core/org_calendar.dart' as org_calendar;
-import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
@@ -14,8 +14,8 @@ import '../../domain/contracts/repositories/abs_i_system_settings_repository.dar
 /// CONSTRAINTS: Owns its own [Timer] instance; [stop] must be called on
 /// shutdown to release it.
 class ActivityPurgeScheduler {
-  final ILiveFeedStore _redis;
-  final ISystemSettingsRepository _settings;
+  final AbsILiveFeedStore _redis;
+  final AbsISystemSettingsRepository _settings;
   final DateTime Function() _now;
 
   Timer? _timer;

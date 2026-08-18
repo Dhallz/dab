@@ -8,7 +8,7 @@ import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_phorge_task_hydrator.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -30,7 +30,7 @@ class _MockRedisService extends Mock implements RedisService {}
 
 class _MockPresenceService extends Mock implements PresenceService {}
 
-class _MockTaskHydrator extends Mock implements IPhorgeTaskHydrator {}
+class _MockTaskHydrator extends Mock implements AbsIPhorgeTaskHydrator {}
 
 class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
 

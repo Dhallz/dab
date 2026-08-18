@@ -9,9 +9,9 @@ import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_mapping.dart'
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
@@ -28,7 +28,7 @@ import 'package:fpdart/fpdart.dart';
 /// API token). The commits endpoint has no date filters — pagination stops
 /// once rows fall before the window.
 class BitbucketCommitSource
-    implements IActivitySource<BitbucketCommitDto>, IDiscoverySource {
+    implements AbsIActivitySource<BitbucketCommitDto>, AbsIDiscoverySource {
   BitbucketCommitSource(
     this._configRepository,
     this._userRepository,
@@ -39,7 +39,7 @@ class BitbucketCommitSource
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
 
   static const _apiBase = 'https://api.bitbucket.org/2.0';
 

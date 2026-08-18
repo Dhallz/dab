@@ -1,8 +1,8 @@
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 
 /// Test double that returns preloaded per-user settings maps.
-class FakeCredentialResolver implements ICredentialResolver {
+class FakeCredentialResolver implements AbsICredentialResolver {
   FakeCredentialResolver([this.userSettings = const {}]);
 
   final Map<String, Map<String, dynamic>> userSettings;

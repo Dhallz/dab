@@ -6,15 +6,15 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart'
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_phorge_task_hydrator.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: low-level I/O for Phorge (Phabricator) Tasks and Transactions.
-/// CONTRACT: Implements [IActivitySource] for [PhorgeTaskBundleDto].
+/// CONTRACT: Implements [AbsIActivitySource] for [PhorgeTaskBundleDto].
 /// CONSTRAINTS: Must be READ-ONLY. Logic is restricted to API coordination and DTO mapping.
 ///
 /// This source handles the complex multi-step fetching logic required by Phorge:
@@ -22,14 +22,14 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// 2. Task hydration (fetching full task details for discovered transactions).
 /// 3. Bundling (pairing transactions with their parent tasks).
 class PhorgeTaskSource
-    implements IActivitySource<PhorgeTaskBundleDto>, IPhorgeTaskHydrator {
+    implements AbsIActivitySource<PhorgeTaskBundleDto>, AbsIPhorgeTaskHydrator {
   final ConduitProtocol _client;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
   final AbsIProviderConfigRepository _configs;
 
   PhorgeTaskSource(
     this._client, {
-    required ICredentialResolver credentials,
+    required AbsICredentialResolver credentials,
     required AbsIProviderConfigRepository configs,
   }) : _credentials = credentials,
        _configs = configs;

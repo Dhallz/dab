@@ -4,15 +4,15 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../domain/entities/user/jira_project_watch_list.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_follow_candidate_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 import 'jira_jql.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists the caller's open Jira issues for the Follow picker. Read-only.
-class JiraFollowCandidateCatalog implements IFollowCandidateCatalog {
+class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   JiraFollowCandidateCatalog(
     this._configs,
     this._credentials,
@@ -20,7 +20,7 @@ class JiraFollowCandidateCatalog implements IFollowCandidateCatalog {
   );
 
   final AbsIProviderConfigRepository _configs;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
   final JsonRestProtocol _jsonRest;
 
   @override

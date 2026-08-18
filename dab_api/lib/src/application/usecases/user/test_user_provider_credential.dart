@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/contracts/ports/i_provider_identity_probe.dart';
+import '../../../domain/contracts/ports/abs_i_provider_identity_probe.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
@@ -14,7 +14,7 @@ class TestUserProviderCredential {
 
   final AbsIUserProviderCredentialRepository _credentials;
   final AbsIProviderConfigRepository _configs;
-  final IProviderIdentityProbe _probe;
+  final AbsIProviderIdentityProbe _probe;
 
   Future<Either<Failure, void>> execute({
     required String userId,

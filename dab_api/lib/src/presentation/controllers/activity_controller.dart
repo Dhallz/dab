@@ -9,7 +9,7 @@ import '../../domain/core/failures/failure.dart';
 import '../../domain/core/org_calendar.dart';
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/entities/activity/activity_provider.dart';
-import '../../domain/contracts/ports/i_webhook_request_authenticator.dart';
+import '../../domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import '../../domain/contracts/ports/webhook_auth_input.dart';
 import '../../domain/contracts/ports/webhook_auth_status.dart';
 import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
@@ -29,8 +29,8 @@ import '../middlewares/auth_middleware.dart';
 class ActivityController {
   final ActivityUseCases _activity = sl<ActivityUseCases>();
   final PresenceService _presence = sl<PresenceService>();
-  final IWebhookRequestAuthenticator _webhookAuth =
-      sl<IWebhookRequestAuthenticator>();
+  final AbsIWebhookRequestAuthenticator _webhookAuth =
+      sl<AbsIWebhookRequestAuthenticator>();
 
   Future<Response> getActivities(Request request) async {
     final userId = userIdProperty.get(request);
@@ -697,7 +697,7 @@ class ActivityController {
     DateTime endDate;
     try {
       final orgTimezoneId = await loadOrgTimezoneId(
-        sl<ISystemSettingsRepository>(),
+        sl<AbsISystemSettingsRepository>(),
       );
       final range = parseOrgDateQueryRange(
         orgTimezoneId: orgTimezoneId,

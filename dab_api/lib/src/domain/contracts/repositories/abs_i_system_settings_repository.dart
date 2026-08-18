@@ -5,7 +5,7 @@ import '../../core/org_calendar.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Abstract contract for storing and retrieving global system settings.
-abstract interface class ISystemSettingsRepository {
+abstract interface class AbsISystemSettingsRepository {
   /// Retrieves a system setting by its unique key.
   Future<Either<Failure, String?>> getSetting(String key);
 
@@ -20,7 +20,7 @@ abstract interface class ISystemSettingsRepository {
 }
 
 /// Resolves the organization IANA timezone id from [system_timezone].
-Future<String> loadOrgTimezoneId(ISystemSettingsRepository repo) async {
+Future<String> loadOrgTimezoneId(AbsISystemSettingsRepository repo) async {
   final result = await repo.getSetting(kSystemTimezoneSettingKey);
   return result.fold(
     (_) => kDefaultOrgTimezoneId,

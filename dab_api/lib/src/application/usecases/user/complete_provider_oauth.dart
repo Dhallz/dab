@@ -4,9 +4,9 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/oauth_providers.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
-import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_oauth_state_store.dart';
-import '../../../domain/contracts/ports/i_oauth_token_client.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_state_store.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_token_client.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'save_user_provider_credential.dart';
 
@@ -21,9 +21,9 @@ class CompleteProviderOauth {
     this._save,
   );
 
-  final IOauthStateStore _stateStore;
-  final IOauthTokenClient _tokenClient;
-  final IOauthClientCredentialResolver _credentials;
+  final AbsIOauthStateStore _stateStore;
+  final AbsIOauthTokenClient _tokenClient;
+  final AbsIOauthClientCredentialResolver _credentials;
   final AbsIProviderConfigRepository _configs;
   final SaveUserProviderCredential _save;
 

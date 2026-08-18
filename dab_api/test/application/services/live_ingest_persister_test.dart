@@ -1,7 +1,7 @@
 import 'package:dab_api/src/application/services/live_ingest_persister.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_live_feed_store.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_presence_broadcaster.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_live_feed_store.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,9 +11,9 @@ import '../../test_factories.dart';
 
 class _MockActivities extends Mock implements AbsIActivityRepository {}
 
-class _MockLiveFeed extends Mock implements ILiveFeedStore {}
+class _MockLiveFeed extends Mock implements AbsILiveFeedStore {}
 
-class _MockPresence extends Mock implements IPresenceBroadcaster {}
+class _MockPresence extends Mock implements AbsIPresenceBroadcaster {}
 
 void main() {
   late _MockActivities activities;

@@ -9,7 +9,7 @@ import 'package:dab_api/src/domain/entities/user/user_provider_credential_status
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_provider_identity_probe.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_provider_identity_probe.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -20,7 +20,7 @@ class _MockUsers extends Mock implements IUserRepository {}
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 
-class _MockProbe extends Mock implements IProviderIdentityProbe {}
+class _MockProbe extends Mock implements AbsIProviderIdentityProbe {}
 
 void main() {
   late _MockCreds creds;

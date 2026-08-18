@@ -38,7 +38,7 @@ dab_api/lib/src/
 │   ├── entities/        ← Core model
 │   ├── dtos/            ← Provider DTO shapes + extension OnDto → `toActivities`
 │   ├── contracts/
-│   │   ├── ports/       ← I/O seams: `IActivitySource`, `ILiveFeedStore`, `AbsIPhorgeGateway`, …
+│   │   ├── ports/       ← I/O seams: `AbsIActivitySource`, `AbsILiveFeedStore`, `AbsIPhorgeFacade`, …
 │   │   └── repositories/← Abstract Postgres persistence interfaces (`AbsI*`)
 │   └── core/            ← Failures, org calendar, watch-list parsers, OAuth catalogs
 ├── application/
@@ -46,7 +46,7 @@ dab_api/lib/src/
 │   ├── services/        ← UnifiedActivityFetcher, ConnectorRegistry, register_activity_connectors, LiveIngestPersister, …
 │   └── containers/      ← Grouped use case aggregators
 ├── infrastructure/
-│   ├── sources/         ← Provider I/O (IActivitySource, catalogs, Discord Gateway)
+│   ├── sources/         ← Provider I/O (`*_source`, `*_catalog`, `DiscordGatewayClient`, `PhorgeFacade`)
 │   ├── protocols/       ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
 │   ├── persistence/     ← postgres/ (Drift), redis/, repositories/ (AbsI* impls)
 │   └── core/            ← config/, security/, http/, adapters/, realtime/, logging/
@@ -122,9 +122,9 @@ ObjectBox records for cache/storage remain in the Infrastructure layer.
 External Provider (Phorge, GitHub, Slack, …)
         │
         ▼
- IActivitySource (Infrastructure)
+ AbsIActivitySource (Infrastructure)
   ── fetches raw DTOs via HTTP ──
-  ── ICredentialResolver: user OAuth/PAT overlay, else org ProviderConfig, else skip
+  ── AbsICredentialResolver: user OAuth/PAT overlay, else org ProviderConfig, else skip
   ── Slack/Discord: org bot token only ──
         │
         ▼
@@ -185,19 +185,19 @@ Provider push (webhook / Gateway WebSocket)
         │
         ▼
  ActivityController (Presentation)
-  ── IWebhookRequestAuthenticator, fast ACK ──
+  ── AbsIWebhookRequestAuthenticator, fast ACK ──
         │
         ▼
  Ingest use case (Application)
   ── Redis dedup + business filter + DTO mapping ──
         │
         ▼
- SQL ActivityRepository ──► LiveIngestPersister (Redis fan-out + IPresenceBroadcaster ACTIVITY_RECEIVED)
+ SQL ActivityRepository ──► LiveIngestPersister (Redis fan-out + AbsIPresenceBroadcaster ACTIVITY_RECEIVED)
 ```
 
 Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge
 (Herald), Jira, Linear, and Slack (Events API); Discord uses the outbound
-`DiscordGatewayService` WebSocket client since Discord has no message webhooks.
+`DiscordGatewayClient` WebSocket client since Discord has no message webhooks.
 Insights with `authoredOnly=false` uses an org token when present; otherwise
 sources union per-user authored fetches (work not attributed to a connected
 identity is omitted).
@@ -209,12 +209,12 @@ identity is omitted).
 ### Source / payload extension pattern
 
 ```
-IActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
+AbsIActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
                                                                               │
                                                                      maps to Activity entity
 ```
 
-- `IActivitySource`: Handles raw I/O, auth, rate-limiting — no business logic.
+- `AbsIActivitySource`: Handles raw I/O, auth, rate-limiting — no business logic.
 - `extension OnXDto`: Pure transformation (`toActivities`) — no I/O.
 - `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering. `ConnectorRegistry` stores the type-erased `RegisteredConnectorPair` so fetch iteration does not widen mappers to `dynamic` (avoids Dart contravariance runtime errors).
 

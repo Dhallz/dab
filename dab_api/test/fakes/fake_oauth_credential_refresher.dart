@@ -1,9 +1,9 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_credential_refresher.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Test double that returns preloaded per-user settings without hitting a token endpoint.
-class FakeOauthCredentialRefresher implements IOauthCredentialRefresher {
+class FakeOauthCredentialRefresher implements AbsIOauthCredentialRefresher {
   FakeOauthCredentialRefresher([this.userSettings = const {}]);
 
   final Map<String, Map<String, dynamic>> userSettings;

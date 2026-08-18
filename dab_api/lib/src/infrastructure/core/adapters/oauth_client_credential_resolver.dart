@@ -1,4 +1,4 @@
-import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
 import '../config/config.dart';
 
 /// Reads a usable OAuth setting, skipping JSON null and the string `null`.
@@ -23,7 +23,7 @@ String? readOauthSetting(Map<String, dynamic> settings, List<String> keys) {
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: OAuth app credentials from [ProviderConfig.settings] with env fallback.
-class OauthClientCredentialResolver implements IOauthClientCredentialResolver {
+class OauthClientCredentialResolver implements AbsIOauthClientCredentialResolver {
   OauthClientCredentialResolver(this._config);
 
   final Config _config;

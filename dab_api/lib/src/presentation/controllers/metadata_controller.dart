@@ -5,7 +5,7 @@ import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
 import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
-import '../../infrastructure/sources/discord/discord_gateway_service.dart';
+import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
@@ -114,9 +114,9 @@ class MetadataController {
       final statusResult = await _metadata.getSystemStatus.execute();
       final isSystemConfigured = statusResult.getOrElse((_) => false);
       final systemTimezone = await loadOrgTimezoneId(
-        sl<ISystemSettingsRepository>(),
+        sl<AbsISystemSettingsRepository>(),
       );
-      final modeResult = await sl<ISystemSettingsRepository>().getSetting(
+      final modeResult = await sl<AbsISystemSettingsRepository>().getSetting(
         kDeploymentModeSettingKey,
       );
       final deploymentMode = normalizeDeploymentMode(
@@ -171,8 +171,8 @@ class MetadataController {
         ),
         (savedConfig) {
           if (savedConfig.id == 'discord') {
-            sl<DiscordGatewayService>().reload().catchError((e) {
-              print('Error reloading DiscordGatewayService: $e');
+            sl<DiscordGatewayClient>().reload().catchError((e) {
+              print('Error reloading DiscordGatewayClient: $e');
             });
           }
           return Response.ok(
@@ -277,7 +277,9 @@ class MetadataController {
     try {
       final bodyStr = await request.readAsString();
       final data = jsonDecode(bodyStr) as Map<String, dynamic>;
-      final settings = data.map((key, value) => MapEntry(key, value.toString()));
+      final settings = data.map(
+        (key, value) => MapEntry(key, value.toString()),
+      );
 
       final result = await _metadata.saveSystemSettings.execute(settings);
       return result.fold(

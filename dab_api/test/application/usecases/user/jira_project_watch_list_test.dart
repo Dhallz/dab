@@ -3,7 +3,7 @@ import 'package:dab_api/src/application/usecases/user/save_jira_project_watch_li
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/jira_project.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_jira_project_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_jira_project_catalog.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../fakes/fake_credential_resolver.dart';
 import '../../../fakes/fake_oauth_credential_refresher.dart';
@@ -11,7 +11,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class _MockCatalog extends Mock implements IJiraProjectCatalog {}
+class _MockCatalog extends Mock implements AbsIJiraProjectCatalog {}
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 

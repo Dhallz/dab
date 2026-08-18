@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
 import '../../../domain/entities/provider/provider_metadata.dart';
-import '../../../domain/contracts/ports/abs_i_phorge_gateway.dart';
+import '../../../domain/contracts/ports/abs_i_phorge_facade.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_metadata_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
@@ -11,15 +11,15 @@ import '../../../domain/contracts/repositories/abs_i_provider_metadata_repositor
 /// CONTRACT: Implements [AbsIProviderMetadataRepository].
 /// CONSTRAINTS: Currently hardcodes User PHID (Legacy lookup missing). Bridges Sources to Metadata Entities.
 class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
-  final AbsIPhorgeGateway _phorgeGateway;
+  final AbsIPhorgeFacade _phorgeFacade;
 
-  ProviderMetadataRepository({required AbsIPhorgeGateway phorgeGateway})
-      : _phorgeGateway = phorgeGateway;
+  ProviderMetadataRepository({required AbsIPhorgeFacade phorgeFacade})
+    : _phorgeFacade = phorgeFacade;
 
   /// Retrieves metadata relevant to the specified user across all providers.
   ///
   /// Flow:
-  /// 1. Uses [AbsIPhorgeGateway.fetchActiveSprintProjects] for sprint tags ([PhorgeProjectDto] rows).
+  /// 1. Uses [AbsIPhorgeFacade.fetchActiveSprintProjects] for sprint tags ([PhorgeProjectDto] rows).
   /// 2. Maps project DTOs to unified [ProviderMetadata] entities.
   @override
   Future<Either<Failure, List<ProviderMetadata>>> getMetadata(
@@ -27,8 +27,9 @@ class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
   ) async {
     // TODO: Resolve real User PHID from AbsIAuthRepository.
     // Currently using a placeholder PHID for the Sprint lookup.
-    final phorgeResult =
-        await _phorgeGateway.fetchActiveSprintProjects('PHID-USER-1234');
+    final phorgeResult = await _phorgeFacade.fetchActiveSprintProjects(
+      'PHID-USER-1234',
+    );
 
     return phorgeResult.fold(Left.new, (phorgeProjects) {
       final metadata = phorgeProjects
@@ -84,4 +85,3 @@ class ProviderMetadataRepository implements AbsIProviderMetadataRepository {
     });
   }
 }
-

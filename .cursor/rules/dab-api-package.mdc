@@ -23,7 +23,7 @@ dab_api/lib/src/
 │   ├── usecases/
 │   └── containers/
 ├── infrastructure/    ← DB, HTTP, protocols, security
-│   ├── sources/       ← Provider I/O (IActivitySource, catalogs, Discord Gateway)
+│   ├── sources/       ← Provider I/O (`*_source`, `*_catalog`, DiscordGatewayClient, PhorgeFacade)
 │   ├── protocols/     ← Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API)
 │   ├── persistence/   ← postgres/ (Drift), redis/, repositories/ (AbsI* impls)
 │   └── core/          ← config/, security/, http/, adapters/, realtime/, logging/
@@ -38,7 +38,7 @@ dab_api/lib/src/
 ### Source / DTO-extension pattern
 New provider integrations must follow this pattern precisely:
 
-1. **`IActivitySource`** (Infrastructure) — fetches raw DTO payloads from a provider API.
+1. **`AbsIActivitySource`** (Infrastructure) — fetches raw DTO payloads from a provider API.
 2. **`extension OnXDto`** (Domain on `domain/dtos/`) — implements **`toActivities(List<User>)`** with pure business logic (no I/O).
 3. **`TypedConnectorPair<T>` + `providerId`** — registered via **`ConnectorRegistry.register`** inside **`register_activity_connectors`** (called from **`service_locator.dart`**).
 
@@ -75,7 +75,7 @@ Never merge HTTP fetch logic into the DTO extensions.
 ## 🌐 HTTP / Controller Rules
 
 - Controllers are **thin**: parse request → call one use case → map result to response. Nothing else.
-- Inbound webhook HMAC / shared-secret checks go through `IWebhookRequestAuthenticator`; do not inline crypto in controllers.
+- Inbound webhook HMAC / shared-secret checks go through `AbsIWebhookRequestAuthenticator`; do not inline crypto in controllers.
 - Return `Either<Failure, T>` from use cases; map `Left` to appropriate HTTP status codes in the controller.
 - Use Relic's middleware pipeline for cross-cutting concerns (auth, Vegas, logging). Do not inline them in controllers.
 - Endpoint paths: `kebab-case` (e.g., `/auth/refresh-token`).

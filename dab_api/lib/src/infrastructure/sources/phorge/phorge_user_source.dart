@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -8,7 +8,7 @@ import 'package:fpdart/fpdart.dart';
 /// ROLE: Infrastructure Source for Phorge User identities and profile data.
 /// CONTRACT: Fetches raw User PHIDs and DTOs from the Phorge Conduit API.
 /// CONSTRAINTS: Must be READ-ONLY. Implements heuristic identity resolution.
-class PhorgeUserSource implements IDiscoverySource {
+class PhorgeUserSource implements AbsIDiscoverySource {
   final ConduitProtocol _client;
 
   PhorgeUserSource(this._client);
@@ -67,7 +67,7 @@ class PhorgeUserSource implements IDiscoverySource {
         .toList();
   }
 
-  /// Full directory enumeration for provisioning ([AbsIPhorgeGateway] delegates here).
+  /// Full directory enumeration for provisioning ([AbsIPhorgeFacade] delegates here).
   Future<Either<Failure, List<PhorgeUserDto>>> fetchDirectoryUsers() async {
     try {
       final dtos = await fetchAllUsers();

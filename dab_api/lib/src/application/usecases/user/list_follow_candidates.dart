@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
-import '../../../domain/contracts/ports/i_follow_candidate_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import 'get_git_branch_list.dart';
 import 'get_git_watch_list.dart';
 
@@ -16,7 +16,7 @@ class ListFollowCandidates {
     this._gitBranches,
   );
 
-  final List<IFollowCandidateCatalog> _issueCatalogs;
+  final List<AbsIFollowCandidateCatalog> _issueCatalogs;
   final GetGitWatchList _gitWatches;
   final GetGitBranchList _gitBranches;
 

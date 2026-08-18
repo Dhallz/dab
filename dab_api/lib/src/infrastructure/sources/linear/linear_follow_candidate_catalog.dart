@@ -6,15 +6,15 @@ import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_follow_candidate_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../protocols/graphql/graphql_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists the caller's open Linear issues for the Follow picker. Read-only.
-class LinearFollowCandidateCatalog implements IFollowCandidateCatalog {
+class LinearFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   LinearFollowCandidateCatalog(
     this._configs,
     this._credentials,
@@ -23,7 +23,7 @@ class LinearFollowCandidateCatalog implements IFollowCandidateCatalog {
   );
 
   final AbsIProviderConfigRepository _configs;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
   final GraphqlProtocol _graphql;
   final IUserRepository _users;
 

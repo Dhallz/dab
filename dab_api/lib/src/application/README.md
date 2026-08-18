@@ -27,7 +27,7 @@ When a client requests activities, the `UnifiedActivityFetcher` coordinates with
 
 ---
 
-> Connector pairs are registered as **`TypedConnectorPair<T>`** (`IActivitySource<T>`, **`providerId`**, **`mapItemToActivities`**). **`ConnectorRegistry.register`** immediately wraps each into a **`RegisteredConnectorPair`** with Object?-typed fetch/map so iteration never uses unsound `TypedConnectorPair<dynamic>` (Dart function contravariance on the row parameter).
+> Connector pairs are registered as **`TypedConnectorPair<T>`** (`AbsIActivitySource<T>`, **`providerId`**, **`mapItemToActivities`**). **`ConnectorRegistry.register`** immediately wraps each into a **`RegisteredConnectorPair`** with Object?-typed fetch/map so iteration never uses unsound `TypedConnectorPair<dynamic>` (Dart function contravariance on the row parameter).
 
 ---
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../domain/contracts/repositories/abs_i_user_repository.dart';
 import 'activity_live_publisher.dart';
@@ -17,7 +17,7 @@ class ActivityLivePollScheduler {
     UnifiedActivityFetcher fetcher,
     IUserRepository users,
     AbsIActivityRepository activities,
-    ILiveFeedStore redis,
+    AbsILiveFeedStore redis,
     ActivityLivePublisher publisher, {
     Duration interval = const Duration(seconds: 45),
     Duration lookback = const Duration(minutes: 20),

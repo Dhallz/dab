@@ -16,21 +16,21 @@ import '../../../test_factories.dart';
 class MockAbsIAuthRepository extends Mock implements AbsIAuthRepository {}
 class MockIUserRepository extends Mock implements IUserRepository {}
 class MockPhorgeUserSource extends Mock implements PhorgeUserSource {}
-class MockISystemSettingsRepository extends Mock
-    implements ISystemSettingsRepository {}
+class MockAbsISystemSettingsRepository extends Mock
+    implements AbsISystemSettingsRepository {}
 
 void main() {
   late MockAbsIAuthRepository mockAuthRepo;
   late MockIUserRepository mockUserRepo;
   late MockPhorgeUserSource mockPhorgeSource;
-  late MockISystemSettingsRepository mockSettingsRepo;
+  late MockAbsISystemSettingsRepository mockSettingsRepo;
   late CreateUserByAdmin useCase;
 
   setUp(() {
     mockAuthRepo = MockAbsIAuthRepository();
     mockUserRepo = MockIUserRepository();
     mockPhorgeSource = MockPhorgeUserSource();
-    mockSettingsRepo = MockISystemSettingsRepository();
+    mockSettingsRepo = MockAbsISystemSettingsRepository();
 
     useCase = CreateUserByAdmin(
       mockAuthRepo,

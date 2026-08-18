@@ -7,7 +7,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 /// (e.g. [`OnGitHubCommitDto.toActivities`]).
 /// CONSTRAINTS: No business mapping rules here — fetch and shape only.
 
-abstract interface class IActivitySource<T> {
+abstract interface class AbsIActivitySource<T> {
   /// Fetches raw payloads for [users] in \[start, end\], scoped by [authoredOnly].
   Future<List<T>> fetchRawData(
     List<User> users,

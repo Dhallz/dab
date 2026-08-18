@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/jira_project_watch_list.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'get_jira_project_watch_list.dart';
 
@@ -14,7 +14,7 @@ class SaveJiraProjectWatchList {
 
   final GetJiraProjectWatchList _get;
   final AbsIProviderConfigRepository _configs;
-  final ICredentialResolver _resolver;
+  final AbsICredentialResolver _resolver;
 
   Future<Either<Failure, JiraProjectWatchList>> execute({
     required String userId,

@@ -6,7 +6,7 @@
 library;
 
 /// Looks up encrypted user credentials and merges them onto org settings.
-abstract interface class ICredentialResolver {
+abstract interface class AbsICredentialResolver {
   /// Decrypted settings for one user × provider, or null when none stored.
   Future<Map<String, dynamic>?> getUserSettings({
     required String userId,

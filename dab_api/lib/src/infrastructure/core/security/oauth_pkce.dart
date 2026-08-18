@@ -4,11 +4,11 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/contracts/ports/i_oauth_pkce.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_pkce.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: PKCE S256 verifier/challenge and OAuth state ids.
-class OauthPkce implements IOauthPkce {
+class OauthPkce implements AbsIOauthPkce {
   OauthPkce({Random? random, Uuid? uuid})
     : _random = random ?? Random.secure(),
       _uuid = uuid ?? const Uuid();

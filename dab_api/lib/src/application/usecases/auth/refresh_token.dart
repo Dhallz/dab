@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
-import '../../../domain/contracts/ports/i_access_token_issuer.dart';
+import '../../../domain/contracts/ports/abs_i_access_token_issuer.dart';
 import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -12,7 +12,7 @@ import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 /// CONSTRAINTS: Must implement "Token Rotation" (old refresh token is invalidated).
 class RefreshToken {
   final AbsIAuthRepository _repo;
-  final IAccessTokenIssuer _jwtProvider;
+  final AbsIAccessTokenIssuer _jwtProvider;
   final _uuid = const Uuid();
 
   RefreshToken(this._repo, this._jwtProvider);

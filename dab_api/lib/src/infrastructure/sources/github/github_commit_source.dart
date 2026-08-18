@@ -4,8 +4,8 @@ import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
@@ -16,11 +16,11 @@ import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dar
 /// CONTRACT: Returns commit DTOs scoped by configured repos, linked users,
 /// and watched branches (plus the instance/default ref).
 /// CONSTRAINTS: Must not mutate remote state. Auth: user PAT overlay, else org token.
-class GitHubCommitSource implements IActivitySource<GitHubCommitDto> {
+class GitHubCommitSource implements AbsIActivitySource<GitHubCommitDto> {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
-  final ICredentialResolver _credentials;
+  final AbsICredentialResolver _credentials;
 
   GitHubCommitSource(
     this._configRepository,

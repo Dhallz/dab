@@ -24,7 +24,7 @@ graph TD
         D_Repo[Repository Interfaces]
     end
     subgraph "Infrastructure Layer"
-        I_Prov[IActivitySource]
+        I_Prov[AbsIActivitySource]
         I_Repo[Repository Impls]
         I_DB[Database]
     end
@@ -60,7 +60,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 - **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
-- **`contracts/`:** All outbound seams. **`ports/`** — I/O that is not our Postgres (`IActivitySource<T>`, `IDiscoverySource`, catalogs, `ILiveFeedStore` / `IPresenceBroadcaster` / `IAccessTokenIssuer`, `IWebhookRequestAuthenticator`, `IDiscordLiveIngestor`, plus `AbsIPhorgeGateway` for Phorge directory/sprint/task/revision facade). Other providers poll through `IActivitySource`, not a dedicated gateway. **`repositories/`** — abstract Postgres contracts (`AbsI*` / `I*`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
+- **`contracts/`:** All outbound seams. **`ports/`** — I/O that is not our Postgres (`AbsIActivitySource<T>`, `AbsIDiscoverySource`, catalogs, `AbsILiveFeedStore` / `AbsIPresenceBroadcaster` / `AbsIAccessTokenIssuer`, `AbsIWebhookRequestAuthenticator`, `AbsIDiscordLiveIngestor`, plus `AbsIPhorgeFacade` for Phorge directory/sprint/task/revision facade). Other providers poll through `AbsIActivitySource`, not a dedicated facade. **`repositories/`** — abstract Postgres contracts (`AbsI*` / `I*`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
 
@@ -70,9 +70,9 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`IActivitySource` implementations (`sources/`):** Implement the domain port `IActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, Discord Gateway) also lives here.
+- **`AbsIActivitySource` implementations (`sources/`):** Implement the domain port `AbsIActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, `DiscordGatewayClient`) also lives here. File suffixes: `*_source.dart` (poll/fetch), `*_catalog.dart` (pick lists), `DiscordGatewayClient`, `PhorgeFacade`. Never `*Service` in this folder.
 
-- **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `IActivitySource`.
+- **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `AbsIActivitySource`.
 
 - **`persistence/`:** All durable/cache stores. **`postgres/`** — Drift schema, DAOs, `MigrationStrategy` (never hand-edit `*.g.dart`). **`redis/`** — live feed, Vegas clock, ingest dedup. **`repositories/`** — AbsI* implementations (TBT `leftOuterJoin` hydration, including `PostgresHealthRepository`).
 
@@ -90,8 +90,8 @@ Orchestrates use cases. Use cases return `Either<Failure, T>` where failures mat
 
 - **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. If **`getConfigs()`** fails, emits a **WARNING** log and skips all connectors (empty active set). Per-connector failures still log WARNING and return an empty slice for that provider only.
 
-- **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `IPresenceBroadcaster`.
-- **Live ingest:** Provider ingest use cases share `IngestionResult` and `LiveIngestPersister` (SQL insert + Redis fan-out + ingest-success timestamp). Application talks to Redis/Presence/JWT through `ILiveFeedStore`, `IPresenceBroadcaster`, and `IAccessTokenIssuer`.
+- **`LogActivity` use case:** Persists activity, increments Vegas version in Redis, and broadcasts over WebSocket via `AbsIPresenceBroadcaster`.
+- **Live ingest:** Provider ingest use cases share `IngestionResult` and `LiveIngestPersister` (SQL insert + Redis fan-out + ingest-success timestamp). Application talks to Redis/Presence/JWT through `AbsILiveFeedStore`, `AbsIPresenceBroadcaster`, and `AbsIAccessTokenIssuer`.
 - **Activity query use cases:** `GetRecentActivities`, `SearchActivities`, and `FetchRemoteActivities`.
 - **`GetLiveActivities`:** Serves **`GET /activities/live`** from Redis lists only (no Postgres). Explorer historical browsing uses **`SearchActivities`** (**`GET /activities/search`**), not Redis.
 - **Auth workflows:** Implemented through `AuthUseCases` (`RegisterUser`, `AuthenticateUser`, `RefreshUserToken`, etc.).
@@ -106,7 +106,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `IWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `AbsIWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public (no JWT) OAuth redirect. Validates Redis `oauth:state:{id}`, exchanges the code, persists via `SaveUserProviderCredential`. Returns HTML. Never includes tokens. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
@@ -123,7 +123,7 @@ Thin entry points only. No business logic.
 - **Account creation rules:** Enforced by use cases, not HTTP middleware. `RegisterUser` is bootstrap-only (rejects once any user exists; honors the `DAB_INITIAL_ADMIN_EMAIL` bootstrap lock). `CreateUserByAdmin` (behind `POST /admin/users`) is the only creation path afterwards and applies the allowed-domain guard when the `allowed_domain_enabled` system setting is on (domain from the `allowed_domain` setting, `DAB_ALLOWED_DOMAIN` env fallback). Existing accounts outside the domain are grandfathered — the toggle never blocks login.
 - **Admin middleware:** After bootstrap, authorizes `/admin/*` using the **database** user role (not only JWT) so promotions apply immediately.
 - **`GET /metadata/status` `isSystemConfigured`:** `true` when there is at least one admin **and** at least one **active** provider config (a first OAuth connect or PAT save activates that row).
-- **Credential waterfall:** each PAT/OAuth provider fetch uses the target user's `UserProviderCredential` overlaid onto org `ProviderConfig` settings (`ICredentialResolver`), else the org token, else skip. Slack and Discord use the instance **bot** token only (no per-user overlay). Tokens are fetch keys, not a visibility ACL.
+- **Credential waterfall:** each PAT/OAuth provider fetch uses the target user's `UserProviderCredential` overlaid onto org `ProviderConfig` settings (`AbsICredentialResolver`), else the org token, else skip. Slack and Discord use the instance **bot** token only (no per-user overlay). Tokens are fetch keys, not a visibility ACL.
 
 | Kind | Providers | Fetch credentials |
 |---|---|---|
@@ -284,16 +284,16 @@ comment is a distinct activity id (`linear|{issue}|comment|{commentId}|{recipien
 so Dashboard live-publishes it; Explorer still groups by issue identifier.
 
 Discord has no outbound webhooks for messages, so live ingestion uses
-`DiscordGatewayService` — an outbound Gateway WebSocket client (IDENTIFY with
+`DiscordGatewayClient` — an outbound Gateway WebSocket client (IDENTIFY with
 the **`botToken`**, `GUILD_MESSAGES`/`MESSAGE_CONTENT` intents, heartbeat +
 RESUME reconnect). `MESSAGE_CREATE` dispatches flow through
-`IDiscordLiveIngestor` (`IngestDiscordMessage`) into the same persist/fan-out
+`AbsIDiscordLiveIngestor` (`IngestDiscordMessage`) into the same persist/fan-out
 pipeline. Live messages fan out like Slack: Gateway `mentions[].id` and
 `@everyone`/`@here` (when `mention_everyone`) to linked Discord identities.
 An explicit user mention, including a self-@, still lands for that recipient;
 `@everyone`/`@here` omit the author. Users who **Follow** the conversation
 (`guildId|channelId|root message id`) also receive a Follow-lane copy of later
-replies, including their own. Unmentioned messages without followers are ignored. The service
+replies, including their own. Unmentioned messages without followers are ignored. The client
 starts on boot when the Discord config is active and reloads on config save.
 Explorer backfill polls `GET /channels/{id}/messages` per configured
 **`channels`** id; attribution requires linked identities
@@ -340,7 +340,7 @@ success but perform no ingestion.
 
 ### Admin provider connectivity (Live ingest signal)
 
-Successful webhook/event ingest paths call `RedisService.recordLiveIngestSuccess(providerId)` with a **7-day TTL** (`live:last_ingest:{providerId}`). `POST /admin/configs/test` Live section is green when that timestamp is within the window (Discord also requires `DiscordGatewayService` connected). If no recent ingest exists, **Try** runs an internal **webhook test delivery** that validates Live signing secrets (HMAC round-trip or shared-secret check) and records the same Redis key — so Live can turn green without waiting for a real provider event. New installs should configure Live secrets and click **Try**.
+Successful webhook/event ingest paths call `RedisService.recordLiveIngestSuccess(providerId)` with a **7-day TTL** (`live:last_ingest:{providerId}`). `POST /admin/configs/test` Live section is green when that timestamp is within the window (Discord also requires `DiscordGatewayClient` connected). If no recent ingest exists, **Try** runs an internal **webhook test delivery** that validates Live signing secrets (HMAC round-trip or shared-secret check) and records the same Redis key — so Live can turn green without waiting for a real provider event. New installs should configure Live secrets and click **Try**.
 
 ---
 

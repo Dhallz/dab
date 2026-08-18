@@ -1,8 +1,8 @@
 import 'package:uuid/uuid.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_provider.dart';
-import '../../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../../services/activity_live_publisher.dart';
@@ -14,8 +14,8 @@ import '../../services/activity_live_publisher.dart';
 class LogActivity {
   final AbsIActivityRepository _repo;
   final AbsIAuthRepository _authRepo;
-  final IPresenceBroadcaster _presence;
-  final ILiveFeedStore _redis;
+  final AbsIPresenceBroadcaster _presence;
+  final AbsILiveFeedStore _redis;
   final ActivityLivePublisher? _livePublisher;
   final _uuid = const Uuid();
 

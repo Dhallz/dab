@@ -1,21 +1,21 @@
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_project/phorge_project_wire_fields_dto.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/provider_metadata_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class MockAbsIPhorgeGateway extends Mock implements AbsIPhorgeGateway {}
+class MockAbsIPhorgeFacade extends Mock implements AbsIPhorgeFacade {}
 
 void main() {
-  late MockAbsIPhorgeGateway mockGateway;
+  late MockAbsIPhorgeFacade mockFacade;
   late ProviderMetadataRepository repository;
 
   setUp(() {
-    mockGateway = MockAbsIPhorgeGateway();
-    repository = ProviderMetadataRepository(phorgeGateway: mockGateway);
+    mockFacade = MockAbsIPhorgeFacade();
+    repository = ProviderMetadataRepository(phorgeFacade: mockFacade);
   });
 
   group('ProviderMetadataRepository', () {
@@ -34,10 +34,7 @@ void main() {
       PhorgeProjectDto(
         id: 2,
         phid: 'PHID-PROJ-222',
-        fields: const PhorgeProjectWireFieldsDto(
-          name: 'Bug',
-          color: 'orange',
-        ),
+        fields: const PhorgeProjectWireFieldsDto(name: 'Bug', color: 'orange'),
       ),
     ];
 
@@ -45,7 +42,7 @@ void main() {
       'should return list of ProviderMetadata when connector call is successful',
       () async {
         when(
-          () => mockGateway.fetchActiveSprintProjects(any()),
+          () => mockFacade.fetchActiveSprintProjects(any()),
         ).thenAnswer((_) async => Right(tPhorgeProjects));
 
         final result = await repository.getMetadata(tUserId);
@@ -75,38 +72,35 @@ void main() {
           containsAll(['slack-global', 'discord-global']),
         );
 
-        verify(() => mockGateway.fetchActiveSprintProjects('PHID-USER-1234'))
-            .called(1);
+        verify(
+          () => mockFacade.fetchActiveSprintProjects('PHID-USER-1234'),
+        ).called(1);
       },
     );
 
-    test(
-      'should return Failure when gateway returns Left',
-      () async {
-        when(
-          () => mockGateway.fetchActiveSprintProjects(any()),
-        ).thenAnswer(
-          (_) async => Left(
-            DatabaseFailure(
-              'Phorge sprint project fetch failed: Exception: Conduit Error',
-            ),
+    test('should return Failure when gateway returns Left', () async {
+      when(() => mockFacade.fetchActiveSprintProjects(any())).thenAnswer(
+        (_) async => Left(
+          DatabaseFailure(
+            'Phorge sprint project fetch failed: Exception: Conduit Error',
           ),
-        );
+        ),
+      );
 
-        final result = await repository.getMetadata(tUserId);
+      final result = await repository.getMetadata(tUserId);
 
-        expect(result.isLeft(), isTrue);
+      expect(result.isLeft(), isTrue);
 
-        final failure = result.match(
-          (l) => l,
-          (r) => throw Exception('Right side returned'),
-        );
-        expect(failure, isA<DatabaseFailure>());
-        expect(failure.message, contains('Conduit Error'));
+      final failure = result.match(
+        (l) => l,
+        (r) => throw Exception('Right side returned'),
+      );
+      expect(failure, isA<DatabaseFailure>());
+      expect(failure.message, contains('Conduit Error'));
 
-        verify(() => mockGateway.fetchActiveSprintProjects('PHID-USER-1234'))
-            .called(1);
-      },
-    );
+      verify(
+        () => mockFacade.fetchActiveSprintProjects('PHID-USER-1234'),
+      ).called(1);
+    });
   });
 }

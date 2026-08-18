@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/jira_project.dart';
-import '../../../domain/contracts/ports/i_jira_project_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_jira_project_catalog.dart';
 import '../../protocols/protocol_exceptions.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 import 'jira_jql.dart';
@@ -11,7 +11,7 @@ import 'jira_jql.dart';
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists Jira Cloud projects for the Settings picker. Read-only.
 /// CONTRACT: Prefers `/rest/api/3/project/search`, falls back to `/project`.
-class JiraProjectCatalog implements IJiraProjectCatalog {
+class JiraProjectCatalog implements AbsIJiraProjectCatalog {
   JiraProjectCatalog(this._jsonRest);
 
   final JsonRestProtocol _jsonRest;

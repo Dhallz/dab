@@ -2,9 +2,9 @@ import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart'
 import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/oauth_state_payload.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_pkce.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_state_store.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_pkce.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_state_store.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -13,13 +13,13 @@ import 'package:test/test.dart';
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 
-class _MockSettings extends Mock implements ISystemSettingsRepository {}
+class _MockSettings extends Mock implements AbsISystemSettingsRepository {}
 
-class _MockStore extends Mock implements IOauthStateStore {}
+class _MockStore extends Mock implements AbsIOauthStateStore {}
 
-class _MockApps extends Mock implements IOauthClientCredentialResolver {}
+class _MockApps extends Mock implements AbsIOauthClientCredentialResolver {}
 
-class _FakePkce implements IOauthPkce {
+class _FakePkce implements AbsIOauthPkce {
   @override
   String generateStateId() => 'state-1';
 

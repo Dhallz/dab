@@ -8,7 +8,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -20,7 +20,7 @@ class _MockProviderConfigRepo extends Mock
 
 class _MockUserRepo extends Mock implements IUserRepository {}
 
-class _FakeSource implements IActivitySource<String> {
+class _FakeSource implements AbsIActivitySource<String> {
   List<User> lastUsers = [];
 
   @override

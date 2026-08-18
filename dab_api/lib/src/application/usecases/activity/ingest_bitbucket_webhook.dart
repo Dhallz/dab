@@ -9,9 +9,9 @@ import '../../../domain/dtos/bitbucket/bitbucket_commit_mapping.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -35,9 +35,9 @@ export 'ingestion_result.dart';
 class IngestBitbucketWebhook {
   final IUserRepository _userRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final ILiveFeedStore _liveFeed;
+  final AbsILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
-  final ICredentialResolver? _credentials;
+  final AbsICredentialResolver? _credentials;
   final AbsIActivityFollowRepository? _follows;
 
   IngestBitbucketWebhook(
@@ -45,10 +45,10 @@ class IngestBitbucketWebhook {
     AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
     this._liveFeed,
-    IPresenceBroadcaster presence, {
+    AbsIPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
-    ICredentialResolver? credentials,
+    AbsICredentialResolver? credentials,
     AbsIActivityFollowRepository? follows,
   }) : _credentials = credentials,
        _follows = follows,

@@ -6,8 +6,8 @@ import 'package:dab_api/src/domain/dtos/discord/discord_message_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
@@ -21,7 +21,7 @@ import 'package:fpdart/fpdart.dart';
 /// allow-list from the `channels` setting.
 /// CONSTRAINTS: Must be READ-ONLY; bot-authored messages are skipped.
 class DiscordMessageSource
-    implements IActivitySource<DiscordMessageDto>, IDiscoverySource {
+    implements AbsIActivitySource<DiscordMessageDto>, AbsIDiscoverySource {
   DiscordMessageSource(
     this._configRepository,
     this._userRepository,

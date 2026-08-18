@@ -1,12 +1,12 @@
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class _MockResolver extends Mock implements ICredentialResolver {}
+class _MockResolver extends Mock implements AbsICredentialResolver {}
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 

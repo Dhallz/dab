@@ -43,7 +43,7 @@ The DAB API is built on a strictly layered Clean Architecture, designed to decou
 
 ### 🧩 The Source / payload-extension pattern
 We separate the "Doing" (I/O) from the "Thinking" (Mapping) to ensure the system is **Open-Closed** for new data types.
-1.  **IActivitySource** (Infrastructure): Fetches raw data from an API and returns it as a specialized DTO.
+1.  **AbsIActivitySource** (Infrastructure): Fetches raw data from an API and returns it as a specialized DTO.
 2.  **`extension OnXDto`** (Domain): Implements **`toActivities(List<User>)`** — transforms that payload into zero or more **`Activity`** values.
 3.  **TypedConnectorPair** (+ **`providerId`**) / **ConnectorRegistry**: Registered in **`register_activity_connectors`** — binds Source + mapping + metadata id filtering.
 

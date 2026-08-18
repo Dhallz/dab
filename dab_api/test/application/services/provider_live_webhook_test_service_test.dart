@@ -7,13 +7,13 @@ import 'package:dab_api/src/infrastructure/core/security/phorge_webhook_verifier
 import 'package:dab_api/src/infrastructure/core/security/shared_secret_verifier.dart';
 import 'package:dab_api/src/infrastructure/core/security/slack_request_verifier.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
-import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_client.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 class _MockRedisService extends Mock implements RedisService {}
 
-class _MockDiscordGateway extends Mock implements DiscordGatewayService {}
+class _MockDiscordGateway extends Mock implements DiscordGatewayClient {}
 
 void main() {
   late _MockRedisService redis;
@@ -51,20 +51,23 @@ void main() {
     verify(() => redis.recordLiveIngestSuccess('github')).called(1);
   });
 
-  test('Jira records test delivery when webhook secret validates HMAC', () async {
-    const config = ProviderConfig(
-      id: 'jira',
-      name: 'Jira',
-      baseUrl: 'https://dhallz.atlassian.net',
-      isActive: true,
-      settings: {'webhookSecret': 'jira-secret'},
-    );
+  test(
+    'Jira records test delivery when webhook secret validates HMAC',
+    () async {
+      const config = ProviderConfig(
+        id: 'jira',
+        name: 'Jira',
+        baseUrl: 'https://dhallz.atlassian.net',
+        isActive: true,
+        settings: {'webhookSecret': 'jira-secret'},
+      );
 
-    final result = await service.testDelivery(config);
+      final result = await service.testDelivery(config);
 
-    expect(result.status, ConnectivitySectionStatus.success);
-    verify(() => redis.recordLiveIngestSuccess('jira')).called(1);
-  });
+      expect(result.status, ConnectivitySectionStatus.success);
+      verify(() => redis.recordLiveIngestSuccess('jira')).called(1);
+    },
+  );
 
   test('GitHub fails when webhook secret is missing', () async {
     const config = ProviderConfig(

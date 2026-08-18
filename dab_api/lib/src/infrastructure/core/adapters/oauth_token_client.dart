@@ -6,11 +6,11 @@ import 'package:http/http.dart' as http;
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/oauth_providers.dart';
 import '../../../domain/entities/user/oauth_token_response.dart';
-import '../../../domain/contracts/ports/i_oauth_token_client.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_token_client.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: OAuth token exchange over HTTP. Never logs tokens or client secrets.
-class HttpOauthTokenClient implements IOauthTokenClient {
+class HttpOauthTokenClient implements AbsIOauthTokenClient {
   HttpOauthTokenClient({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;

@@ -145,8 +145,8 @@ Live events reach these keys through provider push receivers: Slack Events API
 (`POST /integrations/slack/events`), signed push webhooks for GitHub, GitLab,
 Bitbucket, Phorge (Herald), Jira, and Linear
 (`POST /integrations/{provider}/webhook`), and — for Discord, which has no
-message webhooks — the outbound `DiscordGatewayService` WebSocket client. The
-Gateway service connects to the Discord Gateway with the configured bot token
+message webhooks — the outbound `DiscordGatewayClient` WebSocket client. The
+client connects to the Discord Gateway with the configured bot token
 (`GUILD_MESSAGES`/`MESSAGE_CONTENT` intents), maintains the heartbeat loop with
 sequence tracking, and reconnects with RESUME + exponential backoff. It starts
 at boot when the Discord provider is active and reloads on config save.

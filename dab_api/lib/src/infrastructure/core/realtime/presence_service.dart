@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:relic/relic.dart';
 
-import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Tracks Relic WebSocket sessions and fans out live events.
-class PresenceService implements IPresenceBroadcaster {
+class PresenceService implements AbsIPresenceBroadcaster {
   final Map<RelicWebSocket, String> _sessions = {};
 
   void addSession(RelicWebSocket session, String userId) {

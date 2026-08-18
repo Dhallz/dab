@@ -1,8 +1,8 @@
 import 'package:dab_api/src/application/usecases/user/get_git_branch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_bitbucket_branch_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_github_branch_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_gitlab_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_bitbucket_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_github_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_gitlab_branch_catalog.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/git_branch_list.dart';
@@ -16,11 +16,11 @@ import '../../../fakes/fake_oauth_credential_refresher.dart';
 
 class _MockWatches extends Mock implements GetGitWatchList {}
 
-class _MockGitHub extends Mock implements IGitHubBranchCatalog {}
+class _MockGitHub extends Mock implements AbsIGitHubBranchCatalog {}
 
-class _MockGitLab extends Mock implements IGitLabBranchCatalog {}
+class _MockGitLab extends Mock implements AbsIGitLabBranchCatalog {}
 
-class _MockBitbucket extends Mock implements IBitbucketBranchCatalog {}
+class _MockBitbucket extends Mock implements AbsIBitbucketBranchCatalog {}
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 

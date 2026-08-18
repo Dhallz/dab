@@ -1,10 +1,10 @@
 import '../../../domain/core/provider_credential_keys.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
 import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Loads per-user credentials and overlays secrets onto org settings.
-class CredentialResolver implements ICredentialResolver {
+class CredentialResolver implements AbsICredentialResolver {
   CredentialResolver(this._repo);
 
   final AbsIUserProviderCredentialRepository _repo;

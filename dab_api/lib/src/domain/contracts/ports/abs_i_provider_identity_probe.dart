@@ -9,7 +9,7 @@ import '../../entities/user/provider_whoami_result.dart';
 /// discovery.
 /// CONTRACT: Read-only. Never logs tokens. Application use cases depend on
 /// this port, not the infrastructure probe.
-abstract interface class IProviderIdentityProbe {
+abstract interface class AbsIProviderIdentityProbe {
   /// Verifies credentials for [providerId] and returns whoami plus optional
   /// watch-list discovery. Read-only; never logs tokens.
   Future<Either<Failure, ProviderWhoamiResult>> probe({

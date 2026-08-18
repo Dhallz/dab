@@ -6,14 +6,14 @@ import '../../../domain/core/gitlab_scope.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/git_branch_list.dart';
-import '../../../domain/contracts/ports/i_gitlab_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_gitlab_branch_catalog.dart';
 import '../../protocols/protocol_exceptions.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 import 'gitlab_commit_source.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists GitLab branch names for Settings inbox watches. Read-only.
-class GitLabBranchCatalog implements IGitLabBranchCatalog {
+class GitLabBranchCatalog implements AbsIGitLabBranchCatalog {
   GitLabBranchCatalog(this._jsonRest);
 
   final JsonRestProtocol _jsonRest;

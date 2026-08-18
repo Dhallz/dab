@@ -6,7 +6,7 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
-import '../../../domain/contracts/ports/abs_i_phorge_gateway.dart';
+import '../../../domain/contracts/ports/abs_i_phorge_facade.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 
@@ -18,13 +18,13 @@ import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 class SyncPhorgeUsers {
   final IUserRepository _repo;
   final AbsIProviderConfigRepository _configRepo;
-  final AbsIPhorgeGateway _phorgeGateway;
+  final AbsIPhorgeFacade _phorgeFacade;
   final String _allowedDomain;
   final _uuid = const Uuid();
 
   SyncPhorgeUsers(
     this._repo,
-    this._phorgeGateway,
+    this._phorgeFacade,
     this._configRepo, {
     required String allowedDomain,
   }) : _allowedDomain = allowedDomain;
@@ -55,7 +55,7 @@ class SyncPhorgeUsers {
         return const Right(0);
       }
 
-      final directoryResult = await _phorgeGateway.fetchDirectoryUsers();
+      final directoryResult = await _phorgeFacade.fetchDirectoryUsers();
       if (directoryResult.isLeft()) {
         return Left(directoryResult.getLeft().toNullable()!);
       }

@@ -7,7 +7,7 @@ import 'package:relic/relic.dart';
 import '../../application/containers/user_usecases.dart';
 import '../../application/services/identity_discovery_service.dart';
 import '../../domain/core/failures/failure.dart';
-import '../../infrastructure/sources/discord/discord_gateway_service.dart';
+import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
 
@@ -412,8 +412,8 @@ class UserController {
         },
         (summary) {
           if (provider.trim().toLowerCase() == 'discord') {
-            sl<DiscordGatewayService>().reload().catchError((e) {
-              print('Error reloading DiscordGatewayService: $e');
+            sl<DiscordGatewayClient>().reload().catchError((e) {
+              print('Error reloading DiscordGatewayClient: $e');
             });
           }
           return Response.ok(

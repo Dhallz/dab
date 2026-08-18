@@ -6,7 +6,7 @@ Top-level folders:
 
 | Folder | Contents |
 |---|---|
-| `sources/` | Provider I/O (`IActivitySource`, catalogs, Discord Gateway) |
+| `sources/` | Provider I/O (`AbsIActivitySource`, catalogs, Discord Gateway) |
 | `protocols/` | Outbound wire adapters (Conduit, JSON REST, GraphQL, Slack Web API) |
 | `persistence/` | `postgres/` (Drift), `redis/`, `repositories/` (AbsI* impls) |
 | `core/` | `config/`, `security/`, `http/`, `adapters/`, `realtime/`, `logging/` |
@@ -15,7 +15,7 @@ Top-level folders:
 
 ## 🏗️ Core Responsibilities
 
-1. **Sources (`IActivitySource`)**: Specialized fetchers (e.g., `PhorgeTaskSource`) that handle raw I/O and protocol management for a specific data type.
+1. **Sources (`AbsIActivitySource`)**: Specialized fetchers (e.g., `PhorgeTaskSource`) that handle raw I/O and protocol management for a specific data type.
 2. **Repositories (`I...Repository`)**: Implement the interfaces defined in the Domain using PostgreSQL/Drift. They handle the Table-Per-Type (TBT) relational mapping and polymorphic hydration.
 3. **Clients**: Specialized HTTP or Conduit clients that handle rate manipulation and low-level mapping.
 
@@ -32,7 +32,7 @@ Top-level folders:
 
 ## 🧩 The Source Strategy
 
-Sources are data-type specific (e.g., Task, Revision). If you are adding a new platform, implement its raw API logic in a new `IActivitySource` and link it to its corresponding Domain Mapper in the `ConnectorRegistry`.
+Sources are data-type specific (e.g., Task, Revision). If you are adding a new platform, implement its raw API logic in a new `AbsIActivitySource` and link it to its corresponding Domain Mapper in the `ConnectorRegistry`.
 
 ---
 

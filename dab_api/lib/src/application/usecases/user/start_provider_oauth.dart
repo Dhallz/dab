@@ -4,9 +4,9 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/oauth_providers.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/oauth_state_payload.dart';
-import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_oauth_pkce.dart';
-import '../../../domain/contracts/ports/i_oauth_state_store.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_pkce.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_state_store.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 
@@ -22,10 +22,10 @@ class StartProviderOauth {
   );
 
   final AbsIProviderConfigRepository _configs;
-  final ISystemSettingsRepository _settings;
-  final IOauthStateStore _stateStore;
-  final IOauthClientCredentialResolver _credentials;
-  final IOauthPkce _pkce;
+  final AbsISystemSettingsRepository _settings;
+  final AbsIOauthStateStore _stateStore;
+  final AbsIOauthClientCredentialResolver _credentials;
+  final AbsIOauthPkce _pkce;
 
   Future<Either<Failure, String>> execute({
     required String userId,

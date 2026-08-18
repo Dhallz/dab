@@ -1,5 +1,5 @@
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/contracts/ports/i_webhook_request_authenticator.dart';
+import '../../../domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import '../../../domain/contracts/ports/webhook_auth_input.dart';
 import '../../../domain/contracts/ports/webhook_auth_status.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -15,7 +15,7 @@ import '../security/slack_request_verifier.dart';
 /// shared-secret compare. Jira accepts HMAC or `X-Webhook-Secret` / `?secret=`.
 /// CONSTRAINTS: Never logs secrets. Unknown [WebhookAuthInput.providerId]
 /// is [WebhookAuthStatus.invalid].
-class WebhookRequestAuthenticator implements IWebhookRequestAuthenticator {
+class WebhookRequestAuthenticator implements AbsIWebhookRequestAuthenticator {
   WebhookRequestAuthenticator(
     this._configs,
     this._slackVerifier,

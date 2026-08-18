@@ -4,11 +4,11 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/git_branch_list.dart';
-import '../../../domain/contracts/ports/i_bitbucket_branch_catalog.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_github_branch_catalog.dart';
-import '../../../domain/contracts/ports/i_gitlab_branch_catalog.dart';
-import '../../../domain/contracts/ports/i_oauth_credential_refresher.dart';
+import '../../../domain/contracts/ports/abs_i_bitbucket_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_github_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_gitlab_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'get_git_watch_list.dart';
 
@@ -26,12 +26,12 @@ class GetGitBranchList {
   );
 
   final GetGitWatchList _getWatches;
-  final ICredentialResolver _resolver;
-  final IGitHubBranchCatalog _github;
-  final IGitLabBranchCatalog _gitlab;
-  final IBitbucketBranchCatalog _bitbucket;
+  final AbsICredentialResolver _resolver;
+  final AbsIGitHubBranchCatalog _github;
+  final AbsIGitLabBranchCatalog _gitlab;
+  final AbsIBitbucketBranchCatalog _bitbucket;
   final AbsIProviderConfigRepository _configs;
-  final IOauthCredentialRefresher _oauth;
+  final AbsIOauthCredentialRefresher _oauth;
 
   Future<Either<Failure, GitBranchList>> execute({
     required String userId,

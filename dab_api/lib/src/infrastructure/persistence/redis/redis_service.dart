@@ -4,15 +4,15 @@ import 'package:redis/redis.dart';
 
 import '../../../domain/core/org_calendar.dart' as org_calendar;
 import '../../../domain/entities/activity/activity.dart';
-import '../../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'redis_client.dart';
 
 /// [ARCH: INFRASTRUCTURE_SERVICE]
 /// ROLE: Redis live feeds, Vegas clock, and ingest dedup keys.
-class RedisService implements ILiveFeedStore {
+class RedisService implements AbsILiveFeedStore {
   final RedisClient _client;
-  final ISystemSettingsRepository _settings;
+  final AbsISystemSettingsRepository _settings;
 
   RedisService(this._client, this._settings);
 

@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 class _MockRedisService extends Mock implements RedisService {}
 
 class _MockSystemSettingsRepository extends Mock
-    implements ISystemSettingsRepository {}
+    implements AbsISystemSettingsRepository {}
 
 void main() {
   late _MockRedisService redis;

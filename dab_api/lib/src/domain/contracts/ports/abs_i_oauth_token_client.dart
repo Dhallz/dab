@@ -6,7 +6,7 @@ import '../../entities/user/oauth_token_response.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Exchanges an authorization code for tokens. Never logs secrets.
-abstract interface class IOauthTokenClient {
+abstract interface class AbsIOauthTokenClient {
   Future<Either<Failure, OauthTokenResponse>> exchangeAuthorizationCode({
     required OauthProviderSpec spec,
     required String clientId,

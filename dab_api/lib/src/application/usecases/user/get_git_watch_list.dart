@@ -7,7 +7,7 @@ import '../../../domain/core/github_scope.dart';
 import '../../../domain/core/gitlab_scope.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/git_watch_list.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -15,7 +15,7 @@ import '../../../domain/contracts/repositories/abs_i_provider_config_repository.
 class GetGitWatchList {
   GetGitWatchList(this._resolver, this._configs);
 
-  final ICredentialResolver _resolver;
+  final AbsICredentialResolver _resolver;
   final AbsIProviderConfigRepository _configs;
 
   Future<Either<Failure, GitWatchList>> execute({

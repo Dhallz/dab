@@ -2,8 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../domain/core/failures/failure.dart';
 import '../../domain/entities/activity/activity.dart';
-import '../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../usecases/activity/ingestion_result.dart';
 import 'activity_live_publisher.dart';
@@ -17,8 +17,8 @@ import 'activity_live_publisher.dart';
 class LiveIngestPersister {
   LiveIngestPersister({
     required AbsIActivityRepository activities,
-    required ILiveFeedStore liveFeed,
-    required IPresenceBroadcaster presence,
+    required AbsILiveFeedStore liveFeed,
+    required AbsIPresenceBroadcaster presence,
     ActivityLivePublisher? livePublisher,
   }) : _activities = activities,
        _liveFeed = liveFeed,
@@ -26,8 +26,8 @@ class LiveIngestPersister {
        _livePublisher = livePublisher;
 
   final AbsIActivityRepository _activities;
-  final ILiveFeedStore _liveFeed;
-  final IPresenceBroadcaster _presence;
+  final AbsILiveFeedStore _liveFeed;
+  final AbsIPresenceBroadcaster _presence;
   final ActivityLivePublisher? _livePublisher;
 
   /// Persists [activities] and fans them out.

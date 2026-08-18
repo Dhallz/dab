@@ -12,7 +12,7 @@ import '../../../domain/entities/user/user_identity_status.dart';
 import '../../../domain/entities/user/user_provider_credential.dart';
 import '../../../domain/entities/user/user_provider_credential_status.dart';
 import '../../../domain/entities/user/user_provider_credential_summary.dart';
-import '../../../domain/contracts/ports/i_provider_identity_probe.dart';
+import '../../../domain/contracts/ports/abs_i_provider_identity_probe.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
@@ -30,7 +30,7 @@ class SaveUserProviderCredential {
   final AbsIUserProviderCredentialRepository _credentials;
   final IUserRepository _users;
   final AbsIProviderConfigRepository _configs;
-  final IProviderIdentityProbe _probe;
+  final AbsIProviderIdentityProbe _probe;
 
   Future<Either<Failure, UserProviderCredentialSummary>> execute({
     required String userId,

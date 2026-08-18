@@ -4,24 +4,24 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_d
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:fpdart/fpdart.dart';
 
-/// [ARCH: INFRASTRUCTURE_GATEWAY]
-/// ROLE: Consolidated Phorge Conduit read surface for domain [AbsIPhorgeGateway].
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Consolidated Phorge Conduit read surface for domain [AbsIPhorgeFacade].
 /// CONTRACT: Delegates to sources; returns decoded Conduit row DTOs without secondary projections.
 /// CONSTRAINTS: No remote writes.
-class PhorgeGateway implements AbsIPhorgeGateway {
+class PhorgeFacade implements AbsIPhorgeFacade {
   final PhorgeUserSource _userSource;
   final PhorgeTaskSource _taskSource;
   final PhorgeRevisionSource _revisionSource;
   final PhorgeProjectSource _projectSource;
 
-  PhorgeGateway({
+  PhorgeFacade({
     required PhorgeUserSource userSource,
     required PhorgeTaskSource taskSource,
     required PhorgeRevisionSource revisionSource,

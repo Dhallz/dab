@@ -5,13 +5,13 @@ import '../../../domain/core/git_branch_names.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/git_branch_list.dart';
-import '../../../domain/contracts/ports/i_github_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_github_branch_catalog.dart';
 import '../../protocols/protocol_exceptions.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists GitHub branch names for Settings inbox watches. Read-only.
-class GitHubBranchCatalog implements IGitHubBranchCatalog {
+class GitHubBranchCatalog implements AbsIGitHubBranchCatalog {
   GitHubBranchCatalog(this._jsonRest);
 
   final JsonRestProtocol _jsonRest;

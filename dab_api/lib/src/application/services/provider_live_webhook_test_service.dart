@@ -4,13 +4,13 @@ import 'package:crypto/crypto.dart';
 
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
-import '../../domain/contracts/ports/i_live_feed_store.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../infrastructure/core/security/github_webhook_verifier.dart';
 import '../../infrastructure/core/security/linear_webhook_verifier.dart';
 import '../../infrastructure/core/security/phorge_webhook_verifier.dart';
 import '../../infrastructure/core/security/shared_secret_verifier.dart';
 import '../../infrastructure/core/security/slack_request_verifier.dart';
-import '../../infrastructure/sources/discord/discord_gateway_service.dart';
+import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Verifies Live webhook credentials during Admin connectivity tests.
@@ -27,8 +27,8 @@ class ProviderLiveWebhookTestService {
     this._sharedSecretVerifier,
   );
 
-  final ILiveFeedStore _redis;
-  final DiscordGatewayService _discordGateway;
+  final AbsILiveFeedStore _redis;
+  final DiscordGatewayClient _discordGateway;
   final GitHubWebhookVerifier _githubVerifier;
   final SlackRequestVerifier _slackVerifier;
   final LinearWebhookVerifier _linearVerifier;
@@ -103,8 +103,8 @@ class ProviderLiveWebhookTestService {
       'type': 'url_verification',
       'challenge': 'dab-live-webhook-test',
     });
-    final timestamp =
-        (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000).toString();
+    final timestamp = (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000)
+        .toString();
     final signature = _slackSignature(
       body: body,
       timestamp: timestamp,
@@ -293,10 +293,7 @@ class ProviderLiveWebhookTestService {
     return id == 'phabricator' ? 'phorge' : id;
   }
 
-  static String _hexHmacSha256({
-    required String body,
-    required String secret,
-  }) {
+  static String _hexHmacSha256({required String body, required String secret}) {
     return Hmac(
       sha256,
       utf8.encode(secret),

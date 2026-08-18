@@ -5,9 +5,9 @@ import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/linear_team.dart';
 import '../../../domain/entities/user/linear_team_watch_list.dart';
-import '../../../domain/contracts/ports/i_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_linear_team_catalog.dart';
-import '../../../domain/contracts/ports/i_oauth_credential_refresher.dart';
+import '../../../domain/contracts/ports/abs_i_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_linear_team_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
 /// [ARCH: APPLICATION_USECASE]
@@ -20,10 +20,10 @@ class GetLinearTeamWatchList {
     this._oauth,
   );
 
-  final ICredentialResolver _resolver;
-  final ILinearTeamCatalog _catalog;
+  final AbsICredentialResolver _resolver;
+  final AbsILinearTeamCatalog _catalog;
   final AbsIProviderConfigRepository _configs;
-  final IOauthCredentialRefresher _oauth;
+  final AbsIOauthCredentialRefresher _oauth;
 
   Future<Either<Failure, LinearTeamWatchList>> execute(String userId) async {
     var userSettingsResult = await _oauth.ensureFresh(

@@ -1,6 +1,6 @@
 import '../../domain/entities/provider/provider_connectivity_report.dart';
-import '../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../infrastructure/sources/discord/discord_gateway_service.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Evaluates Live-section connectivity using strict external signals.
@@ -9,8 +9,8 @@ import '../../infrastructure/sources/discord/discord_gateway_service.dart';
 class ProviderLiveConnectivityChecker {
   ProviderLiveConnectivityChecker(this._redis, this._discordGateway);
 
-  final ILiveFeedStore _redis;
-  final DiscordGatewayService _discordGateway;
+  final AbsILiveFeedStore _redis;
+  final DiscordGatewayClient _discordGateway;
 
   static const _noEventMessage =
       'No live event received in the last 7 days. Configure Live secrets and click Try to run a webhook test delivery.';
@@ -31,7 +31,8 @@ class ProviderLiveConnectivityChecker {
     }
     return ProviderSectionResult(
       status: ConnectivitySectionStatus.success,
-      message: 'Last live event ${_formatAgo(DateTime.now().toUtc().difference(last))}',
+      message:
+          'Last live event ${_formatAgo(DateTime.now().toUtc().difference(last))}',
     );
   }
 
@@ -39,7 +40,8 @@ class ProviderLiveConnectivityChecker {
     if (!_discordGateway.isRunning || !_discordGateway.isConnected) {
       return const ProviderSectionResult(
         status: ConnectivitySectionStatus.failure,
-        message: 'Discord Gateway is not connected. Verify bot token, guild ID, and channel access.',
+        message:
+            'Discord Gateway is not connected. Verify bot token, guild ID, and channel access.',
       );
     }
     final last = await _redis.getLiveIngestLastSuccess('discord');
@@ -71,7 +73,10 @@ class ProviderLiveConnectivityChecker {
 
 /// Short-circuits live and polling when core authentication fails.
 ProviderSectionResult coreFailurePropagation(String message) {
-  return ProviderSectionResult(status: ConnectivitySectionStatus.failure, message: message);
+  return ProviderSectionResult(
+    status: ConnectivitySectionStatus.failure,
+    message: message,
+  );
 }
 
 ProviderConnectivityReport buildReport({

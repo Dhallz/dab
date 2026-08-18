@@ -4,12 +4,12 @@ import 'package:dab_api/src/application/usecases/user/list_follow_candidates.dar
 import 'package:dab_api/src/domain/entities/user/follow_candidate.dart';
 import 'package:dab_api/src/domain/entities/user/git_branch_list.dart';
 import 'package:dab_api/src/domain/entities/user/git_watch_list.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_follow_candidate_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
-class _MockCatalog extends Mock implements IFollowCandidateCatalog {}
+class _MockCatalog extends Mock implements AbsIFollowCandidateCatalog {}
 
 class _MockGitWatches extends Mock implements GetGitWatchList {}
 

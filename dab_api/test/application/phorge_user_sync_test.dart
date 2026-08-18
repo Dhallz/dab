@@ -3,7 +3,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_dto.dart'
 import 'package:dab_api/src/domain/dtos/phorge/phorge_user/phorge_user_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:fpdart/fpdart.dart' hide Group;
@@ -12,7 +12,7 @@ import 'package:test/test.dart';
 
 class MockUserRepository extends Mock implements IUserRepository {}
 
-class MockAbsIPhorgeGateway extends Mock implements AbsIPhorgeGateway {}
+class MockAbsIPhorgeFacade extends Mock implements AbsIPhorgeFacade {}
 
 class MockProviderConfigRepository extends Mock
     implements AbsIProviderConfigRepository {}
@@ -20,16 +20,16 @@ class MockProviderConfigRepository extends Mock
 void main() {
   late SyncPhorgeUsers syncUseCase;
   late MockUserRepository mockRepo;
-  late MockAbsIPhorgeGateway mockGateway;
+  late MockAbsIPhorgeFacade mockFacade;
   late MockProviderConfigRepository mockConfigRepo;
 
   setUp(() {
     mockRepo = MockUserRepository();
-    mockGateway = MockAbsIPhorgeGateway();
+    mockFacade = MockAbsIPhorgeFacade();
     mockConfigRepo = MockProviderConfigRepository();
     syncUseCase = SyncPhorgeUsers(
       mockRepo,
-      mockGateway,
+      mockFacade,
       mockConfigRepo,
       allowedDomain: 'necs.com',
     );
@@ -68,9 +68,9 @@ void main() {
         ]),
       );
 
-      when(() => mockGateway.fetchDirectoryUsers()).thenAnswer(
-        (_) async => Right(pUsers),
-      );
+      when(
+        () => mockFacade.fetchDirectoryUsers(),
+      ).thenAnswer((_) async => Right(pUsers));
 
       when(() => mockRepo.getUsers()).thenAnswer(
         (_) async => Right([

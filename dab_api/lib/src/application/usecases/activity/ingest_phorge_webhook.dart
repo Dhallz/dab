@@ -4,9 +4,9 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/dtos/phorge/phorge_task/phorge_task_bundle_dto.dart';
 import '../../../domain/dtos/phorge/phorge_task/phorge_task_dto.dart';
 import '../../../domain/entities/user/user.dart';
-import '../../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../../domain/contracts/ports/i_phorge_task_hydrator.dart';
-import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../../domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
+import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -21,7 +21,7 @@ export 'ingestion_result.dart';
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Ingests Phorge Herald webhooks into the DAB live pipeline.
 /// CONTRACT: Herald payloads carry only object/transaction PHIDs, so the task
-/// is re-hydrated via Conduit ([IPhorgeTaskHydrator.fetchBundleForWebhook]) and
+/// is re-hydrated via Conduit ([AbsIPhorgeTaskHydrator.fetchBundleForWebhook]) and
 /// mapped through the same [OnPhorgeTaskBundleDto.toActivities] shaping as
 /// polling. Only transactions authored by users with a known `phorgePhid` are
 /// persisted (no fallback attribution on the live path).
@@ -29,8 +29,8 @@ export 'ingestion_result.dart';
 class IngestPhorgeWebhook {
   final IUserRepository _userRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final IPhorgeTaskHydrator _taskHydrator;
-  final ILiveFeedStore _liveFeed;
+  final AbsIPhorgeTaskHydrator _taskHydrator;
+  final AbsILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
   final AbsIActivityFollowRepository? _follows;
 
@@ -40,7 +40,7 @@ class IngestPhorgeWebhook {
     this._providerConfigRepository,
     this._taskHydrator,
     this._liveFeed,
-    IPresenceBroadcaster presence, {
+    AbsIPresenceBroadcaster presence, {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
     AbsIActivityFollowRepository? follows,

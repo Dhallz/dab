@@ -6,7 +6,7 @@ import '../../../domain/contracts/repositories/abs_i_system_settings_repository.
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Updates global system settings in the database.
 class SaveSystemSettings {
-  final ISystemSettingsRepository _repo;
+  final AbsISystemSettingsRepository _repo;
 
   SaveSystemSettings(this._repo);
 

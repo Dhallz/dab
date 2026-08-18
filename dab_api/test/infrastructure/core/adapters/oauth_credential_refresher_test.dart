@@ -3,8 +3,8 @@ import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/oauth_token_response.dart';
 import 'package:dab_api/src/domain/entities/user/user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/user/user_provider_credential_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_token_client.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_token_client.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/oauth_credential_refresher.dart';
@@ -16,9 +16,9 @@ class _MockCreds extends Mock implements AbsIUserProviderCredentialRepository {}
 
 class _MockConfigs extends Mock implements AbsIProviderConfigRepository {}
 
-class _MockApps extends Mock implements IOauthClientCredentialResolver {}
+class _MockApps extends Mock implements AbsIOauthClientCredentialResolver {}
 
-class _MockTokens extends Mock implements IOauthTokenClient {}
+class _MockTokens extends Mock implements AbsIOauthTokenClient {}
 
 void main() {
   late _MockCreds creds;

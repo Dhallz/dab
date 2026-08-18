@@ -5,7 +5,7 @@ import '../../../domain/core/gitlab_scope.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/user/provider_whoami_result.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/contracts/ports/i_provider_identity_probe.dart';
+import '../../../domain/contracts/ports/abs_i_provider_identity_probe.dart';
 import '../../protocols/conduit/conduit_protocol.dart';
 import '../../protocols/graphql/graphql_protocol.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
@@ -18,7 +18,7 @@ import '../../sources/jira/jira_project_catalog.dart';
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Validates provider credentials via whoami and optional watch-list discovery.
 /// CONSTRAINTS: Read-only. Never logs tokens.
-class ProviderIdentityProbe implements IProviderIdentityProbe {
+class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   ProviderIdentityProbe({
     required JsonRestProtocol jsonRest,
     required GraphqlProtocol graphql,

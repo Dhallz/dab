@@ -6,24 +6,24 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
-import '../../../domain/contracts/ports/i_discord_live_ingestor.dart';
+import '../../../domain/contracts/ports/abs_i_discord_live_ingestor.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 
-/// [ARCH: INFRASTRUCTURE_SERVICE]
+/// [ARCH: INFRASTRUCTURE]
 /// ROLE: Outbound WebSocket client for the Discord Gateway (v10).
 /// CONTRACT: Discord has no outbound webhooks for message events, so this
-/// service maintains a persistent Gateway session: IDENTIFY with the bot
+/// client maintains a persistent Gateway session: IDENTIFY with the bot
 /// token and `GUILD_MESSAGES` + `MESSAGE_CONTENT` intents, heartbeat on the
 /// server-provided interval, track sequence numbers, RESUME after drops with
 /// exponential backoff. `MESSAGE_CREATE` dispatches are handed to
-/// [IDiscordLiveIngestor] (same persist/fan-out pipeline as webhooks).
+/// [AbsIDiscordLiveIngestor] (same persist/fan-out pipeline as webhooks).
 /// CONSTRAINTS: Read-only toward Discord — the client never sends anything
 /// besides IDENTIFY/RESUME/HEARTBEAT control frames.
-class DiscordGatewayService {
+class DiscordGatewayClient {
   final AbsIProviderConfigRepository _configRepository;
-  final IDiscordLiveIngestor _liveIngestor;
+  final AbsIDiscordLiveIngestor _liveIngestor;
 
-  DiscordGatewayService(this._configRepository, this._liveIngestor);
+  DiscordGatewayClient(this._configRepository, this._liveIngestor);
 
   static const _gatewayUrl = 'wss://gateway.discord.gg/?v=10&encoding=json';
 
@@ -51,8 +51,9 @@ class DiscordGatewayService {
   /// a bot token; no-op otherwise.
   Future<void> start() async {
     final config = await _activeConfig();
-    final token =
-        config == null ? '' : extractProviderToken('discord', config.settings);
+    final token = config == null
+        ? ''
+        : extractProviderToken('discord', config.settings);
     if (token.isEmpty) {
       print('[DISCORD_GATEWAY] not started (provider inactive or no token)');
       return;
@@ -164,10 +165,7 @@ class DiscordGatewayService {
         }
         _restartConnection(token);
       case 0: // DISPATCH
-        _onDispatch(
-          (decoded['t'] ?? '').toString(),
-          decoded['d'],
-        );
+        _onDispatch((decoded['t'] ?? '').toString(), decoded['d']);
     }
   }
 

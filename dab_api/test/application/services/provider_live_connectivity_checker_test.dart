@@ -1,13 +1,13 @@
 import 'package:dab_api/src/application/services/provider_live_connectivity_checker.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_connectivity_report.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
-import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_client.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 class _MockRedisService extends Mock implements RedisService {}
 
-class _MockDiscordGateway extends Mock implements DiscordGatewayService {}
+class _MockDiscordGateway extends Mock implements DiscordGatewayClient {}
 
 void main() {
   late _MockRedisService redis;
@@ -21,7 +21,9 @@ void main() {
   });
 
   test('returns failure when no Redis ingest timestamp exists', () async {
-    when(() => redis.getLiveIngestLastSuccess('github')).thenAnswer((_) async => null);
+    when(
+      () => redis.getLiveIngestLastSuccess('github'),
+    ).thenAnswer((_) async => null);
 
     final result = await checker.check('github');
 
@@ -30,9 +32,9 @@ void main() {
   });
 
   test('returns success when recent ingest exists', () async {
-    when(() => redis.getLiveIngestLastSuccess('slack')).thenAnswer(
-      (_) async => DateTime.utc(2026, 7, 3, 10, 0),
-    );
+    when(
+      () => redis.getLiveIngestLastSuccess('slack'),
+    ).thenAnswer((_) async => DateTime.utc(2026, 7, 3, 10, 0));
 
     final result = await checker.check('slack');
 
@@ -49,7 +51,9 @@ void main() {
     expect(disconnected.message, contains('Gateway'));
 
     when(() => discord.isConnected).thenReturn(true);
-    when(() => redis.getLiveIngestLastSuccess('discord')).thenAnswer((_) async => null);
+    when(
+      () => redis.getLiveIngestLastSuccess('discord'),
+    ).thenAnswer((_) async => null);
 
     final noIngest = await checker.check('discord');
     expect(noIngest.status, ConnectivitySectionStatus.failure);

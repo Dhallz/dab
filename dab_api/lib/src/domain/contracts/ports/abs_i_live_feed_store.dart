@@ -5,7 +5,7 @@ import '../../entities/activity/activity.dart';
 /// CONTRACT: Application use cases depend on this port, not the Redis
 /// implementation. Presentation may still use the concrete store for
 /// session/sync helpers.
-abstract interface class ILiveFeedStore {
+abstract interface class AbsILiveFeedStore {
   /// Increments the global Vegas version clock.
   Future<int> incrementVersion();
 

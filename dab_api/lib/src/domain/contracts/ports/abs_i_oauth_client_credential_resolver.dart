@@ -9,7 +9,7 @@ class OauthAppCredentials {
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Resolves OAuth client id/secret for a provider.
-abstract interface class IOauthClientCredentialResolver {
+abstract interface class AbsIOauthClientCredentialResolver {
   OauthAppCredentials? resolve({
     required String providerId,
     required Map<String, dynamic> orgSettings,

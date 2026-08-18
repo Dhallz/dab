@@ -25,7 +25,7 @@ class CreateUserByAdmin {
   final AbsIAuthRepository _repo;
   final IUserRepository _userRepository;
   final PhorgeUserSource _phorgeUserSource;
-  final ISystemSettingsRepository _settingsRepo;
+  final AbsISystemSettingsRepository _settingsRepo;
   final _uuid = const Uuid();
 
   /// [config] is injectable for deterministic tests; defaults to the

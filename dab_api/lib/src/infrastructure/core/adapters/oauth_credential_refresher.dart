@@ -5,16 +5,16 @@ import '../../../domain/core/oauth_providers.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/user_provider_credential.dart';
-import '../../../domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import '../../../domain/contracts/ports/i_oauth_credential_refresher.dart';
-import '../../../domain/contracts/ports/i_oauth_token_client.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
+import '../../../domain/contracts/ports/abs_i_oauth_token_client.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Refreshes expired OAuth access tokens and writes the new secrets back.
 /// CONSTRAINTS: Never logs tokens. Skips non-OAuth credentials.
-class OauthCredentialRefresher implements IOauthCredentialRefresher {
+class OauthCredentialRefresher implements AbsIOauthCredentialRefresher {
   OauthCredentialRefresher(
     this._credentials,
     this._configs,
@@ -25,8 +25,8 @@ class OauthCredentialRefresher implements IOauthCredentialRefresher {
 
   final AbsIUserProviderCredentialRepository _credentials;
   final AbsIProviderConfigRepository _configs;
-  final IOauthClientCredentialResolver _apps;
-  final IOauthTokenClient _tokens;
+  final AbsIOauthClientCredentialResolver _apps;
+  final AbsIOauthTokenClient _tokens;
   final DateTime Function() _now;
 
   @override

@@ -13,7 +13,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/core/config/config.dart';
@@ -168,7 +168,7 @@ void main() async {
   }
 }
 
-class _EmptyCredentialResolver implements ICredentialResolver {
+class _EmptyCredentialResolver implements AbsICredentialResolver {
   @override
   Future<Map<String, dynamic>?> getUserSettings({
     required String userId,

@@ -2,7 +2,7 @@ import '../../entities/user/oauth_state_payload.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: One-time OAuth state (PKCE verifier + user binding) with TTL.
-abstract interface class IOauthStateStore {
+abstract interface class AbsIOauthStateStore {
   Future<void> put(
     String stateId,
     OauthStatePayload payload, {

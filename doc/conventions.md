@@ -34,6 +34,8 @@
 | Failure | `AppFailure` (sealed) | `failures.dart` | `lib/domain/core/` |
 | Repository Interface | `IAuthRepository` | `abs_i_auth_repository.dart` | `lib/domain/repositories/` |
 | Repository Base (abstract) | `IRepository` | `abs_i_repository.dart` | `lib/domain/repositories/core/` |
+| Domain port (API) | `AbsIActivitySource` | `abs_i_activity_source.dart` | `dab_api/.../contracts/ports/` |
+| Domain repository (API) | `AbsIAuthRepository` | `abs_i_auth_repository.dart` | `dab_api/.../contracts/repositories/` |
 | Repository Impl | `AuthRepository` | `auth_repository.dart` | `lib/infrastructure/repositories/` |
 | Use Case | `Login` | `login.dart` | `lib/domain/usecases/[feature]/` |
 | Use Case Container | `AuthUseCases` | `auth_usecases.dart` | `lib/domain/containers/` |
@@ -43,6 +45,21 @@
 | Layout | `AuthViewMobile` | `auth_view_mobile.dart` | `lib/presentation/views/auth/layouts/` |
 | Controller (API) | `AuthController` | `auth_controller.dart` | `lib/src/presentation/controllers/` |
 | Service Locator | `ServiceLocator` | `service_locator.dart` | `lib/services/` (app) / root `lib/src/` (api) |
+
+API `abstract interface` contracts under `domain/contracts/` use class prefix `AbsI` and file prefix `abs_i_` (ports and repositories). `IUserRepository` is the remaining `abstract class` exception.
+
+### API provider I/O (`dab_api` `infrastructure/sources/`)
+
+Do **not** use `*Service` under `sources/` — that suffix is for application orchestration and infra core (`RedisService`, `PresenceService`).
+
+| Role | Class / file | Domain port |
+|---|---|---|
+| Activity or directory fetch | `{Provider}{Resource}Source` / `*_source.dart` | `AbsIActivitySource` / `AbsIDiscoverySource` |
+| Read-only pick list | `{Provider}{Resource}Catalog` / `*_catalog.dart` | `AbsI*Catalog` |
+| Discord Gateway WebSocket | `DiscordGatewayClient` / `discord_gateway_client.dart` | talks to `AbsIDiscordLiveIngestor` |
+| Phorge multi-source facade | `PhorgeFacade` / `phorge_facade.dart` | `AbsIPhorgeFacade` |
+
+Keep “Gateway” only when it is Discord’s product name. A compose-sources wrapper is a **facade**, not a gateway.
 
 ### Route Names
 

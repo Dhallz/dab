@@ -8,7 +8,7 @@ import '../../../domain/contracts/repositories/abs_i_system_settings_repository.
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Fetches global system settings from the database.
 class GetSystemSettings {
-  final ISystemSettingsRepository _repo;
+  final AbsISystemSettingsRepository _repo;
 
   GetSystemSettings(this._repo);
 

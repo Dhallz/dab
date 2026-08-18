@@ -2,10 +2,10 @@ import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
 import 'package:dab_api/src/infrastructure/protocols/slack/slack_web_protocol.dart';
 import 'package:fpdart/fpdart.dart';
@@ -17,7 +17,7 @@ import '../../../domain/core/failures/failure.dart';
 /// CONTRACT: Fetches technical [SlackMessageDto] from the Slack Web API.
 /// CONSTRAINTS: Must be READ-ONLY.
 class SlackMessageSource
-    implements IActivitySource<SlackMessageDto>, IDiscoverySource {
+    implements AbsIActivitySource<SlackMessageDto>, AbsIDiscoverySource {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final SlackWebProtocol _slack;

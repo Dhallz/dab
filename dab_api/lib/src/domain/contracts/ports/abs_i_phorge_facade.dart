@@ -7,11 +7,13 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// [ARCH: DOMAIN_PORT]
-/// ROLE: Read-only Phorge Conduit contract — directory, sprint projects, tasks, revisions.
-/// CONTRACT: Returned rows match Conduit DTO decoding (`user.search`, `project.search`, …).
-/// Uses may compose multiple calls internally (e.g. sprint tags) but expose API-shaped DTOs only.
+/// ROLE: Read-only Phorge Conduit facade — directory, sprint projects, tasks,
+/// revisions. Delegates to per-resource sources; not a poll [AbsIActivitySource].
+/// CONTRACT: Returned rows match Conduit DTO decoding (`user.search`,
+/// `project.search`, …). Callers may compose multiple calls internally
+/// (e.g. sprint tags) but expose API-shaped DTOs only.
 /// CONSTRAINTS: No remote writes; errors return as [Either] left values.
-abstract interface class AbsIPhorgeGateway {
+abstract interface class AbsIPhorgeFacade {
   /// Active non-disabled rows from Conduit [`user.search`].
   Future<Either<Failure, List<PhorgeUserDto>>> fetchDirectoryUsers();
 

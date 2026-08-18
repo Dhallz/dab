@@ -10,8 +10,8 @@ import '../../../domain/dtos/slack/slack_message_dto.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -30,7 +30,7 @@ export 'ingestion_result.dart';
 class IngestSlackEvent {
   final IUserRepository _userRepository;
   final AbsIProviderConfigRepository _providerConfigRepository;
-  final ILiveFeedStore _liveFeed;
+  final AbsILiveFeedStore _liveFeed;
   final http.Client _httpClient;
   final LiveIngestPersister _persister;
   final AbsIActivityFollowRepository? _follows;
@@ -40,7 +40,7 @@ class IngestSlackEvent {
     AbsIActivityRepository activityRepository,
     this._providerConfigRepository,
     this._liveFeed,
-    IPresenceBroadcaster presence, {
+    AbsIPresenceBroadcaster presence, {
     http.Client? httpClient,
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,

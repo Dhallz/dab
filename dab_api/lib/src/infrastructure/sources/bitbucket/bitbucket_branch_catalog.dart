@@ -5,14 +5,14 @@ import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/git_branch_names.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/git_branch_list.dart';
-import '../../../domain/contracts/ports/i_bitbucket_branch_catalog.dart';
+import '../../../domain/contracts/ports/abs_i_bitbucket_branch_catalog.dart';
 import '../../protocols/protocol_exceptions.dart';
 import '../../protocols/rest/json_rest_protocol.dart';
 import 'bitbucket_commit_source.dart';
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists Bitbucket branch names for Settings inbox watches. Read-only.
-class BitbucketBranchCatalog implements IBitbucketBranchCatalog {
+class BitbucketBranchCatalog implements AbsIBitbucketBranchCatalog {
   BitbucketBranchCatalog(this._jsonRest);
 
   final JsonRestProtocol _jsonRest;

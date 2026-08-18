@@ -7,8 +7,8 @@ import '../postgres/app_database.dart';
 
 /// [ARCH: INFRASTRUCTURE_REPOSITORY]
 /// ROLE: Implementation of global system settings storage in the API.
-/// CONTRACT: Implements [ISystemSettingsRepository] using Drift [AppDatabase].
-class SystemSettingsRepository implements ISystemSettingsRepository {
+/// CONTRACT: Implements [AbsISystemSettingsRepository] using Drift [AppDatabase].
+class SystemSettingsRepository implements AbsISystemSettingsRepository {
   final AppDatabase _db;
 
   SystemSettingsRepository(this._db);

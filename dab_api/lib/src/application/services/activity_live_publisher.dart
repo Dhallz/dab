@@ -1,14 +1,14 @@
 import '../../domain/entities/activity/activity.dart';
-import '../../domain/contracts/ports/i_live_feed_store.dart';
-import '../../domain/contracts/ports/i_presence_broadcaster.dart';
+import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
+import '../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Persists live-feed fan-out and delivers WebSocket events to the recipient.
 class ActivityLivePublisher {
   ActivityLivePublisher(this._redis, this._presence);
 
-  final ILiveFeedStore _redis;
-  final IPresenceBroadcaster _presence;
+  final AbsILiveFeedStore _redis;
+  final AbsIPresenceBroadcaster _presence;
 
   Future<void> publish(Activity activity) async {
     await _redis.incrementVersion();
@@ -23,8 +23,8 @@ class ActivityLivePublisher {
 
   /// Production ingest passes [publisher]; unit tests omit it and keep Redis/WS stubs.
   static Future<void> emit({
-    required ILiveFeedStore redis,
-    required IPresenceBroadcaster presence,
+    required AbsILiveFeedStore redis,
+    required AbsIPresenceBroadcaster presence,
     required Activity activity,
     ActivityLivePublisher? publisher,
   }) async {

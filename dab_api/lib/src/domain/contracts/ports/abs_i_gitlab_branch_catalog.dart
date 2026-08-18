@@ -6,7 +6,7 @@ import '../../entities/user/git_branch_list.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Lists GitLab branch names for Settings inbox watches. Read-only.
-abstract interface class IGitLabBranchCatalog {
+abstract interface class AbsIGitLabBranchCatalog {
   Future<Either<Failure, GitBranchList>> listBranches({
     required Map<String, dynamic> settings,
     required List<String> repos,

@@ -79,26 +79,26 @@ import 'package:dab_api/src/application/usecases/user/start_provider_oauth.dart'
 import 'package:dab_api/src/application/usecases/user/sync_phorge_users.dart';
 import 'package:dab_api/src/application/usecases/user/test_user_provider_credential.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_gateway.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_access_token_issuer.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_discord_live_ingestor.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_live_feed_store.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_phorge_task_hydrator.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_presence_broadcaster.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_provider_identity_probe.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_access_token_issuer.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discord_live_ingestor.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_live_feed_store.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_presence_broadcaster.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_provider_identity_probe.dart';
 import 'package:dab_api/src/domain/core/phorge_scope.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_bitbucket_branch_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_github_branch_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_gitlab_branch_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_jira_project_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_linear_team_catalog.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_client_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_credential_refresher.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_pkce.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_state_store.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_oauth_token_client.dart';
-import 'package:dab_api/src/domain/contracts/ports/i_webhook_request_authenticator.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_bitbucket_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_github_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_gitlab_branch_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_jira_project_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_linear_team_catalog.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_pkce.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_state_store.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_token_client.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 // domain
@@ -154,7 +154,7 @@ import 'package:dab_api/src/infrastructure/core/adapters/provider_identity_probe
 import 'package:dab_api/src/infrastructure/core/adapters/webhook_request_authenticator.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
-import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_service.dart';
+import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_client.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
@@ -167,7 +167,7 @@ import 'package:dab_api/src/infrastructure/sources/linear/linear_follow_candidat
 import 'package:dab_api/src/infrastructure/sources/linear/linear_issue_source.dart';
 import 'package:dab_api/src/infrastructure/sources/linear/linear_team_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_follow_candidate_catalog.dart';
-import 'package:dab_api/src/infrastructure/sources/phorge/phorge_gateway.dart';
+import 'package:dab_api/src/infrastructure/sources/phorge/phorge_facade.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_project_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
@@ -207,7 +207,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GraphqlProtocol>(graphqlProtocol);
   final jwtProvider = JwtProvider();
   sl.registerSingleton<JwtProvider>(jwtProvider);
-  sl.registerSingleton<IAccessTokenIssuer>(jwtProvider);
+  sl.registerSingleton<AbsIAccessTokenIssuer>(jwtProvider);
   sl.registerSingleton<http.Client>(http.Client());
   sl.registerSingleton<SlackRequestVerifier>(SlackRequestVerifier());
   sl.registerSingleton<GitHubWebhookVerifier>(GitHubWebhookVerifier());
@@ -246,10 +246,10 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<AbsIActivityFollowRepository>(
     ActivityFollowRepository(db),
   );
-  sl.registerSingleton<ICredentialResolver>(
+  sl.registerSingleton<AbsICredentialResolver>(
     CredentialResolver(sl<AbsIUserProviderCredentialRepository>()),
   );
-  sl.registerSingleton<IProviderIdentityProbe>(
+  sl.registerSingleton<AbsIProviderIdentityProbe>(
     ProviderIdentityProbe(
       jsonRest: jsonRestProtocol,
       graphql: graphqlProtocol,
@@ -261,23 +261,23 @@ Future<void> serviceLocator() async {
   // Infrastructure Sources (Raw I/O)
   final phorgeTaskSource = PhorgeTaskSource(
     conduitProtocol,
-    credentials: sl<ICredentialResolver>(),
+    credentials: sl<AbsICredentialResolver>(),
     configs: providerConfigRepository,
   );
   final phorgeRevisionSource = PhorgeRevisionSource(
     conduitProtocol,
-    credentials: sl<ICredentialResolver>(),
+    credentials: sl<AbsICredentialResolver>(),
     configs: providerConfigRepository,
   );
   final phorgeUserSource = PhorgeUserSource(conduitProtocol);
   final phorgeProjectSource = PhorgeProjectSource(conduitProtocol);
-  final phorgeGateway = PhorgeGateway(
+  final phorgeFacade = PhorgeFacade(
     userSource: phorgeUserSource,
     taskSource: phorgeTaskSource,
     revisionSource: phorgeRevisionSource,
     projectSource: phorgeProjectSource,
   );
-  sl.registerSingleton<AbsIPhorgeGateway>(phorgeGateway);
+  sl.registerSingleton<AbsIPhorgeFacade>(phorgeFacade);
 
   // New Scaffolds (Slack, Jira, Linear, Discord)
   final slackSource = SlackMessageSource(
@@ -289,13 +289,13 @@ Future<void> serviceLocator() async {
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
-    sl<ICredentialResolver>(),
+    sl<AbsICredentialResolver>(),
   );
   final linearSource = LinearIssueSource(
     providerConfigRepository,
     userRepository,
     graphqlProtocol,
-    sl<ICredentialResolver>(),
+    sl<AbsICredentialResolver>(),
   );
   final discordSource = DiscordMessageSource(
     providerConfigRepository,
@@ -306,23 +306,23 @@ Future<void> serviceLocator() async {
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
-    sl<ICredentialResolver>(),
+    sl<AbsICredentialResolver>(),
   );
   final gitlabSource = GitLabCommitSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
-    sl<ICredentialResolver>(),
+    sl<AbsICredentialResolver>(),
   );
   final bitbucketSource = BitbucketCommitSource(
     providerConfigRepository,
     userRepository,
     jsonRestProtocol,
-    sl<ICredentialResolver>(),
+    sl<AbsICredentialResolver>(),
   );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
-  sl.registerSingleton<IPhorgeTaskHydrator>(phorgeTaskSource);
+  sl.registerSingleton<AbsIPhorgeTaskHydrator>(phorgeTaskSource);
   sl.registerSingleton<SlackMessageSource>(slackSource);
   sl.registerSingleton<JiraIssueSource>(jiraSource);
   sl.registerSingleton<LinearIssueSource>(linearSource);
@@ -356,15 +356,15 @@ Future<void> serviceLocator() async {
     PostgresHealthRepository(sl<PostgresClient>()),
   );
   sl.registerSingleton<AbsIProviderMetadataRepository>(
-    ProviderMetadataRepository(phorgeGateway: phorgeGateway),
+    ProviderMetadataRepository(phorgeFacade: phorgeFacade),
   );
   sl.registerSingleton<AbsIProviderConfigRepository>(providerConfigRepository);
-  sl.registerSingleton<ISystemSettingsRepository>(SystemSettingsRepository(db));
+  sl.registerSingleton<AbsISystemSettingsRepository>(SystemSettingsRepository(db));
   sl.registerSingleton<RedisService>(
-    RedisService(redisClient, sl<ISystemSettingsRepository>()),
+    RedisService(redisClient, sl<AbsISystemSettingsRepository>()),
   );
-  sl.registerSingleton<ILiveFeedStore>(sl<RedisService>());
-  sl.registerSingleton<IWebhookRequestAuthenticator>(
+  sl.registerSingleton<AbsILiveFeedStore>(sl<RedisService>());
+  sl.registerSingleton<AbsIWebhookRequestAuthenticator>(
     WebhookRequestAuthenticator(
       sl<AbsIProviderConfigRepository>(),
       sl<SlackRequestVerifier>(),
@@ -374,20 +374,20 @@ Future<void> serviceLocator() async {
       sl<SharedSecretVerifier>(),
     ),
   );
-  sl.registerSingleton<IOauthPkce>(OauthPkce());
-  sl.registerSingleton<IOauthStateStore>(
+  sl.registerSingleton<AbsIOauthPkce>(OauthPkce());
+  sl.registerSingleton<AbsIOauthStateStore>(
     RedisOauthStateStore(sl<RedisService>()),
   );
-  sl.registerSingleton<IOauthTokenClient>(HttpOauthTokenClient());
-  sl.registerSingleton<IOauthClientCredentialResolver>(
+  sl.registerSingleton<AbsIOauthTokenClient>(HttpOauthTokenClient());
+  sl.registerSingleton<AbsIOauthClientCredentialResolver>(
     OauthClientCredentialResolver(config),
   );
-  sl.registerSingleton<IOauthCredentialRefresher>(
+  sl.registerSingleton<AbsIOauthCredentialRefresher>(
     OauthCredentialRefresher(
       sl<AbsIUserProviderCredentialRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IOauthClientCredentialResolver>(),
-      sl<IOauthTokenClient>(),
+      sl<AbsIOauthClientCredentialResolver>(),
+      sl<AbsIOauthTokenClient>(),
     ),
   );
 
@@ -397,18 +397,18 @@ Future<void> serviceLocator() async {
   // ROLE: Cross-cutting system utilities.
   // -----------------------------------------------------
   sl.registerSingleton<PresenceService>(PresenceService());
-  sl.registerSingleton<IPresenceBroadcaster>(sl<PresenceService>());
+  sl.registerSingleton<AbsIPresenceBroadcaster>(sl<PresenceService>());
   sl.registerSingleton<LoggingService>(LoggingService());
   sl.registerSingleton<PushNotificationService>(PushNotificationService());
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
   sl.registerSingleton<ActivityLivePublisher>(
-    ActivityLivePublisher(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
+    ActivityLivePublisher(sl<AbsILiveFeedStore>(), sl<AbsIPresenceBroadcaster>()),
   );
   sl.registerSingleton<LiveIngestPersister>(
     LiveIngestPersister(
       activities: sl<AbsIActivityRepository>(),
-      liveFeed: sl<ILiveFeedStore>(),
-      presence: sl<IPresenceBroadcaster>(),
+      liveFeed: sl<AbsILiveFeedStore>(),
+      presence: sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
@@ -458,28 +458,28 @@ Future<void> serviceLocator() async {
       sl<AbsIAuthRepository>(),
       sl<IUserRepository>(),
       sl<PhorgeUserSource>(),
-      sl<ISystemSettingsRepository>(),
+      sl<AbsISystemSettingsRepository>(),
     ),
   );
   sl.registerSingleton<AuthenticateUser>(
     AuthenticateUser(
       sl<AbsIAuthRepository>(),
       sl<LoginUser>(),
-      sl<IAccessTokenIssuer>(),
+      sl<AbsIAccessTokenIssuer>(),
     ),
   );
   sl.registerSingleton<RegisterNewUser>(
     RegisterNewUser(
       sl<AbsIAuthRepository>(),
       sl<RegisterUser>(),
-      sl<IAccessTokenIssuer>(),
+      sl<AbsIAccessTokenIssuer>(),
     ),
   );
   sl.registerSingleton<LinkUserIdentity>(
     LinkUserIdentity(sl<IUserRepository>()),
   );
   sl.registerSingleton<RefreshToken>(
-    RefreshToken(sl<AbsIAuthRepository>(), sl<IAccessTokenIssuer>()),
+    RefreshToken(sl<AbsIAuthRepository>(), sl<AbsIAccessTokenIssuer>()),
   );
   sl.registerSingleton<LogoutUser>(LogoutUser(sl<AbsIAuthRepository>()));
   sl.registerSingleton<GetAllIdentities>(
@@ -507,7 +507,7 @@ Future<void> serviceLocator() async {
     GetRecentActivities(sl<AbsIActivityRepository>()),
   );
   sl.registerSingleton<GetLiveActivities>(
-    GetLiveActivities(sl<ILiveFeedStore>()),
+    GetLiveActivities(sl<AbsILiveFeedStore>()),
   );
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
@@ -517,11 +517,11 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
-      credentials: sl<ICredentialResolver>(),
+      credentials: sl<AbsICredentialResolver>(),
       follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
@@ -530,8 +530,8 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       httpClient: sl<http.Client>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
@@ -543,9 +543,9 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IPhorgeTaskHydrator>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsIPhorgeTaskHydrator>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
@@ -556,8 +556,8 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
@@ -568,8 +568,8 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
@@ -580,11 +580,11 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
-      credentials: sl<ICredentialResolver>(),
+      credentials: sl<AbsICredentialResolver>(),
       follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
@@ -593,11 +593,11 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
-      credentials: sl<ICredentialResolver>(),
+      credentials: sl<AbsICredentialResolver>(),
       follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
@@ -606,39 +606,39 @@ Future<void> serviceLocator() async {
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ILiveFeedStore>(),
-      sl<IPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
     ),
   );
-  sl.registerSingleton<IDiscordLiveIngestor>(sl<IngestDiscordMessage>());
-  sl.registerSingleton<DiscordGatewayService>(
-    DiscordGatewayService(
+  sl.registerSingleton<AbsIDiscordLiveIngestor>(sl<IngestDiscordMessage>());
+  sl.registerSingleton<DiscordGatewayClient>(
+    DiscordGatewayClient(
       sl<AbsIProviderConfigRepository>(),
-      sl<IDiscordLiveIngestor>(),
+      sl<AbsIDiscordLiveIngestor>(),
     ),
   );
   sl.registerSingleton<LogActivity>(
     LogActivity(
       sl<AbsIActivityRepository>(),
       sl<AbsIAuthRepository>(),
-      sl<IPresenceBroadcaster>(),
-      sl<ILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
+      sl<AbsILiveFeedStore>(),
       livePublisher: sl<ActivityLivePublisher>(),
     ),
   );
   sl.registerSingleton<ArchiveLiveActivity>(
-    ArchiveLiveActivity(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
+    ArchiveLiveActivity(sl<AbsILiveFeedStore>(), sl<AbsIPresenceBroadcaster>()),
   );
   sl.registerSingleton<UnarchiveLiveActivity>(
-    UnarchiveLiveActivity(sl<ILiveFeedStore>(), sl<IPresenceBroadcaster>()),
+    UnarchiveLiveActivity(sl<AbsILiveFeedStore>(), sl<AbsIPresenceBroadcaster>()),
   );
   sl.registerSingleton<ActivityPurgeScheduler>(
     ActivityPurgeScheduler(
-      sl<ILiveFeedStore>(),
-      sl<ISystemSettingsRepository>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsISystemSettingsRepository>(),
     ),
   );
   sl.registerSingleton<ActivityLivePollScheduler>(
@@ -646,7 +646,7 @@ Future<void> serviceLocator() async {
       sl<UnifiedActivityFetcher>(),
       sl<IUserRepository>(),
       sl<AbsIActivityRepository>(),
-      sl<ILiveFeedStore>(),
+      sl<AbsILiveFeedStore>(),
       sl<ActivityLivePublisher>(),
     ),
   );
@@ -655,7 +655,7 @@ Future<void> serviceLocator() async {
   sl.registerLazySingleton<SyncPhorgeUsers>(
     () => SyncPhorgeUsers(
       sl<IUserRepository>(),
-      sl<AbsIPhorgeGateway>(),
+      sl<AbsIPhorgeFacade>(),
       sl<AbsIProviderConfigRepository>(),
       allowedDomain: sl<Config>().allowedDomain,
     ),
@@ -675,7 +675,7 @@ Future<void> serviceLocator() async {
       sl<AbsIUserProviderCredentialRepository>(),
       sl<IUserRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IProviderIdentityProbe>(),
+      sl<AbsIProviderIdentityProbe>(),
     ),
   );
   sl.registerSingleton<DeleteUserProviderCredential>(
@@ -688,54 +688,54 @@ Future<void> serviceLocator() async {
     TestUserProviderCredential(
       sl<AbsIUserProviderCredentialRepository>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IProviderIdentityProbe>(),
+      sl<AbsIProviderIdentityProbe>(),
     ),
   );
   sl.registerSingleton<StartProviderOauth>(
     StartProviderOauth(
       sl<AbsIProviderConfigRepository>(),
-      sl<ISystemSettingsRepository>(),
-      sl<IOauthStateStore>(),
-      sl<IOauthClientCredentialResolver>(),
-      sl<IOauthPkce>(),
+      sl<AbsISystemSettingsRepository>(),
+      sl<AbsIOauthStateStore>(),
+      sl<AbsIOauthClientCredentialResolver>(),
+      sl<AbsIOauthPkce>(),
     ),
   );
   sl.registerSingleton<CompleteProviderOauth>(
     CompleteProviderOauth(
-      sl<IOauthStateStore>(),
-      sl<IOauthTokenClient>(),
-      sl<IOauthClientCredentialResolver>(),
+      sl<AbsIOauthStateStore>(),
+      sl<AbsIOauthTokenClient>(),
+      sl<AbsIOauthClientCredentialResolver>(),
       sl<AbsIProviderConfigRepository>(),
       sl<SaveUserProviderCredential>(),
     ),
   );
-  sl.registerSingleton<IJiraProjectCatalog>(
+  sl.registerSingleton<AbsIJiraProjectCatalog>(
     JiraProjectCatalog(jsonRestProtocol),
   );
-  sl.registerSingleton<IGitHubBranchCatalog>(
+  sl.registerSingleton<AbsIGitHubBranchCatalog>(
     GitHubBranchCatalog(jsonRestProtocol),
   );
-  sl.registerSingleton<IGitLabBranchCatalog>(
+  sl.registerSingleton<AbsIGitLabBranchCatalog>(
     GitLabBranchCatalog(jsonRestProtocol),
   );
-  sl.registerSingleton<IBitbucketBranchCatalog>(
+  sl.registerSingleton<AbsIBitbucketBranchCatalog>(
     BitbucketBranchCatalog(jsonRestProtocol),
   );
   sl.registerSingleton<GetGitWatchList>(
     GetGitWatchList(
-      sl<ICredentialResolver>(),
+      sl<AbsICredentialResolver>(),
       sl<AbsIProviderConfigRepository>(),
     ),
   );
   sl.registerSingleton<GetGitBranchList>(
     GetGitBranchList(
       sl<GetGitWatchList>(),
-      sl<ICredentialResolver>(),
-      sl<IGitHubBranchCatalog>(),
-      sl<IGitLabBranchCatalog>(),
-      sl<IBitbucketBranchCatalog>(),
+      sl<AbsICredentialResolver>(),
+      sl<AbsIGitHubBranchCatalog>(),
+      sl<AbsIGitLabBranchCatalog>(),
+      sl<AbsIBitbucketBranchCatalog>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IOauthCredentialRefresher>(),
+      sl<AbsIOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveGitWatchList>(
@@ -746,26 +746,26 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<GetJiraProjectWatchList>(
     GetJiraProjectWatchList(
-      sl<ICredentialResolver>(),
-      sl<IJiraProjectCatalog>(),
+      sl<AbsICredentialResolver>(),
+      sl<AbsIJiraProjectCatalog>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IOauthCredentialRefresher>(),
+      sl<AbsIOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveJiraProjectWatchList>(
     SaveJiraProjectWatchList(
       sl<GetJiraProjectWatchList>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<ICredentialResolver>(),
+      sl<AbsICredentialResolver>(),
     ),
   );
-  sl.registerSingleton<ILinearTeamCatalog>(LinearTeamCatalog(graphqlProtocol));
+  sl.registerSingleton<AbsILinearTeamCatalog>(LinearTeamCatalog(graphqlProtocol));
   sl.registerSingleton<GetLinearTeamWatchList>(
     GetLinearTeamWatchList(
-      sl<ICredentialResolver>(),
-      sl<ILinearTeamCatalog>(),
+      sl<AbsICredentialResolver>(),
+      sl<AbsILinearTeamCatalog>(),
       sl<AbsIProviderConfigRepository>(),
-      sl<IOauthCredentialRefresher>(),
+      sl<AbsIOauthCredentialRefresher>(),
     ),
   );
   sl.registerSingleton<SaveLinearTeamWatchList>(
@@ -779,18 +779,18 @@ Future<void> serviceLocator() async {
       [
         JiraFollowCandidateCatalog(
           sl<AbsIProviderConfigRepository>(),
-          sl<ICredentialResolver>(),
+          sl<AbsICredentialResolver>(),
           jsonRestProtocol,
         ),
         LinearFollowCandidateCatalog(
           sl<AbsIProviderConfigRepository>(),
-          sl<ICredentialResolver>(),
+          sl<AbsICredentialResolver>(),
           sl<GraphqlProtocol>(),
           sl<IUserRepository>(),
         ),
         PhorgeFollowCandidateCatalog(
           sl<AbsIProviderConfigRepository>(),
-          sl<ICredentialResolver>(),
+          sl<AbsICredentialResolver>(),
           sl<IUserRepository>(),
           sl<ConduitProtocol>(),
         ),
@@ -840,21 +840,21 @@ Future<void> serviceLocator() async {
     ),
   );
   sl.registerSingleton<GetSystemSettings>(
-    GetSystemSettings(sl<ISystemSettingsRepository>()),
+    GetSystemSettings(sl<AbsISystemSettingsRepository>()),
   );
   sl.registerSingleton<SaveSystemSettings>(
-    SaveSystemSettings(sl<ISystemSettingsRepository>()),
+    SaveSystemSettings(sl<AbsISystemSettingsRepository>()),
   );
   sl.registerSingleton<ProviderLiveConnectivityChecker>(
     ProviderLiveConnectivityChecker(
-      sl<ILiveFeedStore>(),
-      sl<DiscordGatewayService>(),
+      sl<AbsILiveFeedStore>(),
+      sl<DiscordGatewayClient>(),
     ),
   );
   sl.registerSingleton<ProviderLiveWebhookTestService>(
     ProviderLiveWebhookTestService(
-      sl<ILiveFeedStore>(),
-      sl<DiscordGatewayService>(),
+      sl<AbsILiveFeedStore>(),
+      sl<DiscordGatewayClient>(),
       sl<GitHubWebhookVerifier>(),
       sl<SlackRequestVerifier>(),
       sl<LinearWebhookVerifier>(),
