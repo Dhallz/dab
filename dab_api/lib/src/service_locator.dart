@@ -192,6 +192,7 @@ Future<void> serviceLocator() async {
   final redisClient = RedisClient(
     host: config.redisHost,
     port: config.redisPort,
+    password: config.redisPassword,
   );
   await redisClient.connect();
   sl.registerSingleton<RedisClient>(redisClient);

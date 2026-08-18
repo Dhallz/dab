@@ -72,7 +72,8 @@ docker-compose up -d  # Postgres, Redis, API, and Swagger go live
 
 > Default host ports moved off the 808x range to avoid collisions with other local
 > APIs. All are env-overridable via `API_PUBLIC_PORT`, `SWAGGER_PUBLIC_PORT`, and
-> `DART_VM_PUBLIC_PORT` in `dab_api/.env`.
+> `DART_VM_PUBLIC_PORT` in `dab_api/.env`. Railway / hosted API:
+> **[doc/deployment.md](./doc/deployment.md)**.
 
 ### 2️⃣ Launch the Dashboard
 ```bash

@@ -51,9 +51,13 @@ We use **Bruno** for Git-native, local-first API exploration. The collection is 
 
 ---
 
-## 🐳 Production Deployment
-To build a Native AOT optimized Docker image:
+## 🐳 Production image
+
 ```bash
 docker build -t dab_api:latest .
 ```
+
+AOT `scratch` image (Drift migrates in process; there is no `migrations/`
+folder). Local Compose vs Railway env, TLS, and the Flutter `--dart-define`
+are in **[deployment.md](../doc/deployment.md)**.
 

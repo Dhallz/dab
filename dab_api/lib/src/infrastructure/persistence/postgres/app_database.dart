@@ -319,6 +319,7 @@ ON CONFLICT (id) DO NOTHING;
     required String database,
     required String user,
     required String password,
+    bool useSsl = false,
   }) {
     return AppDatabase(
       PgDatabase(
@@ -329,7 +330,9 @@ ON CONFLICT (id) DO NOTHING;
           username: user,
           password: password,
         ),
-        settings: const ConnectionSettings(sslMode: SslMode.disable),
+        settings: ConnectionSettings(
+          sslMode: useSsl ? SslMode.require : SslMode.disable,
+        ),
       ),
     );
   }

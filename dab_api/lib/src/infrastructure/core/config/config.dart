@@ -3,6 +3,12 @@ import 'dart:io';
 import 'package:dotenv/dotenv.dart';
 import 'package:path/path.dart' as p;
 
+import 'database_connection_settings.dart';
+import 'redis_connection_settings.dart';
+
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Process env + optional `.env` for API boot.
+/// CONTRACT: `DATABASE_URL` / `REDIS_URL` win over discrete `DB_*` / `REDIS_*`.
 class Config {
   static final Config _instance = Config._internal();
   factory Config() => _instance;
@@ -99,22 +105,60 @@ class Config {
     return _env[key] ?? defaultValue;
   }
 
-  String get dbHost => _getEnv('DB_HOST', 'localhost');
-  int get dbPort => int.parse(_getEnv('DB_PORT', '5432'));
-  String get dbName => _getEnv('DB_NAME', 'db');
-  String get dbUser => _getEnv('DB_USER', 'postgres');
-  String get dbPass => _getEnv('DB_PASS', 'postgres');
+  DatabaseConnectionSettings? _database;
+  RedisConnectionSettings? _redis;
 
-  String get redisHost => _getEnv('REDIS_HOST', 'localhost');
-  int get redisPort => int.parse(_getEnv('REDIS_PORT', '6379'));
+  /// Postgres from `DATABASE_URL` when set, otherwise discrete `DB_*` vars.
+  DatabaseConnectionSettings get database =>
+      _database ??= DatabaseConnectionSettings.resolve(
+        url: _getEnv('DATABASE_URL', ''),
+        host: _getEnv('DB_HOST', 'localhost'),
+        port: int.parse(_getEnv('DB_PORT', '5432')),
+        database: _getEnv('DB_NAME', 'db'),
+        user: _getEnv('DB_USER', 'postgres'),
+        password: _getEnv('DB_PASS', 'postgres'),
+        sslOverride: _getEnv('DAB_DB_SSL', ''),
+      );
 
-  String get jwtSecret =>
-      _getEnv('JWT_SECRET', 'change_me_to_something_secure');
+  String get dbHost => database.host;
+  int get dbPort => database.port;
+  String get dbName => database.database;
+  String get dbUser => database.user;
+  String get dbPass => database.password;
+  bool get dbUseSsl => database.useSsl;
+
+  /// Redis from `REDIS_URL` when set, otherwise discrete `REDIS_*` vars.
+  RedisConnectionSettings get redis =>
+      _redis ??= RedisConnectionSettings.resolve(
+        url: _getEnv('REDIS_URL', ''),
+        host: _getEnv('REDIS_HOST', 'localhost'),
+        port: int.parse(_getEnv('REDIS_PORT', '6379')),
+        password: _getEnv('REDIS_PASSWORD', ''),
+      );
+
+  String get redisHost => redis.host;
+  int get redisPort => redis.port;
+  String? get redisPassword => redis.authPassword;
+
+  /// Placeholder rejected when [isDevelopment] is false.
+  static const insecureJwtPlaceholder = 'change_me_to_something_secure';
+
+  String get jwtSecret => _getEnv('JWT_SECRET', insecureJwtPlaceholder);
   int get jwtExpiryMinutes => int.parse(_getEnv('JWT_EXPIRY_MINUTES', '60'));
 
   int get port => int.parse(_getEnv('PORT', '8080'));
 
   bool get isDevelopment => _getEnv('APP_ENV', 'development') == 'development';
+
+  /// Throws when production would boot with the compiled-in JWT default.
+  void ensureProductionSecrets() {
+    if (isDevelopment) return;
+    if (jwtSecret == insecureJwtPlaceholder) {
+      throw StateError(
+        'JWT_SECRET must be set when APP_ENV is not development.',
+      );
+    }
+  }
 
   /// Allowed registration email domain from [DAB_ALLOWED_DOMAIN] (merged `.env` + platform).
   ///

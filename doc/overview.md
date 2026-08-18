@@ -28,7 +28,7 @@ DAB is a centralized engine that aggregates every signal a developer needs into 
 
 DAB is **not a SaaS** — it is private-first infrastructure that you own and audit.
 
-- **Deployment:** Fully self-hosted via Docker Compose (`cd dab_api && docker-compose up -d`). No hidden cloud dependencies.
+- **Deployment:** Self-hosted via Docker Compose locally, or a single always-on Railway replica — see [deployment.md](./deployment.md). No hidden SaaS dependencies in the product itself.
 - **Data Security:** Provider credentials and operational data stay inside your infrastructure. TLS/encryption-at-rest policies are deployment-controlled.
 - **Hybrid Ingestion Logic:**
   - **Push (Webhooks):** Real-time triggers for modern stacks (GitHub, Slack).

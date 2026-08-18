@@ -10,6 +10,7 @@ import '../domain/containers/user_usecases.dart';
 import '../domain/repositories/abs_i_user_repository.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
+import '../infrastructure/core/remote/api_base_url.dart';
 import '../infrastructure/core/remote/auth_interceptor.dart';
 import '../infrastructure/core/remote/rest_api_client.dart';
 import '../infrastructure/core/remote/web_socket_client.dart';
@@ -67,7 +68,7 @@ class ServiceLocator {
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
     // 1. Core Infrastructure
-    restApiClient = RestApiClient(baseUrl: 'http://localhost:9080');
+    restApiClient = RestApiClient(baseUrl: ApiBaseUrl.fromEnvironment);
     tokenStorage = TokenStorage();
     authInterceptor = AuthInterceptor(tokenStorage);
     restApiClient.addInterceptor(authInterceptor);
@@ -105,7 +106,7 @@ class ServiceLocator {
 
     // 5. Activity Context
     final wsClient = WebSocketClient(
-      'ws://localhost:9080/ws',
+      ApiBaseUrl.webSocket(),
       tokenProvider: () async {
         final tokens = await tokenStorage.readTokens();
         return tokens?['accessToken'];

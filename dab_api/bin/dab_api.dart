@@ -23,6 +23,7 @@ import 'package:relic/relic.dart';
 
 Future<void> main() async {
   final config = Config();
+  config.ensureProductionSecrets();
   initializeOrgCalendar();
 
   // 1. Setup Service Locator (DI)

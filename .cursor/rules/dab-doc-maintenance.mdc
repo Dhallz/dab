@@ -19,6 +19,7 @@ After completing any change that falls into the categories below, **you must upd
 | New view or route added to the app | `doc/app.md` → Application Views table |
 | **Bruno definition changed** | `doc/openapi.yaml` → Sync with Bruno requests |
 | Infrastructure change (DB schema, Redis, Docker) | `doc/infrastructure.md` |
+| Hosting / Railway / production env | `doc/deployment.md` |
 | New naming convention established | `doc/conventions.md` |
 | New package dependency added | `doc/conventions.md` → Tech Stack & Packages |
 | Architectural pattern changed | `doc/architecture.md` + relevant package doc |
@@ -47,4 +48,5 @@ After completing any change that falls into the categories below, **you must upd
 | `doc/api.md` | `dab_api` — update on any backend change |
 | `doc/app.md` | `dab_app` — update on any client change |
 | `doc/infrastructure.md` | Ops/infra — update on DB schema, Redis, Docker changes |
+| `doc/deployment.md` | Ops — local Compose vs Railway env, TLS, client origin |
 | `doc/conventions.md` | Both packages — update when naming or patterns change |

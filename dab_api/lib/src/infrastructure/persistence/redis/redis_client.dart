@@ -12,8 +12,9 @@ class RedisClient {
   Future<void> connect() async {
     final conn = RedisConnection();
     _command = await conn.connect(host, port);
-    if (password != null) {
-      await _command!.send_object(['AUTH', password]);
+    final auth = password?.trim();
+    if (auth != null && auth.isNotEmpty) {
+      await _command!.send_object(['AUTH', auth]);
     }
   }
 

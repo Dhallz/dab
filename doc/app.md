@@ -162,7 +162,7 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 
 ### 4. Services Layer (`lib/services/`)
 
-- `ServiceLocator` — centralizes all dependency instantiation and injection. This is the only place dependencies are wired together.
+- `ServiceLocator` — centralizes all dependency instantiation and injection. This is the only place dependencies are wired together. REST and WebSocket origins come from `ApiBaseUrl` (`--dart-define=DAB_API_BASE`, default local Docker). Hosted API: [deployment.md](./deployment.md).
 
 ---
 

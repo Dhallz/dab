@@ -26,7 +26,9 @@ class PostgresClient {
         ],
         settings: pg.PoolSettings(
           maxConnectionCount: 10,
-          sslMode: pg.SslMode.disable,
+          sslMode: config.dbUseSsl
+              ? pg.SslMode.require
+              : pg.SslMode.disable,
         ),
       );
     }
@@ -42,6 +44,7 @@ class PostgresClient {
         database: config.dbName,
         user: config.dbUser,
         password: config.dbPass,
+        useSsl: config.dbUseSsl,
       );
     }
     return _db!;

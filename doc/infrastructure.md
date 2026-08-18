@@ -176,12 +176,13 @@ never see prior days if a purge was missed.
 
 ## Docker Deployment
 
+Local Compose and Railway share the same API config (URLs vs `DB_*` / `REDIS_*`,
+TLS only when requested). Full steps, env tables, and Flutter `--dart-define`
+are in **[deployment.md](./deployment.md)**.
+
 ```bash
 # Start all services (API + PostgreSQL + Redis)
 cd dab_api && docker-compose up -d
-
-# Production deployment
-cd dab_api && docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Service Map
@@ -214,7 +215,8 @@ In VS Code / Cursor (workspace `.vscode/launch.json`):
 | **DAB App (Debug)** | Start the Flutter client yourself when ready (separate debug session). |
 
 Compose `environment:` overrides `.env` for service hostnames (e.g. `REDIS_HOST=redis`).
-The app targets `http://localhost:9080` and `ws://localhost:9080/ws` (Docker dev defaults in `service_locator.dart`).
+The app defaults to `http://localhost:9080` and `ws://localhost:9080/ws`
+(`ApiBaseUrl` / `--dart-define=DAB_API_BASE`). See [deployment.md](./deployment.md).
 
 ---
 
@@ -230,17 +232,22 @@ The app targets `http://localhost:9080` and `ws://localhost:9080/ws` (Docker dev
 ### Required Environment Variables (`.env`)
 
 ```
+DATABASE_URL=
 DB_HOST=
 DB_PORT=5432
 DB_NAME=
 DB_USER=
 DB_PASS=
+DAB_DB_SSL=
+REDIS_URL=
 REDIS_HOST=
 REDIS_PORT=6379
+REDIS_PASSWORD=
 JWT_SECRET=
 JWT_EXPIRY_MINUTES=60
 DAB_CREDENTIALS_KEY=
 DAB_ALLOWED_DOMAIN=
+APP_ENV=
 PORT=8080
 DAB_INITIAL_ADMIN_EMAIL=
 DAB_GITHUB_OAUTH_CLIENT_ID=
@@ -254,7 +261,11 @@ DAB_BITBUCKET_OAUTH_CLIENT_SECRET=
 DAB_JIRA_OAUTH_CLIENT_ID=
 DAB_JIRA_OAUTH_CLIENT_SECRET=
 ```
-Production compose currently configures DB + API; if Redis is not in compose, provide an external Redis and set `REDIS_HOST` / `REDIS_PORT`.
+
+`DATABASE_URL` / `REDIS_URL` win when set (Railway). Discrete `DB_*` /
+`REDIS_HOST` are what Compose uses. Postgres TLS stays **off** unless
+`sslmode=require` is on the URL or `DAB_DB_SSL=true`. Redis `AUTH` runs only
+when a password is present. Hosted deploy: [deployment.md](./deployment.md).
 
 ---
 
