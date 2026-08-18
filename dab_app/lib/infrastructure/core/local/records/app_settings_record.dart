@@ -14,12 +14,16 @@ class AppSettingsRecord {
   String islandBarSelectionsJson;
   String? syncToken;
 
+  /// Stored inverted so missing ObjectBox values (false) keep banners on.
+  bool inboxNotificationsDisabled;
+
   AppSettingsRecord({
     this.id = 0,
     required this.themeMode,
     this.localeCode,
     this.islandBarSelectionsJson = '{}',
     this.syncToken,
+    this.inboxNotificationsDisabled = false,
   });
 }
 
@@ -30,6 +34,7 @@ extension OnAppSettingsRecord on AppSettingsRecord {
       localeCode: localeCode,
       islandBarSelections: _decodeSelectionsMap(islandBarSelectionsJson),
       syncToken: syncToken,
+      inboxNotificationsEnabled: !inboxNotificationsDisabled,
     );
   }
 }

@@ -1,0 +1,32 @@
+meta {
+  name: Save My Device Token
+  type: http
+  seq: 18
+}
+
+docs {
+  Upserts an FCM/APNs device token for the caller so production can send a
+  data-only inbox wake when no WebSocket session is open.
+  Body: `{ "platform": "android", "token": "fcm-or-apns-token" }`.
+  `platform` is `android` or `ios`. Tokens are stored in development even
+  though FCM is not sent.
+}
+
+put {
+  url: {{baseUrl}}/users/me/device-tokens
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "platform": "android",
+    "token": "example-device-token"
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

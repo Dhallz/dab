@@ -26,3 +26,8 @@ String dashboardActivityHeadline(Activity activity) {
   if (!title.startsWith(prefix)) return title;
   return title.substring(prefix.length).trim();
 }
+
+/// Local-banner subtitle for Directed vs Following.
+String dashboardInboxLaneSubtitle(Activity activity) {
+  return activity.isFollowLane ? 'Following' : 'Directed';
+}

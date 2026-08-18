@@ -107,6 +107,7 @@ Keep “Gateway” only when it is Discord’s product name. A compose-sources w
 | Masonry / staggered grids | `flutter_staggered_grid_view` |
 | Typography / icons | `google_fonts` + `simple_icons` + `flutty_heroicons` |
 | App metadata (version / build) | `package_info_plus` |
+| Local OS banners | `flutter_local_notifications` (desktop; copy stays on device) |
 | External browser (OAuth Connect) | `url_launcher` |
 | Testing | `mocktail` (`ProviderContainer` / overrides for notifiers) |
 

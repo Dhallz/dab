@@ -13,6 +13,7 @@ import 'package:dab_api/src/infrastructure/persistence/postgres/tables/groups_ta
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/provider_configs_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/sessions_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/system_settings_table.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/tables/user_device_tokens_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/user_identities_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/user_provider_credentials_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/users_table.dart';
@@ -41,6 +42,7 @@ part 'app_database.g.dart';
     UserIdentitiesTable,
     UserProviderCredentialsTable,
     ActivityFollowsTable,
+    UserDeviceTokensTable,
     SystemSettingsTable,
   ],
 )
@@ -48,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -230,6 +232,9 @@ ON CONFLICT (id) DO NOTHING;
       if (from < 20) {
         await m.addColumn(activityFollowsTable, activityFollowsTable.title);
         await m.addColumn(activityFollowsTable, activityFollowsTable.url);
+      }
+      if (from < 21) {
+        await m.createTable(userDeviceTokensTable);
       }
     },
     beforeOpen: (details) async {

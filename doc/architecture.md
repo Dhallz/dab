@@ -104,7 +104,7 @@ dab_app/lib/
 ### App Entities (`dab_app/lib/domain/entities/`)
 
 Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`).
-`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`) and optional `localeCode`. An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but is unused in the UI — home branches use per-view toolbars rather than those stored checkboxes.
+`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`), optional `localeCode`, and `inboxNotificationsEnabled` (default **on** — OS banners for Directed and Following while the desktop window is unfocused). An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but is unused in the UI — home branches use per-view toolbars rather than those stored checkboxes.
 
 The Dashboard additionally introduces:
 
@@ -287,7 +287,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health checks |
 | `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
-| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, Dashboard object Follow pins (`/users/me/follows`), and Follow picker rows (`GET /users/me/follows/candidates`) |
+| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, Dashboard object Follow pins (`/users/me/follows`), Follow picker rows (`GET /users/me/follows/candidates`), and device tokens (`PUT/DELETE /users/me/device-tokens`) |
 
 ---
 

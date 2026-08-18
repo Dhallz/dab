@@ -150,6 +150,22 @@ class Config {
 
   bool get isDevelopment => _getEnv('APP_ENV', 'development') == 'development';
 
+  /// Google FCM HTTP v1 service-account JSON or a path to that file.
+  ///
+  /// Empty in development; wake is a no-op when unset or unreadable.
+  String get fcmServiceAccountJson {
+    final raw = _getEnv('FCM_SERVICE_ACCOUNT_JSON', '').trim();
+    if (raw.isEmpty) return '';
+    if (raw.startsWith('{')) return raw;
+    try {
+      final file = File(raw);
+      if (file.existsSync()) return file.readAsStringSync();
+    } catch (_) {
+      return '';
+    }
+    return raw;
+  }
+
   /// Throws when production would boot with the compiled-in JWT default.
   void ensureProductionSecrets() {
     if (isDevelopment) return;

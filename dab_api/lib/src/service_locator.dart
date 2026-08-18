@@ -65,6 +65,8 @@ import 'package:dab_api/src/application/usecases/user/list_follow_candidates.dar
 import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
 import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/delete_activity_follow.dart';
+import 'package:dab_api/src/application/usecases/user/save_user_device_token.dart';
+import 'package:dab_api/src/application/usecases/user/delete_user_device_token.dart';
 import 'package:dab_api/src/application/usecases/user/get_jira_project_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_linear_team_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_user_by_id.dart';
@@ -100,7 +102,9 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_state_store.dart'
 import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_token_client.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_gateway.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_device_token_repository.dart';
 // domain
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_auth_repository.dart';
@@ -129,7 +133,6 @@ import 'package:dab_api/src/infrastructure/persistence/repositories/postgres_hea
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_client.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/core/logging/logging_service.dart';
-import 'package:dab_api/src/infrastructure/core/logging/push_notification_service.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/http_conduit_protocol.dart';
 import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
@@ -144,6 +147,7 @@ import 'package:dab_api/src/infrastructure/persistence/repositories/provider_con
 import 'package:dab_api/src/infrastructure/persistence/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_provider_credential_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/activity_follow_repository.dart';
+import 'package:dab_api/src/infrastructure/persistence/repositories/user_device_token_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/credential_resolver.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/oauth_client_credential_resolver.dart';
@@ -173,6 +177,7 @@ import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
+import 'package:dab_api/src/infrastructure/core/realtime/fcm_http_v1_push_wake_gateway.dart';
 import 'package:dab_api/src/infrastructure/core/realtime/presence_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
@@ -246,6 +251,9 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<AbsIActivityFollowRepository>(
     ActivityFollowRepository(db),
+  );
+  sl.registerSingleton<AbsIUserDeviceTokenRepository>(
+    UserDeviceTokenRepository(db),
   );
   sl.registerSingleton<AbsICredentialResolver>(
     CredentialResolver(sl<AbsIUserProviderCredentialRepository>()),
@@ -400,10 +408,17 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PresenceService>(PresenceService());
   sl.registerSingleton<AbsIPresenceBroadcaster>(sl<PresenceService>());
   sl.registerSingleton<LoggingService>(LoggingService());
-  sl.registerSingleton<PushNotificationService>(PushNotificationService());
+  sl.registerSingleton<AbsIPushWakeGateway>(
+    FcmHttpV1PushWakeGateway.resolve(config, client: sl<http.Client>()),
+  );
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
   sl.registerSingleton<ActivityLivePublisher>(
-    ActivityLivePublisher(sl<AbsILiveFeedStore>(), sl<AbsIPresenceBroadcaster>()),
+    ActivityLivePublisher(
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
+      tokens: sl<AbsIUserDeviceTokenRepository>(),
+      wake: sl<AbsIPushWakeGateway>(),
+    ),
   );
   sl.registerSingleton<LiveIngestPersister>(
     LiveIngestPersister(
@@ -809,6 +824,12 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<DeleteActivityFollow>(
     DeleteActivityFollow(sl<AbsIActivityFollowRepository>()),
   );
+  sl.registerSingleton<SaveUserDeviceToken>(
+    SaveUserDeviceToken(sl<AbsIUserDeviceTokenRepository>()),
+  );
+  sl.registerSingleton<DeleteUserDeviceToken>(
+    DeleteUserDeviceToken(sl<AbsIUserDeviceTokenRepository>()),
+  );
 
   // Group
   sl.registerSingleton<GetGroups>(GetGroups(sl<IUserRepository>()));
@@ -944,6 +965,8 @@ Future<void> serviceLocator() async {
       listFollowCandidates: sl<ListFollowCandidates>(),
       saveActivityFollow: sl<SaveActivityFollow>(),
       deleteActivityFollow: sl<DeleteActivityFollow>(),
+      saveUserDeviceToken: sl<SaveUserDeviceToken>(),
+      deleteUserDeviceToken: sl<DeleteUserDeviceToken>(),
     ),
   );
 

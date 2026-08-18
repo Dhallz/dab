@@ -36,6 +36,7 @@ class SystemRepository extends Repository implements ISystemRepository {
           localeCode: settings.localeCode,
           islandBarSelectionsJson: jsonEncode(settings.islandBarSelections),
           syncToken: settings.syncToken,
+          inboxNotificationsDisabled: !settings.inboxNotificationsEnabled,
         ),
       );
       return unit;

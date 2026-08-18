@@ -211,6 +211,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSectionAppearance => 'Aspetto';
 
   @override
+  String get settingsInboxNotifications => 'Banner inbox';
+
+  @override
+  String get settingsInboxNotificationsSubtitle =>
+      'Mostra un banner per Directed e Following quando la finestra è in background.';
+
+  @override
+  String get inboxWakeAppName => 'DAB';
+
+  @override
+  String get inboxWakeDirected => 'Nuova attività diretta';
+
+  @override
+  String get inboxWakeFollowing => 'Aggiornamento su qualcosa che segui';
+
+  @override
+  String get inboxNotificationDirected => 'Directed';
+
+  @override
+  String get inboxNotificationFollowing => 'Following';
+
+  @override
   String get settingsSectionLanguage => 'Lingua';
 
   @override

@@ -508,6 +508,48 @@ abstract class AppLocalizations {
   /// **'Appearance'**
   String get settingsSectionAppearance;
 
+  /// Settings toggle for local Directed/Following banners while DAB is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox banners'**
+  String get settingsInboxNotifications;
+
+  /// Helper text for the inbox banners settings toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a banner for Directed and Following when the window is in the background.'**
+  String get settingsInboxNotificationsSubtitle;
+
+  /// Generic remote-wake notification title. Unused until mobile FCM.
+  ///
+  /// In en, this message translates to:
+  /// **'DAB'**
+  String get inboxWakeAppName;
+
+  /// Generic remote-wake body for Directed. Unused until mobile FCM.
+  ///
+  /// In en, this message translates to:
+  /// **'New directed activity'**
+  String get inboxWakeDirected;
+
+  /// Generic remote-wake body for Following. Unused until mobile FCM.
+  ///
+  /// In en, this message translates to:
+  /// **'Update on something you follow'**
+  String get inboxWakeFollowing;
+
+  /// Local banner subtitle for Directed inbox activities.
+  ///
+  /// In en, this message translates to:
+  /// **'Directed'**
+  String get inboxNotificationDirected;
+
+  /// Local banner subtitle for Following inbox activities.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get inboxNotificationFollowing;
+
   /// settingsSectionLanguage: Language
   ///
   /// In en, this message translates to:

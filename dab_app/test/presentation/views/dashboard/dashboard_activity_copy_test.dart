@@ -38,4 +38,27 @@ void main() {
     expect(dashboardActivityHeadline(activity), 'fix: typo');
     expect(gitBranchLabelFor(activity.provider), isNull);
   });
+
+  test('lane subtitle is Directed or Following', () {
+    expect(
+      dashboardInboxLaneSubtitle(_commit(title: 'fix')),
+      'Directed',
+    );
+    expect(
+      dashboardInboxLaneSubtitle(
+        Activity(
+          id: 'a-2',
+          userId: 'u-1',
+          provider: const SlackMessageProvider(channelId: 'C1'),
+          title: 'hello',
+          content: 'body',
+          authorName: 'Alice',
+          commentCount: 0,
+          createdAt: DateTime.utc(2026, 8, 17),
+          inboxLane: ActivityInboxLane.follow,
+        ),
+      ),
+      'Following',
+    );
+  });
 }

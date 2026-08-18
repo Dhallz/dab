@@ -23,6 +23,7 @@ void main() {
 
       registerFallbackValue(db.systemSettingsTable);
       registerFallbackValue(db.activityFollowsTable);
+      registerFallbackValue(db.userDeviceTokensTable);
       registerFallbackValue(db.activityFollowsTable.title);
       when(() => migrator.createTable(any())).thenAnswer((_) async {});
       when(() => migrator.addColumn(any(), any())).thenAnswer((_) async {});
@@ -143,6 +144,15 @@ void main() {
           db.activityFollowsTable.url,
         ),
       ).called(1);
+      verifyNever(() => migrator.createTable(db.activityFollowsTable));
+    });
+
+    test('should create user_device_tokens table when upgrading from < 21', () async {
+      final migration = db.migration;
+
+      await migration.onUpgrade(migrator, 20, 21);
+
+      verify(() => migrator.createTable(db.userDeviceTokensTable)).called(1);
       verifyNever(() => migrator.createTable(db.activityFollowsTable));
     });
   });

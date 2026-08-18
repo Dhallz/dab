@@ -268,6 +268,34 @@
   "@settingsSectionAppearance": {
     "description": "settingsSectionAppearance: Appearance"
   },
+  "settingsInboxNotifications": "Inbox banners",
+  "@settingsInboxNotifications": {
+    "description": "Settings toggle for local Directed/Following banners while DAB is running."
+  },
+  "settingsInboxNotificationsSubtitle": "Show a banner for Directed and Following when the window is in the background.",
+  "@settingsInboxNotificationsSubtitle": {
+    "description": "Helper text for the inbox banners settings toggle."
+  },
+  "inboxWakeAppName": "DAB",
+  "@inboxWakeAppName": {
+    "description": "Generic remote-wake notification title. Unused until mobile FCM."
+  },
+  "inboxWakeDirected": "New directed activity",
+  "@inboxWakeDirected": {
+    "description": "Generic remote-wake body for Directed. Unused until mobile FCM."
+  },
+  "inboxWakeFollowing": "Update on something you follow",
+  "@inboxWakeFollowing": {
+    "description": "Generic remote-wake body for Following. Unused until mobile FCM."
+  },
+  "inboxNotificationDirected": "Directed",
+  "@inboxNotificationDirected": {
+    "description": "Local banner subtitle for Directed inbox activities."
+  },
+  "inboxNotificationFollowing": "Following",
+  "@inboxNotificationFollowing": {
+    "description": "Local banner subtitle for Following inbox activities."
+  },
   "settingsSectionLanguage": "Language",
   "@settingsSectionLanguage": {
     "description": "settingsSectionLanguage: Language"

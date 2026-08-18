@@ -70,6 +70,7 @@ Railway injects `DATABASE_URL` and `REDIS_URL`. Prefer those over copying
 | `DAB_CREDENTIALS_KEY` | optional (falls back to JWT) | set once; changing it invalidates stored user tokens |
 | `DAB_INITIAL_ADMIN_EMAIL` | optional | bootstrap admin |
 | `DAB_*_OAUTH_CLIENT_ID` / `_SECRET` | as needed | as needed |
+| `FCM_SERVICE_ACCOUNT_JSON` | unset (wake is a no-op) | Google service-account JSON **or** a file path. Required only to send data-only inbox wakes when the user has no WebSocket session. Tokens are still stored via `PUT /users/me/device-tokens`. Wake payloads never include activity title or body. |
 
 After the first healthy deploy:
 

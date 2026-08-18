@@ -8,6 +8,7 @@ import '../domain/containers/presence_usecases.dart';
 import '../domain/containers/system_usecases.dart';
 import '../domain/containers/user_usecases.dart';
 import '../domain/repositories/abs_i_user_repository.dart';
+import '../infrastructure/core/local/flutter_inbox_local_notification.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
 import '../infrastructure/core/remote/api_base_url.dart';
@@ -63,6 +64,7 @@ class ServiceLocator {
   late final ActivityUseCases activityUseCases;
   late final PresenceUseCases presenceUseCases;
   late final MetadataUseCases metadataUseCases;
+  late final FlutterInboxLocalNotification inboxLocalNotification;
   late final UserUseCases userUseCases;
 
   /// Initializes all dependencies. Must be called at app boot.
@@ -121,7 +123,13 @@ class ServiceLocator {
       activityRemoteDataSource,
       activityLocalDataSource,
     );
-    activityUseCases = ActivityUseCases(activityRepository);
+    inboxLocalNotification = FlutterInboxLocalNotification(
+      router: appRouter.router,
+    );
+    activityUseCases = ActivityUseCases(
+      activityRepository,
+      inboxNotifications: inboxLocalNotification,
+    );
 
     // 6. Presence Context
     final presenceRemoteDataSource = PresenceRemoteDataSource(wsClient);

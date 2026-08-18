@@ -212,6 +212,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsSectionAppearance => 'Apariencia';
 
   @override
+  String get settingsInboxNotifications => 'Avisos de bandeja';
+
+  @override
+  String get settingsInboxNotificationsSubtitle =>
+      'Mostrar un aviso para Directed y Following cuando la ventana está en segundo plano.';
+
+  @override
+  String get inboxWakeAppName => 'DAB';
+
+  @override
+  String get inboxWakeDirected => 'Nueva actividad dirigida';
+
+  @override
+  String get inboxWakeFollowing => 'Actualización de algo que sigues';
+
+  @override
+  String get inboxNotificationDirected => 'Directed';
+
+  @override
+  String get inboxNotificationFollowing => 'Following';
+
+  @override
   String get settingsSectionLanguage => 'Idioma';
 
   @override

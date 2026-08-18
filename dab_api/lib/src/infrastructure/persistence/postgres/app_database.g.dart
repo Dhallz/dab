@@ -6941,6 +6941,437 @@ class ActivityFollowsTableCompanion
   }
 }
 
+class $UserDeviceTokensTableTable extends UserDeviceTokensTable
+    with TableInfo<$UserDeviceTokensTableTable, UserDeviceTokensTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDeviceTokensTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES users(id) ON DELETE CASCADE',
+  );
+  static const VerificationMeta _platformMeta = const VerificationMeta(
+    'platform',
+  );
+  @override
+  late final GeneratedColumn<String> platform = GeneratedColumn<String>(
+    'platform',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
+  @override
+  late final GeneratedColumn<String> token = GeneratedColumn<String>(
+    'token',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+        defaultValue: now(),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    platform,
+    token,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_device_tokens';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDeviceTokensTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('platform')) {
+      context.handle(
+        _platformMeta,
+        platform.isAcceptableOrUnknown(data['platform']!, _platformMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_platformMeta);
+    }
+    if (data.containsKey('token')) {
+      context.handle(
+        _tokenMeta,
+        token.isAcceptableOrUnknown(data['token']!, _tokenMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tokenMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {userId, token},
+  ];
+  @override
+  UserDeviceTokensTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDeviceTokensTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      platform: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}platform'],
+      )!,
+      token: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}token'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $UserDeviceTokensTableTable createAlias(String alias) {
+    return $UserDeviceTokensTableTable(attachedDatabase, alias);
+  }
+}
+
+class UserDeviceTokensTableData extends DataClass
+    implements Insertable<UserDeviceTokensTableData> {
+  final String id;
+  final String userId;
+  final String platform;
+  final String token;
+  final PgDateTime createdAt;
+  final PgDateTime? updatedAt;
+  const UserDeviceTokensTableData({
+    required this.id,
+    required this.userId,
+    required this.platform,
+    required this.token,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['platform'] = Variable<String>(platform);
+    map['token'] = Variable<String>(token);
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    return map;
+  }
+
+  UserDeviceTokensTableCompanion toCompanion(bool nullToAbsent) {
+    return UserDeviceTokensTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      platform: Value(platform),
+      token: Value(token),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory UserDeviceTokensTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDeviceTokensTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      platform: serializer.fromJson<String>(json['platform']),
+      token: serializer.fromJson<String>(json['token']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'platform': serializer.toJson<String>(platform),
+      'token': serializer.toJson<String>(token),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+    };
+  }
+
+  UserDeviceTokensTableData copyWith({
+    String? id,
+    String? userId,
+    String? platform,
+    String? token,
+    PgDateTime? createdAt,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+  }) => UserDeviceTokensTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    platform: platform ?? this.platform,
+    token: token ?? this.token,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  UserDeviceTokensTableData copyWithCompanion(
+    UserDeviceTokensTableCompanion data,
+  ) {
+    return UserDeviceTokensTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      platform: data.platform.present ? data.platform.value : this.platform,
+      token: data.token.present ? data.token.value : this.token,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDeviceTokensTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('platform: $platform, ')
+          ..write('token: $token, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, platform, token, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDeviceTokensTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.platform == this.platform &&
+          other.token == this.token &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class UserDeviceTokensTableCompanion
+    extends UpdateCompanion<UserDeviceTokensTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> platform;
+  final Value<String> token;
+  final Value<PgDateTime> createdAt;
+  final Value<PgDateTime?> updatedAt;
+  final Value<int> rowid;
+  const UserDeviceTokensTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.platform = const Value.absent(),
+    this.token = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserDeviceTokensTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String platform,
+    required String token,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       platform = Value(platform),
+       token = Value(token);
+  static Insertable<UserDeviceTokensTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? platform,
+    Expression<String>? token,
+    Expression<PgDateTime>? createdAt,
+    Expression<PgDateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (platform != null) 'platform': platform,
+      if (token != null) 'token': token,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserDeviceTokensTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? platform,
+    Value<String>? token,
+    Value<PgDateTime>? createdAt,
+    Value<PgDateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return UserDeviceTokensTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      platform: platform ?? this.platform,
+      token: token ?? this.token,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (platform.present) {
+      map['platform'] = Variable<String>(platform.value);
+    }
+    if (token.present) {
+      map['token'] = Variable<String>(token.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDeviceTokensTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('platform: $platform, ')
+          ..write('token: $token, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SystemSettingsTableTable extends SystemSettingsTable
     with TableInfo<$SystemSettingsTableTable, SystemSettingsTableData> {
   @override
@@ -7189,6 +7620,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $UserProviderCredentialsTableTable(this);
   late final $ActivityFollowsTableTable activityFollowsTable =
       $ActivityFollowsTableTable(this);
+  late final $UserDeviceTokensTableTable userDeviceTokensTable =
+      $UserDeviceTokensTableTable(this);
   late final $SystemSettingsTableTable systemSettingsTable =
       $SystemSettingsTableTable(this);
   late final Index idxActivityFollowsObject = Index(
@@ -7217,6 +7650,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     userIdentitiesTable,
     userProviderCredentialsTable,
     activityFollowsTable,
+    userDeviceTokensTable,
     systemSettingsTable,
     idxActivityFollowsObject,
   ];
@@ -13512,6 +13946,244 @@ typedef $$ActivityFollowsTableTableProcessedTableManager =
       ActivityFollowsTableData,
       PrefetchHooks Function()
     >;
+typedef $$UserDeviceTokensTableTableCreateCompanionBuilder =
+    UserDeviceTokensTableCompanion Function({
+      required String id,
+      required String userId,
+      required String platform,
+      required String token,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$UserDeviceTokensTableTableUpdateCompanionBuilder =
+    UserDeviceTokensTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> platform,
+      Value<String> token,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$UserDeviceTokensTableTableFilterComposer
+    extends Composer<_$AppDatabase, $UserDeviceTokensTableTable> {
+  $$UserDeviceTokensTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserDeviceTokensTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserDeviceTokensTableTable> {
+  $$UserDeviceTokensTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserDeviceTokensTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserDeviceTokensTableTable> {
+  $$UserDeviceTokensTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get platform =>
+      $composableBuilder(column: $table.platform, builder: (column) => column);
+
+  GeneratedColumn<String> get token =>
+      $composableBuilder(column: $table.token, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$UserDeviceTokensTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserDeviceTokensTableTable,
+          UserDeviceTokensTableData,
+          $$UserDeviceTokensTableTableFilterComposer,
+          $$UserDeviceTokensTableTableOrderingComposer,
+          $$UserDeviceTokensTableTableAnnotationComposer,
+          $$UserDeviceTokensTableTableCreateCompanionBuilder,
+          $$UserDeviceTokensTableTableUpdateCompanionBuilder,
+          (
+            UserDeviceTokensTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $UserDeviceTokensTableTable,
+              UserDeviceTokensTableData
+            >,
+          ),
+          UserDeviceTokensTableData,
+          PrefetchHooks Function()
+        > {
+  $$UserDeviceTokensTableTableTableManager(
+    _$AppDatabase db,
+    $UserDeviceTokensTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDeviceTokensTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$UserDeviceTokensTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDeviceTokensTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> platform = const Value.absent(),
+                Value<String> token = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDeviceTokensTableCompanion(
+                id: id,
+                userId: userId,
+                platform: platform,
+                token: token,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String platform,
+                required String token,
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDeviceTokensTableCompanion.insert(
+                id: id,
+                userId: userId,
+                platform: platform,
+                token: token,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserDeviceTokensTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserDeviceTokensTableTable,
+      UserDeviceTokensTableData,
+      $$UserDeviceTokensTableTableFilterComposer,
+      $$UserDeviceTokensTableTableOrderingComposer,
+      $$UserDeviceTokensTableTableAnnotationComposer,
+      $$UserDeviceTokensTableTableCreateCompanionBuilder,
+      $$UserDeviceTokensTableTableUpdateCompanionBuilder,
+      (
+        UserDeviceTokensTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $UserDeviceTokensTableTable,
+          UserDeviceTokensTableData
+        >,
+      ),
+      UserDeviceTokensTableData,
+      PrefetchHooks Function()
+    >;
 typedef $$SystemSettingsTableTableCreateCompanionBuilder =
     SystemSettingsTableCompanion Function({
       required String key,
@@ -13736,6 +14408,8 @@ class $AppDatabaseManager {
       );
   $$ActivityFollowsTableTableTableManager get activityFollowsTable =>
       $$ActivityFollowsTableTableTableManager(_db, _db.activityFollowsTable);
+  $$UserDeviceTokensTableTableTableManager get userDeviceTokensTable =>
+      $$UserDeviceTokensTableTableTableManager(_db, _db.userDeviceTokensTable);
   $$SystemSettingsTableTableTableManager get systemSettingsTable =>
       $$SystemSettingsTableTableTableManager(_db, _db.systemSettingsTable);
 }

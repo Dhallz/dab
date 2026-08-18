@@ -18,6 +18,8 @@ import '../usecases/user/delete_activity_follow.dart';
 import '../usecases/user/list_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/save_activity_follow.dart';
+import '../usecases/user/save_user_device_token.dart';
+import '../usecases/user/delete_user_device_token.dart';
 
 class UserUseCases {
   final GetUserById getUserById;
@@ -40,6 +42,8 @@ class UserUseCases {
   final ListFollowCandidates listFollowCandidates;
   final SaveActivityFollow saveActivityFollow;
   final DeleteActivityFollow deleteActivityFollow;
+  final SaveUserDeviceToken saveUserDeviceToken;
+  final DeleteUserDeviceToken deleteUserDeviceToken;
 
   UserUseCases({
     required this.getUserById,
@@ -62,5 +66,7 @@ class UserUseCases {
     required this.listFollowCandidates,
     required this.saveActivityFollow,
     required this.deleteActivityFollow,
+    required this.saveUserDeviceToken,
+    required this.deleteUserDeviceToken,
   });
 }

@@ -44,12 +44,14 @@ class AppSettings with AppSettingsMappable {
   final String? localeCode;
   final Map<String, List<String>> islandBarSelections;
   final String? syncToken;
+  final bool inboxNotificationsEnabled;
 
   const AppSettings({
     this.appThemeVariant = AppThemeVariant.dab,
     this.localeCode,
     this.islandBarSelections = appSettingsDefaultIslandBarSelections,
     this.syncToken,
+    this.inboxNotificationsEnabled = true,
   });
 }
 

@@ -111,6 +111,8 @@ Future<void> main() async {
     ..get('/users/me/follows', UserController().listMyFollows)
     ..put('/users/me/follows', UserController().saveMyFollow)
     ..delete('/users/me/follows', UserController().deleteMyFollow)
+    ..put('/users/me/device-tokens', UserController().saveMyDeviceToken)
+    ..delete('/users/me/device-tokens', UserController().deleteMyDeviceToken)
     ..post(
       '/users/me/credentials/:provider/oauth/start',
       UserController().startMyOauth,

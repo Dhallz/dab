@@ -50,6 +50,14 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
     _$syncToken,
     opt: true,
   );
+  static bool _$inboxNotificationsEnabled(AppSettings v) =>
+      v.inboxNotificationsEnabled;
+  static const Field<AppSettings, bool> _f$inboxNotificationsEnabled = Field(
+    'inboxNotificationsEnabled',
+    _$inboxNotificationsEnabled,
+    opt: true,
+    def: true,
+  );
 
   @override
   final MappableFields<AppSettings> fields = const {
@@ -57,6 +65,7 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
     #localeCode: _f$localeCode,
     #islandBarSelections: _f$islandBarSelections,
     #syncToken: _f$syncToken,
+    #inboxNotificationsEnabled: _f$inboxNotificationsEnabled,
   };
 
   static AppSettings _instantiate(DecodingData data) {
@@ -65,6 +74,7 @@ class AppSettingsMapper extends ClassMapperBase<AppSettings> {
       localeCode: data.dec(_f$localeCode),
       islandBarSelections: data.dec(_f$islandBarSelections),
       syncToken: data.dec(_f$syncToken),
+      inboxNotificationsEnabled: data.dec(_f$inboxNotificationsEnabled),
     );
   }
 
@@ -140,6 +150,7 @@ abstract class AppSettingsCopyWith<$R, $In extends AppSettings, $Out>
     String? localeCode,
     Map<String, List<String>>? islandBarSelections,
     String? syncToken,
+    bool? inboxNotificationsEnabled,
   });
   AppSettingsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -170,6 +181,7 @@ class _AppSettingsCopyWithImpl<$R, $Out>
     Object? localeCode = $none,
     Map<String, List<String>>? islandBarSelections,
     Object? syncToken = $none,
+    bool? inboxNotificationsEnabled,
   }) => $apply(
     FieldCopyWithData({
       if (appThemeVariant != null) #appThemeVariant: appThemeVariant,
@@ -177,6 +189,8 @@ class _AppSettingsCopyWithImpl<$R, $Out>
       if (islandBarSelections != null)
         #islandBarSelections: islandBarSelections,
       if (syncToken != $none) #syncToken: syncToken,
+      if (inboxNotificationsEnabled != null)
+        #inboxNotificationsEnabled: inboxNotificationsEnabled,
     }),
   );
   @override
@@ -188,6 +202,10 @@ class _AppSettingsCopyWithImpl<$R, $Out>
       or: $value.islandBarSelections,
     ),
     syncToken: data.get(#syncToken, or: $value.syncToken),
+    inboxNotificationsEnabled: data.get(
+      #inboxNotificationsEnabled,
+      or: $value.inboxNotificationsEnabled,
+    ),
   );
 
   @override

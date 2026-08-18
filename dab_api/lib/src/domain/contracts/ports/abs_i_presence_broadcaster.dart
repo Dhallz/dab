@@ -8,4 +8,7 @@ abstract interface class AbsIPresenceBroadcaster {
 
   /// Sends [type] + [data] to all sessions owned by [userId].
   void broadcastToUser(String userId, String type, Map<String, dynamic> data);
+
+  /// True when [userId] has at least one connected WebSocket session.
+  bool hasSession(String userId);
 }

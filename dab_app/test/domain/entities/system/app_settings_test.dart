@@ -9,6 +9,11 @@ void main() {
       expect(settings.appThemeVariant, AppThemeVariant.dab);
     });
 
+    test('defaults inbox notifications to on', () {
+      const settings = AppSettings();
+      expect(settings.inboxNotificationsEnabled, isTrue);
+    });
+
     test('defaults island selections to current island bar catalog', () {
       const settings = AppSettings();
 

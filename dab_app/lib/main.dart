@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/presentation/core/styles/app_theme.dart';
+import 'package:dab_app/presentation/features/app/app_lifecycle.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
 import 'package:dab_app/presentation/features/auth/auth_state.dart';
@@ -44,20 +47,53 @@ class _AuthRouterRefreshState extends ConsumerState<_AuthRouterRefresh> {
   }
 }
 
-class DabApp extends ConsumerWidget {
+class DabApp extends ConsumerStatefulWidget {
   final AppRouter appRouter;
 
   const DabApp({super.key, required this.appRouter});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DabApp> createState() => _DabAppState();
+}
+
+class _DabAppState extends ConsumerState<DabApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final lifecycle = WidgetsBinding.instance.lifecycleState;
+      if (lifecycle != null) {
+        ref.read(appLifecycleProvider.notifier).state = lifecycle;
+      }
+      unawaited(sl.inboxLocalNotification.initialize());
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(appLifecycleProvider.notifier).state = state;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(appNotifierProvider);
 
     return MaterialApp.router(
       title: lookupAppLocalizations(
         state.settings.resolvedLocale ?? const Locale('en'),
       ).appWindowTitle,
-      routerConfig: appRouter.router,
+      routerConfig: widget.appRouter.router,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

@@ -70,6 +70,23 @@ class _SettingsViewMobileState extends ConsumerState<SettingsViewMobile> {
           currentVariant: draft.appThemeVariant,
           onChanged: notifier.setThemeVariant,
         ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          isThreeLine: true,
+          title: Text(
+            context.l10n.settingsInboxNotifications,
+            style: AppTextStyles.bodyMedium,
+          ),
+          subtitle: Text(
+            context.l10n.settingsInboxNotificationsSubtitle,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          value: draft.inboxNotificationsEnabled,
+          onChanged: notifier.setInboxNotificationsEnabled,
+        ),
         const Divider(height: 32),
         SettingsSectionHeader(title: context.l10n.settingsSectionLanguage),
         const SizedBox(height: 16),

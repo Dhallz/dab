@@ -1279,6 +1279,65 @@ paths:
           description: Follow pin removed
         '400':
           description: Missing body or unsupported provider
+  /users/me/device-tokens:
+    put:
+      summary: Save my device token
+      description: |
+        Upserts an FCM/APNs registration token for the authenticated user.
+        Used later to send a data-only inbox wake (`type=inbox_wake`) when no
+        WebSocket session is connected. Body
+        `{ "platform": "android", "token": "fcm-or-apns-token" }`.
+        `platform` is `android` or `ios`. Tokens are stored in development;
+        FCM is not sent unless `APP_ENV` is production and
+        `FCM_SERVICE_ACCOUNT_JSON` is set. Wake payloads never include
+        activity title or body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, token]
+              properties:
+                platform:
+                  type: string
+                  enum: [android, ios]
+                token:
+                  type: string
+            example:
+              platform: android
+              token: example-device-token
+      responses:
+        '200':
+          description: Saved device token
+        '400':
+          description: Missing body or unsupported platform
+    delete:
+      summary: Delete my device token
+      description: |
+        Removes an FCM/APNs registration token for the caller.
+        Body `{ "token": "fcm-or-apns-token" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+            example:
+              token: example-device-token
+      responses:
+        '200':
+          description: Device token removed
+        '400':
+          description: Missing token
   /integrations/{provider}/oauth/callback:
     get:
       summary: Public OAuth callback

@@ -55,6 +55,17 @@ class SettingsNotifier extends AutoDisposeNotifier<SettingsState> {
     state = state.copyWith(draftSettings: next, isDirty: next != state.persistedSettings);
   }
 
+  void setInboxNotificationsEnabled(bool enabled) {
+    final next = state.draftSettings.copyWith(
+      inboxNotificationsEnabled: enabled,
+    );
+    ref.read(appNotifierProvider.notifier).setAppSettings(next);
+    state = state.copyWith(
+      draftSettings: next,
+      isDirty: next != state.persistedSettings,
+    );
+  }
+
   Future<void> save() async {
     final settingsToSave = state.draftSettings;
     final result = await _systemUseCases.saveAppSettings.execute(settingsToSave);

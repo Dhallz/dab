@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/containers/activity_usecases.dart';
@@ -7,12 +8,16 @@ import '../../../domain/containers/user_usecases.dart';
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/activity/activity_live_event.dart';
+import '../../../domain/entities/system/app_settings.dart';
 import '../../../domain/entities/user/activity_follow.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../services/service_locator.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/models/view_status.dart';
+import '../../features/app/app_lifecycle.dart';
 import '../../features/app/app_notifier.dart';
 import 'dashboard_state.dart';
+import 'models/dashboard_activity_copy.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
 
@@ -164,12 +169,30 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
       lastSyncedAt: now,
       reconnectNoticeAt: shouldShowReconnectNotice ? now : null,
     );
+    unawaited(_notifyInbox(activity));
     if (shouldShowReconnectNotice) {
       _reconnectNoticeTimer?.cancel();
       _reconnectNoticeTimer = Timer(const Duration(seconds: 4), () {
         onReconnectNoticeCleared();
       });
     }
+  }
+
+  Future<void> _notifyInbox(Activity activity) async {
+    final settings = ref.read(appNotifierProvider).settings;
+    final focused =
+        ref.read(appLifecycleProvider) == AppLifecycleState.resumed;
+    final locale = settings.resolvedLocale ?? const Locale('en');
+    final l10n = lookupAppLocalizations(locale);
+    await _activityUseCases.notifyInboxActivity.execute(
+      enabled: settings.inboxNotificationsEnabled,
+      windowFocused: focused,
+      notificationId: '${activity.id}:${activity.inboxLane.name}',
+      title: dashboardActivityHeadline(activity),
+      body: activity.isFollowLane
+          ? l10n.inboxNotificationFollowing
+          : l10n.inboxNotificationDirected,
+    );
   }
 
   void onActivityArchivedRemotely(String activityId) {

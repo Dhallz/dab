@@ -22,6 +22,13 @@ class PresenceService implements AbsIPresenceBroadcaster {
   Set<String> getActiveUserIds() => _sessions.values.toSet();
 
   @override
+  bool hasSession(String userId) {
+    final id = userId.trim();
+    if (id.isEmpty) return false;
+    return _sessions.values.any((sessionUserId) => sessionUserId == id);
+  }
+
+  @override
   void broadcast(String type, Map<String, dynamic> data) {
     final payload = jsonEncode({'type': type, 'data': data});
     for (final session in _sessions.keys) {

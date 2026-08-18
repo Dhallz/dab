@@ -666,6 +666,101 @@ class UserController {
     );
   }
 
+  Future<Response> saveMyDeviceToken(Request request) async {
+    final userId = userIdProperty.get(request);
+    final body = await _readDeviceTokenBody(request);
+    if (body == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Body must include platform and token'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    final result = await _user.saveUserDeviceToken.execute(
+      userId: userId,
+      platform: body.platform,
+      token: body.token,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (saved) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': saved.toApiMap(),
+            'meta': {
+              'dataType': 'user_device_token',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> deleteMyDeviceToken(Request request) async {
+    final userId = userIdProperty.get(request);
+    final body = await _readDeviceTokenBody(request, requirePlatform: false);
+    if (body == null) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Body must include token'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+    final result = await _user.deleteUserDeviceToken.execute(
+      userId: userId,
+      token: body.token,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (_) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': {'deleted': true},
+            'meta': {
+              'dataType': 'user_device_token_delete',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
   Future<({String providerId, String objectKey, String? title, String? url})?>
   _readFollowBody(Request request) async {
     try {
@@ -685,6 +780,26 @@ class UserController {
         title: title.isEmpty ? null : title,
         url: url.isEmpty ? null : url,
       );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<({String platform, String token})?> _readDeviceTokenBody(
+    Request request, {
+    bool requirePlatform = true,
+  }) async {
+    try {
+      final bodyStr = await request.readAsString();
+      final data = bodyStr.trim().isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(bodyStr);
+      if (data is! Map) return null;
+      final platform = (data['platform'] ?? '').toString().trim();
+      final token = (data['token'] ?? '').toString().trim();
+      if (token.isEmpty) return null;
+      if (requirePlatform && platform.isEmpty) return null;
+      return (platform: platform, token: token);
     } catch (_) {
       return null;
     }

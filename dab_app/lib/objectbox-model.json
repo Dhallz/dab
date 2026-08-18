@@ -41,7 +41,7 @@
     },
     {
       "id": "2:4174291376144611737",
-      "lastPropertyId": "5:3281782940868744179",
+      "lastPropertyId": "7:9053524221215575545",
       "name": "AppSettingsRecord",
       "properties": [
         {
@@ -69,6 +69,11 @@
           "id": "5:3281782940868744179",
           "name": "islandBarSelectionsJson",
           "type": 9
+        },
+        {
+          "id": "7:9053524221215575545",
+          "name": "inboxNotificationsDisabled",
+          "type": 1
         }
       ],
       "relations": []
@@ -264,7 +269,9 @@
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    4384245772715690533
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

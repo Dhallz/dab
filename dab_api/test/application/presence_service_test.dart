@@ -62,5 +62,16 @@ void main() {
       verifyNever(() => mockSocket.trySendText(any()));
       verify(() => mockSocket2.trySendText(any())).called(1);
     });
+
+    test('hasSession is true only for connected user ids', () {
+      presenceService.addSession(mockSocket, 'user1');
+
+      expect(presenceService.hasSession('user1'), isTrue);
+      expect(presenceService.hasSession('user2'), isFalse);
+      expect(presenceService.hasSession('  '), isFalse);
+
+      presenceService.removeSession(mockSocket);
+      expect(presenceService.hasSession('user1'), isFalse);
+    });
   });
 }

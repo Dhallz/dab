@@ -62,6 +62,7 @@ activities                  ← Base table: id, userId (recipient), senderUserId
   └── activity_discord_message  ← Discord metadata: guildId, channelId, messageId, replyToId
 
 activity_follows            ← Per-user Follow pins: userId, providerId, objectKey, title, url
+user_device_tokens          ← Per-user FCM/APNs tokens: platform, token
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -85,6 +86,7 @@ activity_follows            ← Per-user Follow pins: userId, providerId, object
 | `user_identities` | External provider account linkage |
 | `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
 | `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Optional `title` / `url` display snapshot. Indexed `(provider_id, object_key)` for ingest lookup. Schema version 20. |
+| `user_device_tokens` | Per-user FCM/APNs registration tokens for data-only inbox wakes. Unique `(user_id, token)`. `platform` is `android` or `ios`. Schema version 21. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
 | `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |
@@ -170,6 +172,7 @@ never see prior days if a purge was missed.
 - **Auth:** JWT-authenticated upgrade; request identity is used for scoped delivery
 - **Protocol:** Clients upgrade HTTP → WebSocket on connect.
 - **Payloads:** `ACTIVITY_RECEIVED` events pushed on every new ingestion.
+- **Offline wake:** When the recipient has no WebSocket session, `ActivityLivePublisher` may send an FCM HTTP v1 **data-only** message (`type=inbox_wake`, `lane`, `activityId`) to registered device tokens. Development never sends FCM. Activity title/body are never placed on the wire.
 - **Graceful Degradation:** If WebSocket is unavailable, clients fall back to polling with Vegas sync tokens.
 
 ---

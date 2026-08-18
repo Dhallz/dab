@@ -8,15 +8,18 @@ import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
 import 'package:dab_app/domain/entities/user/activity_follow.dart';
 import 'package:dab_app/domain/entities/user/follow_candidate.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_inbox_local_notification.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dab_app/presentation/features/app/app_lifecycle.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_notifier.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
 import 'package:dab_app/presentation/views/dashboard/models/dashboard_feed_mode.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,6 +34,25 @@ class _MockProviderConfigRepository extends Mock
 class _MockSystemUseCases extends Mock implements SystemUseCases {}
 
 class _MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+class _RecordingInbox implements IInboxLocalNotification {
+  int calls = 0;
+  String? lastId;
+  String? lastTitle;
+  String? lastBody;
+
+  @override
+  Future<void> show({
+    required String notificationId,
+    required String title,
+    required String body,
+  }) async {
+    calls += 1;
+    lastId = notificationId;
+    lastTitle = title;
+    lastBody = body;
+  }
+}
 
 /// Stable [AppState] without async [AppNotifier.init] for unit tests.
 class _TestAppNotifier extends AppNotifier {
@@ -76,12 +98,14 @@ void main() {
   );
 
   ProviderContainer containerWithOverrides(
-    DashboardNotifier Function() create,
-  ) {
+    DashboardNotifier Function() create, {
+    List<Override> extra = const [],
+  }) {
     return ProviderContainer(
       overrides: [
         dashboardNotifierProvider.overrideWith(create),
         appNotifierProvider.overrideWith(_TestAppNotifier.new),
+        ...extra,
       ],
     );
   }
@@ -517,5 +541,83 @@ void main() {
     expect(state.followPickerVisible, hasLength(1));
     expect(state.followPickerVisible.single.objectKey, 'acme/app|feature/foo');
     verify(() => userRepository.listMyFollowCandidates(query: 'foo')).called(1);
+  });
+
+  test('shows a local banner when unfocused and skips when focused', () async {
+    when(
+      () => repository.getLiveActivities(
+        limit: 50,
+        global: false,
+        includeArchived: true,
+      ),
+    ).thenAnswer((_) async => const Right([]));
+
+    final unfocusedInbox = _RecordingInbox();
+    final unfocused = containerWithOverrides(
+      () => DashboardNotifier(
+        ActivityUseCases(repository, inboxNotifications: unfocusedInbox),
+        UserUseCases(userRepository),
+      ),
+      extra: [
+        appLifecycleProvider.overrideWith(
+          (ref) => AppLifecycleState.inactive,
+        ),
+      ],
+    );
+    final unfocusedKeep = unfocused.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(unfocusedKeep.close);
+    addTearDown(unfocused.dispose);
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+
+    unfocused.read(dashboardNotifierProvider.notifier).onActivityReceived(
+      Activity(
+        id: 'a-live',
+        userId: 'u-1',
+        provider: const SlackMessageProvider(channelId: 'C1'),
+        title: 'Hello from Slack',
+        content: 'secret body',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 8, 17),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(unfocusedInbox.calls, 1);
+    expect(unfocusedInbox.lastId, 'a-live:directed');
+    expect(unfocusedInbox.lastTitle, 'Hello from Slack');
+    expect(unfocusedInbox.lastBody, 'Directed');
+
+    final focusedInbox = _RecordingInbox();
+    final focused = containerWithOverrides(
+      () => DashboardNotifier(
+        ActivityUseCases(repository, inboxNotifications: focusedInbox),
+        UserUseCases(userRepository),
+      ),
+    );
+    final focusedKeep = focused.listen<DashboardState>(
+      dashboardNotifierProvider,
+      (_, _) {},
+    );
+    addTearDown(focusedKeep.close);
+    addTearDown(focused.dispose);
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+
+    focused.read(dashboardNotifierProvider.notifier).onActivityReceived(
+      Activity(
+        id: 'a-live-2',
+        userId: 'u-1',
+        provider: const SlackMessageProvider(channelId: 'C1'),
+        title: 'Hello from Slack',
+        content: 'secret body',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 8, 17),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(focusedInbox.calls, 0);
   });
 }
