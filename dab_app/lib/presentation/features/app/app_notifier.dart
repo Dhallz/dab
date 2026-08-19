@@ -112,6 +112,10 @@ class AppNotifier extends Notifier<AppState> {
   }
 
   /// Tests each active provider and stores green/red results for browse filters.
+  ///
+  /// Connected user credentials are applied first so Dashboard health stays
+  /// green during slow org tests. A failed Live webhook probe does not paint
+  /// red when Settings → Connect already has a secret for that provider.
   Future<void> refreshProviderConnectionStatuses() async {
     final activeConfigs = state.configs.where((config) => config.isActive);
     if (activeConfigs.isEmpty) {
@@ -122,33 +126,19 @@ class AppNotifier extends Notifier<AppState> {
     final statuses = Map<String, ProviderConnectionStatus>.from(
       state.providerConnectionStatuses,
     );
-    for (final config in activeConfigs) {
-      try {
-        final result = await _providerRepo
-            .testProviderConfig(config)
-            .timeout(const Duration(seconds: 12));
-        result.fold(
-          (failure) {
-            statuses[config.id] = ProviderConnectionStatus(
-              status: ViewStatus.failure,
-              message: failure.message,
-              lastCheck: DateTime.now(),
-            );
-          },
-          (report) {
-            statuses[config.id] = ProviderConnectionStatus.fromReport(
-              report,
-              lastCheck: DateTime.now(),
-            );
-          },
-        );
-      } catch (e) {
-        statuses[config.id] = ProviderConnectionStatus(
-          status: ViewStatus.failure,
-          message: e.toString(),
-          lastCheck: DateTime.now(),
-        );
-      }
+    final connectedLabels = await _connectedCredentialLabels();
+    final seededAt = DateTime.now();
+    var seeded = false;
+    for (final entry in connectedLabels.entries) {
+      if (statuses[entry.key]?.status == ViewStatus.success) continue;
+      statuses[entry.key] = ProviderConnectionStatus(
+        status: ViewStatus.success,
+        message: entry.value,
+        lastCheck: seededAt,
+      );
+      seeded = true;
+    }
+    if (seeded) {
       state = state.copyWith(
         providerConnectionStatuses: Map<String, ProviderConnectionStatus>.from(
           statuses,
@@ -156,23 +146,51 @@ class AppNotifier extends Notifier<AppState> {
       );
     }
 
-    final credentialsResult = await _userRepository.listMyCredentials();
-    credentialsResult.fold((_) => null, (credentials) {
-      for (final cred in credentials) {
-        if (!cred.isConnected) continue;
-        final existing = statuses[cred.providerId];
-        if (existing?.status == ViewStatus.success) continue;
-        statuses[cred.providerId] = ProviderConnectionStatus(
-          status: ViewStatus.success,
-          message: cred.externalUsername ?? cred.externalId,
+    for (final config in activeConfigs) {
+      late final ProviderConnectionStatus tested;
+      try {
+        final result = await _providerRepo
+            .testProviderConfig(config)
+            .timeout(const Duration(seconds: 12));
+        tested = result.fold(
+          (failure) => ProviderConnectionStatus(
+            status: ViewStatus.failure,
+            message: failure.message,
+            lastCheck: DateTime.now(),
+          ),
+          (report) => ProviderConnectionStatus.fromReport(
+            report,
+            lastCheck: DateTime.now(),
+          ),
+        );
+      } catch (e) {
+        tested = ProviderConnectionStatus(
+          status: ViewStatus.failure,
+          message: e.toString(),
           lastCheck: DateTime.now(),
         );
       }
+      statuses[config.id] = tested.preferringConnectedCredential(
+        connectedLabels[config.id],
+      );
       state = state.copyWith(
         providerConnectionStatuses: Map<String, ProviderConnectionStatus>.from(
           statuses,
         ),
       );
+    }
+  }
+
+  Future<Map<String, String>> _connectedCredentialLabels() async {
+    final result = await _userRepository.listMyCredentials();
+    return result.fold((_) => const <String, String>{}, (credentials) {
+      final labels = <String, String>{};
+      for (final cred in credentials) {
+        if (!cred.isConnected) continue;
+        labels[cred.providerId] =
+            cred.externalUsername ?? cred.externalId ?? cred.providerId;
+      }
+      return labels;
     });
   }
 }

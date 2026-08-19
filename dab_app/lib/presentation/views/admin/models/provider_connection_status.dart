@@ -35,4 +35,19 @@ class ProviderConnectionStatus with ProviderConnectionStatusMappable {
       polling: report.polling,
     );
   }
+
+  /// Keeps a connected user credential green when the org Admin test failed
+  /// or warned (typical for unset Live webhooks).
+  ProviderConnectionStatus preferringConnectedCredential(
+    String? credentialLabel,
+  ) {
+    if (status == ViewStatus.success || credentialLabel == null) {
+      return this;
+    }
+    return ProviderConnectionStatus(
+      status: ViewStatus.success,
+      message: credentialLabel,
+      lastCheck: lastCheck,
+    );
+  }
 }
