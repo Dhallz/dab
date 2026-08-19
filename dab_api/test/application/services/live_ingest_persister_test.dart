@@ -109,4 +109,25 @@ void main() {
     verifyNever(() => activities.createActivity(any()));
     verifyNever(() => liveFeed.recordLiveIngestSuccess(any()));
   });
+
+  test('replaceExisting upserts and replaces Redis copies', () async {
+    final activity = TestData.activity(id: 'a-heart', userId: 'u-1');
+    when(
+      () => activities.upsertActivity(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(() => liveFeed.replaceFanOutActivity(any())).thenAnswer((_) async {});
+
+    final result = await persister.persist(
+      activities: [activity],
+      providerId: 'figma',
+      emptyReason: 'duplicate_activity',
+      replaceExisting: true,
+    );
+
+    expect(result.getOrElse((_) => throw StateError('left')).ingested, isTrue);
+    verify(() => activities.upsertActivity(activity)).called(1);
+    verifyNever(() => activities.createActivity(any()));
+    verify(() => liveFeed.replaceFanOutActivity(activity)).called(1);
+    verify(() => liveFeed.recordLiveIngestSuccess('figma')).called(1);
+  });
 }

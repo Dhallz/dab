@@ -22,6 +22,7 @@ import 'package:dab_api/src/application/usecases/activity/archive_live_activity.
 import 'package:dab_api/src/application/usecases/activity/fetch_remote_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_live_activities.dart';
 import 'package:dab_api/src/application/usecases/activity/get_recent_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/ingest_figma_webhook.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_github_webhook.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_bitbucket_webhook.dart';
 import 'package:dab_api/src/application/usecases/activity/ingest_discord_message.dart';
@@ -85,6 +86,7 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_access_token_issuer.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_discord_live_ingestor.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_gateway.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_live_feed_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_presence_broadcaster.dart';
@@ -160,6 +162,8 @@ import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_branch_ca
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_gateway_client.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/figma/figma_file_source.dart';
+import 'package:dab_api/src/infrastructure/sources/figma/figma_follow_candidate_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_branch_catalog.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_branch_catalog.dart';
@@ -329,6 +333,26 @@ Future<void> serviceLocator() async {
     jsonRestProtocol,
     sl<AbsICredentialResolver>(),
   );
+  sl.registerSingleton<AbsIOauthTokenClient>(HttpOauthTokenClient());
+  sl.registerSingleton<AbsIOauthClientCredentialResolver>(
+    OauthClientCredentialResolver(config),
+  );
+  sl.registerSingleton<AbsIOauthCredentialRefresher>(
+    OauthCredentialRefresher(
+      sl<AbsIUserProviderCredentialRepository>(),
+      providerConfigRepository,
+      sl<AbsIOauthClientCredentialResolver>(),
+      sl<AbsIOauthTokenClient>(),
+    ),
+  );
+  final figmaSource = FigmaFileSource(
+    providerConfigRepository,
+    userRepository,
+    jsonRestProtocol,
+    sl<AbsICredentialResolver>(),
+    follows: sl<AbsIActivityFollowRepository>(),
+    oauth: sl<AbsIOauthCredentialRefresher>(),
+  );
 
   sl.registerSingleton<PhorgeUserSource>(phorgeUserSource);
   sl.registerSingleton<AbsIPhorgeTaskHydrator>(phorgeTaskSource);
@@ -339,6 +363,8 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GitHubCommitSource>(githubSource);
   sl.registerSingleton<GitLabCommitSource>(gitlabSource);
   sl.registerSingleton<BitbucketCommitSource>(bitbucketSource);
+  sl.registerSingleton<FigmaFileSource>(figmaSource);
+  sl.registerSingleton<AbsIFigmaFileGateway>(figmaSource);
 
   // Application Orchestration: Mapping Sources to Mappers (single registration site)
   final registry = ConnectorRegistry();
@@ -353,6 +379,7 @@ Future<void> serviceLocator() async {
     githubSource: githubSource,
     gitlabSource: gitlabSource,
     bitbucketSource: bitbucketSource,
+    figmaSource: figmaSource,
   );
 
   sl.registerSingleton<ConnectorRegistry>(registry);
@@ -386,18 +413,6 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<AbsIOauthPkce>(OauthPkce());
   sl.registerSingleton<AbsIOauthStateStore>(
     RedisOauthStateStore(sl<RedisService>()),
-  );
-  sl.registerSingleton<AbsIOauthTokenClient>(HttpOauthTokenClient());
-  sl.registerSingleton<AbsIOauthClientCredentialResolver>(
-    OauthClientCredentialResolver(config),
-  );
-  sl.registerSingleton<AbsIOauthCredentialRefresher>(
-    OauthCredentialRefresher(
-      sl<AbsIUserProviderCredentialRepository>(),
-      sl<AbsIProviderConfigRepository>(),
-      sl<AbsIOauthClientCredentialResolver>(),
-      sl<AbsIOauthTokenClient>(),
-    ),
   );
 
   // -----------------------------------------------------
@@ -589,6 +604,19 @@ Future<void> serviceLocator() async {
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
+    ),
+  );
+  sl.registerSingleton<IngestFigmaWebhook>(
+    IngestFigmaWebhook(
+      sl<IUserRepository>(),
+      sl<AbsIActivityRepository>(),
+      sl<AbsIProviderConfigRepository>(),
+      sl<AbsILiveFeedStore>(),
+      sl<AbsIPresenceBroadcaster>(),
+      livePublisher: sl<ActivityLivePublisher>(),
+      persister: sl<LiveIngestPersister>(),
+      follows: sl<AbsIActivityFollowRepository>(),
+      fileGateway: sl<AbsIFigmaFileGateway>(),
     ),
   );
   sl.registerSingleton<IngestGitLabWebhook>(
@@ -810,6 +838,11 @@ Future<void> serviceLocator() async {
           sl<IUserRepository>(),
           sl<ConduitProtocol>(),
         ),
+        FigmaFollowCandidateCatalog(
+          sl<AbsIProviderConfigRepository>(),
+          sl<AbsICredentialResolver>(),
+          jsonRestProtocol,
+        ),
       ],
       sl<GetGitWatchList>(),
       sl<GetGitBranchList>(),
@@ -935,6 +968,7 @@ Future<void> serviceLocator() async {
       ingestGitLabWebhook: sl<IngestGitLabWebhook>(),
       ingestJiraWebhook: sl<IngestJiraWebhook>(),
       ingestLinearWebhook: sl<IngestLinearWebhook>(),
+      ingestFigmaWebhook: sl<IngestFigmaWebhook>(),
       ingestPhorgeWebhook: sl<IngestPhorgeWebhook>(),
       ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
@@ -1056,6 +1090,12 @@ Future<void> _seedProviders() async {
           'Bitbucket',
           'https://bitbucket.org',
           'https://bitbucket.org/favicon.ico',
+        ),
+        (
+          'figma',
+          'Figma',
+          'https://www.figma.com',
+          'https://static.figma.com/app/icon/1/favicon.png',
         ),
       ];
 

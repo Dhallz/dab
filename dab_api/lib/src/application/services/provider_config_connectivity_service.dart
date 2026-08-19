@@ -8,6 +8,7 @@ import '../../domain/core/discord_scope.dart';
 import '../../domain/core/failures/failure.dart';
 import '../../domain/core/github_scope.dart';
 import '../../domain/core/gitlab_scope.dart';
+import '../../domain/core/figma_scope.dart';
 import '../../domain/core/phorge_scope.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../domain/entities/provider/provider_connectivity_report.dart';
@@ -51,6 +52,7 @@ class ProviderConfigConnectivityService {
       'linear' => _testLinear(config),
       'discord' => _testDiscord(config),
       'phorge' || 'phabricator' => _testPhorge(config),
+      'figma' => _testFigma(config),
       _ => _testGeneric(config),
     };
   }
@@ -321,6 +323,51 @@ class ProviderConfigConnectivityService {
     return Right(buildReport(core: core, live: live, polling: polling));
   }
 
+  Future<Either<Failure, ProviderConnectivityReport>> _testFigma(
+    ProviderConfig config,
+  ) async {
+    if (!config.isActive) {
+      return Left(ValidationFailure('Provider is not active'));
+    }
+
+    final token = _setting(config, ['api.token', 'apiToken', 'token']);
+    final clientId = _setting(config, ['clientId']);
+
+    late final ProviderSectionResult core;
+    if (token.isNotEmpty) {
+      core = await _figmaCore(token);
+      if (core.status == ConnectivitySectionStatus.failure) {
+        return Right(
+          buildReport(
+            core: core,
+            live: coreFailurePropagation(core.message),
+            polling: coreFailurePropagation(core.message),
+          ),
+        );
+      }
+    } else if (clientId.isNotEmpty) {
+      core = const ProviderSectionResult(
+        status: ConnectivitySectionStatus.success,
+        message: 'OAuth client configured',
+      );
+    } else {
+      core = const ProviderSectionResult(
+        status: ConnectivitySectionStatus.success,
+        message: 'Configuration present',
+      );
+    }
+
+    final polling = token.isNotEmpty
+        ? await _figmaPolling(config, token)
+        : const ProviderSectionResult(
+            status: ConnectivitySectionStatus.success,
+            message:
+                'Explorer polls with connected Figma accounts; paste file URLs or Follow a file',
+          );
+    final live = await _resolveLive(config, 'figma');
+    return Right(buildReport(core: core, live: live, polling: polling));
+  }
+
   Future<Either<Failure, ProviderConnectivityReport>> _testGeneric(
     ProviderConfig config,
   ) async {
@@ -372,6 +419,99 @@ class ProviderConfigConnectivityService {
       return ProviderSectionResult(
         status: ConnectivitySectionStatus.failure,
         message: 'GitHub connectivity test failed: $e',
+      );
+    }
+  }
+
+  Future<ProviderSectionResult> _figmaCore(String token) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$kFigmaApiBase/v1/me'),
+            headers: figmaAuthHeaders(token),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final handle =
+            (body['handle'] ?? body['email'] ?? body['id'] ?? 'unknown')
+                .toString();
+        return ProviderSectionResult(
+          status: ConnectivitySectionStatus.success,
+          message: 'Connected as $handle',
+        );
+      }
+      return ProviderSectionResult(
+        status: ConnectivitySectionStatus.failure,
+        message:
+            'Figma API returned ${response.statusCode}. Verify the personal access token.',
+      );
+    } catch (e) {
+      return ProviderSectionResult(
+        status: ConnectivitySectionStatus.failure,
+        message: 'Figma connectivity test failed: $e',
+      );
+    }
+  }
+
+  Future<ProviderSectionResult> _figmaPolling(
+    ProviderConfig config,
+    String token,
+  ) async {
+    final fileKeys = parseFigmaFileKeys(config.settings['fileKeys']);
+    final teamIds = parseFigmaTeamIds(
+      config.settings['teamIds'] ?? config.settings['teamId'],
+    );
+    if (fileKeys.isEmpty && teamIds.isEmpty) {
+      return const ProviderSectionResult(
+        status: ConnectivitySectionStatus.success,
+        message:
+            'Paste file URLs so Explorer can poll comments; Connect OAuth cannot list a team',
+      );
+    }
+    try {
+      if (fileKeys.isNotEmpty) {
+        final key = fileKeys.first;
+        final response = await http
+            .get(
+              Uri.parse('$kFigmaApiBase/v1/files/$key/meta'),
+              headers: figmaAuthHeaders(token),
+            )
+            .timeout(const Duration(seconds: 10));
+        if (response.statusCode != 200) {
+          return ProviderSectionResult(
+            status: ConnectivitySectionStatus.failure,
+            message:
+                'Figma file meta returned ${response.statusCode} for $key',
+          );
+        }
+        return ProviderSectionResult(
+          status: ConnectivitySectionStatus.success,
+          message: 'Reached Figma file meta for $key',
+        );
+      }
+      final teamId = teamIds.first;
+      final response = await http
+          .get(
+            Uri.parse('$kFigmaApiBase/v1/teams/$teamId/projects'),
+            headers: figmaAuthHeaders(token),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) {
+        return ProviderSectionResult(
+          status: ConnectivitySectionStatus.failure,
+          message:
+              'Figma team projects returned ${response.statusCode} for $teamId',
+        );
+      }
+      return ProviderSectionResult(
+        status: ConnectivitySectionStatus.success,
+        message: 'Reached Figma team $teamId',
+      );
+    } catch (e) {
+      return ProviderSectionResult(
+        status: ConnectivitySectionStatus.failure,
+        message: 'Figma polling probe failed: $e',
       );
     }
   }

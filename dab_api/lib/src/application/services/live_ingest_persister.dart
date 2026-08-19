@@ -12,6 +12,7 @@ import 'activity_live_publisher.dart';
 /// ROLE: Shared persist + Redis fan-out tail for live ingest use cases.
 /// CONTRACT: Inserts each [Activity], skips duplicate-key failures, emits
 /// live-feed fan-out, and records ingest success when at least one row is new.
+/// [replaceExisting] upserts by id and replaces Redis copies (last-edited).
 /// CONSTRAINTS: Does not map DTOs or apply provider filters — callers pass
 /// already-shaped activities. Duplicate detection is message-based.
 class LiveIngestPersister {
@@ -41,17 +42,20 @@ class LiveIngestPersister {
     required String emptyReason,
     String logTag = 'INGEST',
     void Function(Activity activity)? onInserted,
+    bool replaceExisting = false,
   }) async {
     var ingestedCount = 0;
     for (final activity in activities) {
-      final createResult = await _activities.createActivity(activity);
+      final createResult = replaceExisting
+          ? await _activities.upsertActivity(activity)
+          : await _activities.createActivity(activity);
       if (createResult.isLeft()) {
         final message = createResult
             .getLeft()
             .toNullable()!
             .message
             .toLowerCase();
-        if (_isDuplicateViolation(message)) {
+        if (!replaceExisting && _isDuplicateViolation(message)) {
           continue;
         }
         return Left(createResult.getLeft().toNullable()!);
@@ -63,6 +67,7 @@ class LiveIngestPersister {
         presence: _presence,
         activity: activity,
         publisher: _livePublisher,
+        replaceExisting: replaceExisting,
       );
       print(
         '[$logTag] ingest_complete activity_id=${activity.id} user_id=${activity.userId}',

@@ -128,4 +128,40 @@ void main() {
 
     expect(status, WebhookAuthStatus.ok);
   });
+
+  test('Figma JSON passcode compares constant-time', () async {
+    when(() => configs.getConfigs()).thenAnswer(
+      (_) async => Right([
+        const ProviderConfig(
+          id: 'figma',
+          name: 'Figma',
+          baseUrl: 'https://www.figma.com',
+          settings: {'webhookSecret': 'figma-pass'},
+        ),
+      ]),
+    );
+
+    final ok = await authenticator.authenticate(
+      const WebhookAuthInput(
+        providerId: 'figma',
+        jsonPasscode: 'figma-pass',
+      ),
+    );
+    final fromBody = await authenticator.authenticate(
+      const WebhookAuthInput(
+        providerId: 'figma',
+        body: '{"event_type":"PING","passcode":"figma-pass"}',
+      ),
+    );
+    final invalid = await authenticator.authenticate(
+      const WebhookAuthInput(
+        providerId: 'figma',
+        jsonPasscode: 'wrong',
+      ),
+    );
+
+    expect(ok, WebhookAuthStatus.ok);
+    expect(fromBody, WebhookAuthStatus.ok);
+    expect(invalid, WebhookAuthStatus.invalid);
+  });
 }

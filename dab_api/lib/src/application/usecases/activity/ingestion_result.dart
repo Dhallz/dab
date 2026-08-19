@@ -50,3 +50,6 @@ typedef BitbucketWebhookIngestionResult = IngestionResult;
 
 /// Discord Gateway `MESSAGE_CREATE` ingest outcome.
 typedef DiscordMessageIngestionResult = IngestionResult;
+
+/// Figma `FILE_COMMENT` / `FILE_UPDATE` webhook ingest outcome.
+typedef FigmaWebhookIngestionResult = IngestionResult;

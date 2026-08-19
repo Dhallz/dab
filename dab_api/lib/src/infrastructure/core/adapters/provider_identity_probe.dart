@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/figma_scope.dart';
 import '../../../domain/core/gitlab_scope.dart';
 import '../../../domain/core/provider_credential_keys.dart';
 import '../../../domain/entities/user/provider_whoami_result.dart';
@@ -64,6 +65,8 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
           return Right(await _slack(settings));
         case 'discord':
           return Right(await _discord(settings));
+        case 'figma':
+          return Right(await _figma(settings));
         default:
           return const Left(ValidationFailure('Unknown provider'));
       }
@@ -305,6 +308,23 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
     return ProviderWhoamiResult(
       externalId: userId,
       externalUsername: (body['user'] ?? body['team'] ?? '').toString().trim(),
+    );
+  }
+
+  Future<ProviderWhoamiResult> _figma(Map<String, dynamic> settings) async {
+    final token = extractProviderToken('figma', settings);
+    final me = await _jsonRest.getJsonMap(
+      Uri.parse('$kFigmaApiBase/v1/me'),
+      headers: figmaAuthHeaders(token),
+    );
+    final id = (me['id'] ?? '').toString().trim();
+    if (id.isEmpty) {
+      throw StateError('Figma /v1/me returned no id');
+    }
+    final handle = (me['handle'] ?? '').toString().trim();
+    return ProviderWhoamiResult(
+      externalId: id,
+      externalUsername: handle,
     );
   }
 

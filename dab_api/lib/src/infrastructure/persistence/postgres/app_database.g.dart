@@ -3958,6 +3958,348 @@ class ActivityDiscordMessageTableCompanion
   }
 }
 
+class $ActivityFigmaFileTableTable extends ActivityFigmaFileTable
+    with TableInfo<$ActivityFigmaFileTableTable, ActivityFigmaFileTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityFigmaFileTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _activityIdMeta = const VerificationMeta(
+    'activityId',
+  );
+  @override
+  late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
+    'activity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES activities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _fileKeyMeta = const VerificationMeta(
+    'fileKey',
+  );
+  @override
+  late final GeneratedColumn<String> fileKey = GeneratedColumn<String>(
+    'file_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _commentIdMeta = const VerificationMeta(
+    'commentId',
+  );
+  @override
+  late final GeneratedColumn<String> commentId = GeneratedColumn<String>(
+    'comment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastTouchedByMeta = const VerificationMeta(
+    'lastTouchedBy',
+  );
+  @override
+  late final GeneratedColumn<String> lastTouchedBy = GeneratedColumn<String>(
+    'last_touched_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    activityId,
+    fileKey,
+    commentId,
+    lastTouchedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_figma_file';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityFigmaFileTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('activity_id')) {
+      context.handle(
+        _activityIdMeta,
+        activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activityIdMeta);
+    }
+    if (data.containsKey('file_key')) {
+      context.handle(
+        _fileKeyMeta,
+        fileKey.isAcceptableOrUnknown(data['file_key']!, _fileKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileKeyMeta);
+    }
+    if (data.containsKey('comment_id')) {
+      context.handle(
+        _commentIdMeta,
+        commentId.isAcceptableOrUnknown(data['comment_id']!, _commentIdMeta),
+      );
+    }
+    if (data.containsKey('last_touched_by')) {
+      context.handle(
+        _lastTouchedByMeta,
+        lastTouchedBy.isAcceptableOrUnknown(
+          data['last_touched_by']!,
+          _lastTouchedByMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {activityId};
+  @override
+  ActivityFigmaFileTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityFigmaFileTableData(
+      activityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_id'],
+      )!,
+      fileKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_key'],
+      )!,
+      commentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}comment_id'],
+      ),
+      lastTouchedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_touched_by'],
+      ),
+    );
+  }
+
+  @override
+  $ActivityFigmaFileTableTable createAlias(String alias) {
+    return $ActivityFigmaFileTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityFigmaFileTableData extends DataClass
+    implements Insertable<ActivityFigmaFileTableData> {
+  final String activityId;
+  final String fileKey;
+  final String? commentId;
+  final String? lastTouchedBy;
+  const ActivityFigmaFileTableData({
+    required this.activityId,
+    required this.fileKey,
+    this.commentId,
+    this.lastTouchedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['activity_id'] = Variable<String>(activityId);
+    map['file_key'] = Variable<String>(fileKey);
+    if (!nullToAbsent || commentId != null) {
+      map['comment_id'] = Variable<String>(commentId);
+    }
+    if (!nullToAbsent || lastTouchedBy != null) {
+      map['last_touched_by'] = Variable<String>(lastTouchedBy);
+    }
+    return map;
+  }
+
+  ActivityFigmaFileTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityFigmaFileTableCompanion(
+      activityId: Value(activityId),
+      fileKey: Value(fileKey),
+      commentId: commentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(commentId),
+      lastTouchedBy: lastTouchedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastTouchedBy),
+    );
+  }
+
+  factory ActivityFigmaFileTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityFigmaFileTableData(
+      activityId: serializer.fromJson<String>(json['activityId']),
+      fileKey: serializer.fromJson<String>(json['fileKey']),
+      commentId: serializer.fromJson<String?>(json['commentId']),
+      lastTouchedBy: serializer.fromJson<String?>(json['lastTouchedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'activityId': serializer.toJson<String>(activityId),
+      'fileKey': serializer.toJson<String>(fileKey),
+      'commentId': serializer.toJson<String?>(commentId),
+      'lastTouchedBy': serializer.toJson<String?>(lastTouchedBy),
+    };
+  }
+
+  ActivityFigmaFileTableData copyWith({
+    String? activityId,
+    String? fileKey,
+    Value<String?> commentId = const Value.absent(),
+    Value<String?> lastTouchedBy = const Value.absent(),
+  }) => ActivityFigmaFileTableData(
+    activityId: activityId ?? this.activityId,
+    fileKey: fileKey ?? this.fileKey,
+    commentId: commentId.present ? commentId.value : this.commentId,
+    lastTouchedBy: lastTouchedBy.present
+        ? lastTouchedBy.value
+        : this.lastTouchedBy,
+  );
+  ActivityFigmaFileTableData copyWithCompanion(
+    ActivityFigmaFileTableCompanion data,
+  ) {
+    return ActivityFigmaFileTableData(
+      activityId: data.activityId.present
+          ? data.activityId.value
+          : this.activityId,
+      fileKey: data.fileKey.present ? data.fileKey.value : this.fileKey,
+      commentId: data.commentId.present ? data.commentId.value : this.commentId,
+      lastTouchedBy: data.lastTouchedBy.present
+          ? data.lastTouchedBy.value
+          : this.lastTouchedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityFigmaFileTableData(')
+          ..write('activityId: $activityId, ')
+          ..write('fileKey: $fileKey, ')
+          ..write('commentId: $commentId, ')
+          ..write('lastTouchedBy: $lastTouchedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(activityId, fileKey, commentId, lastTouchedBy);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityFigmaFileTableData &&
+          other.activityId == this.activityId &&
+          other.fileKey == this.fileKey &&
+          other.commentId == this.commentId &&
+          other.lastTouchedBy == this.lastTouchedBy);
+}
+
+class ActivityFigmaFileTableCompanion
+    extends UpdateCompanion<ActivityFigmaFileTableData> {
+  final Value<String> activityId;
+  final Value<String> fileKey;
+  final Value<String?> commentId;
+  final Value<String?> lastTouchedBy;
+  final Value<int> rowid;
+  const ActivityFigmaFileTableCompanion({
+    this.activityId = const Value.absent(),
+    this.fileKey = const Value.absent(),
+    this.commentId = const Value.absent(),
+    this.lastTouchedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityFigmaFileTableCompanion.insert({
+    required String activityId,
+    required String fileKey,
+    this.commentId = const Value.absent(),
+    this.lastTouchedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : activityId = Value(activityId),
+       fileKey = Value(fileKey);
+  static Insertable<ActivityFigmaFileTableData> custom({
+    Expression<String>? activityId,
+    Expression<String>? fileKey,
+    Expression<String>? commentId,
+    Expression<String>? lastTouchedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (activityId != null) 'activity_id': activityId,
+      if (fileKey != null) 'file_key': fileKey,
+      if (commentId != null) 'comment_id': commentId,
+      if (lastTouchedBy != null) 'last_touched_by': lastTouchedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityFigmaFileTableCompanion copyWith({
+    Value<String>? activityId,
+    Value<String>? fileKey,
+    Value<String?>? commentId,
+    Value<String?>? lastTouchedBy,
+    Value<int>? rowid,
+  }) {
+    return ActivityFigmaFileTableCompanion(
+      activityId: activityId ?? this.activityId,
+      fileKey: fileKey ?? this.fileKey,
+      commentId: commentId ?? this.commentId,
+      lastTouchedBy: lastTouchedBy ?? this.lastTouchedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (activityId.present) {
+      map['activity_id'] = Variable<String>(activityId.value);
+    }
+    if (fileKey.present) {
+      map['file_key'] = Variable<String>(fileKey.value);
+    }
+    if (commentId.present) {
+      map['comment_id'] = Variable<String>(commentId.value);
+    }
+    if (lastTouchedBy.present) {
+      map['last_touched_by'] = Variable<String>(lastTouchedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityFigmaFileTableCompanion(')
+          ..write('activityId: $activityId, ')
+          ..write('fileKey: $fileKey, ')
+          ..write('commentId: $commentId, ')
+          ..write('lastTouchedBy: $lastTouchedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SessionsTableTable extends SessionsTable
     with TableInfo<$SessionsTableTable, SessionsTableData> {
   @override
@@ -7608,6 +7950,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ActivitySlackMessageTableTable(this);
   late final $ActivityDiscordMessageTableTable activityDiscordMessageTable =
       $ActivityDiscordMessageTableTable(this);
+  late final $ActivityFigmaFileTableTable activityFigmaFileTable =
+      $ActivityFigmaFileTableTable(this);
   late final $SessionsTableTable sessionsTable = $SessionsTableTable(this);
   late final $GroupsTableTable groupsTable = $GroupsTableTable(this);
   late final $GroupMembersTableTable groupMembersTable =
@@ -7643,6 +7987,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     activityLinearIssueTable,
     activitySlackMessageTable,
     activityDiscordMessageTable,
+    activityFigmaFileTable,
     sessionsTable,
     groupsTable,
     groupMembersTable,
@@ -7715,6 +8060,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       result: [
         TableUpdate('activity_discord_message', kind: UpdateKind.delete),
       ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'activities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('activity_figma_file', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -8413,6 +8765,34 @@ final class $$ActivitiesTableTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $ActivityFigmaFileTableTable,
+    List<ActivityFigmaFileTableData>
+  >
+  _activityFigmaFileTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.activityFigmaFileTable,
+        aliasName: $_aliasNameGenerator(
+          db.activitiesTable.id,
+          db.activityFigmaFileTable.activityId,
+        ),
+      );
+
+  $$ActivityFigmaFileTableTableProcessedTableManager
+  get activityFigmaFileTableRefs {
+    final manager = $$ActivityFigmaFileTableTableTableManager(
+      $_db,
+      $_db.activityFigmaFileTable,
+    ).filter((f) => f.activityId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _activityFigmaFileTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ActivitiesTableTableFilterComposer
@@ -8687,6 +9067,32 @@ class $$ActivitiesTableTableFilterComposer
               }) => $$ActivityDiscordMessageTableTableFilterComposer(
                 $db: $db,
                 $table: $db.activityDiscordMessageTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> activityFigmaFileTableRefs(
+    Expression<bool> Function($$ActivityFigmaFileTableTableFilterComposer f) f,
+  ) {
+    final $$ActivityFigmaFileTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityFigmaFileTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityFigmaFileTableTableFilterComposer(
+                $db: $db,
+                $table: $db.activityFigmaFileTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -9031,6 +9437,32 @@ class $$ActivitiesTableTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> activityFigmaFileTableRefs<T extends Object>(
+    Expression<T> Function($$ActivityFigmaFileTableTableAnnotationComposer a) f,
+  ) {
+    final $$ActivityFigmaFileTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.activityFigmaFileTable,
+          getReferencedColumn: (t) => t.activityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ActivityFigmaFileTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.activityFigmaFileTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ActivitiesTableTableTableManager
@@ -9055,6 +9487,7 @@ class $$ActivitiesTableTableTableManager
             bool activityLinearIssueTableRefs,
             bool activitySlackMessageTableRefs,
             bool activityDiscordMessageTableRefs,
+            bool activityFigmaFileTableRefs,
           })
         > {
   $$ActivitiesTableTableTableManager(
@@ -9144,6 +9577,7 @@ class $$ActivitiesTableTableTableManager
                 activityLinearIssueTableRefs = false,
                 activitySlackMessageTableRefs = false,
                 activityDiscordMessageTableRefs = false,
+                activityFigmaFileTableRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -9162,6 +9596,7 @@ class $$ActivitiesTableTableTableManager
                       db.activitySlackMessageTable,
                     if (activityDiscordMessageTableRefs)
                       db.activityDiscordMessageTable,
+                    if (activityFigmaFileTableRefs) db.activityFigmaFileTable,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -9334,6 +9769,27 @@ class $$ActivitiesTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (activityFigmaFileTableRefs)
+                        await $_getPrefetchedData<
+                          ActivitiesTableData,
+                          $ActivitiesTableTable,
+                          ActivityFigmaFileTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ActivitiesTableTableReferences
+                              ._activityFigmaFileTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ActivitiesTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).activityFigmaFileTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.activityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9363,6 +9819,7 @@ typedef $$ActivitiesTableTableProcessedTableManager =
         bool activityLinearIssueTableRefs,
         bool activitySlackMessageTableRefs,
         bool activityDiscordMessageTableRefs,
+        bool activityFigmaFileTableRefs,
       })
     >;
 typedef $$ActivityPhorgeTableTableCreateCompanionBuilder =
@@ -11988,6 +12445,333 @@ typedef $$ActivityDiscordMessageTableTableProcessedTableManager =
       ActivityDiscordMessageTableData,
       PrefetchHooks Function({bool activityId})
     >;
+typedef $$ActivityFigmaFileTableTableCreateCompanionBuilder =
+    ActivityFigmaFileTableCompanion Function({
+      required String activityId,
+      required String fileKey,
+      Value<String?> commentId,
+      Value<String?> lastTouchedBy,
+      Value<int> rowid,
+    });
+typedef $$ActivityFigmaFileTableTableUpdateCompanionBuilder =
+    ActivityFigmaFileTableCompanion Function({
+      Value<String> activityId,
+      Value<String> fileKey,
+      Value<String?> commentId,
+      Value<String?> lastTouchedBy,
+      Value<int> rowid,
+    });
+
+final class $$ActivityFigmaFileTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ActivityFigmaFileTableTable,
+          ActivityFigmaFileTableData
+        > {
+  $$ActivityFigmaFileTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ActivitiesTableTable _activityIdTable(_$AppDatabase db) =>
+      db.activitiesTable.createAlias(
+        $_aliasNameGenerator(
+          db.activityFigmaFileTable.activityId,
+          db.activitiesTable.id,
+        ),
+      );
+
+  $$ActivitiesTableTableProcessedTableManager get activityId {
+    final $_column = $_itemColumn<String>('activity_id')!;
+
+    final manager = $$ActivitiesTableTableTableManager(
+      $_db,
+      $_db.activitiesTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_activityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ActivityFigmaFileTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityFigmaFileTableTable> {
+  $$ActivityFigmaFileTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get fileKey => $composableBuilder(
+    column: $table.fileKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get commentId => $composableBuilder(
+    column: $table.commentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastTouchedBy => $composableBuilder(
+    column: $table.lastTouchedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ActivitiesTableTableFilterComposer get activityId {
+    final $$ActivitiesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityFigmaFileTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityFigmaFileTableTable> {
+  $$ActivityFigmaFileTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get fileKey => $composableBuilder(
+    column: $table.fileKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get commentId => $composableBuilder(
+    column: $table.commentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastTouchedBy => $composableBuilder(
+    column: $table.lastTouchedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ActivitiesTableTableOrderingComposer get activityId {
+    final $$ActivitiesTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityFigmaFileTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityFigmaFileTableTable> {
+  $$ActivityFigmaFileTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get fileKey =>
+      $composableBuilder(column: $table.fileKey, builder: (column) => column);
+
+  GeneratedColumn<String> get commentId =>
+      $composableBuilder(column: $table.commentId, builder: (column) => column);
+
+  GeneratedColumn<String> get lastTouchedBy => $composableBuilder(
+    column: $table.lastTouchedBy,
+    builder: (column) => column,
+  );
+
+  $$ActivitiesTableTableAnnotationComposer get activityId {
+    final $$ActivitiesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.activityId,
+      referencedTable: $db.activitiesTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ActivitiesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.activitiesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ActivityFigmaFileTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ActivityFigmaFileTableTable,
+          ActivityFigmaFileTableData,
+          $$ActivityFigmaFileTableTableFilterComposer,
+          $$ActivityFigmaFileTableTableOrderingComposer,
+          $$ActivityFigmaFileTableTableAnnotationComposer,
+          $$ActivityFigmaFileTableTableCreateCompanionBuilder,
+          $$ActivityFigmaFileTableTableUpdateCompanionBuilder,
+          (ActivityFigmaFileTableData, $$ActivityFigmaFileTableTableReferences),
+          ActivityFigmaFileTableData,
+          PrefetchHooks Function({bool activityId})
+        > {
+  $$ActivityFigmaFileTableTableTableManager(
+    _$AppDatabase db,
+    $ActivityFigmaFileTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityFigmaFileTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ActivityFigmaFileTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ActivityFigmaFileTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> activityId = const Value.absent(),
+                Value<String> fileKey = const Value.absent(),
+                Value<String?> commentId = const Value.absent(),
+                Value<String?> lastTouchedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityFigmaFileTableCompanion(
+                activityId: activityId,
+                fileKey: fileKey,
+                commentId: commentId,
+                lastTouchedBy: lastTouchedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String activityId,
+                required String fileKey,
+                Value<String?> commentId = const Value.absent(),
+                Value<String?> lastTouchedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityFigmaFileTableCompanion.insert(
+                activityId: activityId,
+                fileKey: fileKey,
+                commentId: commentId,
+                lastTouchedBy: lastTouchedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ActivityFigmaFileTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({activityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (activityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.activityId,
+                                referencedTable:
+                                    $$ActivityFigmaFileTableTableReferences
+                                        ._activityIdTable(db),
+                                referencedColumn:
+                                    $$ActivityFigmaFileTableTableReferences
+                                        ._activityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ActivityFigmaFileTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ActivityFigmaFileTableTable,
+      ActivityFigmaFileTableData,
+      $$ActivityFigmaFileTableTableFilterComposer,
+      $$ActivityFigmaFileTableTableOrderingComposer,
+      $$ActivityFigmaFileTableTableAnnotationComposer,
+      $$ActivityFigmaFileTableTableCreateCompanionBuilder,
+      $$ActivityFigmaFileTableTableUpdateCompanionBuilder,
+      (ActivityFigmaFileTableData, $$ActivityFigmaFileTableTableReferences),
+      ActivityFigmaFileTableData,
+      PrefetchHooks Function({bool activityId})
+    >;
 typedef $$SessionsTableTableCreateCompanionBuilder =
     SessionsTableCompanion Function({
       required String id,
@@ -14389,6 +15173,11 @@ class $AppDatabaseManager {
       $$ActivityDiscordMessageTableTableTableManager(
         _db,
         _db.activityDiscordMessageTable,
+      );
+  $$ActivityFigmaFileTableTableTableManager get activityFigmaFileTable =>
+      $$ActivityFigmaFileTableTableTableManager(
+        _db,
+        _db.activityFigmaFileTable,
       );
   $$SessionsTableTableTableManager get sessionsTable =>
       $$SessionsTableTableTableManager(_db, _db.sessionsTable);

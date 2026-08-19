@@ -65,17 +65,20 @@ class ActivityFooter extends StatelessWidget {
   }
 
   String _formatAuthorLabel() {
-    if (providerAuthorName.isEmpty) {
+    final author = looksLikeOpaqueUserId(providerAuthorName)
+        ? ''
+        : providerAuthorName.trim();
+    if (author.isEmpty) {
       return displayAuthorName;
     }
 
     final sameName =
-        providerAuthorName.toLowerCase() == displayAuthorName.toLowerCase();
+        author.toLowerCase() == displayAuthorName.toLowerCase();
     if (sameName) {
       return displayAuthorName;
     }
 
-    return '$displayAuthorName (${providerAuthorName.trim()})';
+    return '$displayAuthorName ($author)';
   }
 
   Widget _buildSingleActivityChips(BuildContext context) {

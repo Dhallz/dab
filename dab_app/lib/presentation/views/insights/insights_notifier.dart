@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/containers/activity_usecases.dart';
@@ -42,11 +44,34 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
 
   @override
   InsightsState build() {
-    return InsightsState.initial();
+    ref.listen(
+      appNotifierProvider.select(
+        (s) => (configs: s.configs, connections: s.providerConnectionStatuses),
+      ),
+      (previous, next) {
+        if (next.configs.isEmpty) return;
+        unawaited(syncProviderFilters(next.configs, next.connections));
+      },
+    );
+    return _seededState(InsightsState.initial());
+  }
+
+  InsightsState _seededState(InsightsState base) {
+    final app = ref.read(appNotifierProvider);
+    if (app.configs.isEmpty) return base;
+    return _applyProviderConfigFilters(
+      base,
+      app.configs,
+      app.providerConnectionStatuses,
+      selectAll: base.selectedProviders.isEmpty,
+    );
   }
 
   Future<void> started(String? connectedUserId) async {
-    state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
+    state = _seededState(state).copyWith(
+      status: ViewStatus.loading,
+      errorMessage: null,
+    );
     final usersResult = await _userUseCases.getUsers.execute();
     final providerResult = await _metadataUseCases.getProviderConfigs.execute();
 
@@ -303,6 +328,8 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         return {ActivityCategory.task, ActivityCategory.revision};
       case 'jira':
         return {ActivityCategory.task};
+      case 'figma':
+        return {ActivityCategory.message, ActivityCategory.generic};
       default:
         return {ActivityCategory.generic};
     }

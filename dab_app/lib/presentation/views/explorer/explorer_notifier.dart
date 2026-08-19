@@ -57,10 +57,33 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
     ref.onDispose(() {
       _dateDebounceTimer?.cancel();
     });
-    return ExplorerState.initial();
+    ref.listen(
+      appNotifierProvider.select(
+        (s) => (configs: s.configs, connections: s.providerConnectionStatuses),
+      ),
+      (previous, next) {
+        if (next.configs.isEmpty) return;
+        unawaited(
+          syncProviderFilters(next.configs, next.connections),
+        );
+      },
+    );
+    return _seededState(ExplorerState.initial());
+  }
+
+  ExplorerState _seededState(ExplorerState base) {
+    final app = ref.read(appNotifierProvider);
+    if (app.configs.isEmpty) return base;
+    return _applyProviderConfigFilters(
+      base,
+      app.configs,
+      app.providerConnectionStatuses,
+      selectAll: base.selectedProviders.isEmpty,
+    );
   }
 
   Future<void> started(String? connectedUserId) async {
+    state = _seededState(state);
     final results = await Future.wait([
       _userUseCases.getUsers.execute(),
       _userUseCases.getGroups.execute(),
@@ -225,6 +248,13 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           taskOrder.add(key);
         }
         taskGroups[key]!.add(activity);
+      } else if (provider is FigmaFileProvider && provider.fileKey != null) {
+        final key = '${activity.userId}_${provider.fileKey}';
+        if (!taskGroups.containsKey(key)) {
+          taskGroups[key] = [];
+          taskOrder.add(key);
+        }
+        taskGroups[key]!.add(activity);
       } else if (provider is SlackMessageProvider &&
           provider.channelId != null &&
           provider.threadTs != null) {
@@ -250,6 +280,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
 
     for (final key in taskOrder) {
       final groupedActivities = taskGroups[key]!;
+      groupedActivities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       if (groupedActivities.length == 1) {
         items.add(SingleActivityItem(groupedActivities.first));
       } else {
@@ -258,6 +289,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           PhorgeTaskProvider(:final taskPhid?) => taskPhid,
           JiraIssueProvider(:final issueKey?) => issueKey,
           LinearIssueProvider(:final identifier?) => identifier,
+          FigmaFileProvider(:final fileKey?) => fileKey,
           _ => groupedActivities.first.id,
         };
         items.add(
@@ -349,6 +381,8 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       case 'jira':
       case 'linear':
         return {ActivityCategory.task};
+      case 'figma':
+        return {ActivityCategory.message, ActivityCategory.generic};
       default:
         return {ActivityCategory.generic};
     }

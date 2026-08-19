@@ -61,6 +61,7 @@ void main() {
         messageId: 'm-root',
       ),
       GitHubCommitProvider(repo: 'acme/app', branch: 'feature/foo'),
+      FigmaFileProvider(fileKey: 'Abc123File'),
     ];
     for (final provider in cases) {
       final providerId = followProviderIdFor(provider);

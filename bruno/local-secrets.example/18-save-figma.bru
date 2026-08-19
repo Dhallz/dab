@@ -1,0 +1,54 @@
+meta {
+  name: 18 Save Figma
+  type: http
+  seq: 18
+}
+
+docs {
+  Restores **Figma** provider config.
+
+  Settings:
+  - Core: optional org `api.token` (PAT) for meta GET / poll
+  - Live: `webhookSecret` (Figma **passcode**)
+  - Polling: newline `fileKeys` and/or `teamIds` (empty = no file filter)
+
+  **Webhook URL** (paste into Figma → webhooks; DAB does not register webhooks):
+  `{{figmaWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "figma",
+    "name": "Figma",
+    "baseUrl": "https://www.figma.com",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{figmaApiToken}}",
+      "webhookSecret": "{{figmaWebhookSecret}}",
+      "fileKeys": "{{figmaFileKeys}}",
+      "teamIds": "{{figmaTeamIds}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("figmaWebhookUrl") || bru.getEnvVar("figmaWebhookUrl");
+  if (url) {
+    console.log("Figma webhook URL:", url);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns figma config", function() {
+    expect(res.body.data.id).to.equal("figma");
+  });
+}

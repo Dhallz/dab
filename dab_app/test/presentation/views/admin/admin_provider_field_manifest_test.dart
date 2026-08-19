@@ -105,6 +105,42 @@ void main() {
     );
   });
 
+  test('personal Figma keeps OAuth core, Live webhook, and poll allow-list', () {
+    final figma = ProviderFieldManifest.forProvider(
+      'figma',
+      l10n,
+      personal: true,
+    );
+    expect(
+      figma[ProviderConfigSection.core]!.map((f) => f.key),
+      containsAll(['clientId', 'clientSecret']),
+    );
+    expect(
+      figma[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookSecret']),
+    );
+    expect(
+      figma[ProviderConfigSection.polling]!.map((f) => f.key),
+      containsAll(['fileKeys', 'teamIds']),
+    );
+  });
+
+  test('org Figma exposes optional PAT, webhook passcode, and file allow-list', () {
+    final figma = ProviderFieldManifest.forProvider('figma', l10n);
+    expect(
+      figma[ProviderConfigSection.core]!.map((f) => f.key),
+      contains('api.token'),
+    );
+    expect(
+      figma[ProviderConfigSection.live]!.map((f) => f.key),
+      containsAll(['webhookUrl', 'webhookSecret']),
+    );
+    expect(
+      figma[ProviderConfigSection.polling]!.map((f) => f.key),
+      containsAll(['fileKeys', 'teamIds']),
+    );
+  });
+
   test('Phorge Core includes instance URL in org and personal Admin', () {
     final org = ProviderFieldManifest.forProvider('phorge', l10n);
     expect(

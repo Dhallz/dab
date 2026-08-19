@@ -9,6 +9,7 @@ const kOauthProviderIds = {
   'linear',
   'bitbucket',
   'jira',
+  'figma',
 };
 
 bool isOauthUserProvider(String providerId) =>
@@ -25,6 +26,7 @@ class OauthProviderSpec {
     this.usePkce = true,
     this.useBasicClientAuth = false,
     this.tokenRequestJson = false,
+    this.refreshUrl,
     this.extraAuthorizeParams = const {},
   });
 
@@ -36,7 +38,20 @@ class OauthProviderSpec {
   final bool usePkce;
   final bool useBasicClientAuth;
   final bool tokenRequestJson;
+
+  /// Token refresh endpoint when it differs from [tokenUrl] (Figma).
+  final String? refreshUrl;
   final Map<String, String> extraAuthorizeParams;
+
+  /// POST target for [grantType] (`authorization_code` vs `refresh_token`).
+  String tokenEndpointForGrant(String grantType) {
+    if (grantType == 'refresh_token' &&
+        refreshUrl != null &&
+        refreshUrl!.trim().isNotEmpty) {
+      return refreshUrl!.trim();
+    }
+    return tokenUrl;
+  }
 }
 
 /// Resolves OAuth endpoints for [providerId]. [instanceUrl] is used for GitLab.
@@ -89,6 +104,20 @@ OauthProviderSpec? oauthSpecFor(String providerId, {String instanceUrl = ''}) {
           'audience': 'api.atlassian.com',
           'prompt': 'consent',
         },
+      );
+    case 'figma':
+      return const OauthProviderSpec(
+        providerId: 'figma',
+        authorizeUrl: 'https://www.figma.com/oauth',
+        tokenUrl: 'https://api.figma.com/v1/oauth/token',
+        refreshUrl: 'https://api.figma.com/v1/oauth/refresh',
+        scopes: [
+          'current_user:read',
+          'file_comments:read',
+          'file_metadata:read',
+        ],
+        accessTokenSettingKey: 'api.token',
+        useBasicClientAuth: true,
       );
     default:
       return null;

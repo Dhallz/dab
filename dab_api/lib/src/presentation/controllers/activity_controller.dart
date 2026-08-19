@@ -677,6 +677,83 @@ class ActivityController {
     );
   }
 
+  Future<Response> receiveFigmaWebhook(Request request) async {
+    final body = await request.readAsString();
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      decoded = null;
+    }
+    final passcode = decoded is Map
+        ? (decoded['passcode'] ?? '').toString()
+        : '';
+
+    final auth = await _webhookAuth.authenticate(
+      WebhookAuthInput(
+        providerId: 'figma',
+        body: body,
+        jsonPasscode: passcode,
+      ),
+    );
+    final authRejected = _webhookAuthResponse(
+      auth,
+      missingSecret: 'Figma webhook passcode is not configured',
+      invalid: 'Invalid Figma webhook passcode',
+    );
+    if (authRejected != null) return authRejected;
+
+    if (decoded is! Map<String, dynamic>) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid Figma webhook payload'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final event = (decoded['event_type'] ?? decoded['eventType'] ?? '')
+        .toString();
+    print('[FIGMA_WEBHOOK] webhook_received event=$event file=${decoded['file_key']}');
+
+    if (event.toString().trim().toUpperCase() == 'PING') {
+      return Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': {'accepted': true},
+            'meta': {
+              'dataType': 'figma_webhook_ack',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    unawaited(
+      _activity.ingestFigmaWebhook.execute(payload: decoded).then((result) {
+        result.fold((failure) {
+          print('Figma live ingestion failed: ${failure.message}');
+        }, (_) {});
+      }),
+    );
+
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'data': {'accepted': true},
+          'meta': {
+            'dataType': 'figma_webhook_ack',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
   Future<Response> searchActivities(Request request) async {
     final callerId = userIdProperty.get(request);
 

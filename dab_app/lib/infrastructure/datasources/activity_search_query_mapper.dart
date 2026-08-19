@@ -13,6 +13,7 @@ class ActivitySearchQueryMapper {
       BitbucketCommitProvider() => 'bitbucket',
       JiraIssueProvider() => 'jira',
       LinearIssueProvider() => 'linear',
+      FigmaFileProvider() => 'figma',
       SlackMessageProvider() => 'slack',
       DiscordMessageProvider() => 'discord',
       GenericProvider(name: final n) => n.toLowerCase().trim(),

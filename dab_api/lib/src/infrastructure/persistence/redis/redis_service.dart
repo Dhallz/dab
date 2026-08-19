@@ -100,6 +100,29 @@ class RedisService implements AbsILiveFeedStore {
     );
   }
 
+  @override
+  Future<void> replaceFanOutActivity(Activity activity) async {
+    await _removeActivityIdFromList('activities:global', activity.id);
+    await _removeActivityIdFromList(
+      'activities:user:${activity.userId}',
+      activity.id,
+    );
+    await fanOutActivity(activity);
+  }
+
+  Future<void> _removeActivityIdFromList(
+    String listKey,
+    String activityId,
+  ) async {
+    final raw = await _cmd.send_object(['LRANGE', listKey, 0, -1]);
+    if (raw is! List) return;
+    for (final entry in raw) {
+      final existing = _decodeActivity(entry);
+      if (existing?.id != activityId) continue;
+      await _cmd.send_object(['LREM', listKey, 1, entry]);
+    }
+  }
+
   /// Returns live activities from Redis materialized feeds.
   ///
   /// This method serves the dedicated live endpoint and intentionally reads only

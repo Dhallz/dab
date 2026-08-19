@@ -50,7 +50,7 @@ class ActivityCategoryStyles extends ThemeExtension<ActivityCategoryStyles> {
         ),
         ActivityCategory.message: ActivityStyle(
           color: AppColors.genericActivity,
-          icon: AppIcons.slack,
+          icon: AppIcons.message,
           label: 'MESSAGE',
         ),
         ActivityCategory.generic: ActivityStyle(

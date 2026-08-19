@@ -1,6 +1,7 @@
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/discord/discord_message_dto.dart';
+import 'package:dab_api/src/domain/dtos/figma/figma_file_dto.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_dto.dart';
 import 'package:dab_api/src/domain/dtos/jira/jira_issue_dto.dart';
@@ -10,6 +11,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_bundle_dt
 import 'package:dab_api/src/domain/dtos/slack/slack_message_dto.dart';
 import 'package:dab_api/src/infrastructure/sources/bitbucket/bitbucket_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/discord/discord_message_source.dart';
+import 'package:dab_api/src/infrastructure/sources/figma/figma_file_source.dart';
 import 'package:dab_api/src/infrastructure/sources/github/github_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/gitlab/gitlab_commit_source.dart';
 import 'package:dab_api/src/infrastructure/sources/jira/jira_issue_source.dart';
@@ -33,6 +35,7 @@ void registerActivityConnectors({
   required GitHubCommitSource githubSource,
   required GitLabCommitSource gitlabSource,
   required BitbucketCommitSource bitbucketSource,
+  required FigmaFileSource figmaSource,
 }) {
   registry.register<PhorgeTaskBundleDto>(
     TypedConnectorPair<PhorgeTaskBundleDto>(
@@ -94,6 +97,13 @@ void registerActivityConnectors({
     TypedConnectorPair<BitbucketCommitDto>(
       source: bitbucketSource,
       providerId: 'bitbucket',
+      mapItemToActivities: (dto, users) => dto.toActivities(users),
+    ),
+  );
+  registry.register<FigmaFileDto>(
+    TypedConnectorPair<FigmaFileDto>(
+      source: figmaSource,
+      providerId: 'figma',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );

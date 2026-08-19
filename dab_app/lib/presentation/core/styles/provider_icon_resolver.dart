@@ -59,6 +59,7 @@ class ProviderIconResolver {
     if (key.contains('slack')) return AppIcons.slack;
     if (key.contains('discord')) return AppIcons.discord;
     if (key.contains('linear')) return AppIcons.linear;
+    if (key.contains('figma')) return AppIcons.figma;
     return null;
   }
 }

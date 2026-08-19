@@ -149,6 +149,45 @@ void main() {
       expect(grouped.activities.length, 2);
     });
 
+    test('groups Figma comments by file and newest first', () {
+      final date = DateTime.now();
+      final activities = [
+        Activity(
+          id: 'fig-1',
+          userId: 'user1',
+          provider: const FigmaFileProvider(
+            fileKey: 'Abc123File',
+            commentId: 'c-old',
+          ),
+          title: 'Onboarding',
+          content: 'older comment',
+          authorName: 'Alice',
+          commentCount: 1,
+          createdAt: date.subtract(const Duration(hours: 1)),
+        ),
+        Activity(
+          id: 'fig-2',
+          userId: 'user1',
+          provider: const FigmaFileProvider(
+            fileKey: 'Abc123File',
+            commentId: 'c-new',
+          ),
+          title: 'Onboarding',
+          content: '@Dhallz ok encore',
+          authorName: 'Dhallz',
+          commentCount: 1,
+          createdAt: date,
+        ),
+      ];
+
+      final items = notifier.groupActivities(activities);
+      expect(items.single, isA<TaskActivityItem>());
+      final grouped = items.single as TaskActivityItem;
+      expect(grouped.taskId, 'Abc123File');
+      expect(grouped.activities.first.content, '@Dhallz ok encore');
+      expect(grouped.activities.first.title, 'Onboarding');
+    });
+
     test('groups slack threaded messages by channel and thread', () {
       final date = DateTime.now();
       final activities = [

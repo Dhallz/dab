@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import '../../../domain/contracts/ports/webhook_auth_input.dart';
@@ -13,6 +15,7 @@ import '../security/slack_request_verifier.dart';
 /// ROLE: Authenticates inbound provider webhooks using Live secrets.
 /// CONTRACT: Loads the active provider config, then HMAC or constant-time
 /// shared-secret compare. Jira accepts HMAC or `X-Webhook-Secret` / `?secret=`.
+/// Figma compares JSON `passcode` to Live `webhookSecret`.
 /// CONSTRAINTS: Never logs secrets. Unknown [WebhookAuthInput.providerId]
 /// is [WebhookAuthStatus.invalid].
 class WebhookRequestAuthenticator implements AbsIWebhookRequestAuthenticator {
@@ -58,6 +61,8 @@ class WebhookRequestAuthenticator implements AbsIWebhookRequestAuthenticator {
         return _verifyLinear(input);
       case 'jira':
         return _verifyJira(input);
+      case 'figma':
+        return _verifyFigmaPasscode(input);
       default:
         return WebhookAuthStatus.invalid;
     }
@@ -152,6 +157,33 @@ class WebhookRequestAuthenticator implements AbsIWebhookRequestAuthenticator {
       expected: secret,
     );
     return sharedValid ? WebhookAuthStatus.ok : WebhookAuthStatus.invalid;
+  }
+
+  Future<WebhookAuthStatus> _verifyFigmaPasscode(WebhookAuthInput input) async {
+    final expected = await _resolveSetting('figma', const [
+      'webhookSecret',
+      'webhook_secret',
+    ]);
+    if (expected.isEmpty) return WebhookAuthStatus.missingSecret;
+    var provided = input.jsonPasscode.trim();
+    if (provided.isEmpty) {
+      provided = _passcodeFromBody(input.body);
+    }
+    final valid = _sharedSecretVerifier.isValid(
+      provided: provided,
+      expected: expected,
+    );
+    return valid ? WebhookAuthStatus.ok : WebhookAuthStatus.invalid;
+  }
+
+  String _passcodeFromBody(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        return (decoded['passcode'] ?? '').toString();
+      }
+    } catch (_) {}
+    return '';
   }
 
   Future<String> _resolveSetting(String providerId, List<String> keys) async {

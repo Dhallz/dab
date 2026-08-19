@@ -124,4 +124,35 @@ void main() {
       'https://dab.example/integrations/github/oauth/callback',
     );
   });
+
+  test('upgrades public http public_api_url to https for redirect_uri', () async {
+    when(() => configs.getConfigs()).thenAnswer(
+      (_) async => Right([
+        ProviderConfig(
+          id: 'figma',
+          name: 'Figma',
+          baseUrl: 'https://www.figma.com',
+          isActive: true,
+          settings: const {'clientId': 'fig-cid'},
+        ),
+      ]),
+    );
+    when(
+      () => apps.resolve(
+        providerId: 'figma',
+        orgSettings: any(named: 'orgSettings'),
+      ),
+    ).thenReturn(const OauthAppCredentials(clientId: 'fig-cid'));
+    when(() => settings.getSetting('public_api_url')).thenAnswer(
+      (_) async => const Right('http://tunnel.ngrok-free.dev'),
+    );
+    when(() => store.put(any(), any())).thenAnswer((_) async {});
+
+    final result = await useCase.execute(userId: 'user-42', providerId: 'figma');
+    final url = result.getOrElse((l) => throw StateError(l.message));
+    expect(
+      Uri.parse(url).queryParameters['redirect_uri'],
+      'https://tunnel.ngrok-free.dev/integrations/figma/oauth/callback',
+    );
+  });
 }

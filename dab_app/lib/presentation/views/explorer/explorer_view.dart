@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/app/app_notifier.dart';
 import '../../features/auth/auth_notifier.dart';
 import 'explorer_notifier.dart';
 import 'layouts/explorer_view_desktop.dart';
@@ -27,18 +26,8 @@ class _ExplorerViewState extends ConsumerState<ExplorerView> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(
-      appNotifierProvider.select(
-        (s) => (configs: s.configs, connections: s.providerConnectionStatuses),
-      ),
-      (previous, next) {
-        if (next.configs.isEmpty) return;
-        ref.read(explorerNotifierProvider.notifier).syncProviderFilters(
-          next.configs,
-          next.connections,
-        );
-      },
-    );
+    // Keep the autoDispose notifier alive across [started]'s first await.
+    ref.watch(explorerNotifierProvider.select((s) => s.availableProviders));
 
     return LayoutBuilder(
       builder: (context, constraints) {

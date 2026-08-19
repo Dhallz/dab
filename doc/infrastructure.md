@@ -145,7 +145,7 @@ that handler).
 
 Live events reach these keys through provider push receivers: Slack Events API
 (`POST /integrations/slack/events`), signed push webhooks for GitHub, GitLab,
-Bitbucket, Phorge (Herald), Jira, and Linear
+Bitbucket, Phorge (Herald), Jira, Linear, and Figma
 (`POST /integrations/{provider}/webhook`), and — for Discord, which has no
 message webhooks — the outbound `DiscordGatewayClient` WebSocket client. The
 client connects to the Discord Gateway with the configured bot token

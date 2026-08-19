@@ -1,0 +1,32 @@
+meta {
+  name: Figma Webhook File Update
+  type: http
+  seq: 19
+}
+
+docs {
+  `FILE_UPDATE` — wake only. DAB GETs file meta and upserts a last-edited
+  Following heartbeat for file Followers. Same `passcode` auth.
+}
+
+post {
+  url: {{baseUrl}}/integrations/figma/webhook
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "event_type": "FILE_UPDATE",
+    "file_key": "Abc123File",
+    "file_name": "Onboarding",
+    "timestamp": "2026-08-01T15:00:00Z",
+    "passcode": "{{figmaWebhookSecret}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -20,6 +20,7 @@ class SettingsConnectedAccountsSection extends ConsumerWidget {
     'bitbucket',
     'jira',
     'linear',
+    'figma',
   ];
   static const _tokenProviders = ['phorge'];
 

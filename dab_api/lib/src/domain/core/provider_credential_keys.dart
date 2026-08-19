@@ -30,6 +30,7 @@ const kPatProviderIds = {
   'jira',
   'linear',
   'phorge',
+  'figma',
 };
 
 /// Providers that need a single workspace bot (instance [ProviderConfig], not user tokens).
@@ -69,6 +70,7 @@ String extractProviderToken(String providerId, Map<String, dynamic> settings) {
   final id = providerId.trim().toLowerCase();
   switch (id) {
     case 'github':
+    case 'figma':
       return (settings['api.token'] ??
               settings['token'] ??
               settings['accessToken'] ??

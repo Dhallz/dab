@@ -164,6 +164,28 @@ class SlackMessageProvider extends ActivityProvider
 }
 
 @MappableClass()
+class FigmaFileProvider extends ActivityProvider with FigmaFileProviderMappable {
+  final String? fileKey;
+  final String? commentId;
+  final String? lastTouchedBy;
+
+  const FigmaFileProvider({
+    this.fileKey,
+    this.commentId,
+    this.lastTouchedBy,
+  });
+
+  @override
+  String get name => 'Figma';
+
+  @override
+  ActivityCategory get category {
+    final cid = commentId?.trim() ?? '';
+    return cid.isEmpty ? ActivityCategory.generic : ActivityCategory.message;
+  }
+}
+
+@MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override
   final String name;

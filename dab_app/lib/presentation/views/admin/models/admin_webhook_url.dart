@@ -7,9 +7,17 @@
 library;
 
 String normalizePublicApiBase(String? raw) {
-  final text = (raw ?? '').trim();
+  final text = (raw ?? '').trim().replaceAll(RegExp(r'/+$'), '');
   if (text.isEmpty) return '';
-  return text.replaceAll(RegExp(r'/+$'), '');
+  final uri = Uri.tryParse(text);
+  if (uri == null || uri.host.isEmpty || !uri.hasScheme) return text;
+  final host = uri.host.toLowerCase();
+  final isLoopback =
+      host == 'localhost' || host == '127.0.0.1' || host == '::1';
+  if (!isLoopback && uri.scheme == 'http') {
+    return uri.replace(scheme: 'https').toString().replaceAll(RegExp(r'/+$'), '');
+  }
+  return text;
 }
 
 /// Path Jira/GitHub/… webhooks POST to. Slack uses Events API.

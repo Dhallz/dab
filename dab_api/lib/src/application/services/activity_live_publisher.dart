@@ -22,9 +22,16 @@ class ActivityLivePublisher {
   final AbsIUserDeviceTokenRepository? _tokens;
   final AbsIPushWakeGateway? _wake;
 
-  Future<void> publish(Activity activity) async {
+  Future<void> publish(
+    Activity activity, {
+    bool replaceExisting = false,
+  }) async {
     await _redis.incrementVersion();
-    await _redis.fanOutActivity(activity);
+    if (replaceExisting) {
+      await _redis.replaceFanOutActivity(activity);
+    } else {
+      await _redis.fanOutActivity(activity);
+    }
     final payload = activity.toMap();
     _presence.broadcastToUser(
       activity.userId,
@@ -55,13 +62,18 @@ class ActivityLivePublisher {
     required AbsIPresenceBroadcaster presence,
     required Activity activity,
     ActivityLivePublisher? publisher,
+    bool replaceExisting = false,
   }) async {
     if (publisher != null) {
-      await publisher.publish(activity);
+      await publisher.publish(activity, replaceExisting: replaceExisting);
       return;
     }
     await redis.incrementVersion();
-    await redis.fanOutActivity(activity);
+    if (replaceExisting) {
+      await redis.replaceFanOutActivity(activity);
+    } else {
+      await redis.fanOutActivity(activity);
+    }
     presence.broadcastToUser(
       activity.userId,
       'ACTIVITY_RECEIVED',

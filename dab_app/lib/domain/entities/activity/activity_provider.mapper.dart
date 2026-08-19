@@ -23,6 +23,7 @@ class ActivityProviderMapper extends ClassMapperBase<ActivityProvider> {
       LinearIssueProviderMapper.ensureInitialized();
       DiscordMessageProviderMapper.ensureInitialized();
       SlackMessageProviderMapper.ensureInitialized();
+      FigmaFileProviderMapper.ensureInitialized();
       GenericProviderMapper.ensureInitialized();
     }
     return _instance!;
@@ -1593,6 +1594,180 @@ class _SlackMessageProviderCopyWithImpl<$R, $Out>
   SlackMessageProviderCopyWith<$R2, SlackMessageProvider, $Out2>
   $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _SlackMessageProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class FigmaFileProviderMapper extends ClassMapperBase<FigmaFileProvider> {
+  FigmaFileProviderMapper._();
+
+  static FigmaFileProviderMapper? _instance;
+  static FigmaFileProviderMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = FigmaFileProviderMapper._());
+      ActivityProviderMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'FigmaFileProvider';
+
+  static String? _$fileKey(FigmaFileProvider v) => v.fileKey;
+  static const Field<FigmaFileProvider, String> _f$fileKey = Field(
+    'fileKey',
+    _$fileKey,
+    opt: true,
+  );
+  static String? _$commentId(FigmaFileProvider v) => v.commentId;
+  static const Field<FigmaFileProvider, String> _f$commentId = Field(
+    'commentId',
+    _$commentId,
+    opt: true,
+  );
+  static String? _$lastTouchedBy(FigmaFileProvider v) => v.lastTouchedBy;
+  static const Field<FigmaFileProvider, String> _f$lastTouchedBy = Field(
+    'lastTouchedBy',
+    _$lastTouchedBy,
+    opt: true,
+  );
+  static String _$name(FigmaFileProvider v) => v.name;
+  static const Field<FigmaFileProvider, String> _f$name = Field(
+    'name',
+    _$name,
+    mode: FieldMode.member,
+  );
+  static ActivityCategory _$category(FigmaFileProvider v) => v.category;
+  static const Field<FigmaFileProvider, ActivityCategory> _f$category = Field(
+    'category',
+    _$category,
+    mode: FieldMode.member,
+  );
+
+  @override
+  final MappableFields<FigmaFileProvider> fields = const {
+    #fileKey: _f$fileKey,
+    #commentId: _f$commentId,
+    #lastTouchedBy: _f$lastTouchedBy,
+    #name: _f$name,
+    #category: _f$category,
+  };
+
+  static FigmaFileProvider _instantiate(DecodingData data) {
+    return FigmaFileProvider(
+      fileKey: data.dec(_f$fileKey),
+      commentId: data.dec(_f$commentId),
+      lastTouchedBy: data.dec(_f$lastTouchedBy),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static FigmaFileProvider fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<FigmaFileProvider>(map);
+  }
+
+  static FigmaFileProvider fromJson(String json) {
+    return ensureInitialized().decodeJson<FigmaFileProvider>(json);
+  }
+}
+
+mixin FigmaFileProviderMappable {
+  String toJson() {
+    return FigmaFileProviderMapper.ensureInitialized()
+        .encodeJson<FigmaFileProvider>(this as FigmaFileProvider);
+  }
+
+  Map<String, dynamic> toMap() {
+    return FigmaFileProviderMapper.ensureInitialized()
+        .encodeMap<FigmaFileProvider>(this as FigmaFileProvider);
+  }
+
+  FigmaFileProviderCopyWith<
+    FigmaFileProvider,
+    FigmaFileProvider,
+    FigmaFileProvider
+  >
+  get copyWith =>
+      _FigmaFileProviderCopyWithImpl<FigmaFileProvider, FigmaFileProvider>(
+        this as FigmaFileProvider,
+        $identity,
+        $identity,
+      );
+  @override
+  String toString() {
+    return FigmaFileProviderMapper.ensureInitialized().stringifyValue(
+      this as FigmaFileProvider,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return FigmaFileProviderMapper.ensureInitialized().equalsValue(
+      this as FigmaFileProvider,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return FigmaFileProviderMapper.ensureInitialized().hashValue(
+      this as FigmaFileProvider,
+    );
+  }
+}
+
+extension FigmaFileProviderValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, FigmaFileProvider, $Out> {
+  FigmaFileProviderCopyWith<$R, FigmaFileProvider, $Out>
+  get $asFigmaFileProvider => $base.as(
+    (v, t, t2) => _FigmaFileProviderCopyWithImpl<$R, $Out>(v, t, t2),
+  );
+}
+
+abstract class FigmaFileProviderCopyWith<
+  $R,
+  $In extends FigmaFileProvider,
+  $Out
+>
+    implements ActivityProviderCopyWith<$R, $In, $Out> {
+  @override
+  $R call({String? fileKey, String? commentId, String? lastTouchedBy});
+  FigmaFileProviderCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _FigmaFileProviderCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, FigmaFileProvider, $Out>
+    implements FigmaFileProviderCopyWith<$R, FigmaFileProvider, $Out> {
+  _FigmaFileProviderCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<FigmaFileProvider> $mapper =
+      FigmaFileProviderMapper.ensureInitialized();
+  @override
+  $R call({
+    Object? fileKey = $none,
+    Object? commentId = $none,
+    Object? lastTouchedBy = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (fileKey != $none) #fileKey: fileKey,
+      if (commentId != $none) #commentId: commentId,
+      if (lastTouchedBy != $none) #lastTouchedBy: lastTouchedBy,
+    }),
+  );
+  @override
+  FigmaFileProvider $make(CopyWithData data) => FigmaFileProvider(
+    fileKey: data.get(#fileKey, or: $value.fileKey),
+    commentId: data.get(#commentId, or: $value.commentId),
+    lastTouchedBy: data.get(#lastTouchedBy, or: $value.lastTouchedBy),
+  );
+
+  @override
+  FigmaFileProviderCopyWith<$R2, FigmaFileProvider, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  ) => _FigmaFileProviderCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 
 class GenericProviderMapper extends ClassMapperBase<GenericProvider> {

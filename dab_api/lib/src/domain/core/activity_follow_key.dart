@@ -15,6 +15,7 @@ const kFollowableProviderIds = {
   'github',
   'gitlab',
   'bitbucket',
+  'figma',
 };
 
 /// Git hosts that pin a single repo + branch on Following.
@@ -39,6 +40,7 @@ String? followProviderIdFor(ActivityProvider provider) {
     GitHubCommitProvider() => 'github',
     GitLabCommitProvider() => 'gitlab',
     BitbucketCommitProvider() => 'bitbucket',
+    FigmaFileProvider() => 'figma',
     GenericProvider() => null,
   };
 }
@@ -79,6 +81,7 @@ String? followObjectKeyFor(ActivityProvider provider) {
       gitFollowObjectKey(project, branch),
     BitbucketCommitProvider(:final repo, :final branch) =>
       gitFollowObjectKey(repo, branch),
+    FigmaFileProvider(:final fileKey) => _nonEmpty(fileKey),
     GenericProvider() => null,
   };
 }

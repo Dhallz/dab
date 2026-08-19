@@ -21,6 +21,9 @@ class WebhookAuthInput {
   /// Jira Bruno simulation `?secret=` fallback.
   final String sharedSecretQuery;
 
+  /// Figma JSON body `passcode` (compared to Live `webhookSecret`).
+  final String jsonPasscode;
+
   /// Builds the authenticator input for one inbound request.
   const WebhookAuthInput({
     required this.providerId,
@@ -29,5 +32,6 @@ class WebhookAuthInput {
     this.timestampHeader = '',
     this.sharedSecretHeader = '',
     this.sharedSecretQuery = '',
+    this.jsonPasscode = '',
   });
 }

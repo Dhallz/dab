@@ -2,6 +2,7 @@ import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activitie
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_follows_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_bitbucket_commit_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_discord_message_table.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_figma_file_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_github_commit_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_gitlab_commit_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_jira_issue_table.dart';
@@ -35,6 +36,7 @@ part 'app_database.g.dart';
     ActivityLinearIssueTable,
     ActivitySlackMessageTable,
     ActivityDiscordMessageTable,
+    ActivityFigmaFileTable,
     SessionsTable,
     GroupsTable,
     GroupMembersTable,
@@ -50,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -236,6 +238,14 @@ ON CONFLICT (id) DO NOTHING;
       if (from < 21) {
         await m.createTable(userDeviceTokensTable);
       }
+      if (from < 22) {
+        await m.createTable(activityFigmaFileTable);
+        await m.database.customStatement(r'''
+INSERT INTO provider_configs (id, name, base_url, is_active, icon_url, settings, updated_at)
+VALUES ('figma', 'Figma', 'https://www.figma.com', 1, 'https://static.figma.com/app/icon/1/favicon.png', '{}', NOW())
+ON CONFLICT (id) DO NOTHING;
+''');
+      }
     },
     beforeOpen: (details) async {
       final configCount = await select(providerConfigsTable).get();
@@ -310,6 +320,16 @@ ON CONFLICT (id) DO NOTHING;
               baseUrl: 'https://bitbucket.org',
               isActive: const Value(1),
               iconUrl: const Value('https://bitbucket.org/favicon.ico'),
+              settings: const Value('{}'),
+            ),
+            ProviderConfigsTableCompanion.insert(
+              id: 'figma',
+              name: 'Figma',
+              baseUrl: 'https://www.figma.com',
+              isActive: const Value(1),
+              iconUrl: const Value(
+                'https://static.figma.com/app/icon/1/favicon.png',
+              ),
               settings: const Value('{}'),
             ),
           ]);

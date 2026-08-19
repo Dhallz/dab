@@ -575,6 +575,60 @@ paths:
           description: Invalid webhook secret
         '500':
           description: Webhook secret not configured for active jira provider
+  /integrations/figma/webhook:
+    post:
+      summary: Figma webhook receiver (FILE_COMMENT, FILE_UPDATE, PING).
+      description: |
+        Receives Figma team/project/file webhooks. Authentication is the JSON
+        body `passcode` compared constant-time to Live `webhookSecret`.
+        DAB does not register Figma webhooks. `FILE_COMMENT` fans Directed
+        mentions plus file Followers. `FILE_UPDATE` upserts a last-edited
+        Following heartbeat after `GET /v1/files/:key/meta`. `PING` is ACK-only.
+        Processing is asynchronous except PING.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              event_type: FILE_COMMENT
+              file_key: Abc123File
+              file_name: Onboarding
+              passcode: your-figma-passcode
+              comment:
+                - id: c-1
+                  message: Please take a look
+                  mentions:
+                    - id: "123456"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['figma_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook passcode
+        '500':
+          description: Webhook passcode not configured for active figma provider
   /integrations/linear/webhook:
     post:
       summary: Linear webhook receiver (Issue and Comment create/update).

@@ -28,6 +28,34 @@ ProviderConfig _pickProviderConfig(
   return fallback;
 }
 
+const _adminMultilineSettingKeys = {
+  'repos',
+  'channels',
+  'projects',
+  'fileKeys',
+  'teamIds',
+  'projectKeys',
+  'teamKeys',
+};
+
+const _adminSplitToListSettingKeys = {
+  'repos',
+  'channels',
+  'projects',
+  'fileKeys',
+  'teamIds',
+};
+
+/// Strips Dart `List.toString()` wrappers (`[path]`, `[[path]]`) from Admin
+/// allow-list rows so GitLab `projects` is `group/project`, not `[[group/project]]`.
+String _unwrapAdminListItem(String raw) {
+  var text = raw.trim();
+  while (text.length >= 2 && text.startsWith('[') && text.endsWith(']')) {
+    text = text.substring(1, text.length - 1).trim();
+  }
+  return text;
+}
+
 class ProviderCard extends ConsumerStatefulWidget {
   final ProviderConfig config;
 
@@ -148,12 +176,11 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     dynamic rawValue, {
     Map<String, String> systemSettings = const {},
   }) {
-    if ((field.key == 'repos' ||
-            field.key == 'channels' ||
-            field.key == 'projectKeys' ||
-            field.key == 'teamKeys') &&
-        rawValue is List) {
-      return rawValue.map((e) => e.toString()).join('\n');
+    if (_adminMultilineSettingKeys.contains(field.key) && rawValue is List) {
+      return [
+        for (final item in rawValue)
+          _unwrapAdminListItem(item.toString()),
+      ].where((e) => e.isNotEmpty).join('\n');
     }
 
     if (field.key == 'botToken') {
@@ -303,12 +330,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     required Map<String, String> systemSettings,
   }) {
     return fields.map((field) {
-      final isMultiValueField =
-          field.key == 'repos' ||
-          field.key == 'channels' ||
-          field.key == 'projectKeys' ||
-          field.key == 'teamKeys' ||
-          field.key == 'projects';
+      final isMultiValueField = _adminMultilineSettingKeys.contains(field.key);
       final isWebhookUrlField = field.key == 'webhookUrl';
       return Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.m),
@@ -726,15 +748,14 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
 
     _controllers.forEach((key, controller) {
       final value = controller.text.trim();
-      if (key == 'repos' || key == 'channels' || key == 'projects') {
+      if (_adminSplitToListSettingKeys.contains(key)) {
         if (value.isEmpty) {
           settings.remove(key);
         } else {
-          settings[key] = value
-              .split(RegExp(r'[\n,]+'))
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList();
+          settings[key] = [
+            for (final part in value.split(RegExp(r'[\n,]+')))
+              _unwrapAdminListItem(part),
+          ].where((e) => e.isNotEmpty).toList();
         }
       } else if (key == 'apiBaseUrl' && value.isEmpty) {
         settings.remove('apiBaseUrl');

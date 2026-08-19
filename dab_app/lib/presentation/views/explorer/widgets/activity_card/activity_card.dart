@@ -109,10 +109,11 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
     final commitSha = isGitHubCommit
         ? _extractSha(widget.activity.title)
         : null;
-    final displayAuthorName =
-        widget.resolvedAuthorName?.trim().isNotEmpty == true
-        ? widget.resolvedAuthorName!.trim()
-        : widget.activity.authorName;
+    final resolved = widget.resolvedAuthorName?.trim() ?? '';
+    final author = widget.activity.authorName.trim();
+    final displayAuthorName = resolved.isNotEmpty
+        ? resolved
+        : (author.isNotEmpty && !looksLikeOpaqueUserId(author) ? author : '');
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),

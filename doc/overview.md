@@ -95,4 +95,5 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | Jira | ✅ Active (issues + comments v1) | REST `/rest/api/3/search/jql` polling + identity discovery (`DAB-79`); webhook live path |
 | Linear | ✅ Active (issues + comments v1) | GraphQL polling + signed webhook live path |
 | Discord | ✅ Active (messages v1) | REST polling + Gateway WebSocket live path |
+| Figma | ✅ Active (comments + last-edited v1) | REST comments/meta polling + passcode webhook live path |
 | Microsoft Teams | 🔜 Planned | Removed from v1; Graph change notifications operationally heavy |

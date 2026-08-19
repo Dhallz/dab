@@ -81,6 +81,10 @@ Future<void> main() async {
       ActivityController().receiveJiraWebhook,
     )
     ..post(
+      '/integrations/figma/webhook',
+      ActivityController().receiveFigmaWebhook,
+    )
+    ..post(
       '/integrations/linear/webhook',
       ActivityController().receiveLinearWebhook,
     )

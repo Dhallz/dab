@@ -20,6 +20,18 @@ void main() {
     );
   });
 
+  test('upgrades public http public_api_url to https', () {
+    expect(
+      derivedWebhookUrl(
+        providerId: 'figma',
+        systemSettings: const {
+          'public_api_url': 'http://discourse-huddle-bagful.ngrok-free.dev',
+        },
+      ),
+      'https://discourse-huddle-bagful.ngrok-free.dev/integrations/figma/webhook',
+    );
+  });
+
   test('does not invent a localhost default when public_api_url is unset', () {
     expect(
       derivedWebhookUrl(providerId: 'jira', systemSettings: const {}),

@@ -31,8 +31,8 @@ Execute requests in `bruno/local-secrets/` **in sequence**:
 | 02 | Save system settings | `public_api_url`, timezone, domain gate |
 | 03 | Pick target user | Sets `targetUserId` for identity linking |
 | 04 | Webhook endpoints | Prints `*WebhookUrl` vars from `publicApiUrl` |
-| 10–17 | Save *provider* | One request per provider you use |
-| 20–27 | Link identity | Optional — map DAB users to provider external IDs |
+| 10–18 | Save *provider* | One request per provider you use |
+| 20–28 | Link identity | Optional — map DAB users to provider external IDs |
 | 90 | Verify configs | `GET /admin/configs` smoke check |
 | 91 | Test all providers | Optional — `POST /admin/configs/test` per provider |
 
@@ -47,6 +47,13 @@ the URL on **GitHub/Slack/etc.**, and save only the **shared secret** in DAB.
 
 After step **02** or **04**, Bruno sets copy-reference vars like `githubWebhookUrl`.
 Each provider save request (10–16) logs the URL to the console. Discord has no HTTP webhook.
+
+**Figma live webhooks** are registered in Figma (`POST /v2/webhooks`), not DAB.
+After saving Figma config (step **18**), run `bruno/figma/create-webhook-file-comment`
+then `create-webhook-file-update` with `local-secrets` selected. Set
+`figmaWebhookWriteToken` (`webhooks:write`, short TTL), `figmaTeamId`,
+`figmaWebhookSecret` (must match Admin Live), and `figmaWebhookUrl` (HTTPS).
+Revoke the write token and clear `figmaWebhookWriteToken` after both requests succeed.
 
 ## Git safety
 

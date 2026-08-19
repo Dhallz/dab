@@ -123,14 +123,6 @@ class AppNotifier extends Notifier<AppState> {
       state.providerConnectionStatuses,
     );
     for (final config in activeConfigs) {
-      statuses[config.id] = ProviderConnectionStatus(
-        status: ViewStatus.loading,
-        lastCheck: DateTime.now(),
-      );
-    }
-    state = state.copyWith(providerConnectionStatuses: statuses);
-
-    for (final config in activeConfigs) {
       try {
         final result = await _providerRepo
             .testProviderConfig(config)

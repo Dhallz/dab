@@ -48,20 +48,27 @@ Map<String, ProviderConnectionStatus> successConnectionsFor(
 
 /// Stable [AppState] without async [AppNotifier.init] for unit tests.
 class TestAppNotifier extends AppNotifier {
-  TestAppNotifier({Map<String, ProviderConnectionStatus>? connections})
-    : _connections =
-          connections ?? successConnectionsFor(const ['slack', 'github']),
-      super(
-        MockSystemUseCases(),
-        MockMetadataUseCases(),
-        MockUserRepository(),
-        MockProviderConfigRepository(),
-      );
+  TestAppNotifier({
+    Map<String, ProviderConnectionStatus>? connections,
+    List<ProviderConfig>? configs,
+  }) : _connections =
+           connections ?? successConnectionsFor(const ['slack', 'github']),
+       _configs = configs ?? const [],
+       super(
+         MockSystemUseCases(),
+         MockMetadataUseCases(),
+         MockUserRepository(),
+         MockProviderConfigRepository(),
+       );
 
   final Map<String, ProviderConnectionStatus> _connections;
+  final List<ProviderConfig> _configs;
 
   @override
-  AppState build() => AppState(providerConnectionStatuses: _connections);
+  AppState build() => AppState(
+    configs: _configs,
+    providerConnectionStatuses: _connections,
+  );
 }
 
 void main() {
@@ -112,12 +119,16 @@ void main() {
 
   ProviderContainer createTestContainer({
     Map<String, ProviderConnectionStatus>? connections,
+    List<ProviderConfig>? configs,
   }) =>
       ProviderContainer(
         overrides: [
           explorerNotifierProvider.overrideWith(createNotifier),
           appNotifierProvider.overrideWith(
-            () => TestAppNotifier(connections: connections),
+            () => TestAppNotifier(
+              connections: connections,
+              configs: configs,
+            ),
           ),
         ],
       );
@@ -212,6 +223,35 @@ void main() {
     },
   );
 
+  test('Figma is browsable with message and generic activity filters', () async {
+    final figma = ProviderConfig(
+      id: 'figma',
+      name: 'Figma',
+      baseUrl: 'https://www.figma.com',
+      isActive: true,
+    );
+    when(() => mockProviderConfigRepository.getProviderConfigs()).thenAnswer(
+      (_) async => Right([figma]),
+    );
+
+    final container = createTestContainer(
+      connections: successConnectionsFor(['figma']),
+    );
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    await container.read(explorerNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.availableProviders, ['figma']);
+    expect(state.selectedProviders, {'figma'});
+    expect(state.availableActivityCategories, {
+      ActivityCategory.message,
+      ActivityCategory.generic,
+    });
+  });
+
   test('syncProviderFilters drops deactivated providers without full reload', () async {
     final container = createTestContainer();
     subscribeExplorer(container);
@@ -246,9 +286,28 @@ void main() {
     ).called(1);
   });
 
-  test('omits active providers that failed connection tests', () async {
+  test('seeds provider filters from app configs before started completes', () {
     final container = createTestContainer(
-      connections: successConnectionsFor(['slack']),
+      configs: [providerConfig, githubProviderConfig],
+    );
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.availableProviders, ['slack', 'github']);
+    expect(state.selectedProviders, {'slack', 'github'});
+    expect(state.availableActivityCategories, {
+      ActivityCategory.message,
+      ActivityCategory.commit,
+    });
+  });
+
+  test('keeps active providers that failed connection tests in the sidebar', () async {
+    final container = createTestContainer(
+      connections: {
+        ...successConnectionsFor(['slack']),
+        'github': const ProviderConnectionStatus(status: ViewStatus.failure),
+      },
     );
     subscribeExplorer(container);
     addTearDown(container.dispose);
@@ -257,8 +316,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     final state = container.read(explorerNotifierProvider);
-    expect(state.availableProviders, ['slack']);
-    expect(state.selectedProviders, {'slack'});
+    expect(state.availableProviders, ['slack', 'github']);
+    expect(state.selectedProviders, {'slack', 'github'});
   });
 
   test('preselects connected user on first load', () async {

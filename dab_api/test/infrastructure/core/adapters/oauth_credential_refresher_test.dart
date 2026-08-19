@@ -172,4 +172,34 @@ void main() {
     final result = await refresher.ensureFresh(userId: 'u1', providerId: 'jira');
     expect(result.getLeft().toNullable()?.message, contains('expired'));
   });
+
+  test('Figma reconnect copy names Figma when refresh is impossible', () async {
+    final expiredNoRefresh = UserProviderCredential(
+      id: 'u1_figma',
+      userId: 'u1',
+      providerId: 'figma',
+      settings: {
+        'api.token': 'old-access',
+        'tokenType': 'oauth',
+        'tokenExpiresAt': DateTime.utc(2026, 8, 14, 18).toIso8601String(),
+      },
+      status: row.status,
+      createdAt: row.createdAt,
+    );
+    when(
+      () => creds.get(
+        userId: any(named: 'userId'),
+        providerId: any(named: 'providerId'),
+      ),
+    ).thenAnswer((_) async => Right(expiredNoRefresh));
+
+    final result = await refresher.ensureFresh(
+      userId: 'u1',
+      providerId: 'figma',
+    );
+    expect(
+      result.getLeft().toNullable()?.message,
+      'Figma sign-in expired. Disconnect and Connect with Figma again.',
+    );
+  });
 }

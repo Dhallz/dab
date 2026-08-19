@@ -74,8 +74,11 @@ class _DashboardActivityCardState extends State<DashboardActivityCard> {
     final branch = gitBranchLabelFor(widget.activity.provider);
     final showSenderLine =
         widget.activity.authorName.trim().isNotEmpty &&
+        !looksLikeOpaqueUserId(widget.activity.authorName) &&
         (widget.activity.provider is SlackMessageProvider ||
-            widget.activity.provider is GitHubCommitProvider);
+            widget.activity.provider is DiscordMessageProvider ||
+            widget.activity.provider is GitHubCommitProvider ||
+            widget.activity.provider is FigmaFileProvider);
     final metaLine = _metaLine(branch: branch, showSender: showSenderLine);
     final pad = widget.compact ? AppSpacing.s : AppSpacing.m;
     final iconGap = widget.compact ? AppSpacing.xs : AppSpacing.m;

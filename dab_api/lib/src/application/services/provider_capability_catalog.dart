@@ -52,6 +52,12 @@ class ProviderCapabilityCatalog {
       'supportsWebSocket': true,
       'supportsPolling': true,
     },
+    'figma': {
+      'ingestionMode': 'hybrid',
+      'supportsWebhook': true,
+      'supportsWebSocket': false,
+      'supportsPolling': true,
+    },
   };
 
   List<Map<String, dynamic>> all({

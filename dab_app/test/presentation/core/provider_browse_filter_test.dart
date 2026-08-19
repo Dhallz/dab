@@ -18,7 +18,7 @@ void main() {
     isActive: true,
   );
 
-  test('includes only active providers with successful connection tests', () {
+  test('includes every active provider regardless of connection health', () {
     final result = browsableProviderConfigs([
       slack,
       github.copyWith(isActive: false),
@@ -33,14 +33,18 @@ void main() {
       'jira': const ProviderConnectionStatus(status: ViewStatus.failure),
     });
 
-    expect(result.map((config) => config.id), ['slack']);
+    expect(result.map((config) => config.id), ['slack', 'jira']);
   });
 
-  test('excludes providers with warning aggregate status', () {
-    final result = browsableProviderConfigs([slack], {
+  test('keeps untested, loading, and warning providers visible', () {
+    final result = browsableProviderConfigs([
+      slack,
+      github,
+    ], {
+      'github': const ProviderConnectionStatus(status: ViewStatus.loading),
       'slack': const ProviderConnectionStatus(status: ViewStatus.warning),
     });
 
-    expect(result, isEmpty);
+    expect(result.map((config) => config.id), ['slack', 'github']);
   });
 }

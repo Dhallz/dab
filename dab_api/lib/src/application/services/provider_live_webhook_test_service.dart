@@ -69,6 +69,12 @@ class ProviderLiveWebhookTestService {
       'linear' => _testLinear(config),
       'phorge' => _testPhorge(config),
       'discord' => _testDiscord(),
+      'figma' => _testSharedSecretProvider(
+        providerId: 'figma',
+        config: config,
+        keys: const ['webhookSecret', 'webhook_secret'],
+        label: 'Figma webhook passcode',
+      ),
       _ => const ProviderSectionResult(
         status: ConnectivitySectionStatus.failure,
         message: 'Live webhook test is not supported for this provider',

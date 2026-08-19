@@ -12,6 +12,9 @@ abstract interface class AbsILiveFeedStore {
   /// Writes [activity] into global, per-user, and temporal live feeds.
   Future<void> fanOutActivity(Activity activity);
 
+  /// Removes existing live-feed copies of [activity.id], then [fanOutActivity].
+  Future<void> replaceFanOutActivity(Activity activity);
+
   /// Returns the caller's (or global) live-feed slice for today.
   Future<List<Activity>> getLiveActivities({
     required String userId,

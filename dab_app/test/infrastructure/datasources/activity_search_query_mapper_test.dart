@@ -76,12 +76,12 @@ void main() {
       );
     });
 
-    test('providerFilterKey maps Jira typed provider to config id', () {
+    test('providerFilterKey maps Figma typed provider to config id', () {
       expect(
         ActivitySearchQueryMapper.providerFilterKey(
-          const JiraIssueProvider(),
+          const FigmaFileProvider(fileKey: 'Abc123File'),
         ),
-        'jira',
+        'figma',
       );
     });
 

@@ -50,6 +50,10 @@ class ProviderStyles extends ThemeExtension<ProviderStyles> {
           brandColor: AppColors.brandLinear,
           icon: AppIcons.linear,
         ),
+        'figma': ProviderStyle(
+          brandColor: AppColors.brandFigma,
+          icon: AppIcons.figma,
+        ),
         'jira': ProviderStyle(
           brandColor: AppColors.brandJira,
           icon: AppIcons.jira,

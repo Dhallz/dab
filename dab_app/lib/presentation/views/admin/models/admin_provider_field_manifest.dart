@@ -241,6 +241,37 @@ class ProviderFieldManifest {
         ],
       };
     }
+    if (lowerId.contains('figma')) {
+      return {
+        ProviderConfigSection.core: [
+          AdminConfigField(
+            key: 'api.token',
+            label: l10n.adminFieldPersonalAccessToken,
+            isSecret: true,
+          ),
+        ],
+        ProviderConfigSection.live: [
+          webhookEndpointField(l10n),
+          AdminConfigField(
+            key: 'webhookSecret',
+            label: l10n.adminFieldWebhookSecret,
+            isSecret: true,
+          ),
+        ],
+        ProviderConfigSection.polling: [
+          AdminConfigField(
+            key: 'fileKeys',
+            label: 'File keys or URLs (one per line)',
+            hint: 'Paste figma.com/design/… links. Connect OAuth cannot list a team.',
+          ),
+          AdminConfigField(
+            key: 'teamIds',
+            label: 'Team ids (one per line)',
+            hint: 'Optional. Needs a PAT that can list projects; Connect tokens cannot.',
+          ),
+        ],
+      };
+    }
 
     return {
       ProviderConfigSection.core: [
@@ -343,6 +374,24 @@ class ProviderFieldManifest {
           AdminConfigField(
             key: 'channels',
             label: l10n.adminFieldChannelIdsOnePerLine,
+          ),
+        ],
+      };
+    }
+    if (lowerId.contains('figma')) {
+      return {
+        ProviderConfigSection.core: oauthCore(),
+        ProviderConfigSection.live: liveWebhook,
+        ProviderConfigSection.polling: [
+          AdminConfigField(
+            key: 'fileKeys',
+            label: 'File keys or URLs (one per line)',
+            hint: 'Paste figma.com/design/… links. Connect OAuth cannot list a team.',
+          ),
+          AdminConfigField(
+            key: 'teamIds',
+            label: 'Team ids (one per line)',
+            hint: 'Optional. Needs a PAT that can list projects; Connect tokens cannot.',
           ),
         ],
       };

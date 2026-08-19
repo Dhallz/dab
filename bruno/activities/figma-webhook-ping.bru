@@ -1,0 +1,28 @@
+meta {
+  name: Figma Webhook Ping
+  type: http
+  seq: 20
+}
+
+docs {
+  `PING` — ACK only. Used by Figma when registering the webhook.
+}
+
+post {
+  url: {{baseUrl}}/integrations/figma/webhook
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "event_type": "PING",
+    "passcode": "{{figmaWebhookSecret}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

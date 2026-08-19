@@ -47,6 +47,7 @@ class AppIcons {
   static final IconData commit = HeroIcons.commandLine.outline;
   static final IconData revision = HeroIcons.codeBracket.outline;
   static final IconData task = HeroIcons.clipboardDocumentCheck.outline;
+  static final IconData message = HeroIcons.chatBubbleLeftRight.outline;
   static final IconData genericActivity = HeroIcons.bolt.outline;
 
   // Providers
@@ -55,6 +56,7 @@ class AppIcons {
   static final IconData bitbucket = SimpleIcons.bitbucket;
   static final IconData phorge = HeroIcons.codeBracket.outline;
   static final IconData linear = SimpleIcons.linear;
+  static final IconData figma = SimpleIcons.figma;
   static final IconData jira = SimpleIcons.jira;
   static final IconData slack = SimpleIcons.slack;
   static final IconData discord = SimpleIcons.discord;
@@ -63,7 +65,7 @@ class AppIcons {
 
   // Utility
   static final IconData chevronRight = HeroIcons.chevronRight.outline;
-  static final IconData chatMessage = HeroIcons.chatBubbleLeftRight.outline;
+  static final IconData chatMessage = message;
   static final IconData users = HeroIcons.userGroup.outline;
   static final IconData user = HeroIcons.user.outline;
   static final IconData selected = HeroIcons.checkCircle.solid;

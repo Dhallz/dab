@@ -122,6 +122,8 @@ class OauthCredentialRefresher implements AbsIOauthCredentialRefresher {
         return 'Jira sign-in expired. Disconnect and Connect with Jira again.';
       case 'linear':
         return 'Linear sign-in expired. Disconnect and Connect with Linear again.';
+      case 'figma':
+        return 'Figma sign-in expired. Disconnect and Connect with Figma again.';
       default:
         return 'Sign-in expired. Disconnect and Connect again.';
     }

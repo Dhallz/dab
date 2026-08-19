@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/extensions/activity_extensions.dart';
 import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_icons.dart';
 import '../explorer_notifier.dart';
@@ -85,17 +86,21 @@ class _ExplorerDesktopActivityPane extends ConsumerWidget {
                 child: switch (item) {
                   SingleActivityItem(:final activity) => ActivityCard(
                     activity: activity,
-                    resolvedAuthorName: userNameById[activity.userId],
+                    resolvedAuthorName: activity.senderDisplayName(userNameById),
                   ),
                   TaskActivityItem(:final activities) => ActivityCard(
                     activity: activities.first,
                     activities: activities,
-                    resolvedAuthorName: userNameById[activities.first.userId],
+                    resolvedAuthorName: activities.first.senderDisplayName(
+                      userNameById,
+                    ),
                   ),
                   SlackConversationItem(:final activities) => ActivityCard(
                     activity: activities.first,
                     activities: activities,
-                    resolvedAuthorName: userNameById[activities.first.userId],
+                    resolvedAuthorName: activities.first.senderDisplayName(
+                      userNameById,
+                    ),
                   ),
                 },
               );

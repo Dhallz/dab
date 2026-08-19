@@ -89,6 +89,17 @@ class ActivityHistoryItem extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
+                if (_historyAuthorLabel().isNotEmpty) ...[
+                  Text(
+                    _historyAuthorLabel(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
                 MarkdownBody(
                   data: activity.content,
                   styleSheet: MarkdownStyleSheet(
@@ -116,6 +127,12 @@ class ActivityHistoryItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _historyAuthorLabel() {
+    final author = activity.authorName.trim();
+    if (author.isEmpty || looksLikeOpaqueUserId(author)) return '';
+    return author;
   }
 
   String _formatDateDetailed(DateTime date) {

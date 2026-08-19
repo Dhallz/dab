@@ -90,17 +90,20 @@ class HttpOauthTokenClient implements AbsIOauthTokenClient {
       }
 
       http.Response response;
+      final tokenUrl = spec.tokenEndpointForGrant(
+        (fields['grant_type'] ?? '').toString(),
+      );
       if (spec.tokenRequestJson) {
         headers['Content-Type'] = 'application/json';
         response = await _client.post(
-          Uri.parse(spec.tokenUrl),
+          Uri.parse(tokenUrl),
           headers: headers,
           body: jsonEncode(fields),
         );
       } else {
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
         response = await _client.post(
-          Uri.parse(spec.tokenUrl),
+          Uri.parse(tokenUrl),
           headers: headers,
           body: fields,
         );

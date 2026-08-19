@@ -86,7 +86,7 @@ dab_app/lib/
 | Entity | Description |
 |---|---|
 | `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow, and `inboxLane` (`directed` \| `follow`) so Dashboard can show two independent rows when a user is both a directed recipient and a follower. Missing/legacy JSON is treated as directed. |
-| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, …) |
+| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, Figma files, …) |
 | `User` | DAB user — `id`, `email`, `role` (`UserRole`), optional `linkedProviderIds` (non-secret Directory hint) |
 | `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
 | `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. Jira/Linear OAuth access tokens are refreshed from the stored refresh token when expired. |
@@ -94,8 +94,8 @@ dab_app/lib/
 | `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
 | `GitWatchList` | Per-user git watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. Watched branches also feed Explorer git polling refs. |
 | `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
-| `FollowCandidate` | One Dashboard Following-picker row (`providerId`, `objectKey`, `title`, optional `url`, `kind` `issue` \| `gitBranch`). |
-| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
+| `FollowCandidate` | One Dashboard Following-picker row (`providerId`, `objectKey`, `title`, optional `url`, `kind` `issue` \| `gitBranch` \| `file`). |
+| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, Figma `file_key`, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
 | `Group` | Team / organizational group |
 | `Session` | Active auth session holding JWT + refresh token |
 | `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
@@ -158,7 +158,10 @@ External Provider (Phorge, GitHub, Slack, …)
 
 ### Live push ingestion (Dashboard)
 
-The polling flow above powers Explorer (historical backfill). Dashboard is a
+The polling flow above powers Explorer (historical backfill). Figma poll keys
+come from Admin **file URLs/keys** and Follow pins — Connect OAuth cannot list
+a team. Explorer poll refreshes the Figma user access token before comments
+and retries once on HTTP 401. Dashboard is a
 **personal inbound inbox**: live ingest fans out one row per recipient
 (`Activity.userId`), records the linked actor as `senderUserId`, and delivers
 `ACTIVITY_RECEIVED` with `broadcastToUser(recipient)`. The app hydrates
@@ -166,7 +169,7 @@ The polling flow above powers Explorer (historical backfill). Dashboard is a
 `activities:user:{id}`. `ActivityLivePollScheduler` does **not** refill the
 inbox with authored poll rows; inbound rows come from webhooks / Gateway.
 Identity linking is required — unlinked mentions are dropped. Followable
-providers (Phorge, Jira, Linear, Slack, Discord, and git **repo+branch** pins)
+providers (Phorge, Jira, Linear, Slack, Discord, Figma files, and git **repo+branch** pins)
 emit a **second** live row
 for users who Follow that object key (`inboxLane: follow`, id seed suffixed
 `|follow`) instead of unioning followers into the directed recipient set.
@@ -196,7 +199,7 @@ Provider push (webhook / Gateway WebSocket)
 ```
 
 Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge
-(Herald), Jira, Linear, and Slack (Events API); Discord uses the outbound
+(Herald), Jira, Linear, Figma (JSON passcode), and Slack (Events API); Discord uses the outbound
 `DiscordGatewayClient` WebSocket client since Discord has no message webhooks.
 Insights with `authoredOnly=false` uses an org token when present; otherwise
 sources union per-user authored fetches (work not attributed to a connected
@@ -245,6 +248,7 @@ activity_slack_message     ← Slack message metadata (workspace/channel/thread/
 activity_discord_message   ← Discord message metadata (guild/channel/message ids)
 activity_jira_issue        ← Jira issue metadata (issue key, project key, status snapshot)
 activity_linear_issue      ← Linear issue metadata (identifier, team key, status snapshot)
+activity_figma_file        ← Figma file metadata (file key, comment id, last-touched handle)
 ```
 
 The orphaned `activity_teams_message` table remains on installs upgraded from
@@ -281,7 +285,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`, user-scoped inbound inbox), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`, user-scoped inbound inbox), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear, Figma), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
 | `AdminController` | `/admin` | User management (creation + roles) + identity review/link/resolve |
 | `AuthController` | `/auth` | Register, login, refresh token |
 | `GroupController` | `/groups` | Group management |

@@ -210,6 +210,32 @@ class DiscordMessageProvider extends ActivityProvider
   String get category => 'message';
 }
 
+/// [ARCH: DOMAIN_MODEL]
+/// ROLE: Metadata for Figma file comments and last-edited heartbeats.
+/// CONTRACT: Corresponds to the `activity_figma_file` SQL table.
+/// Comments use [category] `message`; last-edited uses `generic`.
+@MappableClass()
+class FigmaFileProvider extends ActivityProvider with FigmaFileProviderMappable {
+  final String? fileKey;
+  final String? commentId;
+  final String? lastTouchedBy;
+
+  const FigmaFileProvider({
+    this.fileKey,
+    this.commentId,
+    this.lastTouchedBy,
+  });
+
+  @override
+  String get name => 'Figma';
+
+  @override
+  String get category {
+    final cid = commentId?.trim() ?? '';
+    return cid.isEmpty ? 'generic' : 'message';
+  }
+}
+
 @MappableClass()
 class GenericProvider extends ActivityProvider with GenericProviderMappable {
   @override

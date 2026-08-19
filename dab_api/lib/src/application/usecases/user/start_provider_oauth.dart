@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/core/oauth_providers.dart';
+import '../../../domain/core/public_api_url.dart';
 import '../../../domain/entities/provider/provider_config.dart';
 import '../../../domain/entities/user/oauth_state_payload.dart';
 import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
@@ -66,11 +67,10 @@ class StartProviderOauth {
     }
 
     final publicResult = await _settings.getSetting('public_api_url');
-    final publicBase = publicResult
-        .getOrElse((_) => null)
-        ?.trim()
-        .replaceAll(RegExp(r'/+$'), '');
-    if (publicBase == null || publicBase.isEmpty) {
+    final publicBase = canonicalizePublicApiBase(
+      publicResult.getOrElse((_) => null),
+    );
+    if (publicBase.isEmpty) {
       return const Left(
         ValidationFailure(
           'public_api_url is not set. An admin must save it under Security.',

@@ -106,14 +106,14 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket}/webhook`) — HMAC/shared-secret via `AbsIWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook`) — HMAC/shared-secret via `AbsIWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public (no JWT) OAuth redirect. Validates Redis `oauth:state:{id}`, exchanges the code, persists via `SaveUserProviderCredential`. Returns HTML. Never includes tokens. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
 | `GroupController` | `/groups/*` | Group management |
 | `HealthController` | `GET /health`, `/health/db` | Pulse check, DB connectivity |
 | `MetadataController` | `/metadata/*`, `/admin/configs*`, `/admin/system-settings` | Public bootstrap status/configs (includes `deploymentMode`), provider metadata list, provider capability matrix (`/metadata/capabilities`), admin provider config save/test (`POST /admin/configs/test` returns Core/Live/Polling section report; Live green = Redis `live:last_ingest:{providerId}` within 7 days), system settings (domain validation toggle + allowed domain + `public_api_url` for OAuth callbacks and webhooks + `deployment_mode`) |
-| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear,github,gitlab,bitbucket}/projects` for Jira/Linear instance allow-lists and personal git inbox watches, `GET /users/me/credentials/{github,gitlab,bitbucket}/branches` for the Settings branch picker), Dashboard object Follow pins (`GET/PUT/DELETE /users/me/follows` with `{ providerId, objectKey, title?, url? }` for Phorge, Jira, Linear, Slack, Discord, and git `owner/repo|branch`; `GET /users/me/follows/candidates?q=` for the Following picker), and mobile device tokens (`PUT/DELETE /users/me/device-tokens` with `{ platform, token }` / `{ token }`). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
+| `UserController` | `/users/*` | User directory plus self-serve credentials (`GET/PUT/DELETE /users/me/credentials`, `POST /users/me/credentials/:provider/test`, `POST /users/me/credentials/:provider/oauth/start`, `GET/PUT /users/me/credentials/{jira,linear,github,gitlab,bitbucket}/projects` for Jira/Linear instance allow-lists and personal git inbox watches, `GET /users/me/credentials/{github,gitlab,bitbucket}/branches` for the Settings branch picker), Dashboard object Follow pins (`GET/PUT/DELETE /users/me/follows` with `{ providerId, objectKey, title?, url? }` for Phorge, Jira, Linear, Slack, Discord, Figma `file_key`, and git `owner/repo|branch`; `GET /users/me/follows/candidates?q=` for the Following picker), and mobile device tokens (`PUT/DELETE /users/me/device-tokens` with `{ platform, token }` / `{ token }`). Secrets are encrypted at rest (`DAB_CREDENTIALS_KEY`); list/test/oauth-start never echo tokens. OAuth tokens are stored as the existing provider secret keys plus `tokenType=oauth`. Jira Cloud access tokens expire in about an hour; listing projects refreshes them via `offline_access` before calling Jira. Slack/Discord bots are instance `ProviderConfig` fields (Admin), not per-user Settings paste. |
 
 #### Middleware
 
@@ -127,7 +127,7 @@ Thin entry points only. No business logic.
 
 | Kind | Providers | Fetch credentials |
 |---|---|---|
-| OAuth / PAT | GitHub, GitLab, Bitbucket, Jira, Linear, Phorge | User secret overlay, else org settings |
+| OAuth / PAT | GitHub, GitLab, Bitbucket, Jira, Linear, Phorge, Figma | User secret overlay, else org settings |
 | Workspace bot | Slack, Discord | Org `botToken` only |
 - **`GET /activities/search` query `startDate` / `endDate`:** Bare `YYYY-MM-DD` (no TZ) is interpreted as **organization calendar days** in the configured `system_timezone` (default `UTC`), converted to UTC instants for provider polling and DB queries (`ActivityController` + `OrgCalendar`). **`dab_app`** sends the same `YYYY-MM-DD` strings derived from Explorer/Insights picker dates in the org timezone (`ActivitySearchQueryMapper.toRemoteQueryParameters`), and client-side filtering uses the same org-day semantics. **`authoredOnly`:** **`dab_app`** Explorer keeps **`true`** for personal-scope browsing; **Insights** uses **`false`** for team analytics so connectors can apply broader retrieval (e.g. Phorge sprint/global paths).
 
@@ -171,6 +171,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Discord | ✅ Active (messages v1) | REST + discovery | Gateway WebSocket client (`MESSAGE_CREATE`) |
 | GitLab | ✅ Active (commits v1) | REST + discovery | Push Hook webhook (`X-Gitlab-Token`) |
 | Bitbucket | ✅ Active (commits v1) | REST + discovery | `repo:push` webhook (`X-Hub-Signature` HMAC) |
+| Figma | ✅ Active (comments + last-edited v1) | REST comments + file meta | Webhook JSON `passcode` vs Live `webhookSecret` |
 | Teams | 🔜 Planned (removed from v1; Graph change notifications operationally heavy) | Microsoft Graph REST | — |
 
 GitHub v1 ingestion is commits-only and uses provider-linked identities from
@@ -283,6 +284,34 @@ later updates, including their own. Each
 comment is a distinct activity id (`linear|{issue}|comment|{commentId}|{recipient}`)
 so Dashboard live-publishes it; Explorer still groups by issue identifier.
 
+Figma collaboration is the **file**. `FigmaFileSource` polls
+`GET /v1/files/:key/comments` and `GET /v1/files/:key/meta` (fields may be nested under `file`; card titles are `[folder_name] name`) for allow-listed
+`fileKeys` (bare keys or `figma.com/design/…` URLs), files the searched users
+**Follow**, and — only when a token can list projects — files under Admin
+`teamIds`. Connect OAuth (`current_user:read`, `file_comments:read`,
+`file_metadata:read`) **cannot** enumerate a team (`projects:read` /
+`folders:read` are not requested; `folders:read` is blocked for public OAuth
+apps). Live ingestion
+(`POST /integrations/figma/webhook`) authenticates with the JSON body
+**`passcode`** compared constant-time to Live **`webhookSecret`**. DAB does
+**not** call `POST /v2/webhooks` — register in Figma (or Bruno
+`bruno/figma/create-webhook-file-comment` and `create-webhook-file-update`
+with a short-lived `webhooks:write` token). Admin Live **webhookSecret** is
+the Figma `passcode`. `FILE_COMMENT` fans Directed rows to linked `mentions[]` and a
+Follow-lane copy to anyone who Follows that `file_key` (including the author's
+own comments). Replies without an `@mention` are Following-only. `FILE_UPDATE`
+is a wake: if the file has Followers, DAB GETs file meta and upserts one
+Following heartbeat per recipient (`figma|{fileKey}|touched|{userId}`) with
+copy **`last edited by {handle}`** (or **Edited recently** when no token).
+A later touch **replaces** the previous heartbeat. `PING` is ACK-only. Whoami
+is `GET /v1/me` (`user_identities.external_id` = Figma user id; no email
+fallback). OAuth scopes are `current_user:read`, `file_comments:read`,
+`file_metadata:read`. Explorer poll refreshes the user access token (Figma
+tokens expire; `POST /v1/oauth/refresh` with HTTP Basic) and retries comments
+once on HTTP 401. Comments use `Authorization: Bearer` for OAuth and
+`X-Figma-Token` only for `figd_` PATs — sending both makes comments return
+401 Missing credentials. If refresh fails, Connect with Figma again.
+
 Discord has no outbound webhooks for messages, so live ingestion uses
 `DiscordGatewayClient` — an outbound Gateway WebSocket client (IDENTIFY with
 the **`botToken`**, `GUILD_MESSAGES`/`MESSAGE_CONTENT` intents, heartbeat +
@@ -301,8 +330,9 @@ Explorer backfill polls `GET /channels/{id}/messages` per configured
 
 GitLab ingestion is commit-oriented: `GitLabCommitSource` polls
 `GET /projects/:id/repository/commits` per configured **`projects`** entry
-(token auth via **`apiToken`**, instance URL from `baseUrl`/**`instanceUrl`**),
-attributing commits by `author_email` against user emails and linked
+(`group/project`, numeric id, or project URL; Dart `List.toString()` wrappers
+like `[[group/project]]` are unwrapped). Token auth via **`apiToken`**, instance
+URL from `baseUrl`/**`instanceUrl`**, attributing commits by `author_email` against user emails and linked
 identities. Live ingestion (`POST /integrations/gitlab/webhook`) handles Push
 Hook events authenticated with the plain shared **`webhookSecret`** in
 `X-Gitlab-Token` (constant-time compare; GitLab does not sign payloads). After

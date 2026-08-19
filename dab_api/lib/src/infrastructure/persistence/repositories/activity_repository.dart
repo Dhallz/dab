@@ -156,12 +156,65 @@ class ActivityRepository implements AbsIActivityRepository {
                   replyToId: Value(provider.replyToId),
                 ),
               );
+        } else if (provider is FigmaFileProvider) {
+          await _db
+              .into(_db.activityFigmaFileTable)
+              .insert(_figmaCompanion(activity.id, provider));
         }
         return const Right(null);
       } catch (e) {
         return Left(DatabaseFailure('Error creating activity: $e'));
       }
     });
+  }
+
+  @override
+  Future<Either<DatabaseFailure, void>> upsertActivity(
+    Activity activity,
+  ) async {
+    return _db.transaction(() async {
+      try {
+        await _db
+            .into(_db.activitiesTable)
+            .insertOnConflictUpdate(
+              ActivitiesTableCompanion.insert(
+                id: activity.id,
+                userId: activity.userId,
+                senderUserId: Value(activity.senderUserId),
+                providerName: activity.provider.name,
+                title: activity.title,
+                content: activity.content,
+                url: Value(activity.url),
+                authorName: activity.authorName,
+                authorAvatarUrl: Value(activity.authorAvatarUrl),
+                commentCount: Value(activity.commentCount),
+                createdAt: toPgDateTime(activity.createdAt),
+              ),
+            );
+        final provider = activity.provider;
+        if (provider is FigmaFileProvider) {
+          await _db
+              .into(_db.activityFigmaFileTable)
+              .insertOnConflictUpdate(_figmaCompanion(activity.id, provider));
+        }
+        return const Right(null);
+      } catch (e) {
+        return Left(DatabaseFailure('Error upserting activity: $e'));
+      }
+    });
+  }
+
+  ActivityFigmaFileTableCompanion _figmaCompanion(
+    String activityId,
+    FigmaFileProvider provider,
+  ) {
+    final key = provider.fileKey?.trim();
+    return ActivityFigmaFileTableCompanion.insert(
+      activityId: activityId,
+      fileKey: (key == null || key.isEmpty) ? 'unknown' : key,
+      commentId: Value(provider.commentId),
+      lastTouchedBy: Value(provider.lastTouchedBy),
+    );
   }
 
   @override
@@ -214,6 +267,12 @@ class ActivityRepository implements AbsIActivityRepository {
         leftOuterJoin(
           _db.activityBitbucketCommitTable,
           _db.activityBitbucketCommitTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
+        leftOuterJoin(
+          _db.activityFigmaFileTable,
+          _db.activityFigmaFileTable.activityId.equalsExp(
             _db.activitiesTable.id,
           ),
         ),
@@ -297,6 +356,12 @@ class ActivityRepository implements AbsIActivityRepository {
             _db.activitiesTable.id,
           ),
         ),
+        leftOuterJoin(
+          _db.activityFigmaFileTable,
+          _db.activityFigmaFileTable.activityId.equalsExp(
+            _db.activitiesTable.id,
+          ),
+        ),
         // ENFORCE Deep Deactivation filtering for user-specific feeds too
         innerJoin(
           _db.providerConfigsTable,
@@ -338,6 +403,7 @@ class ActivityRepository implements AbsIActivityRepository {
     final discordData = row.readTableOrNull(_db.activityDiscordMessageTable);
     final gitlabData = row.readTableOrNull(_db.activityGitlabCommitTable);
     final bitbucketData = row.readTableOrNull(_db.activityBitbucketCommitTable);
+    final figmaData = row.readTableOrNull(_db.activityFigmaFileTable);
 
     ActivityProvider provider;
     final pName = activityData.providerName.toLowerCase();
@@ -409,6 +475,14 @@ class ActivityRepository implements AbsIActivityRepository {
       );
     } else if (pName == 'bitbucket') {
       provider = const BitbucketCommitProvider();
+    } else if (pName == 'figma' && figmaData != null) {
+      provider = FigmaFileProvider(
+        fileKey: figmaData.fileKey,
+        commentId: figmaData.commentId,
+        lastTouchedBy: figmaData.lastTouchedBy,
+      );
+    } else if (pName == 'figma') {
+      provider = const FigmaFileProvider();
     } else {
       provider = GenericProvider(name: activityData.providerName);
     }

@@ -85,4 +85,15 @@ void main() {
     );
     expect(followObjectKeyFor(const GenericProvider(name: 'other')), isNull);
   });
+
+  test('encodes Figma file keys', () {
+    expect(
+      followObjectKeyFor(const FigmaFileProvider(fileKey: 'Abc123File')),
+      'Abc123File',
+    );
+    expect(
+      followProviderIdFor(const FigmaFileProvider(fileKey: 'Abc123File')),
+      'figma',
+    );
+  });
 }

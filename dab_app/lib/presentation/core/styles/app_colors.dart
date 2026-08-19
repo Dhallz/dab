@@ -79,6 +79,7 @@ class AppColors {
   static const Color brandBitbucket = Color(0xFF0052CC);
   static const Color brandJira = Color(0xFF0052CC);
   static const Color brandLinear = Color(0xFF5E6AD2);
+  static const Color brandFigma = Color(0xFFF24E1E);
   static const Color brandSlack = Color(0xFF4A154B);
   static const Color brandDiscord = Color(0xFF5865F2);
 

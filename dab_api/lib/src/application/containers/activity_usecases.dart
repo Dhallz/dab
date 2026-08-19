@@ -3,6 +3,7 @@ import '../usecases/activity/fetch_remote_activities.dart';
 import '../usecases/activity/get_live_activities.dart';
 import '../usecases/activity/get_recent_activities.dart';
 import '../usecases/activity/ingest_bitbucket_webhook.dart';
+import '../usecases/activity/ingest_figma_webhook.dart';
 import '../usecases/activity/ingest_github_webhook.dart';
 import '../usecases/activity/ingest_gitlab_webhook.dart';
 import '../usecases/activity/ingest_jira_webhook.dart';
@@ -23,6 +24,7 @@ class ActivityUseCases {
   final IngestGitLabWebhook ingestGitLabWebhook;
   final IngestJiraWebhook ingestJiraWebhook;
   final IngestLinearWebhook ingestLinearWebhook;
+  final IngestFigmaWebhook ingestFigmaWebhook;
   final IngestPhorgeWebhook ingestPhorgeWebhook;
   final IngestSlackEvent ingestSlackEvent;
   final LogActivity logActivity;
@@ -39,6 +41,7 @@ class ActivityUseCases {
     required this.ingestGitLabWebhook,
     required this.ingestJiraWebhook,
     required this.ingestLinearWebhook,
+    required this.ingestFigmaWebhook,
     required this.ingestPhorgeWebhook,
     required this.ingestSlackEvent,
     required this.logActivity,

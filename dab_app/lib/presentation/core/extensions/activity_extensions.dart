@@ -3,7 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../localization/l10n_extension.dart';
 import '../styles/activity_category_styles.dart';
+import '../styles/app_icons.dart';
 import '../styles/provider_styles.dart';
+
+/// True when [value] is a UUID or a long numeric Figma user id, not a name.
+bool looksLikeOpaqueUserId(String value) {
+  final text = value.trim();
+  if (text.isEmpty) return false;
+  if (RegExp(r'^[0-9]{8,}$').hasMatch(text)) return true;
+  return RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  ).hasMatch(text);
+}
 
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: UI-specific extensions for the [Activity] entity.
@@ -40,6 +52,11 @@ extension OnActivity on Activity {
     if (provider is SlackMessageProvider ||
         provider is DiscordMessageProvider) {
       return 'message';
+    }
+    final figma = provider;
+    if (figma is FigmaFileProvider) {
+      final cid = figma.commentId?.trim() ?? '';
+      return cid.isEmpty ? 'activity' : 'comment';
     }
 
     final contentLower = content.toLowerCase();
@@ -86,6 +103,8 @@ extension OnActivity on Activity {
       'status' => Icons.swap_horiz_rounded,
       'review' => Icons.fact_check_outlined,
       'assignment' => Icons.person_add_alt_1_outlined,
+      'commit' => AppIcons.commit,
+      'message' => AppIcons.message,
       _ => icon(context),
     };
   }
@@ -101,5 +120,17 @@ extension OnActivity on Activity {
       'message' => context.l10n.activityKindMessage,
       _ => context.l10n.activityKindActivity,
     };
+  }
+
+  /// Sender label: linked sender name, else [authorName], never a raw user id.
+  String senderDisplayName(Map<String, String> userNameById) {
+    final senderId = senderUserId?.trim() ?? '';
+    if (senderId.isNotEmpty) {
+      final linked = userNameById[senderId]?.trim() ?? '';
+      if (linked.isNotEmpty) return linked;
+    }
+    final author = authorName.trim();
+    if (author.isNotEmpty && !looksLikeOpaqueUserId(author)) return author;
+    return '';
   }
 }

@@ -151,7 +151,17 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     );
     if (state.activities.any((item) => item.id == activity.id)) {
       // ignore: avoid_print
-      print('[LIVE_CLIENT] dashboard_dedup activity_id=${activity.id}');
+      print('[LIVE_CLIENT] dashboard_replace activity_id=${activity.id}');
+      final updatedList = [
+        activity,
+        ...state.activities.where((item) => item.id != activity.id),
+      ];
+      if (updatedList.length > 100) updatedList.removeLast();
+      state = state.copyWith(
+        activities: updatedList,
+        providerHealth: _providerHealthFor(updatedList),
+        lastSyncedAt: now,
+      );
       return;
     }
     final updatedList = [activity, ...state.activities];
