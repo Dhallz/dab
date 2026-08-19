@@ -68,10 +68,9 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
   }
 
   Future<void> started(String? connectedUserId) async {
-    state = _seededState(state).copyWith(
-      status: ViewStatus.loading,
-      errorMessage: null,
-    );
+    state = _seededState(
+      state,
+    ).copyWith(status: ViewStatus.loading, errorMessage: null);
     final usersResult = await _userUseCases.getUsers.execute();
     final providerResult = await _metadataUseCases.getProviderConfigs.execute();
 
@@ -85,18 +84,15 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
       );
     });
 
-    providerResult.fold(
-      (_) => null,
-      (configs) {
-        final app = ref.read(appNotifierProvider);
-        nextState = _applyProviderConfigFilters(
-          nextState,
-          (configs as List).whereType<ProviderConfig>().toList(),
-          app.providerConnectionStatuses,
-          selectAll: true,
-        );
-      },
-    );
+    providerResult.fold((_) => null, (configs) {
+      final app = ref.read(appNotifierProvider);
+      nextState = _applyProviderConfigFilters(
+        nextState,
+        (configs as List).whereType<ProviderConfig>().toList(),
+        app.providerConnectionStatuses,
+        selectAll: true,
+      );
+    });
 
     if (connectedUserId != null &&
         nextState.users.any((user) => user.id == connectedUserId)) {
@@ -289,7 +285,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         endDate: state.endDate,
         users: state.selectedUserIds.toList(),
         providers: state.selectedProviders,
-        coverageProviders: state.availableProviders.toSet(),
+        coverageProviders: Set<String>.from(state.selectedProviders),
         categories: state.selectedActivityCategories,
         authoredOnly: false,
         orgTimezoneId: ref.read(appNotifierProvider).orgTimezoneId,

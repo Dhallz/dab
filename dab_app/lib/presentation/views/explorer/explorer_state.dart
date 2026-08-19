@@ -42,6 +42,9 @@ class ExplorerState with ExplorerStateMappable {
   final List<String> availableProviders;
   final Set<String> selectedProviders;
 
+  /// Provider ids whose Explorer search is still in flight.
+  final Set<String> loadingProviders;
+
   const ExplorerState({
     this.status = ViewStatus.initial,
     this.items = const [],
@@ -59,6 +62,7 @@ class ExplorerState with ExplorerStateMappable {
     this.selectedActivityCategories = const {},
     this.availableProviders = const [],
     this.selectedProviders = const {},
+    this.loadingProviders = const {},
   });
 
   factory ExplorerState.initial() =>
@@ -68,6 +72,9 @@ class ExplorerState with ExplorerStateMappable {
 /// [ARCH: PRESENTATION_STATE]
 /// ROLE: Derived Explorer island-bar projections from [ExplorerState].
 extension OnExplorerState on ExplorerState {
+  /// Whether any selected-provider search is still outstanding.
+  bool get isFetchingProviders => loadingProviders.isNotEmpty;
+
   /// All [Activity] instances currently represented in [items] (flattened stacks).
   List<Activity> get flattenedExplorerActivities {
     final result = <Activity>[];

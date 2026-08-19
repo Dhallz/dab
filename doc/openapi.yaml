@@ -211,6 +211,7 @@ paths:
           - `true`: Returns only transactions **authored by** the target users.
           - `false`: Returns transactions **authored by** OR **addressed to** (@mentions) the target users.
         - `users`: (Optional) Comma-separated list of User UUIDs. Defaults to current caller.
+        - `providers`: (Optional) Comma-separated provider config ids (e.g. `slack,phorge`). Omit to poll every active connector.
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
@@ -249,6 +250,12 @@ paths:
             type: boolean
             default: true
           description: If true, only returns activities directly authored by the specified users. If false, includes mentions and tags addressed to them.
+        - name: providers
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated provider config ids (e.g. slack,github,phorge). Omit to search every active connector.
       responses:
         '200':
           description: Successful data envelope with historical activities

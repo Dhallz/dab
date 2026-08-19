@@ -20,11 +20,14 @@ class FetchRemoteActivities {
   /// [ARCH: APPLICATION_ENTRY]
   /// ROLE: Executes the activity aggregation flow.
   /// CONTRACT: Returns [Right] with activities or [Left] with [Failure].
+  /// [providerIds] limits [UnifiedActivityFetcher.fetchAll]; `null` means all
+  /// active connectors.
   Future<Either<Failure, List<Activity>>> execute({
     required List<User> targetUsers,
     required DateTime startDate,
     required DateTime endDate,
     required bool authoredOnly,
+    Set<String>? providerIds,
   }) async {
     try {
       if (targetUsers.isEmpty) return const Right([]);
@@ -34,6 +37,7 @@ class FetchRemoteActivities {
         start: startDate,
         end: endDate,
         authoredOnly: authoredOnly,
+        providerIds: providerIds,
       );
 
       // Deduplicate by ID just in case

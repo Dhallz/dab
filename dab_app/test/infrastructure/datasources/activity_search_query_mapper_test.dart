@@ -21,6 +21,14 @@ void main() {
       expect(params['endDate'], '2026-01-07');
       expect(params['users'], 'u1,u2');
       expect(params['authoredOnly'], 'true');
+      expect(params.containsKey('providers'), isFalse);
+    });
+
+    test('includes sorted providers when the query names them', () {
+      const query = ActivitySearchQuery(providers: {'github', 'slack'});
+
+      final params = ActivitySearchQueryMapper.toRemoteQueryParameters(query);
+      expect(params['providers'], 'github,slack');
     });
 
     test('matches local and domain filters with same semantics', () {
@@ -119,35 +127,32 @@ void main() {
       expect(activity.toExplorerRecord('UTC').providerKey, 'discord');
     });
 
-    test(
-      'matches America/New_York org day for evening UTC Slack message',
-      () {
-        final activity = Activity(
-          id: 'slack-ny',
-          userId: 'u1',
-          provider: const SlackMessageProvider(channelId: 'C123'),
-          title: 'Evening ping',
-          content: 'ok',
-          authorName: 'Alice',
-          commentCount: 0,
-          createdAt: DateTime.utc(2026, 7, 3, 0, 42),
-        );
+    test('matches America/New_York org day for evening UTC Slack message', () {
+      final activity = Activity(
+        id: 'slack-ny',
+        userId: 'u1',
+        provider: const SlackMessageProvider(channelId: 'C123'),
+        title: 'Evening ping',
+        content: 'ok',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 7, 3, 0, 42),
+      );
 
-        final query = ActivitySearchQuery(
-          startDate: DateTime(2026, 7, 2),
-          endDate: DateTime(2026, 7, 2),
-          orgTimezoneId: 'America/New_York',
-        );
+      final query = ActivitySearchQuery(
+        startDate: DateTime(2026, 7, 2),
+        endDate: DateTime(2026, 7, 2),
+        orgTimezoneId: 'America/New_York',
+      );
 
-        expect(
-          ActivitySearchQueryMapper.matchesActivity(activity, query),
-          isTrue,
-        );
-        expect(
-          ActivitySearchQueryMapper.toRemoteQueryParameters(query)['startDate'],
-          '2026-07-02',
-        );
-      },
-    );
+      expect(
+        ActivitySearchQueryMapper.matchesActivity(activity, query),
+        isTrue,
+      );
+      expect(
+        ActivitySearchQueryMapper.toRemoteQueryParameters(query)['startDate'],
+        '2026-07-02',
+      );
+    });
   });
 }

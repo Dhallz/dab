@@ -23,6 +23,7 @@ void main() {
     fetchRemote = _MockFetchRemoteActivities();
     useCase = SearchActivities(authRepo, fetchRemote);
     registerFallbackValue(TestData.user(id: 'fallback'));
+    registerFallbackValue(<String>{});
   });
 
   test(
@@ -46,6 +47,7 @@ void main() {
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           authoredOnly: any(named: 'authoredOnly'),
+          providerIds: any(named: 'providerIds'),
         ),
       );
     },
@@ -64,6 +66,7 @@ void main() {
         startDate: start,
         endDate: end,
         authoredOnly: true,
+        providerIds: null,
       ),
     ).thenAnswer((_) async => Right([activity]));
 
@@ -81,6 +84,44 @@ void main() {
         startDate: start,
         endDate: end,
         authoredOnly: true,
+        providerIds: null,
+      ),
+    ).called(1);
+  });
+
+  test('forwards providerIds to FetchRemoteActivities', () async {
+    final user = TestData.user(id: 'u-3');
+    final activity = TestData.activity(userId: 'u-3');
+    final start = DateTime.utc(2026, 2, 1);
+    final end = DateTime.utc(2026, 2, 2);
+
+    when(() => authRepo.findById('u-3')).thenAnswer((_) async => Right(user));
+    when(
+      () => fetchRemote.execute(
+        targetUsers: [user],
+        startDate: start,
+        endDate: end,
+        authoredOnly: false,
+        providerIds: {'phorge'},
+      ),
+    ).thenAnswer((_) async => Right([activity]));
+
+    final result = await useCase.execute(
+      targetUserIds: const ['u-3'],
+      startDate: start,
+      endDate: end,
+      authoredOnly: false,
+      providerIds: {'phorge'},
+    );
+
+    expect(result, equals([activity]));
+    verify(
+      () => fetchRemote.execute(
+        targetUsers: [user],
+        startDate: start,
+        endDate: end,
+        authoredOnly: false,
+        providerIds: {'phorge'},
       ),
     ).called(1);
   });
@@ -94,6 +135,7 @@ void main() {
         startDate: any(named: 'startDate'),
         endDate: any(named: 'endDate'),
         authoredOnly: any(named: 'authoredOnly'),
+        providerIds: any(named: 'providerIds'),
       ),
     ).thenAnswer((_) async => Left(DatabaseFailure('upstream')));
 

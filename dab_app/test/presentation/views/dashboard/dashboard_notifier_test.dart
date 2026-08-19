@@ -491,6 +491,8 @@ void main() {
 
     final state = container.read(dashboardNotifierProvider);
     expect(state.followedObjectRefs, [followObjectRef('jira', 'DAB-7')]);
+    expect(state.followedFeed, hasLength(1));
+    expect(state.followedFeed.single.title, '[DAB-7] Inbox');
     verify(
       () => userRepository.saveMyActivityFollow(
         providerId: 'jira',

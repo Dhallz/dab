@@ -45,6 +45,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
   final MetadataUseCases _metadataUseCases;
 
   Timer? _dateDebounceTimer;
+  int _fetchGeneration = 0;
 
   ExplorerNotifier(
     this._activityUseCases,
@@ -63,9 +64,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       ),
       (previous, next) {
         if (next.configs.isEmpty) return;
-        unawaited(
-          syncProviderFilters(next.configs, next.connections),
-        );
+        unawaited(syncProviderFilters(next.configs, next.connections));
       },
     );
     return _seededState(ExplorerState.initial());
@@ -107,18 +106,15 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
       (l) => null,
       (groups) => newState = newState.copyWith(groups: groups),
     );
-    providerResult.fold(
-      (failure) => null,
-      (configs) {
-        final app = ref.read(appNotifierProvider);
-        newState = _applyProviderConfigFilters(
-          newState,
-          (configs as List).whereType<ProviderConfig>().toList(),
-          app.providerConnectionStatuses,
-          selectAll: true,
-        );
-      },
-    );
+    providerResult.fold((failure) => null, (configs) {
+      final app = ref.read(appNotifierProvider);
+      newState = _applyProviderConfigFilters(
+        newState,
+        (configs as List).whereType<ProviderConfig>().toList(),
+        app.providerConnectionStatuses,
+        selectAll: true,
+      );
+    });
 
     if (connectedUserId != null &&
         newState.users.any((user) => user.id == connectedUserId)) {
@@ -167,42 +163,101 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
   }
 
   Future<void> _fetchActivities() async {
-    state = state.copyWith(status: ViewStatus.loading);
+    final generation = ++_fetchGeneration;
 
     final targetIds = _resolveTargetUserIds();
     if (targetIds.isEmpty) {
-      state = state.copyWith(status: ViewStatus.success, items: const []);
+      state = state.copyWith(
+        status: ViewStatus.success,
+        items: const [],
+        loadingProviders: const {},
+      );
+      return;
+    }
+
+    final providers = state.selectedProviders.toList()..sort();
+    if (providers.isEmpty) {
+      state = state.copyWith(
+        status: ViewStatus.success,
+        items: const [],
+        loadingProviders: const {},
+      );
       return;
     }
 
     final usersToSearch = targetIds.toList();
     final (startDate, endDate) = _resolveDateWindow();
+    final categories = Set<ActivityCategory>.from(
+      state.selectedActivityCategories,
+    );
+    final orgTimezoneId = ref.read(appNotifierProvider).orgTimezoneId;
 
-    final result = await _activityUseCases.searchActivities.execute(
-      ActivitySearchQuery(
-        startDate: startDate,
-        endDate: endDate,
-        users: usersToSearch,
-        providers: state.selectedProviders,
-        coverageProviders: Set<String>.from(state.availableProviders),
-        categories: state.selectedActivityCategories,
-        authoredOnly: true,
-        orgTimezoneId: ref.read(appNotifierProvider).orgTimezoneId,
-      ),
+    state = state.copyWith(
+      status: ViewStatus.loading,
+      items: const [],
+      loadingProviders: Set<String>.from(providers),
+      errorMessage: null,
     );
 
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: ViewStatus.failure,
-          errorMessage: failure.message,
-        );
-      },
-      (activities) {
-        final items = groupActivities(activities);
+    final mergedById = <String, Activity>{};
+    var anySuccess = false;
+    var anyFailure = false;
+    String? lastError;
 
-        state = state.copyWith(status: ViewStatus.success, items: items);
-      },
+    await Future.wait(
+      providers.map((providerId) async {
+        final result = await _activityUseCases.searchActivities.execute(
+          ActivitySearchQuery(
+            startDate: startDate,
+            endDate: endDate,
+            users: usersToSearch,
+            providers: {providerId},
+            coverageProviders: {providerId},
+            categories: categories,
+            authoredOnly: true,
+            orgTimezoneId: orgTimezoneId,
+          ),
+        );
+        if (generation != _fetchGeneration) return;
+
+        result.fold(
+          (failure) {
+            anyFailure = true;
+            lastError = failure.message;
+            final remaining = Set<String>.from(state.loadingProviders)
+              ..remove(providerId);
+            state = state.copyWith(loadingProviders: remaining);
+          },
+          (activities) {
+            anySuccess = true;
+            for (final activity in activities) {
+              mergedById[activity.id] = activity;
+            }
+            final remaining = Set<String>.from(state.loadingProviders)
+              ..remove(providerId);
+            state = state.copyWith(
+              items: groupActivities(mergedById.values.toList()),
+              loadingProviders: remaining,
+            );
+          },
+        );
+      }),
+    );
+
+    if (generation != _fetchGeneration) return;
+
+    if (!anySuccess && anyFailure) {
+      state = state.copyWith(
+        status: ViewStatus.failure,
+        errorMessage: lastError,
+        loadingProviders: const {},
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      status: ViewStatus.success,
+      loadingProviders: const {},
     );
   }
 
@@ -550,16 +605,13 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
           orgTimezoneId: orgTimezoneId,
         ),
       );
-      final cleared = await clearResult.fold(
-        (failure) async {
-          state = state.copyWith(
-            status: ViewStatus.failure,
-            errorMessage: failure.message,
-          );
-          return false;
-        },
-        (_) async => true,
-      );
+      final cleared = await clearResult.fold((failure) async {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+        return false;
+      }, (_) async => true);
       if (!cleared) return false;
     }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/application/services/unified_activity_fetcher.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
@@ -19,6 +21,21 @@ class _MockProviderConfigRepo extends Mock
     implements AbsIProviderConfigRepository {}
 
 class _MockUserRepo extends Mock implements IUserRepository {}
+
+class _DelayedSource implements AbsIActivitySource<String> {
+  _DelayedSource(this._onFetch);
+  final Future<List<String>> Function() _onFetch;
+
+  @override
+  Future<List<String>> fetchRawData(
+    List<User> users,
+    DateTime start,
+    DateTime end,
+    bool authoredOnly,
+  ) {
+    return _onFetch();
+  }
+}
 
 class _FakeSource implements AbsIActivitySource<String> {
   List<User> lastUsers = [];
@@ -88,22 +105,27 @@ void main() {
 
     when(() => configRepo.getConfigs()).thenAnswer(
       (_) async => const Right([
-        ProviderConfig(id: 'github', name: 'GitHub', baseUrl: 'https://github.com'),
+        ProviderConfig(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.com',
+        ),
       ]),
     );
-    when(() => userRepo.getIdentitiesForUsersAndProvider(any(), 'github'))
-        .thenAnswer(
-          (_) async => Right([
-            UserIdentity(
-              id: 'i-1',
-              userId: 'u-1',
-              providerId: 'github',
-              externalId: 'alice',
-              status: UserIdentityStatus.linked,
-              createdAt: DateTime.utc(2026, 1, 1),
-            ),
-          ]),
-        );
+    when(
+      () => userRepo.getIdentitiesForUsersAndProvider(any(), 'github'),
+    ).thenAnswer(
+      (_) async => Right([
+        UserIdentity(
+          id: 'i-1',
+          userId: 'u-1',
+          providerId: 'github',
+          externalId: 'alice',
+          status: UserIdentityStatus.linked,
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      ]),
+    );
 
     final activities = await sut.fetchAll(
       users: [user1, user2],
@@ -121,11 +143,16 @@ void main() {
 
     when(() => configRepo.getConfigs()).thenAnswer(
       (_) async => const Right([
-        ProviderConfig(id: 'github', name: 'GitHub', baseUrl: 'https://github.com'),
+        ProviderConfig(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.com',
+        ),
       ]),
     );
-    when(() => userRepo.getIdentitiesForUsersAndProvider(any(), 'github'))
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => userRepo.getIdentitiesForUsersAndProvider(any(), 'github'),
+    ).thenAnswer((_) async => const Right([]));
 
     final activities = await sut.fetchAll(
       users: [user],
@@ -136,5 +163,76 @@ void main() {
 
     expect(source.lastUsers, isEmpty);
     expect(activities, isEmpty);
+  });
+
+  test('shares one connector poll across concurrent fetchAll', () async {
+    final user = TestData.user(id: 'u-1');
+    final gate = Completer<void>();
+    var calls = 0;
+    final delayed = _DelayedSource(() async {
+      calls++;
+      await gate.future;
+      return const ['raw'];
+    });
+    registry = ConnectorRegistry()
+      ..register<String>(
+        TypedConnectorPair<String>(
+          source: delayed,
+          providerId: 'github',
+          mapItemToActivities: _fakeGithubMapRow,
+        ),
+      );
+    sut = UnifiedActivityFetcher(
+      registry,
+      configRepo,
+      userRepo,
+      (_, {String level = 'INFO', Map<String, dynamic>? extra}) {},
+    );
+
+    when(() => configRepo.getConfigs()).thenAnswer(
+      (_) async => const Right([
+        ProviderConfig(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.com',
+        ),
+      ]),
+    );
+    when(
+      () => userRepo.getIdentitiesForUsersAndProvider(any(), 'github'),
+    ).thenAnswer(
+      (_) async => Right([
+        UserIdentity(
+          id: 'i-1',
+          userId: 'u-1',
+          providerId: 'github',
+          externalId: 'alice',
+          status: UserIdentityStatus.linked,
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      ]),
+    );
+
+    final first = sut.fetchAll(
+      users: [user],
+      start: DateTime.utc(2026, 1, 1),
+      end: DateTime.utc(2026, 1, 2),
+      authoredOnly: true,
+    );
+    final second = sut.fetchAll(
+      users: [user],
+      start: DateTime.utc(2026, 1, 1),
+      end: DateTime.utc(2026, 1, 2),
+      authoredOnly: true,
+    );
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(calls, 1);
+
+    gate.complete();
+    final results = await Future.wait([first, second]);
+    expect(calls, 1);
+    expect(results[0], hasLength(1));
+    expect(results[1], hasLength(1));
   });
 }

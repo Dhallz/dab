@@ -691,11 +691,7 @@ class ActivityController {
         : '';
 
     final auth = await _webhookAuth.authenticate(
-      WebhookAuthInput(
-        providerId: 'figma',
-        body: body,
-        jsonPasscode: passcode,
-      ),
+      WebhookAuthInput(providerId: 'figma', body: body, jsonPasscode: passcode),
     );
     final authRejected = _webhookAuthResponse(
       auth,
@@ -715,7 +711,9 @@ class ActivityController {
 
     final event = (decoded['event_type'] ?? decoded['eventType'] ?? '')
         .toString();
-    print('[FIGMA_WEBHOOK] webhook_received event=$event file=${decoded['file_key']}');
+    print(
+      '[FIGMA_WEBHOOK] webhook_received event=$event file=${decoded['file_key']}',
+    );
 
     if (event.toString().trim().toUpperCase() == 'PING') {
       return Response.ok(
@@ -761,6 +759,7 @@ class ActivityController {
     final endDateStr = request.url.queryParameters['endDate'];
     final usersStr = request.url.queryParameters['users'];
     final authoredOnlyStr = request.url.queryParameters['authoredOnly'];
+    final providersStr = request.url.queryParameters['providers'];
 
     if (startDateStr == null || endDateStr == null) {
       return Response.badRequest(
@@ -799,12 +798,15 @@ class ActivityController {
 
     final authoredOnly = authoredOnlyStr?.toLowerCase() != 'false';
 
+    final providerIds = _parseProviderIds(providersStr);
+
     try {
       final activities = await _activity.searchActivities.execute(
         targetUserIds: targetUserIds,
         startDate: startDate,
         endDate: endDate,
         authoredOnly: authoredOnly,
+        providerIds: providerIds,
       );
       final jsonList = activities.map((a) => a.toMap()).toList();
 
@@ -890,5 +892,17 @@ class ActivityController {
           ),
         );
     }
+  }
+
+  /// Comma-separated provider config ids. Empty or omitted means every active
+  /// connector.
+  Set<String>? _parseProviderIds(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final ids = raw
+        .split(',')
+        .map((value) => value.trim().toLowerCase())
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    return ids.isEmpty ? null : ids;
   }
 }

@@ -12,7 +12,8 @@ import '../dashboard_state.dart';
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Focused autocomplete at the top of Following for issues and git
 /// branches that are not already in the live inbox. Suggestions appear in an
-/// overlay only while the field is focused.
+/// overlay only while the field is focused. The field and menu share a
+/// [TapRegion] group so choosing a row Follows it before the overlay closes.
 class DashboardFollowSearch extends StatefulWidget {
   final DashboardState state;
   final ValueChanged<String> onQueryChanged;
@@ -111,6 +112,7 @@ class _DashboardFollowSearchState extends State<DashboardFollowSearch> {
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,
+                groupId: _tapGroup,
                 enabled: true,
                 readOnly: false,
                 onChanged: _onText,
@@ -212,28 +214,32 @@ class _FollowSearchMenu extends StatelessWidget {
                         itemCount: rows.length,
                         itemBuilder: (context, index) {
                           final row = rows[index];
-                          return ListTile(
-                            dense: true,
-                            leading: Icon(
-                              ProviderIconResolver.resolveFallbackIcon(
-                                context,
-                                row.providerId,
+                          return Listener(
+                            behavior: HitTestBehavior.opaque,
+                            onPointerDown: (_) => onFollow(row),
+                            child: ListTile(
+                              dense: true,
+                              mouseCursor: SystemMouseCursors.click,
+                              leading: Icon(
+                                ProviderIconResolver.resolveFallbackIcon(
+                                  context,
+                                  row.providerId,
+                                ),
+                                size: 16,
+                                color: ProviderIconResolver.resolveBrandColor(
+                                  context,
+                                  row.providerId,
+                                ),
                               ),
-                              size: 16,
-                              color: ProviderIconResolver.resolveBrandColor(
-                                context,
-                                row.providerId,
+                              title: Text(
+                                row.title,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            title: Text(
-                              row.title,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            onTap: () => onFollow(row),
                           );
                         },
                       ),

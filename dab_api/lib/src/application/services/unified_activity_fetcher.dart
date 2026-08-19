@@ -22,7 +22,12 @@ class UnifiedActivityFetcher {
     String message, {
     String level,
     Map<String, dynamic>? extra,
-  }) _log;
+  })
+  _log;
+
+  /// In-flight connector work keyed by provider + window + users. Concurrent
+  /// [fetchAll] calls (Explorer per-provider search) share one upstream poll.
+  final Map<String, Future<List<Activity>>> _inFlightByConnector = {};
 
   UnifiedActivityFetcher(
     this._registry,
@@ -72,62 +77,27 @@ class UnifiedActivityFetcher {
           }
           return true;
         })
-        .map((pair) async {
-          try {
-            final identitiesResult = await _userRepo
-                .getIdentitiesForUsersAndProvider(
-                  users.map((u) => u.id),
-                  pair.providerId,
-                );
-            final identities = identitiesResult.getOrElse((_) => []);
-            final linkedIdentitiesByUserId = {
-              for (final identity in identities)
-                if (identity.status == UserIdentityStatus.linked)
-                  identity.userId: identity,
-            };
-
-            final usersForConnector = users
-                .where((u) => linkedIdentitiesByUserId.containsKey(u.id))
-                .map((u) {
-                  final identity = linkedIdentitiesByUserId[u.id]!;
-                  if (pair.providerId == 'phorge') {
-                    return u.copyWith(
-                      phorgePhid: identity.externalId,
-                      phorgeUsername: identity.externalUsername,
-                    );
-                  }
-                  return u;
-                })
-                .toList();
-            if (usersForConnector.isEmpty) {
-              return <Activity>[];
+        .map((pair) {
+          final flightKey = _connectorFlightKey(
+            providerId: pair.providerId,
+            users: users,
+            start: start,
+            end: end,
+            authoredOnly: authoredOnly,
+          );
+          return _inFlightByConnector.putIfAbsent(flightKey, () async {
+            try {
+              return await _fetchConnectorPair(
+                pair: pair,
+                users: users,
+                start: start,
+                end: end,
+                authoredOnly: authoredOnly,
+              );
+            } finally {
+              _inFlightByConnector.remove(flightKey);
             }
-
-            final rawDataList = await pair.fetchRawData(
-              usersForConnector,
-              start,
-              end,
-              authoredOnly,
-            );
-
-            return rawDataList
-                .expand(
-                  (item) =>
-                      pair.mapItemToActivities(item, usersForConnector),
-                )
-                .toList();
-          } catch (e) {
-            // Individual source failure SHOULD NOT break the entire aggregation.
-            _log(
-              'UnifiedActivityFetcher: connector fetch failed',
-              level: 'WARNING',
-              extra: {
-                'provider': pair.providerId,
-                'error': e.toString(),
-              },
-            );
-            return <Activity>[];
-          }
+          });
         });
 
     final results = await Future.wait(aggregationTasks);
@@ -138,5 +108,79 @@ class UnifiedActivityFetcher {
     allActivities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return allActivities;
+  }
+
+  String _connectorFlightKey({
+    required String providerId,
+    required List<User> users,
+    required DateTime start,
+    required DateTime end,
+    required bool authoredOnly,
+  }) {
+    final userIds = users.map((u) => u.id).toList()..sort();
+    return [
+      providerId,
+      start.toUtc().toIso8601String(),
+      end.toUtc().toIso8601String(),
+      authoredOnly ? '1' : '0',
+      userIds.join(','),
+    ].join('|');
+  }
+
+  Future<List<Activity>> _fetchConnectorPair({
+    required RegisteredConnectorPair pair,
+    required List<User> users,
+    required DateTime start,
+    required DateTime end,
+    required bool authoredOnly,
+  }) async {
+    try {
+      final identitiesResult = await _userRepo.getIdentitiesForUsersAndProvider(
+        users.map((u) => u.id),
+        pair.providerId,
+      );
+      final identities = identitiesResult.getOrElse((_) => []);
+      final linkedIdentitiesByUserId = {
+        for (final identity in identities)
+          if (identity.status == UserIdentityStatus.linked)
+            identity.userId: identity,
+      };
+
+      final usersForConnector = users
+          .where((u) => linkedIdentitiesByUserId.containsKey(u.id))
+          .map((u) {
+            final identity = linkedIdentitiesByUserId[u.id]!;
+            if (pair.providerId == 'phorge') {
+              return u.copyWith(
+                phorgePhid: identity.externalId,
+                phorgeUsername: identity.externalUsername,
+              );
+            }
+            return u;
+          })
+          .toList();
+      if (usersForConnector.isEmpty) {
+        return <Activity>[];
+      }
+
+      final rawDataList = await pair.fetchRawData(
+        usersForConnector,
+        start,
+        end,
+        authoredOnly,
+      );
+
+      return rawDataList
+          .expand((item) => pair.mapItemToActivities(item, usersForConnector))
+          .toList();
+    } catch (e) {
+      // Individual source failure SHOULD NOT break the entire aggregation.
+      _log(
+        'UnifiedActivityFetcher: connector fetch failed',
+        level: 'WARNING',
+        extra: {'provider': pair.providerId, 'error': e.toString()},
+      );
+      return <Activity>[];
+    }
   }
 }

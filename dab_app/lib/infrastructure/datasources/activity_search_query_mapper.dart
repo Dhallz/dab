@@ -45,6 +45,11 @@ class ActivitySearchQueryMapper {
       queryParameters['users'] = users.join(',');
     }
 
+    final providers = query.normalizedProviders.toList()..sort();
+    if (providers.isNotEmpty) {
+      queryParameters['providers'] = providers.join(',');
+    }
+
     return queryParameters;
   }
 
@@ -108,11 +113,6 @@ class ActivitySearchQueryMapper {
 
     final start = query.startDate ?? query.endDate!;
     final end = query.endDate ?? query.startDate!;
-    return isInstantInOrgDateWindow(
-      query.orgTimezoneId,
-      createdAt,
-      start,
-      end,
-    );
+    return isInstantInOrgDateWindow(query.orgTimezoneId, createdAt, start, end);
   }
 }

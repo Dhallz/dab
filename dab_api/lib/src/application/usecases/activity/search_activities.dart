@@ -17,11 +17,15 @@ class SearchActivities {
 
   /// 1. Resolves all [targetUserIds] into full [User] entities.
   /// 2. Delegates the parallel protocol I/O to [FetchRemoteActivities].
+  ///
+  /// [providerIds] limits the connector fan-out. `null` or empty means every
+  /// active registered provider (Insights / unfiltered search).
   Future<List<Activity>> execute({
     required List<String> targetUserIds,
     required DateTime startDate,
     required DateTime endDate,
     required bool authoredOnly,
+    Set<String>? providerIds,
   }) async {
     List<User> targetUsers = [];
 
@@ -39,6 +43,7 @@ class SearchActivities {
       startDate: startDate,
       endDate: endDate,
       authoredOnly: authoredOnly,
+      providerIds: providerIds,
     );
 
     return result.getOrElse((_) => []);

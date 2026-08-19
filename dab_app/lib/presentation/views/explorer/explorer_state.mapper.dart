@@ -141,6 +141,13 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     opt: true,
     def: const {},
   );
+  static Set<String> _$loadingProviders(ExplorerState v) => v.loadingProviders;
+  static const Field<ExplorerState, Set<String>> _f$loadingProviders = Field(
+    'loadingProviders',
+    _$loadingProviders,
+    opt: true,
+    def: const {},
+  );
 
   @override
   final MappableFields<ExplorerState> fields = const {
@@ -160,6 +167,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
     #selectedActivityCategories: _f$selectedActivityCategories,
     #availableProviders: _f$availableProviders,
     #selectedProviders: _f$selectedProviders,
+    #loadingProviders: _f$loadingProviders,
   };
 
   static ExplorerState _instantiate(DecodingData data) {
@@ -180,6 +188,7 @@ class ExplorerStateMapper extends ClassMapperBase<ExplorerState> {
       selectedActivityCategories: data.dec(_f$selectedActivityCategories),
       availableProviders: data.dec(_f$availableProviders),
       selectedProviders: data.dec(_f$selectedProviders),
+      loadingProviders: data.dec(_f$loadingProviders),
     );
   }
 
@@ -268,6 +277,7 @@ abstract class ExplorerStateCopyWith<$R, $In extends ExplorerState, $Out>
     Set<ActivityCategory>? selectedActivityCategories,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
+    Set<String>? loadingProviders,
   });
   ExplorerStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -326,6 +336,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
     Set<ActivityCategory>? selectedActivityCategories,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
+    Set<String>? loadingProviders,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -346,6 +357,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
         #selectedActivityCategories: selectedActivityCategories,
       if (availableProviders != null) #availableProviders: availableProviders,
       if (selectedProviders != null) #selectedProviders: selectedProviders,
+      if (loadingProviders != null) #loadingProviders: loadingProviders,
     }),
   );
   @override
@@ -378,6 +390,7 @@ class _ExplorerStateCopyWithImpl<$R, $Out>
       #selectedProviders,
       or: $value.selectedProviders,
     ),
+    loadingProviders: data.get(#loadingProviders, or: $value.loadingProviders),
   );
 
   @override

@@ -9,6 +9,7 @@ import '../../../core/styles/app_spacing.dart';
 import '../../../core/widgets/dab_toggle_chip.dart';
 import '../../../core/widgets/view_toolbar.dart';
 import '../explorer_notifier.dart';
+import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import 'explorer_calendar_header.dart';
 import 'explorer_date_selector.dart';
@@ -32,13 +33,15 @@ class ExplorerIslandBarContent extends ConsumerWidget {
           s.rangeStartDate,
           s.rangeEndDate,
           s.items,
+          s.loadingProviders,
           s.status,
         ),
       ),
     );
     final state = ref.read(explorerNotifierProvider);
     final notifier = ref.read(explorerNotifierProvider.notifier);
-    final isLoading = state.status == ViewStatus.loading;
+    final isBusy =
+        state.status == ViewStatus.loading || state.isFetchingProviders;
     final today = DateTime.now();
     final horizontal = ViewToolbar.horizontalPadding(context);
 
@@ -48,14 +51,8 @@ class ExplorerIslandBarContent extends ConsumerWidget {
       style: IconButton.styleFrom(
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      onPressed: isLoading ? null : () => notifier.clearCacheAndRefresh(),
-      icon: isLoading
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(AppIcons.refresh, size: AppLayout.iconMedium),
+      onPressed: isBusy ? null : () => notifier.clearCacheAndRefresh(),
+      icon: Icon(AppIcons.refresh, size: AppLayout.iconMedium),
     );
 
     return Padding(

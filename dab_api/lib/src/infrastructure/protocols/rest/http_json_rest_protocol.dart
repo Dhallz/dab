@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 /// CONTRACT: [defaultTimeout] applies when [timeout] is null on calls.
 class HttpJsonRestProtocol implements JsonRestProtocol {
   final http.Client _client;
+  final Map<String, Future<http.Response>> _inFlightGets = {};
 
   @override
   final Duration defaultTimeout;
@@ -25,14 +26,16 @@ class HttpJsonRestProtocol implements JsonRestProtocol {
     Duration? timeout,
   }) async {
     final t = timeout ?? defaultTimeout;
-    try {
-      return await _client.get(uri, headers: headers).timeout(t);
-    } catch (e) {
-      throw JsonRestProtocolException(
-        message: 'GET failed: $e',
-        uri: uri,
-      );
-    }
+    final flightKey = '$uri|${_headerFlightKey(headers)}';
+    return _inFlightGets.putIfAbsent(flightKey, () async {
+      try {
+        return await _client.get(uri, headers: headers).timeout(t);
+      } catch (e) {
+        throw JsonRestProtocolException(message: 'GET failed: $e', uri: uri);
+      } finally {
+        _inFlightGets.remove(flightKey);
+      }
+    });
   }
 
   @override
@@ -103,5 +106,11 @@ class HttpJsonRestProtocol implements JsonRestProtocol {
         uri: uri,
       );
     }
+  }
+
+  String _headerFlightKey(Map<String, String>? headers) {
+    if (headers == null || headers.isEmpty) return '';
+    final keys = headers.keys.toList()..sort();
+    return keys.map((key) => '$key=${headers[key]}').join('&');
   }
 }
