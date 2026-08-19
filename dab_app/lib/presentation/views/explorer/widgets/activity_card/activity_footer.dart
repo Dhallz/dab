@@ -72,8 +72,7 @@ class ActivityFooter extends StatelessWidget {
       return displayAuthorName;
     }
 
-    final sameName =
-        author.toLowerCase() == displayAuthorName.toLowerCase();
+    final sameName = author.toLowerCase() == displayAuthorName.toLowerCase();
     if (sameName) {
       return displayAuthorName;
     }
@@ -111,7 +110,10 @@ class ActivityFooter extends StatelessWidget {
     }
 
     final totalCount = activities!.length;
-    final heatColor = _getHeatColor(totalCount, Theme.of(context).colorScheme.primary);
+    final heatColor = _getHeatColor(
+      totalCount,
+      Theme.of(context).colorScheme.primary,
+    );
 
     return Row(
       mainAxisSize: MainAxisSize.min,

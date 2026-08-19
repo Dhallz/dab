@@ -69,9 +69,7 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
         : await launchUrl(url, mode: LaunchMode.platformDefault);
     if (!didLaunch) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.explorerCouldNotLaunchUrl)),
         );
       }
@@ -223,7 +221,10 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                widget.activity.provider.category
+                                                widget
+                                                    .activity
+                                                    .provider
+                                                    .category
                                                     .abbreviatedLabel(l10n),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
