@@ -82,12 +82,12 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     'deploymentMode',
     _$deploymentMode,
     opt: true,
-    def: 'organization',
+    def: kDeploymentModeManaged,
   );
-  static bool _$isPersonalDeployment(AppState v) => v.isPersonalDeployment;
-  static const Field<AppState, bool> _f$isPersonalDeployment = Field(
-    'isPersonalDeployment',
-    _$isPersonalDeployment,
+  static bool _$isIndividualDeployment(AppState v) => v.isIndividualDeployment;
+  static const Field<AppState, bool> _f$isIndividualDeployment = Field(
+    'isIndividualDeployment',
+    _$isIndividualDeployment,
     mode: FieldMode.member,
   );
 
@@ -101,7 +101,7 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #unresolvedIdentityCount: _f$unresolvedIdentityCount,
     #providerConnectionStatuses: _f$providerConnectionStatuses,
     #deploymentMode: _f$deploymentMode,
-    #isPersonalDeployment: _f$isPersonalDeployment,
+    #isIndividualDeployment: _f$isIndividualDeployment,
   };
 
   static AppState _instantiate(DecodingData data) {

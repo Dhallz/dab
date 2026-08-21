@@ -50,7 +50,7 @@ class ProvidersTab extends ConsumerWidget {
       ),
     );
     final isPersonal = ref.watch(
-      appNotifierProvider.select((s) => s.isPersonalDeployment),
+      appNotifierProvider.select((s) => s.isIndividualDeployment),
     );
     final state = ref.read(adminNotifierProvider);
     final sorted = _sortedProviderConfigs(state.configs, state);

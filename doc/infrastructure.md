@@ -101,7 +101,7 @@ Slack ingestion is read-only and identity-gated: only messages authored by
 linked Slack identities (`provider_id='slack'`) are attributed. Provider
 credentials are stored in `provider_configs.settings` (`botToken`, optional
 `channels`, optional `apiBaseUrl`, plus OAuth `clientId`/`clientSecret` in
-personal mode) for instance bots and OAuth apps, or in
+individual mode) for instance bots and OAuth apps, or in
 `user_provider_credentials.settings` (encrypted) for user OAuth tokens / PATs.
 OAuth CSRF/PKCE state lives in Redis `oauth:state:{id}` (TTL ~10 minutes). Changing
 `DAB_CREDENTIALS_KEY` invalidates stored user tokens.

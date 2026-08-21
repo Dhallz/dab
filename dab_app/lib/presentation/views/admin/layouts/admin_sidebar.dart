@@ -17,11 +17,11 @@ class AdminSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(adminNotifierProvider.notifier);
-    final isPersonal = ref.watch(
-      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    final isIndividual = ref.watch(
+      appNotifierProvider.select((s) => s.isIndividualDeployment),
     );
     final cs = Theme.of(context).colorScheme;
-    final sections = adminSectionsFor(isPersonal: isPersonal);
+    final sections = adminSectionsFor(isIndividual: isIndividual);
     return AppSidebar(
       children: [
         Text(

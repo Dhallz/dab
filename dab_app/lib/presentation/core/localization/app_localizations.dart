@@ -2012,31 +2012,31 @@ abstract class AppLocalizations {
   /// **'Hasn\'t connected {provider}'**
   String explorerUserNotConnected(String provider);
 
-  /// No description provided for @adminDeploymentModeTitle.
+  /// Title for Admin Security deployment-mode card
   ///
   /// In en, this message translates to:
   /// **'Deployment mode'**
   String get adminDeploymentModeTitle;
 
-  /// No description provided for @adminDeploymentModeSubtitle.
+  /// Explains Managed vs Individual deployment on Admin Security
   ///
   /// In en, this message translates to:
-  /// **'Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.'**
+  /// **'Individual mode lets each teammate connect providers from Settings. Managed mode keeps Admin-owned tokens and Identities.'**
   String get adminDeploymentModeSubtitle;
 
-  /// No description provided for @adminDeploymentModeOrganization.
+  /// Segmented-button label for Admin-owned credential deployment
   ///
   /// In en, this message translates to:
-  /// **'Organization'**
-  String get adminDeploymentModeOrganization;
+  /// **'Managed'**
+  String get adminDeploymentModeManaged;
 
-  /// No description provided for @adminDeploymentModePersonal.
+  /// Segmented-button label for Settings PAT / small-team deployment
   ///
   /// In en, this message translates to:
-  /// **'Personal / small team'**
-  String get adminDeploymentModePersonal;
+  /// **'Individual'**
+  String get adminDeploymentModeIndividual;
 
-  /// No description provided for @adminDeploymentModeSavedSnack.
+  /// Snack bar after saving deployment mode
   ///
   /// In en, this message translates to:
   /// **'Deployment mode saved'**

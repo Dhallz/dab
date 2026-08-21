@@ -12,6 +12,7 @@ docs {
   - `allowed_domain`: Allowed email domain. Kept in settings even while validation is disabled so re-enabling does not require retyping it.
   - `public_api_url`: Public DAB API base URL (no trailing slash). Used by the Admin Providers tab to compose webhook endpoint URLs.
   - `system_timezone`: IANA organization timezone (e.g. `America/New_York`). Calendar days in Explorer, Insights, and the live-feed purge follow this zone.
+  - `deployment_mode`: `managed` (Admin-owned tokens and Identities) or `individual` (each teammate connects from Settings). Legacy `organization` / `personal` are accepted and rewritten.
 
   Existing accounts outside the allowed domain are grandfathered: enabling validation only gates future account creations, never login.
 }

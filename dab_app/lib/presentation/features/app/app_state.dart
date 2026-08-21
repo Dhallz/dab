@@ -3,6 +3,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/system/app_settings.dart';
+import '../../../../domain/core/deployment_mode.dart';
 import '../../../../domain/core/org_calendar.dart';
 import '../../views/admin/models/provider_connection_status.dart';
 
@@ -26,7 +27,7 @@ class AppState with AppStateMappable {
   /// Last-known Admin connection-test results keyed by provider id.
   final Map<String, ProviderConnectionStatus> providerConnectionStatuses;
 
-  /// `organization` or `personal` from `GET /metadata/status`.
+  /// `managed` or `individual` from `GET /metadata/status`.
   final String deploymentMode;
 
   const AppState({
@@ -37,8 +38,9 @@ class AppState with AppStateMappable {
     this.orgTimezoneId = kDefaultOrgTimezoneId,
     this.unresolvedIdentityCount = 0,
     this.providerConnectionStatuses = const {},
-    this.deploymentMode = 'organization',
+    this.deploymentMode = kDeploymentModeManaged,
   });
 
-  bool get isPersonalDeployment => deploymentMode == 'personal';
+  /// True when teammates connect providers from Settings (Individual mode).
+  bool get isIndividualDeployment => isIndividualDeploymentMode(deploymentMode);
 }

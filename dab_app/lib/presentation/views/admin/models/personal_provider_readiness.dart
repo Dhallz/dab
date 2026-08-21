@@ -2,8 +2,8 @@ import 'package:dab_app/domain/entities/provider/provider_config.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 
 /// [ARCH: PRESENTATION_MODEL]
-/// ROLE: Header-light status for Admin provider cards in personal/small-team mode.
-/// CONTRACT: Green when the instance fields that personal mode actually uses
+/// ROLE: Header-light status for Admin provider cards in individual mode.
+/// CONTRACT: Green when the instance fields that individual mode actually uses
 /// are present (OAuth app or workspace bot). Never probes org PATs or live ingest.
 class PersonalProviderReadiness {
   const PersonalProviderReadiness({

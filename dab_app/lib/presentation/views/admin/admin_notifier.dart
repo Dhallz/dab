@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../domain/core/deployment_mode.dart';
 import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../domain/entities/provider/provider_connectivity_report.dart';
@@ -54,9 +55,9 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
 
   @override
   AdminState build() {
-    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
+    final isIndividual = ref.read(appNotifierProvider).isIndividualDeployment;
     return AdminState(
-      selectedSection: isPersonal
+      selectedSection: isIndividual
           ? AdminSection.security
           : AdminSection.providers,
     );
@@ -65,14 +66,14 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   Future<void> start() async {
     state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
 
-    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
+    final isIndividual = ref.read(appNotifierProvider).isIndividualDeployment;
     final configsResult = await _providerRepo.getProviderConfigs();
     final usersResult = await _userRepo.getUsers();
     final settingsResult = await _providerRepo.getSystemSettings();
 
     final errors = <String>[];
     var identities = state.identities;
-    if (isPersonal) {
+    if (isIndividual) {
       identities = const [];
     } else {
       final identitiesResult = await _userRepo.getIdentities();
@@ -173,8 +174,8 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
   }
 
   Future<void> setSection(AdminSection section) async {
-    final isPersonal = ref.read(appNotifierProvider).isPersonalDeployment;
-    final next = (isPersonal && section == AdminSection.identities)
+    final isIndividual = ref.read(appNotifierProvider).isIndividualDeployment;
+    final next = (isIndividual && section == AdminSection.identities)
         ? AdminSection.security
         : section;
     state = state.copyWith(selectedSection: next);
@@ -241,7 +242,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
             .map((c) => c.id == config.id ? config : c)
             .toList();
         state = state.copyWith(configs: newConfigs, errorMessage: null);
-        if (ref.read(appNotifierProvider).isPersonalDeployment) {
+        if (ref.read(appNotifierProvider).isIndividualDeployment) {
           _applyPersonalReadiness(config);
         }
         await ref.read(appNotifierProvider.notifier).init();
@@ -267,10 +268,10 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
         }
         state = state.copyWith(systemSettings: settings, errorMessage: null);
         final app = ref.read(appNotifierProvider.notifier);
-        final mode = settings['deployment_mode'];
+        final mode = settings[kDeploymentModeSettingKey];
         if (mode != null) {
           app.setDeploymentMode(mode);
-          if (mode == 'personal' &&
+          if (isIndividualDeploymentMode(mode) &&
               state.selectedSection == AdminSection.identities) {
             state = state.copyWith(selectedSection: AdminSection.security);
           }
@@ -413,7 +414,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
       return;
     }
 
-    if (ref.read(appNotifierProvider).isPersonalDeployment) {
+    if (ref.read(appNotifierProvider).isIndividualDeployment) {
       for (final config in activeConfigs) {
         _applyPersonalReadiness(config);
       }

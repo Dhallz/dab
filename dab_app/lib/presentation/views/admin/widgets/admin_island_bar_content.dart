@@ -38,8 +38,8 @@ class AdminIslandBarContent extends ConsumerWidget {
     final notifier = ref.read(adminNotifierProvider.notifier);
     final l10n = context.l10n;
     final m = state.islandBarModel;
-    final isPersonal = ref.watch(
-      appNotifierProvider.select((s) => s.isPersonalDeployment),
+    final isIndividual = ref.watch(
+      appNotifierProvider.select((s) => s.isIndividualDeployment),
     );
     final cs = Theme.of(context).colorScheme;
     final isLoading = state.status == ViewStatus.loading;
@@ -63,7 +63,7 @@ class AdminIslandBarContent extends ConsumerWidget {
     if (showSectionChips) {
       return ViewToolbar(
         children: [
-          for (final section in adminSectionsFor(isPersonal: isPersonal))
+          for (final section in adminSectionsFor(isIndividual: isIndividual))
             DabToggleChip(
               label: section.localizedTitle(l10n),
               isSelected: section == state.selectedSection,
@@ -95,12 +95,12 @@ class AdminIslandBarContent extends ConsumerWidget {
           icon: AppIcons.error,
           title: l10n.adminIslandFailedTitle,
           value: '${m.connectionFailed}',
-          tooltip: isPersonal
+          tooltip: isIndividual
               ? l10n.adminIslandFailedTooltipPersonal
               : l10n.adminIslandFailedTooltip,
           iconColor: m.connectionFailed > 0 ? cs.error : cs.onSurfaceVariant,
         ),
-        if (!isPersonal && m.unresolvedIdentities > 0)
+        if (!isIndividual && m.unresolvedIdentities > 0)
           DabIslandStat(
             compact: true,
             icon: AppIcons.warning,

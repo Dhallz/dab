@@ -1028,8 +1028,8 @@ paths:
                         description: IANA organization timezone for calendar-day boundaries.
                       deploymentMode:
                         type: string
-                        enum: [organization, personal]
-                        description: Organization (Admin-owned tokens) or personal/small-team (Settings PATs, shared live wall).
+                        enum: [managed, individual]
+                        description: Managed (Admin-owned tokens) or Individual (Settings PATs, shared live wall). Legacy `organization` / `personal` values are accepted and normalized.
                   meta:
                     type: object
                     properties:
@@ -1736,7 +1736,7 @@ paths:
     get:
       summary: Retrieve system configuration settings.
       description: |
-        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, and `system_timezone`.
+        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, and `deployment_mode`.
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
@@ -1745,6 +1745,7 @@ paths:
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
         | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+        | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are normalized on read. |
       security:
         - bearerAuth: []
       responses:
@@ -1768,6 +1769,9 @@ paths:
                       system_timezone:
                         type: string
                         example: America/New_York
+                      deployment_mode:
+                        type: string
+                        enum: [managed, individual]
     put:
       summary: Update system configuration settings.
       description: |
@@ -1784,6 +1788,7 @@ paths:
         | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
         | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+        | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are accepted and rewritten. |
       security:
         - bearerAuth: []
       requestBody:
@@ -1806,6 +1811,9 @@ paths:
                   type: string
                   nullable: true
                   example: America/New_York
+                deployment_mode:
+                  type: string
+                  enum: [managed, individual]
       responses:
         '200':
           description: Settings updated

@@ -1,3 +1,4 @@
+import '../../core/deployment_mode.dart';
 import '../../core/org_calendar.dart';
 
 /// [ARCH: DOMAIN_ENTITY]
@@ -10,8 +11,9 @@ class SystemStatus {
   const SystemStatus({
     required this.isSystemConfigured,
     this.orgTimezoneId = kDefaultOrgTimezoneId,
-    this.deploymentMode = 'organization',
+    this.deploymentMode = kDeploymentModeManaged,
   });
 
-  bool get isPersonalDeployment => deploymentMode == 'personal';
+  /// True when teammates connect providers from Settings (Individual mode).
+  bool get isIndividualDeployment => isIndividualDeploymentMode(deploymentMode);
 }

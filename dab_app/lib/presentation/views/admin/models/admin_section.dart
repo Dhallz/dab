@@ -6,9 +6,9 @@ part 'admin_section.mapper.dart';
 @MappableEnum()
 enum AdminSection { providers, identities, security }
 
-/// Sections shown in the Admin shell. Personal mode hides Identities.
-List<AdminSection> adminSectionsFor({required bool isPersonal}) {
-  if (isPersonal) {
+/// Sections shown in the Admin shell. Individual mode hides Identities.
+List<AdminSection> adminSectionsFor({required bool isIndividual}) {
+  if (isIndividual) {
     return const [AdminSection.security, AdminSection.providers];
   }
   return AdminSection.values;

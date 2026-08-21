@@ -19,14 +19,6 @@ const kDeploymentModeOrganizationLegacy = 'organization';
 /// [kDeploymentModeIndividual].
 const kDeploymentModePersonalLegacy = 'personal';
 
-const kAllowedSystemSettingKeys = {
-  'allowed_domain_enabled',
-  'allowed_domain',
-  'public_api_url',
-  'system_timezone',
-  kDeploymentModeSettingKey,
-};
-
 /// Returns true when [raw] is the individual / small-team profile.
 bool isIndividualDeploymentMode(String? raw) {
   final value = (raw ?? '').trim().toLowerCase();

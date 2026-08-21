@@ -14,6 +14,7 @@ docs {
   | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
   | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
   | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+  | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are normalized on read. |
 }
 
 get {
@@ -33,5 +34,6 @@ tests {
     expect(res.body.data).to.have.property("allowed_domain");
     expect(res.body.data).to.have.property("public_api_url");
     expect(res.body.data).to.have.property("system_timezone");
+    expect(res.body.data).to.have.property("deployment_mode");
   });
 }

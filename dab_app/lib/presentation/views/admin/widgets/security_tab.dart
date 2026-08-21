@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/core/deployment_mode.dart';
 import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/presentation/core/localization/l10n_extension.dart';
@@ -53,8 +54,9 @@ class _SecurityTabState extends State<SecurityTab> {
     _selectedTimezone = resolveOrgTimezoneId(
       widget.systemSettings[kSystemTimezoneSettingKey],
     );
-    _deploymentMode =
-        widget.systemSettings['deployment_mode'] ?? 'organization';
+    _deploymentMode = normalizeDeploymentMode(
+      widget.systemSettings[kDeploymentModeSettingKey],
+    );
   }
 
   @override
@@ -75,9 +77,13 @@ class _SecurityTabState extends State<SecurityTab> {
     if (nextTz != _selectedTimezone) {
       _selectedTimezone = nextTz;
     }
-    final nextMode =
-        widget.systemSettings['deployment_mode'] ?? 'organization';
-    if (nextMode != oldWidget.systemSettings['deployment_mode']) {
+    final nextMode = normalizeDeploymentMode(
+      widget.systemSettings[kDeploymentModeSettingKey],
+    );
+    if (nextMode !=
+        normalizeDeploymentMode(
+          oldWidget.systemSettings[kDeploymentModeSettingKey],
+        )) {
       _deploymentMode = nextMode;
     }
   }
@@ -95,8 +101,9 @@ class _SecurityTabState extends State<SecurityTab> {
   /// Accounts whose email falls outside the allowed domain. Grandfathered:
   /// they keep working — this is informational only.
   List<User> get _nonCompliantUsers {
-    final domain =
-        (widget.systemSettings['allowed_domain'] ?? '').trim().toLowerCase();
+    final domain = (widget.systemSettings['allowed_domain'] ?? '')
+        .trim()
+        .toLowerCase();
     if (!_isValidationEnabled || domain.isEmpty) return const [];
     return widget.users
         .where((u) => !u.email.toLowerCase().endsWith('@$domain'))
@@ -121,7 +128,7 @@ class _SecurityTabState extends State<SecurityTab> {
       settings[kSystemTimezoneSettingKey] = timezone;
     }
     if (deploymentMode != null) {
-      settings['deployment_mode'] = deploymentMode;
+      settings[kDeploymentModeSettingKey] = deploymentMode;
     }
     if (publicApiUrl != null) {
       settings['public_api_url'] = publicApiUrl;
@@ -149,7 +156,7 @@ class _SecurityTabState extends State<SecurityTab> {
             children: [
               const BootstrapStatusCard(),
               const SizedBox(height: 24),
-              if (_deploymentMode != 'personal') ...[
+              if (!isIndividualDeploymentMode(_deploymentMode)) ...[
                 _DomainValidationPanel(
                   isEnabled: _isValidationEnabled,
                   domainController: _domainController,
@@ -167,13 +174,58 @@ class _SecurityTabState extends State<SecurityTab> {
                 ),
                 const SizedBox(height: 24),
               ],
-              _OrganizationTimezonePanel(
-                selectedTimezone: _selectedTimezone,
-                onTimezoneChanged: (timezone) {
-                  setState(() => _selectedTimezone = timezone);
-                  _saveSettings(timezone: timezone);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final timezonePanel = _OrganizationTimezonePanel(
+                    selectedTimezone: _selectedTimezone,
+                    onTimezoneChanged: (timezone) {
+                      setState(() => _selectedTimezone = timezone);
+                      _saveSettings(timezone: timezone);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.adminTimezoneSavedSnack)),
+                      );
+                    },
+                  );
+                  final deploymentPanel = _DeploymentModePanel(
+                    mode: _deploymentMode,
+                    onChanged: (mode) async {
+                      setState(() => _deploymentMode = mode);
+                      final messenger = ScaffoldMessenger.of(context);
+                      final savedMessage = l10n.adminDeploymentModeSavedSnack;
+                      final ok = await _saveSettings(deploymentMode: mode);
+                      if (!mounted) return;
+                      if (ok) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(savedMessage)),
+                        );
+                      } else {
+                        setState(() {
+                          _deploymentMode = normalizeDeploymentMode(
+                            widget.systemSettings[kDeploymentModeSettingKey],
+                          );
+                        });
+                      }
+                    },
+                  );
+                  if (constraints.maxWidth < 720) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        timezonePanel,
+                        const SizedBox(height: 24),
+                        deploymentPanel,
+                      ],
+                    );
+                  }
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: timezonePanel),
+                        const SizedBox(width: 24),
+                        Expanded(child: deploymentPanel),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -187,28 +239,6 @@ class _SecurityTabState extends State<SecurityTab> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(l10n.adminPublicApiUrlSavedSnack)),
                   );
-                },
-              ),
-              const SizedBox(height: 24),
-              _DeploymentModePanel(
-                mode: _deploymentMode,
-                onChanged: (mode) async {
-                  setState(() => _deploymentMode = mode);
-                  final messenger = ScaffoldMessenger.of(context);
-                  final savedMessage = l10n.adminDeploymentModeSavedSnack;
-                  final ok = await _saveSettings(deploymentMode: mode);
-                  if (!mounted) return;
-                  if (ok) {
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(savedMessage)),
-                    );
-                  } else {
-                    setState(() {
-                      _deploymentMode =
-                          widget.systemSettings['deployment_mode'] ??
-                          'organization';
-                    });
-                  }
                 },
               ),
               const SizedBox(height: 32),
@@ -296,13 +326,10 @@ class _SecurityTabState extends State<SecurityTab> {
           )
         else
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final user = filtered[index];
-                return UserTile(user: user, notifier: widget.notifier);
-              },
-              childCount: filtered.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final user = filtered[index];
+              return UserTile(user: user, notifier: widget.notifier);
+            }, childCount: filtered.length),
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
@@ -348,11 +375,7 @@ class _DomainValidationPanel extends StatelessWidget {
                   color: cs.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  AppIcons.admin,
-                  color: cs.primary,
-                  size: 20,
-                ),
+                child: Icon(AppIcons.admin, color: cs.primary, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -458,11 +481,7 @@ class _DomainValidationPanel extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        AppIcons.warning,
-                        color: cs.error,
-                        size: 18,
-                      ),
+                      Icon(AppIcons.warning, color: cs.error, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -514,6 +533,7 @@ class _OrganizationTimezonePanel extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: cs.onSurface.withValues(alpha: 0.03),
@@ -578,12 +598,7 @@ class _OrganizationTimezonePanel extends StatelessWidget {
               if (value != null) onTimezoneChanged(value);
             },
             dropdownMenuEntries: kOrgTimezoneOptions
-                .map(
-                  (tz) => DropdownMenuEntry<String>(
-                    value: tz,
-                    label: tz,
-                  ),
-                )
+                .map((tz) => DropdownMenuEntry<String>(value: tz, label: tz))
                 .toList(),
           ),
         ],
@@ -596,18 +611,18 @@ class _DeploymentModePanel extends StatelessWidget {
   final String mode;
   final ValueChanged<String> onChanged;
 
-  const _DeploymentModePanel({
-    required this.mode,
-    required this.onChanged,
-  });
+  const _DeploymentModePanel({required this.mode, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final selected = mode == 'personal' ? 'personal' : 'organization';
+    final selected = isIndividualDeploymentMode(mode)
+        ? kDeploymentModeIndividual
+        : kDeploymentModeManaged;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: cs.onSurface.withValues(alpha: 0.03),
@@ -637,12 +652,12 @@ class _DeploymentModePanel extends StatelessWidget {
               showSelectedIcon: false,
               segments: [
                 ButtonSegment(
-                  value: 'organization',
-                  label: Text(l10n.adminDeploymentModeOrganization),
+                  value: kDeploymentModeManaged,
+                  label: Text(l10n.adminDeploymentModeManaged),
                 ),
                 ButtonSegment(
-                  value: 'personal',
-                  label: Text(l10n.adminDeploymentModePersonal),
+                  value: kDeploymentModeIndividual,
+                  label: Text(l10n.adminDeploymentModeIndividual),
                 ),
               ],
               selected: {selected},
@@ -662,10 +677,7 @@ class _PublicApiUrlPanel extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSaved;
 
-  const _PublicApiUrlPanel({
-    required this.controller,
-    required this.onSaved,
-  });
+  const _PublicApiUrlPanel({required this.controller, required this.onSaved});
 
   @override
   Widget build(BuildContext context) {

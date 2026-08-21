@@ -1319,10 +1319,25 @@
     }
   },
   "adminDeploymentModeTitle": "Deployment mode",
-  "adminDeploymentModeSubtitle": "Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.",
-  "adminDeploymentModeOrganization": "Organization",
-  "adminDeploymentModePersonal": "Personal / small team",
+  "@adminDeploymentModeTitle": {
+    "description": "Title for Admin Security deployment-mode card"
+  },
+  "adminDeploymentModeSubtitle": "Individual mode lets each teammate connect providers from Settings. Managed mode keeps Admin-owned tokens and Identities.",
+  "@adminDeploymentModeSubtitle": {
+    "description": "Explains Managed vs Individual deployment on Admin Security"
+  },
+  "adminDeploymentModeManaged": "Managed",
+  "@adminDeploymentModeManaged": {
+    "description": "Segmented-button label for Admin-owned credential deployment"
+  },
+  "adminDeploymentModeIndividual": "Individual",
+  "@adminDeploymentModeIndividual": {
+    "description": "Segmented-button label for Settings PAT / small-team deployment"
+  },
   "adminDeploymentModeSavedSnack": "Deployment mode saved",
+  "@adminDeploymentModeSavedSnack": {
+    "description": "Snack bar after saving deployment mode"
+  },
   "adminFieldOauthClientId": "OAuth client ID",
   "adminFieldOauthClientIdJiraHint": "Copy Client ID from Authorization → OAuth 2.0 (3LO), not App ID. Add Jira API scopes read:jira-work and read:jira-user under Permissions first.",
   "adminOauthCallbackMustMatch": "Callback URL in the provider console must be exactly: {url}",

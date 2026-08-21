@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/core/failures.dart';
 import '../../../domain/core/org_calendar.dart';
 import '../../../domain/entities/provider/provider_config.dart';
@@ -53,8 +54,9 @@ class ProviderConfigRepository extends Repository
         orgTimezoneId: resolveOrgTimezoneId(
           payload['systemTimezone']?.toString(),
         ),
-        deploymentMode:
-            (payload['deploymentMode'] ?? 'organization').toString(),
+        deploymentMode: normalizeDeploymentMode(
+          payload['deploymentMode']?.toString(),
+        ),
       );
     });
   }
@@ -89,7 +91,8 @@ class ProviderConfigRepository extends Repository
       return ProviderConnectivityReport(
         aggregate: _parseStatus(payload['aggregate']?.toString()),
         summaryMessage:
-            payload['summaryMessage']?.toString() ?? 'Connectivity test complete',
+            payload['summaryMessage']?.toString() ??
+            'Connectivity test complete',
         core: _parseSection(sections['core']),
         live: _parseSection(sections['live']),
         polling: _parseSection(sections['polling']),

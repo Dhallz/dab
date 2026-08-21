@@ -7,6 +7,9 @@ meta {
 docs {
   Returns the current initialization state of the DAB system.
   Used by the client to determine if the first-run configuration wizard should be displayed.
+
+  `deploymentMode` is `managed` (Admin-owned tokens) or `individual` (Settings PATs).
+  Legacy stored values `organization` and `personal` are normalized on read.
 }
 
 get {
@@ -22,5 +25,7 @@ tests {
   test("Returns isSystemConfigured", function() {
     expect(res.body.data).to.have.property("isSystemConfigured");
     expect(res.body.data).to.have.property("systemTimezone");
+    expect(res.body.data).to.have.property("deploymentMode");
+    expect(["managed", "individual"]).to.include(res.body.data.deploymentMode);
   });
 }

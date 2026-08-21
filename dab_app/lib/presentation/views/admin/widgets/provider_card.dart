@@ -434,7 +434,7 @@ class _ProviderCardState extends ConsumerState<ProviderCard> {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final isPersonal = ref.watch(
-      appNotifierProvider.select((s) => s.isPersonalDeployment),
+      appNotifierProvider.select((s) => s.isIndividualDeployment),
     );
     final manifest = ProviderFieldManifest.forProvider(
       config.id,

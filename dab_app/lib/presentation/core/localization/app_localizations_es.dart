@@ -1051,13 +1051,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminDeploymentModeSubtitle =>
-      'Personal mode lets each teammate connect providers from Settings. Organization mode keeps Admin-owned tokens and Identities.';
+      'Individual mode lets each teammate connect providers from Settings. Managed mode keeps Admin-owned tokens and Identities.';
 
   @override
-  String get adminDeploymentModeOrganization => 'Organization';
+  String get adminDeploymentModeManaged => 'Managed';
 
   @override
-  String get adminDeploymentModePersonal => 'Personal / small team';
+  String get adminDeploymentModeIndividual => 'Individual';
 
   @override
   String get adminDeploymentModeSavedSnack => 'Deployment mode saved';

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
 import '../../../domain/entities/system/app_settings.dart';
@@ -73,7 +74,7 @@ class AppNotifier extends Notifier<AppState> {
 
   /// Updates deployment mode without a full [init] (avoids a global loading flash).
   void setDeploymentMode(String mode) {
-    state = state.copyWith(deploymentMode: mode);
+    state = state.copyWith(deploymentMode: normalizeDeploymentMode(mode));
   }
 
   /// Updates org timezone without a full [init].
