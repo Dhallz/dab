@@ -4,7 +4,7 @@ import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
@@ -16,7 +16,7 @@ import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dar
 /// CONTRACT: Returns commit DTOs scoped by configured repos, linked users,
 /// and watched branches (plus the instance/default ref).
 /// CONSTRAINTS: Must not mutate remote state. Auth: user PAT overlay, else org token.
-class GitHubCommitSource implements AbsIActivitySource<GitHubCommitDto> {
+class GitHubCommitSource implements AbsIActivityPort<GitHubCommitDto> {
   final AbsIProviderConfigRepository _configRepository;
   final IUserRepository _userRepository;
   final JsonRestProtocol _jsonRest;
@@ -55,7 +55,7 @@ class GitHubCommitSource implements AbsIActivitySource<GitHubCommitDto> {
                 : configuredApiBaseUrl)
             .replaceAll(RegExp(r'/+$'), '');
 
-    final repos = extractConfiguredGithubRepos(orgSettings);
+    final repos = orgSettings.extractConfiguredGithubRepos();
     if (repos.isEmpty) {
       return [];
     }
@@ -82,18 +82,13 @@ class GitHubCommitSource implements AbsIActivitySource<GitHubCommitDto> {
       providerId: 'github',
     );
 
-    final orgToken = extractProviderToken('github', orgSettings);
+    final orgToken = orgSettings.extractProviderToken('github');
     final useOrgWide = !authoredOnly && orgToken.isNotEmpty;
 
     final commits = <GitHubCommitDto>[];
     final seen = <String>{};
     for (final repo in repos) {
-      final refs = gitExplorerPollRefs(
-        repo: repo,
-        instanceRepos: repos,
-        configuredBranch: configuredBranch,
-        userSettingsById: userSettings,
-      );
+      final refs = userSettings.gitExplorerPollRefs(repo: repo, instanceRepos: repos, configuredBranch: configuredBranch);
       for (final ref in refs) {
         final branch = (ref ?? '').trim();
         final branchForDto = branch.isEmpty ? null : branch;
@@ -124,7 +119,7 @@ class GitHubCommitSource implements AbsIActivitySource<GitHubCommitDto> {
             orgSettings: orgSettings,
             userSettings: userSettings[userId],
           );
-          final token = extractProviderToken('github', merged);
+          final token = merged.extractProviderToken('github');
           if (token.isEmpty) continue;
           final rawCommits = await _fetchCommits(
             apiBaseUrl: apiBaseUrl,

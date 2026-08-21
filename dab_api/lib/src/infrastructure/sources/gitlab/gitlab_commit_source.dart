@@ -7,9 +7,9 @@ import 'package:dab_api/src/domain/dtos/gitlab/gitlab_commit_mapping.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_port.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
@@ -24,7 +24,7 @@ import 'package:fpdart/fpdart.dart';
 /// CONSTRAINTS: Must be READ-ONLY. Auth: personal access token
 /// (`PRIVATE-TOKEN` header).
 class GitLabCommitSource
-    implements AbsIActivitySource<GitLabCommitDto>, AbsIDiscoverySource {
+    implements AbsIActivityPort<GitLabCommitDto>, AbsIDiscoveryPort {
   GitLabCommitSource(
     this._configRepository,
     this._userRepository,
@@ -52,14 +52,14 @@ class GitLabCommitSource
       providerId: 'gitlab',
     );
     Map<String, dynamic> authSettings = cfg.settings;
-    var token = extractProviderToken('gitlab', authSettings);
+    var token = authSettings.extractProviderToken('gitlab');
     if (token.isEmpty) {
       for (final user in users) {
         final merged = _credentials.overlay(
           orgSettings: cfg.settings,
           userSettings: userSettings[user.id],
         );
-        token = extractProviderToken('gitlab', merged);
+        token = merged.extractProviderToken('gitlab');
         if (token.isNotEmpty) {
           authSettings = merged;
           break;
@@ -68,27 +68,22 @@ class GitLabCommitSource
     }
     if (token.isEmpty) return const [];
 
-    final projects = gitLabProjects(cfg.settings);
+    final projects = cfg.settings.gitLabProjects();
     if (projects.isEmpty) return const [];
 
     final emailToUser = await _buildEmailAttributionMap(users);
     if (emailToUser.isEmpty) return const [];
 
-    final apiBase = gitLabApiBase(cfg.settings, cfg.baseUrl);
+    final apiBase = cfg.settings.gitLabApiBase(cfg.baseUrl);
     final branch = (cfg.settings['branch'] ?? '').toString().trim();
-    final headers = gitLabAuthHeaders(authSettings);
+    final headers = authSettings.gitLabAuthHeaders();
 
     final commits = <GitLabCommitDto>[];
     final seen = <String>{};
 
     for (final project in projects) {
       final encodedProject = Uri.encodeComponent(project);
-      final refs = gitExplorerPollRefs(
-        repo: project,
-        instanceRepos: projects,
-        configuredBranch: branch,
-        userSettingsById: userSettings,
-      );
+      final refs = userSettings.gitExplorerPollRefs(repo: project, instanceRepos: projects, configuredBranch: branch);
       for (final ref in refs) {
         final refName = (ref ?? '').trim();
         final uri =
@@ -137,20 +132,20 @@ class GitLabCommitSource
     final cfg = await _activeGitLabConfig();
     if (cfg == null) return const Right(null);
 
-    final token = extractProviderToken('gitlab', cfg.settings);
+    final token = cfg.settings.extractProviderToken('gitlab');
     if (token.isEmpty) return const Right(null);
 
     final query = email.trim().isNotEmpty ? email.trim() : name.trim();
     if (query.isEmpty) return const Right(null);
 
     final uri = Uri.parse(
-      '${gitLabApiBase(cfg.settings, cfg.baseUrl)}/users',
+      '${cfg.settings.gitLabApiBase(cfg.baseUrl)}/users',
     ).replace(queryParameters: {'search': query});
 
     try {
       final list = await _jsonRest.getJsonList(
         uri,
-        headers: gitLabAuthHeaders(cfg.settings),
+        headers: cfg.settings.gitLabAuthHeaders(),
       );
       for (final raw in list) {
         if (raw is! Map<String, dynamic>) continue;
@@ -195,11 +190,15 @@ class GitLabCommitSource
   }
 }
 
-/// Auth headers for GitLab REST. OAuth access tokens use Bearer.
-Map<String, String> gitLabAuthHeaders(Map<String, dynamic> settings) {
-  final token = extractProviderToken('gitlab', settings);
-  if (isOauthCredential(settings)) {
-    return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Auth headers for GitLab REST. OAuth access tokens use Bearer.
+extension OnProviderSettings on Map {
+  /// Auth headers for GitLab REST. OAuth access tokens use Bearer.
+  Map<String, String> gitLabAuthHeaders() {
+    final token = extractProviderToken('gitlab');
+    if (isOauthCredential) {
+      return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
+    }
+    return {'PRIVATE-TOKEN': token, 'Accept': 'application/json'};
   }
-  return {'PRIVATE-TOKEN': token, 'Accept': 'application/json'};
 }

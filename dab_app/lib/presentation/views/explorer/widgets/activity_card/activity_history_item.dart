@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../../presentation/core/extensions/string_extensions.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Individual item within the activity history timeline.
@@ -131,7 +132,7 @@ class ActivityHistoryItem extends StatelessWidget {
 
   String _historyAuthorLabel() {
     final author = activity.authorName.trim();
-    if (author.isEmpty || looksLikeOpaqueUserId(author)) return '';
+    if (author.isEmpty || author.looksLikeOpaqueUserId) return '';
     return author;
   }
 

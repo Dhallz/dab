@@ -4,11 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/activity/activity.dart';
+import '../../../core/extensions/activity_extensions.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../../../features/app/app_notifier.dart';
 import '../models/dashboard_timeline_markers.dart';
-import '../models/dashboard_watching_placeholder.dart';
 import 'dashboard_timeline_row.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
@@ -53,7 +53,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
           activities: activities,
           index: index,
           orgTimezoneId: orgTimezoneId,
-          skip: isDashboardWatchingPlaceholder,
+          skip: (activity) => activity.isDashboardWatchingPlaceholder,
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +89,7 @@ class DashboardTimelineFeed extends ConsumerWidget {
               timeLabel: timeFormat.format(local),
               isLast: index == activities.length - 1,
               onArchive:
-                  activity.archived || isDashboardWatchingPlaceholder(activity)
+                  activity.archived || activity.isDashboardWatchingPlaceholder
                   ? null
                   : () => onArchive(activity),
               onUnarchive: activity.archived

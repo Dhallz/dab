@@ -22,7 +22,7 @@ class DeleteUserProviderCredential {
     final deleted = await _credentials.delete(userId: userId, providerId: id);
     if (deleted.isLeft()) return deleted;
 
-    if (isBotSharedProvider(id)) {
+    if (id.isBotSharedProvider) {
       final remaining = await _credentials.listForProvider(id);
       final others = remaining.getOrElse((_) => []);
       if (others.isEmpty) {

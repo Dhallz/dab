@@ -42,5 +42,5 @@ class AppState with AppStateMappable {
   });
 
   /// True when teammates connect providers from Settings (Individual mode).
-  bool get isIndividualDeployment => isIndividualDeploymentMode(deploymentMode);
+  bool get isIndividualDeployment => deploymentMode.isIndividualDeploymentMode;
 }

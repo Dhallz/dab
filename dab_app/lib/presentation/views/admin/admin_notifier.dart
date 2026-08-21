@@ -271,7 +271,7 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
         final mode = settings[kDeploymentModeSettingKey];
         if (mode != null) {
           app.setDeploymentMode(mode);
-          if (isIndividualDeploymentMode(mode) &&
+          if (mode.isIndividualDeploymentMode &&
               state.selectedSection == AdminSection.identities) {
             state = state.copyWith(selectedSection: AdminSection.security);
           }

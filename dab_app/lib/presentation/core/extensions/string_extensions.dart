@@ -3,9 +3,20 @@ import 'package:flutter/material.dart';
 import '../localization/l10n_extension.dart';
 
 /// [ARCH: PRESENTATION_CORE]
-/// ROLE: UI helpers for [String] values that represent [Activity.granularKey] keys
-/// in Explorer chrome (calendar-header summaries).
+/// ROLE: UI helpers for [String] values used in Explorer chrome and author
+/// labels.
 extension OnString on String {
+  /// True when this is a UUID or a long numeric Figma user id, not a name.
+  bool get looksLikeOpaqueUserId {
+    final text = trim();
+    if (text.isEmpty) return false;
+    if (RegExp(r'^[0-9]{8,}$').hasMatch(text)) return true;
+    return RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    ).hasMatch(text);
+  }
+
   /// User-facing label for this granular key in activity-kind summaries.
   String islandSummaryLabel(BuildContext context) {
     return switch (this) {

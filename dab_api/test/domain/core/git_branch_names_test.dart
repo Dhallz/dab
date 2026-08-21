@@ -3,11 +3,11 @@ import 'package:test/test.dart';
 
 void main() {
   test('pins main ahead of other names', () {
-    final list = gitBranchListFromNames([
+    final list = [
       'feature/x',
       'main',
       'develop',
-    ], truncated: false);
+    ].gitBranchListFromNames(truncated: false);
     expect(list.available, ['main', 'develop', 'feature/x']);
     expect(list.truncated, isFalse);
   });

@@ -82,8 +82,8 @@ class UserProviderCredentialRepository
               providerId: credential.providerId,
               settings: Value(_cipher.encryptMap(credential.settings)),
               status: Value(credential.status.name),
-              createdAt: Value(toPgDateTime(credential.createdAt)),
-              updatedAt: Value(toPgDateTime(now)),
+              createdAt: Value(credential.createdAt.toPgDateTime()),
+              updatedAt: Value(now.toPgDateTime()),
             ),
           );
       return Right(credential.copyWith(updatedAt: now));

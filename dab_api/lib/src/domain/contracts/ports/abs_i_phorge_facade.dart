@@ -8,7 +8,7 @@ import 'package:fpdart/fpdart.dart';
 
 /// [ARCH: DOMAIN_PORT]
 /// ROLE: Read-only Phorge Conduit facade — directory, sprint projects, tasks,
-/// revisions. Delegates to per-resource sources; not a poll [AbsIActivitySource].
+/// revisions. Delegates to per-resource sources; not a poll [AbsIActivityPort].
 /// CONTRACT: Returned rows match Conduit DTO decoding (`user.search`,
 /// `project.search`, …). Callers may compose multiple calls internally
 /// (e.g. sprint tags) but expose API-shaped DTOs only.

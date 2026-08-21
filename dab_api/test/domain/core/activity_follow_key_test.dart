@@ -5,20 +5,20 @@ import 'package:test/test.dart';
 void main() {
   test('encodes Phorge, Jira, and Linear object keys', () {
     expect(
-      followObjectKeyFor(const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1')),
+      (const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1')).followObjectKey,
       'PHID-TASK-1',
     );
     expect(
-      followProviderIdFor(const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1')),
+      (const PhorgeTaskProvider(taskPhid: 'PHID-TASK-1')).followProviderId,
       'phorge',
     );
     expect(
-      followObjectKeyFor(const PhorgeRevisionProvider(revisionId: 'PHID-DREV-1')),
+      (const PhorgeRevisionProvider(revisionId: 'PHID-DREV-1')).followObjectKey,
       'PHID-DREV-1',
     );
-    expect(followObjectKeyFor(const JiraIssueProvider(issueKey: 'DAB-7')), 'DAB-7');
+    expect((const JiraIssueProvider(issueKey: 'DAB-7')).followObjectKey, 'DAB-7');
     expect(
-      followObjectKeyFor(const LinearIssueProvider(identifier: 'ENG-42')),
+      (const LinearIssueProvider(identifier: 'ENG-42')).followObjectKey,
       'ENG-42',
     );
   });
@@ -62,17 +62,15 @@ void main() {
 
   test('git Follow keys require a repo and a branch', () {
     expect(
-      followObjectKeyFor(const GitHubCommitProvider(repo: 'acme/app')),
+      (const GitHubCommitProvider(repo: 'acme/app')).followObjectKey,
       isNull,
     );
     expect(
-      followProviderIdFor(const GitLabCommitProvider(project: 'acme/app')),
+      (const GitLabCommitProvider(project: 'acme/app')).followProviderId,
       'gitlab',
     );
     expect(
-      followObjectKeyFor(
-        const GitHubCommitProvider(repo: 'Acme/app', branch: 'refs/heads/feature/foo'),
-      ),
+      (const GitHubCommitProvider(repo: 'Acme/app', branch: 'refs/heads/feature/foo')).followObjectKey,
       'acme/app|feature/foo',
     );
     expect(
@@ -80,19 +78,19 @@ void main() {
       'acme/app',
     );
     expect(
-      followObjectKeyFor(const BitbucketCommitProvider(repo: 'acme/app')),
+      (const BitbucketCommitProvider(repo: 'acme/app')).followObjectKey,
       isNull,
     );
-    expect(followObjectKeyFor(const GenericProvider(name: 'other')), isNull);
+    expect((const GenericProvider(name: 'other')).followObjectKey, isNull);
   });
 
   test('encodes Figma file keys', () {
     expect(
-      followObjectKeyFor(const FigmaFileProvider(fileKey: 'Abc123File')),
+      (const FigmaFileProvider(fileKey: 'Abc123File')).followObjectKey,
       'Abc123File',
     );
     expect(
-      followProviderIdFor(const FigmaFileProvider(fileKey: 'Abc123File')),
+      (const FigmaFileProvider(fileKey: 'Abc123File')).followProviderId,
       'figma',
     );
   });

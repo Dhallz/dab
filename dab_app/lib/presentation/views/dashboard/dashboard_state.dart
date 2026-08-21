@@ -5,10 +5,10 @@ import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/entities/activity/activity.dart';
 import '../../../domain/entities/user/activity_follow.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
+import '../../core/extensions/activity_follow_extensions.dart';
 import 'models/dashboard_feed_group.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
-import 'models/dashboard_watching_placeholder.dart';
 
 part 'dashboard_state.mapper.dart';
 
@@ -74,7 +74,7 @@ class DashboardState with DashboardStateMappable {
   List<ActivityFollow> get watchingPins {
     final covered = <String>{
       for (final activity in followedVisible)
-        ?followObjectRefFor(activity.provider),
+        ?activity.provider.followObjectRefFor,
     };
     return [
       for (final follow in follows)
@@ -93,7 +93,7 @@ class DashboardState with DashboardStateMappable {
 
   /// Whether [activity] is currently Follow-pinned.
   bool isFollowing(Activity activity) {
-    final ref = followObjectRefFor(activity.provider);
+    final ref = activity.provider.followObjectRefFor;
     return ref != null && followedObjectRefs.contains(ref);
   }
 }
@@ -102,7 +102,7 @@ class DashboardState with DashboardStateMappable {
 extension OnDashboardState on DashboardState {
   /// Following pane items: quiet pin cards first, then Follow-lane live cards.
   List<Activity> get followedFeed => [
-    for (final pin in watchingPins) watchingPlaceholderActivity(pin),
+    for (final pin in watchingPins) pin.watchingPlaceholderActivity,
     ...followedVisible,
   ];
 

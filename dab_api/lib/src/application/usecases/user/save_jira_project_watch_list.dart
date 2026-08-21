@@ -24,9 +24,7 @@ class SaveJiraProjectWatchList {
     if (listed.isLeft()) return Left(listed.getLeft().toNullable()!);
     final watch = listed.getOrElse((_) => throw StateError('watch list'));
     final allowed = {for (final p in watch.available) p.key};
-    final selected = parseJiraProjectKeys(
-      projectKeys,
-    ).where(allowed.contains).toList();
+    final selected = (projectKeys as Object?).parseJiraProjectKeys().where(allowed.contains).toList();
 
     final configs = (await _configs.getConfigs()).getOrElse(
       (_) => const <ProviderConfig>[],

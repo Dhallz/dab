@@ -82,7 +82,7 @@ extension OnGitLabCommitDto on GitLabCommitDto {
         Activity(
           id: _gitLabCommitUuid.v5(
             Namespace.url.value,
-            withInboxLaneId(stable, lane),
+            stable.withInboxLaneId(lane),
           ),
           userId: user.id,
           senderUserId: senderUserId ?? userId,

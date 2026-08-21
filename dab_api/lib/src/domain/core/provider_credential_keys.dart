@@ -36,167 +36,155 @@ const kPatProviderIds = {
 /// Providers that need a single workspace bot (instance [ProviderConfig], not user tokens).
 const kBotProviderIds = {'slack', 'discord'};
 
-bool isKnownProviderId(String providerId) {
-  final id = providerId.trim().toLowerCase();
-  return kPatProviderIds.contains(id) || kBotProviderIds.contains(id);
+/// [ARCH: DOMAIN]
+/// ROLE: Provider-id predicates on the raw catalog string.
+extension OnString on String {
+  /// True when [this] is a known PAT or bot provider id.
+  bool get isKnownProviderId {
+    final id = trim().toLowerCase();
+    return kPatProviderIds.contains(id) || kBotProviderIds.contains(id);
+  }
+
+  /// True when [this] is a shared workspace-bot provider (Slack, Discord).
+  bool get isBotSharedProvider =>
+      kBotProviderIds.contains(trim().toLowerCase());
 }
 
-bool isBotSharedProvider(String providerId) =>
-    kBotProviderIds.contains(providerId.trim().toLowerCase());
+/// [ARCH: DOMAIN]
+/// ROLE: Credential overlay, token extraction, and OAuth expiry on settings maps.
+extension OnProviderSettings on Map {
+  /// Overlays non-empty user secret fields onto this org settings map.
+  /// Watch lists stay org-owned.
+  Map<String, dynamic> overlayProviderSecrets([Map? userSettings]) {
+    final out = Map<String, dynamic>.from(this);
+    if (userSettings == null || userSettings.isEmpty) return out;
+    userSettings.forEach((key, value) {
+      if (value == null) return;
+      final isOverlay =
+          kProviderSecretSettingKeys.contains(key) ||
+          key.startsWith('api.') ||
+          kProviderOauthMetaKeys.contains(key);
+      if (!isOverlay) return;
+      final text = value.toString().trim();
+      if (text.isEmpty) return;
+      out[key] = value;
+    });
+    return out;
+  }
 
-/// Overlays non-empty user secret fields onto org settings. Watch lists stay org-owned.
-Map<String, dynamic> overlayProviderSecrets({
-  required Map<String, dynamic> orgSettings,
-  Map<String, dynamic>? userSettings,
-}) {
-  final out = Map<String, dynamic>.from(orgSettings);
-  if (userSettings == null || userSettings.isEmpty) return out;
-  userSettings.forEach((key, value) {
-    if (value == null) return;
-    final isOverlay =
-        kProviderSecretSettingKeys.contains(key) ||
-        key.startsWith('api.') ||
-        kProviderOauthMetaKeys.contains(key);
-    if (!isOverlay) return;
-    final text = value.toString().trim();
-    if (text.isEmpty) return;
-    out[key] = value;
-  });
-  return out;
-}
-
-/// Extracts a bearer/PAT-style token for [providerId] from merged settings.
-String extractProviderToken(String providerId, Map<String, dynamic> settings) {
-  final id = providerId.trim().toLowerCase();
-  switch (id) {
-    case 'github':
-    case 'figma':
-      return (settings['api.token'] ??
-              settings['token'] ??
-              settings['accessToken'] ??
-              '')
-          .toString()
-          .trim();
-    case 'gitlab':
-      return (settings['api.token'] ??
-              settings['apiToken'] ??
-              settings['token'] ??
-              settings['accessToken'] ??
-              '')
-          .toString()
-          .trim();
-    case 'linear':
-      return (settings['apiKey'] ??
-              settings['api.key'] ??
-              settings['token'] ??
-              settings['accessToken'] ??
-              '')
-          .toString()
-          .trim();
-    case 'phorge':
-      return (settings['api.token'] ??
-              settings['apiToken'] ??
-              settings['token'] ??
-              '')
-          .toString()
-          .trim();
-    case 'slack':
-    case 'discord':
-      return (settings['botToken'] ??
-              settings['api.token'] ??
-              settings['token'] ??
-              '')
-          .toString()
-          .trim();
-    case 'jira':
-      if (isOauthCredential(settings)) {
-        return (settings['apiToken'] ??
-                settings['api.token'] ??
-                settings['token'] ??
+  /// Extracts a bearer/PAT-style token for [providerId] from this merged map.
+  String extractProviderToken(String providerId) {
+    final id = providerId.trim().toLowerCase();
+    switch (id) {
+      case 'github':
+      case 'figma':
+        return (this['api.token'] ?? this['token'] ?? this['accessToken'] ?? '')
+            .toString()
+            .trim();
+      case 'gitlab':
+        return (this['api.token'] ??
+                this['apiToken'] ??
+                this['token'] ??
+                this['accessToken'] ??
                 '')
             .toString()
             .trim();
-      }
-      return (settings['api.token'] ??
-              settings['apiToken'] ??
-              settings['token'] ??
-              '')
-          .toString()
-          .trim();
-    case 'bitbucket':
-      return (settings['apiToken'] ??
-              settings['appPassword'] ??
-              settings['token'] ??
-              settings['accessToken'] ??
-              '')
-          .toString()
-          .trim();
-    default:
-      return (settings['token'] ??
-              settings['api.token'] ??
-              settings['apiKey'] ??
-              '')
-          .toString()
-          .trim();
+      case 'linear':
+        return (this['apiKey'] ??
+                this['api.key'] ??
+                this['token'] ??
+                this['accessToken'] ??
+                '')
+            .toString()
+            .trim();
+      case 'phorge':
+        return (this['api.token'] ?? this['apiToken'] ?? this['token'] ?? '')
+            .toString()
+            .trim();
+      case 'slack':
+      case 'discord':
+        return (this['botToken'] ?? this['api.token'] ?? this['token'] ?? '')
+            .toString()
+            .trim();
+      case 'jira':
+        if (isOauthCredential) {
+          return (this['apiToken'] ??
+                  this['api.token'] ??
+                  this['token'] ??
+                  '')
+              .toString()
+              .trim();
+        }
+        return (this['api.token'] ?? this['apiToken'] ?? this['token'] ?? '')
+            .toString()
+            .trim();
+      case 'bitbucket':
+        return (this['apiToken'] ??
+                this['appPassword'] ??
+                this['token'] ??
+                this['accessToken'] ??
+                '')
+            .toString()
+            .trim();
+      default:
+        return (this['token'] ?? this['api.token'] ?? this['apiKey'] ?? '')
+            .toString()
+            .trim();
+    }
   }
-}
 
-bool isOauthCredential(Map<String, dynamic> settings) =>
-    (settings['tokenType'] ?? '').toString().trim().toLowerCase() == 'oauth';
+  /// True when this credential row is OAuth (`tokenType=oauth`).
+  bool get isOauthCredential =>
+      (this['tokenType'] ?? '').toString().trim().toLowerCase() == 'oauth';
 
-/// True when an OAuth credential has a refresh token and the access token is
-/// missing an expiry or expires within [skew] of [now].
-bool oauthAccessTokenNeedsRefresh(
-  Map<String, dynamic> settings, {
-  DateTime? now,
-  Duration skew = const Duration(seconds: 90),
-}) {
-  if (!isOauthCredential(settings)) return false;
-  final refresh = (settings['refreshToken'] ?? '').toString().trim();
-  if (refresh.isEmpty) return false;
-  final raw = (settings['tokenExpiresAt'] ?? '').toString().trim();
-  if (raw.isEmpty) return true;
-  final expires = DateTime.tryParse(raw);
-  if (expires == null) return true;
-  final n = (now ?? DateTime.now()).toUtc();
-  return !expires.toUtc().isAfter(n.add(skew));
-}
+  /// True when an OAuth credential has a refresh token and the access token is
+  /// missing an expiry or expires within [skew] of [now].
+  bool oauthAccessTokenNeedsRefresh({
+    DateTime? now,
+    Duration skew = const Duration(seconds: 90),
+  }) {
+    if (!isOauthCredential) return false;
+    final refresh = (this['refreshToken'] ?? '').toString().trim();
+    if (refresh.isEmpty) return false;
+    final raw = (this['tokenExpiresAt'] ?? '').toString().trim();
+    if (raw.isEmpty) return true;
+    final expires = DateTime.tryParse(raw);
+    if (expires == null) return true;
+    final n = (now ?? DateTime.now()).toUtc();
+    return !expires.toUtc().isAfter(n.add(skew));
+  }
 
-/// True when [tokenExpiresAt] is in the past (or unparseable) for an OAuth row.
-bool oauthAccessTokenIsExpired(Map<String, dynamic> settings, {DateTime? now}) {
-  if (!isOauthCredential(settings)) return false;
-  final raw = (settings['tokenExpiresAt'] ?? '').toString().trim();
-  if (raw.isEmpty) return false;
-  final expires = DateTime.tryParse(raw);
-  if (expires == null) return true;
-  return !expires.toUtc().isAfter((now ?? DateTime.now()).toUtc());
-}
+  /// True when [tokenExpiresAt] is in the past (or unparseable) for an OAuth row.
+  bool oauthAccessTokenIsExpired({DateTime? now}) {
+    if (!isOauthCredential) return false;
+    final raw = (this['tokenExpiresAt'] ?? '').toString().trim();
+    if (raw.isEmpty) return false;
+    final expires = DateTime.tryParse(raw);
+    if (expires == null) return true;
+    return !expires.toUtc().isAfter((now ?? DateTime.now()).toUtc());
+  }
 
-/// True when merged settings contain the secrets required to call [providerId].
-bool hasRequiredProviderSecrets(
-  String providerId,
-  Map<String, dynamic> settings,
-) {
-  final id = providerId.trim().toLowerCase();
-  switch (id) {
-    case 'jira':
-      if (isOauthCredential(settings)) {
-        final cloudId = (settings['cloudId'] ?? '').toString().trim();
-        return cloudId.isNotEmpty &&
-            extractProviderToken(id, settings).isNotEmpty;
-      }
-      final email = (settings['email'] ?? settings['api.email'] ?? '')
-          .toString()
-          .trim();
-      return email.isNotEmpty && extractProviderToken(id, settings).isNotEmpty;
-    case 'bitbucket':
-      if (isOauthCredential(settings)) {
-        return extractProviderToken(id, settings).isNotEmpty;
-      }
-      final username = (settings['username'] ?? '').toString().trim();
-      return username.isNotEmpty &&
-          extractProviderToken(id, settings).isNotEmpty;
-    default:
-      return extractProviderToken(id, settings).isNotEmpty;
+  /// True when this merged map contains the secrets required to call [providerId].
+  bool hasRequiredProviderSecrets(String providerId) {
+    final id = providerId.trim().toLowerCase();
+    switch (id) {
+      case 'jira':
+        if (isOauthCredential) {
+          final cloudId = (this['cloudId'] ?? '').toString().trim();
+          return cloudId.isNotEmpty && extractProviderToken(id).isNotEmpty;
+        }
+        final email = (this['email'] ?? this['api.email'] ?? '')
+            .toString()
+            .trim();
+        return email.isNotEmpty && extractProviderToken(id).isNotEmpty;
+      case 'bitbucket':
+        if (isOauthCredential) {
+          return extractProviderToken(id).isNotEmpty;
+        }
+        final username = (this['username'] ?? '').toString().trim();
+        return username.isNotEmpty && extractProviderToken(id).isNotEmpty;
+      default:
+        return extractProviderToken(id).isNotEmpty;
+    }
   }
 }

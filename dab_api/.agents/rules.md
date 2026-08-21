@@ -38,7 +38,7 @@ dab_api/lib/src/
 ### Source / DTO-extension pattern
 New provider integrations must follow this pattern precisely:
 
-1. **`AbsIActivitySource`** (Infrastructure) — fetches raw DTO payloads from a provider API.
+1. **`AbsIActivityPort`** (Domain) — interface for fetching raw DTO payloads. Infrastructure **Sources** implement it.
 2. **`extension OnXDto`** (Domain on `domain/dtos/`) — implements **`toActivities(List<User>)`** with pure business logic (no I/O).
 3. **`TypedConnectorPair<T>` + `providerId`** — registered via **`ConnectorRegistry.register`** inside **`register_activity_connectors`** (called from **`service_locator.dart`**) — binds Source, row type, wiring id (`github`, …), and mapping closure.
 

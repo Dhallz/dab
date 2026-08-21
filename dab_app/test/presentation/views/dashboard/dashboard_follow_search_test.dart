@@ -2,7 +2,7 @@ import 'package:dab_app/domain/entities/user/follow_candidate.dart';
 import 'package:dab_app/presentation/core/localization/app_localizations.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
-import 'package:dab_app/presentation/views/dashboard/widgets/dashboard_follow_search.dart';
+import 'package:dab_app/presentation/views/dashboard/widgets/dashboard_follow_search/dashboard_follow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

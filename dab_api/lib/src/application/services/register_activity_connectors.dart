@@ -39,70 +39,70 @@ void registerActivityConnectors({
 }) {
   registry.register<PhorgeTaskBundleDto>(
     TypedConnectorPair<PhorgeTaskBundleDto>(
-      source: phorgeTaskSource,
+      port: phorgeTaskSource,
       providerId: 'phorge',
       mapItemToActivities: (bundle, users) => bundle.toActivities(users),
     ),
   );
   registry.register<PhorgeRevisionDto>(
     TypedConnectorPair<PhorgeRevisionDto>(
-      source: phorgeRevisionSource,
+      port: phorgeRevisionSource,
       providerId: 'phorge',
       mapItemToActivities: (data, users) => data.toActivities(users),
     ),
   );
   registry.register<SlackMessageDto>(
     TypedConnectorPair<SlackMessageDto>(
-      source: slackSource,
+      port: slackSource,
       providerId: 'slack',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<JiraIssueDto>(
     TypedConnectorPair<JiraIssueDto>(
-      source: jiraSource,
+      port: jiraSource,
       providerId: 'jira',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<LinearIssueDto>(
     TypedConnectorPair<LinearIssueDto>(
-      source: linearSource,
+      port: linearSource,
       providerId: 'linear',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<DiscordMessageDto>(
     TypedConnectorPair<DiscordMessageDto>(
-      source: discordSource,
+      port: discordSource,
       providerId: 'discord',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<GitHubCommitDto>(
     TypedConnectorPair<GitHubCommitDto>(
-      source: githubSource,
+      port: githubSource,
       providerId: 'github',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<GitLabCommitDto>(
     TypedConnectorPair<GitLabCommitDto>(
-      source: gitlabSource,
+      port: gitlabSource,
       providerId: 'gitlab',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<BitbucketCommitDto>(
     TypedConnectorPair<BitbucketCommitDto>(
-      source: bitbucketSource,
+      port: bitbucketSource,
       providerId: 'bitbucket',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),
   );
   registry.register<FigmaFileDto>(
     TypedConnectorPair<FigmaFileDto>(
-      source: figmaSource,
+      port: figmaSource,
       providerId: 'figma',
       mapItemToActivities: (dto, users) => dto.toActivities(users),
     ),

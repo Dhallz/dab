@@ -3,20 +3,20 @@ import 'package:test/test.dart';
 
 void main() {
   test('canonical values stay managed and individual', () {
-    expect(normalizeDeploymentMode('managed'), kDeploymentModeManaged);
-    expect(normalizeDeploymentMode('individual'), kDeploymentModeIndividual);
+    expect(('managed').normalizeDeploymentMode(), kDeploymentModeManaged);
+    expect(('individual').normalizeDeploymentMode(), kDeploymentModeIndividual);
   });
 
   test('legacy organization and personal map to the new names', () {
-    expect(normalizeDeploymentMode('organization'), kDeploymentModeManaged);
-    expect(normalizeDeploymentMode('personal'), kDeploymentModeIndividual);
-    expect(isIndividualDeploymentMode('personal'), isTrue);
-    expect(isIndividualDeploymentMode('organization'), isFalse);
+    expect(('organization').normalizeDeploymentMode(), kDeploymentModeManaged);
+    expect(('personal').normalizeDeploymentMode(), kDeploymentModeIndividual);
+    expect(('personal').isIndividualDeploymentMode, isTrue);
+    expect(('organization').isIndividualDeploymentMode, isFalse);
   });
 
   test('unknown or empty values default to managed', () {
-    expect(normalizeDeploymentMode(null), kDeploymentModeManaged);
-    expect(normalizeDeploymentMode(''), kDeploymentModeManaged);
-    expect(normalizeDeploymentMode('weird'), kDeploymentModeManaged);
+    expect(null.normalizeDeploymentMode(), kDeploymentModeManaged);
+    expect(('').normalizeDeploymentMode(), kDeploymentModeManaged);
+    expect(('weird').normalizeDeploymentMode(), kDeploymentModeManaged);
   });
 }

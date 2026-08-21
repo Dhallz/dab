@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('legacy personal is treated as individual', () {
-    expect(isIndividualDeploymentMode('personal'), isTrue);
-    expect(normalizeDeploymentMode('personal'), kDeploymentModeIndividual);
-    expect(normalizeDeploymentMode('organization'), kDeploymentModeManaged);
+    expect(('personal').isIndividualDeploymentMode, isTrue);
+    expect(('personal').normalizeDeploymentMode(), kDeploymentModeIndividual);
+    expect(('organization').normalizeDeploymentMode(), kDeploymentModeManaged);
   });
 }

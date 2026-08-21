@@ -24,8 +24,12 @@ class UserDeviceToken {
   };
 }
 
-/// True when [raw] is an allowed mobile platform id.
-bool isDeviceTokenPlatform(String raw) {
-  final value = raw.trim().toLowerCase();
-  return value == 'android' || value == 'ios';
+/// [ARCH: DOMAIN]
+/// ROLE: Allowed mobile platform ids for device tokens.
+extension OnString on String {
+  /// True when [this] is an allowed mobile platform id (`android` or `ios`).
+  bool get isDeviceTokenPlatform {
+    final value = trim().toLowerCase();
+    return value == 'android' || value == 'ios';
+  }
 }

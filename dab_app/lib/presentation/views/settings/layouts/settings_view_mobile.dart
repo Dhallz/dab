@@ -8,7 +8,7 @@ import '../../../core/models/view_status.dart';
 import '../../../core/styles/app_icons.dart';
 import '../../../core/styles/app_text_styles.dart';
 import '../settings_notifier.dart';
-import '../widgets/settings_connected_accounts_section.dart';
+import '../widgets/settings_connected_accounts_section/settings_connected_accounts_section.dart';
 import '../widgets/settings_explorer_cache_section.dart';
 import '../widgets/settings_language_selector.dart';
 import '../widgets/settings_section_header.dart';

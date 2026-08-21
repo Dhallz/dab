@@ -5,9 +5,9 @@ import 'package:dab_api/src/domain/entities/figma/figma_file_meta.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_meta_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_credential_refresher.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -21,7 +21,7 @@ import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dar
 /// cannot list a team (`projects:read` / `folders:read` are not requested);
 /// poll keys come from Admin file keys/URLs plus Follow pins.
 class FigmaFileSource
-    implements AbsIActivitySource<FigmaFileDto>, AbsIFigmaFileGateway {
+    implements AbsIActivityPort<FigmaFileDto>, AbsIFigmaFileMetaPort {
   FigmaFileSource(
     this._configRepository,
     this._userRepository,
@@ -194,9 +194,9 @@ class FigmaFileSource
     try {
       final body = await _jsonRest.getJsonMap(
         Uri.parse('$kFigmaApiBase/v1/files/${fileKey.trim()}/meta'),
-        headers: figmaAuthHeaders(token),
+        headers: token.figmaAuthHeaders(),
       );
-      final fields = figmaFileMetaFields(body);
+      final fields = body.figmaFileMetaFields();
       final person = fields['last_touched_by'];
       Map<String, dynamic>? user;
       if (person is Map) user = Map<String, dynamic>.from(person);
@@ -226,7 +226,7 @@ class FigmaFileSource
     try {
       final body = await _jsonRest.getJsonMap(
         Uri.parse('$kFigmaApiBase/v1/files/${fileKey.trim()}/comments'),
-        headers: figmaAuthHeaders(token),
+        headers: token.figmaAuthHeaders(),
       );
       final raw = body['comments'];
       if (raw is! List) return const [];
@@ -253,7 +253,7 @@ class FigmaFileSource
                 .trim(),
             createdAt: created,
             authorId: (userMap?['id'] ?? '').toString().trim(),
-            authorHandle: figmaAuthorLabelFromUser(userMap),
+            authorHandle: (userMap as Object?).figmaAuthorLabelFromUser(),
             mentionIds: _mentionIds(map),
           ),
         );
@@ -299,7 +299,7 @@ class FigmaFileSource
       out.add(_FigmaFileRef(key: trimmed, name: label));
     }
 
-    for (final key in parseFigmaFileKeys(cfg.settings['fileKeys'])) {
+    for (final key in (cfg.settings['fileKeys'] as Object?).parseFigmaFileKeys()) {
       add(key, key);
     }
 
@@ -308,7 +308,7 @@ class FigmaFileSource
       providerId: 'figma',
     );
     for (final settings in userSettings.values) {
-      for (final key in parseFigmaFileKeys(settings['fileKeys'])) {
+      for (final key in (settings['fileKeys'] as Object?).parseFigmaFileKeys()) {
         add(key, key);
       }
     }
@@ -319,16 +319,16 @@ class FigmaFileSource
         final listed = await follows.listForUser(user.id);
         for (final follow in listed.getOrElse((_) => const [])) {
           if (follow.providerId.trim().toLowerCase() != 'figma') continue;
-          final key = extractFigmaFileKey(follow.objectKey);
+          final key = follow.objectKey.extractFigmaFileKey();
           if (key == null) continue;
           add(key, follow.title ?? key);
         }
       }
     }
 
-    final teamIds = parseFigmaTeamIds(
-      cfg.settings['teamIds'] ?? cfg.settings['teamId'],
-    );
+    final teamIds = ((cfg.settings['teamIds'] ?? cfg.settings['teamId'])
+            as Object?)
+        .parseFigmaTeamIds();
     for (final teamId in teamIds) {
       for (final file in await _filesForTeam(teamId, token)) {
         add(file.key, file.name);
@@ -344,7 +344,7 @@ class FigmaFileSource
     try {
       final projectsBody = await _jsonRest.getJsonMap(
         Uri.parse('$kFigmaApiBase/v1/teams/$teamId/projects'),
-        headers: figmaAuthHeaders(token),
+        headers: token.figmaAuthHeaders(),
       );
       final projects = projectsBody['projects'];
       if (projects is! List) return const [];
@@ -355,7 +355,7 @@ class FigmaFileSource
         if (projectId.isEmpty) continue;
         final filesBody = await _jsonRest.getJsonMap(
           Uri.parse('$kFigmaApiBase/v1/projects/$projectId/files'),
-          headers: figmaAuthHeaders(token),
+          headers: token.figmaAuthHeaders(),
         );
         final files = filesBody['files'];
         if (files is! List) continue;
@@ -392,7 +392,7 @@ class FigmaFileSource
       forceRefresh: forceRefresh,
     );
     if (userToken != null && userToken.isNotEmpty) return userToken;
-    final orgToken = extractProviderToken('figma', cfg.settings);
+    final orgToken = cfg.settings.extractProviderToken('figma');
     if (orgToken.isNotEmpty) return orgToken;
     return null;
   }
@@ -430,7 +430,7 @@ class FigmaFileSource
         orgSettings: cfg.settings,
         userSettings: settings,
       );
-      final token = extractProviderToken('figma', merged);
+      final token = merged.extractProviderToken('figma');
       if (token.isNotEmpty) return token;
     }
     return null;

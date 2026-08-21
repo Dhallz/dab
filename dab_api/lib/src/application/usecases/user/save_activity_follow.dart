@@ -60,7 +60,7 @@ String? _clipSnapshot(String? raw, int max) {
 ) {
   final id = providerId.trim().toLowerCase();
   final key = objectKey.trim();
-  if (isGitFollowProviderId(id)) {
+  if (id.isGitFollowProviderId) {
     final parsed = parseGitFollowObjectKey(key);
     if (parsed == null) return null;
     return (
@@ -68,6 +68,6 @@ String? _clipSnapshot(String? raw, int max) {
       objectKey: gitFollowObjectKey(parsed.repo, parsed.branch)!,
     );
   }
-  if (!isFollowableProviderId(id) || key.isEmpty) return null;
+  if (!id.isFollowableProviderId || key.isEmpty) return null;
   return (providerId: id, objectKey: key);
 }

@@ -42,12 +42,12 @@ class OauthCredentialRefresher implements AbsIOauthCredentialRefresher {
     if (row == null) return const Right({});
 
     final settings = Map<String, dynamic>.from(row.settings);
-    if (!isOauthCredential(settings)) return Right(settings);
+    if (!settings.isOauthCredential) return Right(settings);
 
     final refreshToken = (settings['refreshToken'] ?? '').toString().trim();
-    final expired = oauthAccessTokenIsExpired(settings, now: _now());
+    final expired = settings.oauthAccessTokenIsExpired(now: _now());
     final needsRefresh =
-        force || oauthAccessTokenNeedsRefresh(settings, now: _now());
+        force || settings.oauthAccessTokenNeedsRefresh(now: _now());
 
     if (!needsRefresh && !expired) return Right(settings);
 
@@ -68,7 +68,7 @@ class OauthCredentialRefresher implements AbsIOauthCredentialRefresher {
                 org?.baseUrl ??
                 '')
             .toString();
-    final spec = oauthSpecFor(id, instanceUrl: instanceUrl);
+    final spec = id.oauthSpecFor(instanceUrl: instanceUrl);
     if (spec == null) return Right(settings);
 
     final apps = _apps.resolve(

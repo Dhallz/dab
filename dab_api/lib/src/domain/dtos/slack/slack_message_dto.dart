@@ -83,10 +83,7 @@ extension OnSlackMessageDto on SlackMessageDto {
       if (user == null) continue;
 
       final stableIdentity = fanOut
-          ? withInboxLaneId(
-              '${workspaceId ?? 'workspace'}-$channelId-$ts-$targetUserId',
-              lane,
-            )
+          ? ('${workspaceId ?? 'workspace'}-$channelId-$ts-$targetUserId').withInboxLaneId(lane)
           : '${workspaceId ?? 'workspace'}-$channelId-${threadTs ?? ts}-$ts';
 
       activities.add(

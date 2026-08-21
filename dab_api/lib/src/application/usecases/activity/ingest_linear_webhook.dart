@@ -172,7 +172,7 @@ class IngestLinearWebhook {
       );
     }
 
-    final watchedTeams = parseLinearTeamKeys(linearConfig.settings['teamKeys']);
+    final watchedTeams = (linearConfig.settings['teamKeys'] as Object?).parseLinearTeamKeys();
     if (watchedTeams.isNotEmpty && !watchedTeams.contains(dto.teamKey)) {
       return const Right(
         LinearWebhookIngestionResult.ignored('team_not_watched'),

@@ -1,6 +1,6 @@
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 
 /// [ARCH: APPLICATION]
 /// ROLE: Converts one raw connector payload row into normalized [Activity]s.
@@ -8,11 +8,11 @@ typedef ActivityMapping<T> =
     List<Activity> Function(T item, List<User> usersForConnector);
 
 /// [ARCH: APPLICATION]
-/// ROLE: Pairs an [AbsIActivitySource] with a Postgres-safe [providerId] and mapping closure.
+/// ROLE: Pairs an [AbsIActivityPort] with a Postgres-safe [providerId] and mapping closure.
 /// CONTRACT: [mapItemToActivities] must be pure Domain logic ([T] is the source row type).
 
 class TypedConnectorPair<T> {
-  final AbsIActivitySource<T> source;
+  final AbsIActivityPort<T> port;
 
   /// Wire id aligning with [`ProviderConfig.id`] (`github`, `jira`, `phorge`, …).
   final String providerId;
@@ -20,7 +20,7 @@ class TypedConnectorPair<T> {
   final ActivityMapping<T> mapItemToActivities;
 
   TypedConnectorPair({
-    required this.source,
+    required this.port,
     required this.providerId,
     required this.mapItemToActivities,
   });
@@ -67,7 +67,7 @@ class ConnectorRegistry {
       RegisteredConnectorPair(
         providerId: pair.providerId,
         fetchRawData: (users, start, end, authoredOnly) async {
-          final rows = await pair.source.fetchRawData(
+          final rows = await pair.port.fetchRawData(
             users,
             start,
             end,

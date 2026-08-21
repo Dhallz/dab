@@ -7,9 +7,9 @@ import 'package:dab_api/src/domain/entities/user/linear_team_watch_list.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_port.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/graphql/graphql_protocol.dart';
@@ -23,7 +23,7 @@ import 'package:fpdart/fpdart.dart';
 /// bearer token.
 /// CONSTRAINTS: Must be READ-ONLY; no mutations are ever issued.
 class LinearIssueSource
-    implements AbsIActivitySource<LinearIssueDto>, AbsIDiscoverySource {
+    implements AbsIActivityPort<LinearIssueDto>, AbsIDiscoveryPort {
   LinearIssueSource(
     this._configRepository,
     this._userRepository,
@@ -190,7 +190,7 @@ query DabUserLookup(\$filter: UserFilter) {
               },
             ],
           };
-    final teamKeys = parseLinearTeamKeys(cfg.settings['teamKeys']);
+    final teamKeys = (cfg.settings['teamKeys'] as Object?).parseLinearTeamKeys();
     final filter = <String, dynamic>{
       'updatedAt': {
         'gte': start.toUtc().toIso8601String(),
@@ -425,7 +425,7 @@ query DabUserLookup(\$filter: UserFilter) {
   }
 
   String _apiKey(Map<String, dynamic> settings) =>
-      extractProviderToken('linear', settings);
+      settings.extractProviderToken('linear');
 
   Uri _endpoint(Map<String, dynamic> settings) {
     final raw = (settings['apiBaseUrl'] ?? '').toString().trim();

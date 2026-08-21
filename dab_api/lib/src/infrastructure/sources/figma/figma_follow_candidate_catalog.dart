@@ -55,10 +55,10 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
       orgSettings: org.settings,
       userSettings: userSettings,
     );
-    final token = extractProviderToken('figma', merged);
+    final token = merged.extractProviderToken('figma');
     if (token.isEmpty) return const [];
 
-    final pastedKey = extractFigmaFileKey(query);
+    final pastedKey = query.extractFigmaFileKey();
     if (pastedKey != null) {
       final metaName = await _fileName(pastedKey, token);
       return [
@@ -66,7 +66,7 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
           providerId: 'figma',
           objectKey: pastedKey,
           title: metaName ?? pastedKey,
-          url: figmaFileUrl(pastedKey),
+          url: pastedKey.figmaFileUrl(),
           kind: 'file',
         ),
       ];
@@ -75,9 +75,9 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     final q = query.toLowerCase();
     final files = <FollowCandidate>[];
     final seen = <String>{};
-    final allowKeys = parseFigmaFileKeys(
-      org.settings['fileKeys'] ?? userSettings?['fileKeys'],
-    );
+    final allowKeys = ((org.settings['fileKeys'] ?? userSettings?['fileKeys'])
+            as Object?)
+        .parseFigmaFileKeys();
     if (allowKeys.isNotEmpty) {
       for (final key in allowKeys) {
         if (!key.toLowerCase().contains(q)) continue;
@@ -87,7 +87,7 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
             providerId: 'figma',
             objectKey: key,
             title: key,
-            url: figmaFileUrl(key),
+            url: key.figmaFileUrl(),
             kind: 'file',
           ),
         );
@@ -95,9 +95,9 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
       return files;
     }
 
-    final teamIds = parseFigmaTeamIds(
-      org.settings['teamIds'] ?? org.settings['teamId'],
-    );
+    final teamIds = ((org.settings['teamIds'] ?? org.settings['teamId'])
+            as Object?)
+        .parseFigmaTeamIds();
     for (final teamId in teamIds) {
       final listed = await _filesForTeam(teamId, token);
       for (final file in listed) {
@@ -109,7 +109,7 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
             providerId: 'figma',
             objectKey: file.key,
             title: file.name,
-            url: figmaFileUrl(file.key),
+            url: file.key.figmaFileUrl(),
             kind: 'file',
           ),
         );
@@ -123,9 +123,9 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     try {
       final body = await _jsonRest.getJsonMap(
         Uri.parse('$kFigmaApiBase/v1/files/${fileKey.trim()}/meta'),
-        headers: figmaAuthHeaders(token),
+        headers: token.figmaAuthHeaders(),
       );
-      final fields = figmaFileMetaFields(body);
+      final fields = body.figmaFileMetaFields();
       final title = figmaFileTitle(
         name: (fields['name'] ?? '').toString(),
         folderName: (fields['folder_name'] ?? '').toString(),
@@ -144,7 +144,7 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     try {
       final projectsBody = await _jsonRest.getJsonMap(
         Uri.parse('$kFigmaApiBase/v1/teams/$teamId/projects'),
-        headers: figmaAuthHeaders(token),
+        headers: token.figmaAuthHeaders(),
       );
       final projects = projectsBody['projects'];
       if (projects is! List) return const [];
@@ -155,7 +155,7 @@ class FigmaFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
         if (projectId.isEmpty) continue;
         final filesBody = await _jsonRest.getJsonMap(
           Uri.parse('$kFigmaApiBase/v1/projects/$projectId/files'),
-          headers: figmaAuthHeaders(token),
+          headers: token.figmaAuthHeaders(),
         );
         final files = filesBody['files'];
         if (files is! List) continue;

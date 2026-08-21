@@ -62,7 +62,7 @@ class GetJiraProjectWatchList {
     var listed = await listWith(userSettings);
     if (listed.isLeft() &&
         _isUnauthorized(listed.getLeft().toNullable()!) &&
-        isOauthCredential(userSettings)) {
+        userSettings.isOauthCredential) {
       userSettingsResult = await _oauth.ensureFresh(
         userId: userId,
         providerId: 'jira',
@@ -86,7 +86,7 @@ class GetJiraProjectWatchList {
     }
 
     final available = listed.getOrElse((_) => const <JiraProject>[]);
-    final selected = parseJiraProjectKeys(org?.settings['projectKeys']);
+    final selected = (org?.settings['projectKeys'] as Object?).parseJiraProjectKeys();
     final byKey = {for (final project in available) project.key: project};
     for (final key in selected) {
       byKey.putIfAbsent(key, () => JiraProject(key: key, name: key));

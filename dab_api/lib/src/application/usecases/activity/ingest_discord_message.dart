@@ -100,7 +100,7 @@ class IngestDiscordMessage implements AbsIDiscordLiveIngestor {
     }
 
     // Respect the channel allow-list when configured (empty = all channels).
-    final allowedChannels = discordChannelIds(discordConfig.settings);
+    final allowedChannels = discordConfig.settings.discordChannelIds();
     final channelId = (payload['channel_id'] ?? '').toString().trim();
     if (allowedChannels.isNotEmpty && !allowedChannels.contains(channelId)) {
       return const Right(

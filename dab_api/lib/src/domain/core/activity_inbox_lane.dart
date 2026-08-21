@@ -12,15 +12,21 @@ part 'activity_inbox_lane.mapper.dart';
 @MappableEnum()
 enum ActivityInboxLane { directed, follow }
 
-/// True when [lane] is the Follow subscription copy.
-bool isFollowInboxLane(ActivityInboxLane lane) =>
-    lane == ActivityInboxLane.follow;
+/// [ARCH: DOMAIN]
+/// ROLE: Follow vs Directed helpers on an inbox lane.
+extension OnActivityInboxLane on ActivityInboxLane {
+  /// True when this lane is the Follow subscription copy.
+  bool get isFollowInboxLane => this == ActivityInboxLane.follow;
+}
 
-/// Appends a follow token to a stable activity id seed. Directed seeds stay
-/// unchanged so existing live rows do not duplicate.
-String withInboxLaneId(String seed, ActivityInboxLane lane) {
-  if (lane == ActivityInboxLane.follow) return '$seed|follow';
-  return seed;
+/// [ARCH: DOMAIN]
+/// ROLE: Appends a follow token to a stable activity id seed.
+extension OnString on String {
+  /// Directed seeds stay unchanged so existing live rows do not duplicate.
+  String withInboxLaneId(ActivityInboxLane lane) {
+    if (lane == ActivityInboxLane.follow) return '$this|follow';
+    return this;
+  }
 }
 
 /// Directed assignments first, then Follow. A user in both appears twice.

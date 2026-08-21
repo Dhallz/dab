@@ -53,7 +53,7 @@ class DiscordGatewayClient {
     final config = await _activeConfig();
     final token = config == null
         ? ''
-        : extractProviderToken('discord', config.settings);
+        : config.settings.extractProviderToken('discord');
     if (token.isEmpty) {
       print('[DISCORD_GATEWAY] not started (provider inactive or no token)');
       return;

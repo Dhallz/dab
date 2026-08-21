@@ -121,7 +121,7 @@ class IngestGitLabWebhook {
     }
 
     final allowedProjects = {
-      for (final item in gitLabProjects(gitlabConfig.settings))
+      for (final item in gitlabConfig.settings.gitLabProjects())
         item.toLowerCase(),
     };
     if (allowedProjects.isNotEmpty &&
@@ -155,7 +155,7 @@ class IngestGitLabWebhook {
 
     var attributableCommits = 0;
     final toPersist = <Activity>[];
-    final instanceRepos = gitLabProjects(gitlabConfig.settings);
+    final instanceRepos = gitlabConfig.settings.gitLabProjects();
     final settingsByUser =
         await _credentials?.getUserSettingsForUsers(
           userIds: users.map((u) => u.id),
@@ -178,13 +178,7 @@ class IngestGitLabWebhook {
         emailToUser: emailToUser,
       );
       if (dto == null) continue;
-      final watchers = gitInboxWatchers(
-        userSettingsById: settingsByUser,
-        repo: project,
-        branch: branch,
-        instanceRepos: instanceRepos,
-        senderUserId: dto.userId,
-      );
+      final watchers = settingsByUser.gitInboxWatchers(repo: project, branch: branch, instanceRepos: instanceRepos, senderUserId: dto.userId);
       if (watchers.isEmpty && followers.isEmpty) continue;
       attributableCommits++;
       toPersist.addAll(

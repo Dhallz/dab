@@ -42,7 +42,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
     ProviderConfig? orgConfig,
   }) async {
     final id = providerId.trim().toLowerCase();
-    if (!hasRequiredProviderSecrets(id, settings)) {
+    if (!settings.hasRequiredProviderSecrets(id)) {
       return const Left(
         ValidationFailure('Missing required credentials for this provider'),
       );
@@ -76,7 +76,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _github(Map<String, dynamic> settings) async {
-    final token = extractProviderToken('github', settings);
+    final token = settings.extractProviderToken('github');
     final apiBase = _trimSlash(
       (settings['apiBaseUrl'] ?? '').toString().trim().isEmpty
           ? 'https://api.github.com'
@@ -127,8 +127,8 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
     Map<String, dynamic> settings,
     ProviderConfig? orgConfig,
   ) async {
-    final apiBase = gitLabApiBase(settings, orgConfig?.baseUrl ?? '');
-    final headers = gitLabAuthHeaders(settings);
+    final apiBase = settings.gitLabApiBase(orgConfig?.baseUrl ?? '');
+    final headers = settings.gitLabAuthHeaders();
     final user = await _jsonRest.getJsonMap(
       Uri.parse('$apiBase/user'),
       headers: headers,
@@ -164,7 +164,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _bitbucket(Map<String, dynamic> settings) async {
-    final headers = bitbucketAuthHeaders(settings);
+    final headers = settings.bitbucketAuthHeaders();
     if (headers == null) {
       throw StateError('Bitbucket credentials are incomplete');
     }
@@ -238,7 +238,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _linear(Map<String, dynamic> settings) async {
-    final apiKey = extractProviderToken('linear', settings);
+    final apiKey = settings.extractProviderToken('linear');
     final raw = (settings['apiBaseUrl'] ?? '').toString().trim();
     final endpoint = Uri.parse(
       raw.isEmpty ? 'https://api.linear.app/graphql' : raw,
@@ -264,7 +264,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
     Map<String, dynamic> settings,
     ProviderConfig? orgConfig,
   ) async {
-    final token = extractProviderToken('phorge', settings);
+    final token = settings.extractProviderToken('phorge');
     final result = await _conduit.call('user.whoami', {}, apiToken: token);
     final phid = (result['phid'] ?? result['userPHID'] ?? '').toString().trim();
     if (phid.isEmpty) {
@@ -291,7 +291,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _slack(Map<String, dynamic> settings) async {
-    final token = extractProviderToken('slack', settings);
+    final token = settings.extractProviderToken('slack');
     final apiBase = _trimSlash(
       (settings['apiBaseUrl'] ?? '').toString().trim().isEmpty
           ? 'https://slack.com/api'
@@ -312,10 +312,10 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _figma(Map<String, dynamic> settings) async {
-    final token = extractProviderToken('figma', settings);
+    final token = settings.extractProviderToken('figma');
     final me = await _jsonRest.getJsonMap(
       Uri.parse('$kFigmaApiBase/v1/me'),
-      headers: figmaAuthHeaders(token),
+      headers: token.figmaAuthHeaders(),
     );
     final id = (me['id'] ?? '').toString().trim();
     if (id.isEmpty) {
@@ -329,7 +329,7 @@ class ProviderIdentityProbe implements AbsIProviderIdentityProbe {
   }
 
   Future<ProviderWhoamiResult> _discord(Map<String, dynamic> settings) async {
-    final token = extractProviderToken('discord', settings);
+    final token = settings.extractProviderToken('discord');
     final me = await _jsonRest.getJsonMap(
       Uri.parse('https://discord.com/api/v10/users/@me'),
       headers: {'Authorization': 'Bot $token', 'Accept': 'application/json'},

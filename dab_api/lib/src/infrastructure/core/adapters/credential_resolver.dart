@@ -41,9 +41,6 @@ class CredentialResolver implements AbsICredentialResolver {
     required Map<String, dynamic> orgSettings,
     Map<String, dynamic>? userSettings,
   }) {
-    return overlayProviderSecrets(
-      orgSettings: orgSettings,
-      userSettings: userSettings,
-    );
+    return orgSettings.overlayProviderSecrets(userSettings);
   }
 }

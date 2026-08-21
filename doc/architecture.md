@@ -38,7 +38,7 @@ dab_api/lib/src/
 │   ├── entities/        ← Core model
 │   ├── dtos/            ← Provider DTO shapes + extension OnDto → `toActivities`
 │   ├── contracts/
-│   │   ├── ports/       ← I/O seams: `AbsIActivitySource`, `AbsILiveFeedStore`, `AbsIPhorgeFacade`, …
+│   │   ├── ports/       ← I/O seams: `AbsIActivityPort`, `AbsILiveFeedStore`, `AbsIPhorgeFacade`, …
 │   │   └── repositories/← Abstract Postgres persistence interfaces (`AbsI*`)
 │   └── core/            ← Failures, org calendar, watch-list parsers, OAuth catalogs
 ├── application/
@@ -122,7 +122,8 @@ ObjectBox records for cache/storage remain in the Infrastructure layer.
 External Provider (Phorge, GitHub, Slack, …)
         │
         ▼
- AbsIActivitySource (Infrastructure)
+ AbsIActivityPort (Domain)
+  ── implemented by infrastructure Sources ──
   ── fetches raw DTOs via HTTP ──
   ── AbsICredentialResolver: user OAuth/PAT overlay, else org ProviderConfig, else skip
   ── Slack/Discord: org bot token only ──
@@ -212,12 +213,12 @@ identity is omitted).
 ### Source / payload extension pattern
 
 ```
-AbsIActivitySource  (Infrastructure)  ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
+AbsIActivityPort (Domain)  ← implemented by Sources (Infrastructure) ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
                                                                               │
                                                                      maps to Activity entity
 ```
 
-- `AbsIActivitySource`: Handles raw I/O, auth, rate-limiting — no business logic.
+- `AbsIActivityPort`: Domain interface for provider fetch. Infrastructure Sources handle raw I/O, auth, rate-limiting — no business logic.
 - `extension OnXDto`: Pure transformation (`toActivities`) — no I/O.
 - `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering. `ConnectorRegistry` stores the type-erased `RegisteredConnectorPair` so fetch iteration does not widen mappers to `dynamic` (avoids Dart contravariance runtime errors).
 

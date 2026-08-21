@@ -41,9 +41,9 @@ class ListUserProviderCredentials {
           .where((i) => i.providerId == providerId)
           .firstOrNull;
       final org = configs.where((c) => c.id == providerId).firstOrNull;
-      final orgHasBot = isBotSharedProvider(providerId) &&
+      final orgHasBot = providerId.isBotSharedProvider &&
           org != null &&
-          hasRequiredProviderSecrets(providerId, org.settings);
+          org.settings.hasRequiredProviderSecrets(providerId);
 
       if (cred == null && !orgHasBot) continue;
 
@@ -52,7 +52,7 @@ class ListUserProviderCredentials {
           providerId: providerId,
           status: cred?.status ?? UserProviderCredentialStatus.connected,
           hasSecret: cred != null || orgHasBot,
-          isSharedBot: isBotSharedProvider(providerId),
+          isSharedBot: providerId.isBotSharedProvider,
           externalId: identity?.status == UserIdentityStatus.linked
               ? identity?.externalId
               : null,

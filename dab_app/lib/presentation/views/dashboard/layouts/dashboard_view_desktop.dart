@@ -1,11 +1,9 @@
 import 'package:dab_app/presentation/core/widgets/app_sidebar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../dashboard_notifier.dart';
 import '../widgets/dashboard_island_bar_content.dart';
-import '../widgets/dashboard_live_feed_scope.dart';
-import '../widgets/dashboard_sidebar_content.dart';
+import '../widgets/dashboard_live_feed_scope/dashboard_live_feed_scope.dart';
+import '../widgets/dashboard_sidebar_pane.dart';
 
 /// [ARCH: PRESENTATION_LAYOUT]
 /// ROLE: Desktop rendering of the Activity Dashboard.
@@ -22,7 +20,7 @@ class DashboardViewDesktop extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AppSidebar(
-            children: const [Expanded(child: _DashboardSidebarPane())],
+            children: const [Expanded(child: DashboardSidebarPane())],
           ),
           Expanded(
             child: Column(
@@ -41,26 +39,5 @@ class DashboardViewDesktop extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-/// Sidebar metrics — avoids rebuilding when only the main feed slice changes.
-class _DashboardSidebarPane extends ConsumerWidget {
-  const _DashboardSidebarPane();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(
-      dashboardNotifierProvider.select(
-        (s) => (
-          providerHealth: s.providerHealth,
-          activities: s.activities,
-          showArchived: s.showArchivedActivities,
-          follows: s.follows,
-        ),
-      ),
-    );
-    final state = ref.read(dashboardNotifierProvider);
-    return DashboardSidebarContent(state: state);
   }
 }

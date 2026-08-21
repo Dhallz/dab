@@ -38,7 +38,7 @@ class SaveUserProviderCredential {
     required Map<String, dynamic> settings,
   }) async {
     final id = providerId.trim().toLowerCase();
-    if (!isKnownProviderId(id)) {
+    if (!id.isKnownProviderId) {
       return const Left(ValidationFailure('Unknown provider'));
     }
 
@@ -48,10 +48,7 @@ class SaveUserProviderCredential {
         .where((c) => c.id == id)
         .firstOrNull;
 
-    final merged = overlayProviderSecrets(
-      orgSettings: orgConfig?.settings ?? const {},
-      userSettings: settings,
-    );
+    final merged = (orgConfig?.settings ?? const {}).overlayProviderSecrets(settings);
     // Incoming settings always win for secrets even when overlay skipped empty.
     settings.forEach((key, value) {
       if (value == null) return;
@@ -82,7 +79,7 @@ class SaveUserProviderCredential {
     }
     final whoami = probeResult.getOrElse((l) => throw StateError(l.message));
 
-    if (isBotSharedProvider(id)) {
+    if (id.isBotSharedProvider) {
       return _saveSharedBot(
         userId: userId,
         providerId: id,
@@ -253,17 +250,17 @@ class SaveUserProviderCredential {
 
     if (discovered.isNotEmpty) {
       if (providerId == 'github') {
-        final existing = extractConfiguredGithubRepos(next);
+        final existing = next.extractConfiguredGithubRepos();
         if (existing.isEmpty) {
           next['repos'] = discovered.take(25).toList();
         }
       } else if (providerId == 'gitlab') {
-        final existing = gitLabProjects(next);
+        final existing = next.gitLabProjects();
         if (existing.isEmpty) {
           next['projects'] = discovered.take(25).toList();
         }
       } else if (providerId == 'bitbucket') {
-        final existing = bitbucketRepos(next);
+        final existing = next.bitbucketRepos();
         if (existing.isEmpty) {
           next['repos'] = discovered.take(25).toList();
           final first = discovered.first;

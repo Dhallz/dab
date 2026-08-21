@@ -1,7 +1,7 @@
 import '../../domain/entities/activity/activity.dart';
 import '../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
-import '../../domain/contracts/ports/abs_i_push_wake_gateway.dart';
+import '../../domain/contracts/ports/abs_i_push_wake_client.dart';
 import '../../domain/contracts/repositories/abs_i_user_device_token_repository.dart';
 import '../../domain/core/inbox_wake.dart';
 
@@ -13,14 +13,14 @@ class ActivityLivePublisher {
     this._redis,
     this._presence, {
     AbsIUserDeviceTokenRepository? tokens,
-    AbsIPushWakeGateway? wake,
+    AbsIPushWakeClient? wake,
   }) : _tokens = tokens,
        _wake = wake;
 
   final AbsILiveFeedStore _redis;
   final AbsIPresenceBroadcaster _presence;
   final AbsIUserDeviceTokenRepository? _tokens;
-  final AbsIPushWakeGateway? _wake;
+  final AbsIPushWakeClient? _wake;
 
   Future<void> publish(
     Activity activity, {
@@ -50,7 +50,7 @@ class ActivityLivePublisher {
     final tokens = listed.fold((_) => const <String>[], (ids) => ids);
     if (tokens.isEmpty) return;
     try {
-      await wake.sendWake(tokens: tokens, data: inboxWakeData(activity));
+      await wake.sendWake(tokens: tokens, data: activity.inboxWakeData());
     } catch (_) {
       // Ingest must not fail because a wake provider is down.
     }

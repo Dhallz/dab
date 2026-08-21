@@ -25,4 +25,16 @@ extension OnActivityProvider on ActivityProvider {
   }
 
   Color brandColor(BuildContext context) => providerStyle(context).brandColor;
+
+  /// Branch name on a git commit provider, or null when absent.
+  String? get gitBranchLabel {
+    final raw = switch (this) {
+      GitHubCommitProvider(:final branch) => branch,
+      GitLabCommitProvider(:final branch) => branch,
+      BitbucketCommitProvider(:final branch) => branch,
+      _ => null,
+    };
+    final value = raw?.trim() ?? '';
+    return value.isEmpty ? null : value;
+  }
 }

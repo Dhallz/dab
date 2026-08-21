@@ -28,17 +28,15 @@ void main() {
 
   test('git Follow keys require a repo and a branch', () {
     expect(
-      followObjectKeyFor(const GitHubCommitProvider(repo: 'acme/app')),
+      (const GitHubCommitProvider(repo: 'acme/app')).followObjectKey,
       isNull,
     );
     expect(
-      followObjectRefFor(const GitHubCommitProvider(repo: 'acme/app')),
+      (const GitHubCommitProvider(repo: 'acme/app')).followObjectRefFor,
       isNull,
     );
     expect(
-      followObjectKeyFor(
-        const GitHubCommitProvider(repo: 'Acme/app', branch: 'feature/foo'),
-      ),
+      (const GitHubCommitProvider(repo: 'Acme/app', branch: 'feature/foo')).followObjectKey,
       'acme/app|feature/foo',
     );
   });
@@ -64,16 +62,16 @@ void main() {
       FigmaFileProvider(fileKey: 'Abc123File'),
     ];
     for (final provider in cases) {
-      final providerId = followProviderIdFor(provider);
-      final objectKey = followObjectKeyFor(provider);
+      final providerId = provider.followProviderId;
+      final objectKey = provider.followObjectKey;
       expect(providerId, isNotNull, reason: '$provider');
       expect(objectKey, isNotNull, reason: '$provider');
       final rebuilt = activityProviderForFollow(
         providerId: providerId!,
         objectKey: objectKey!,
       );
-      expect(followObjectKeyFor(rebuilt), objectKey, reason: '$provider');
-      expect(followProviderIdFor(rebuilt), providerId, reason: '$provider');
+      expect(rebuilt.followObjectKey, objectKey, reason: '$provider');
+      expect(rebuilt.followProviderId, providerId, reason: '$provider');
     }
   });
 }

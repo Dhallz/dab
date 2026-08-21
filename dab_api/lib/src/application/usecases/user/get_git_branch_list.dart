@@ -128,7 +128,7 @@ class GetGitBranchList {
     var result = await listWith(userSettings);
     if (result.isLeft() &&
         _isUnauthorized(result.getLeft().toNullable()!) &&
-        isOauthCredential(userSettings)) {
+        userSettings.isOauthCredential) {
       userSettingsResult = await _oauth.ensureFresh(
         userId: userId,
         providerId: id,

@@ -1,29 +1,34 @@
 import '../../../domain/contracts/ports/abs_i_oauth_client_credential_resolver.dart';
 import '../config/config.dart';
 
-/// Reads a usable OAuth setting, skipping JSON null and the string `null`.
-String? readOauthSetting(Map<String, dynamic> settings, List<String> keys) {
-  for (final key in keys) {
-    if (!settings.containsKey(key)) continue;
-    final raw = settings[key];
-    if (raw == null) continue;
-    var value = raw.toString().trim();
-    if (value.length >= 2) {
-      final first = value[0];
-      final last = value[value.length - 1];
-      if ((first == '"' && last == '"') || (first == "'" && last == "'")) {
-        value = value.substring(1, value.length - 1).trim();
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Reads a usable OAuth setting from a provider settings map.
+extension OnProviderSettings on Map {
+  /// First non-empty value among [keys], skipping JSON null and the string `null`.
+  String? readOauthSetting(List<String> keys) {
+    for (final key in keys) {
+      if (!containsKey(key)) continue;
+      final raw = this[key];
+      if (raw == null) continue;
+      var value = raw.toString().trim();
+      if (value.length >= 2) {
+        final first = value[0];
+        final last = value[value.length - 1];
+        if ((first == '"' && last == '"') || (first == "'" && last == "'")) {
+          value = value.substring(1, value.length - 1).trim();
+        }
       }
+      if (value.isEmpty || value.toLowerCase() == 'null') continue;
+      return value;
     }
-    if (value.isEmpty || value.toLowerCase() == 'null') continue;
-    return value;
+    return null;
   }
-  return null;
 }
 
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: OAuth app credentials from [ProviderConfig.settings] with env fallback.
-class OauthClientCredentialResolver implements AbsIOauthClientCredentialResolver {
+class OauthClientCredentialResolver
+    implements AbsIOauthClientCredentialResolver {
   OauthClientCredentialResolver(this._config);
 
   final Config _config;
@@ -33,11 +38,11 @@ class OauthClientCredentialResolver implements AbsIOauthClientCredentialResolver
     required String providerId,
     required Map<String, dynamic> orgSettings,
   }) {
-    final fromSettings = readOauthSetting(orgSettings, const [
+    final fromSettings = orgSettings.readOauthSetting(const [
       'clientId',
       'oauthClientId',
     ]);
-    final secretFromSettings = readOauthSetting(orgSettings, const [
+    final secretFromSettings = orgSettings.readOauthSetting(const [
       'clientSecret',
       'oauthClientSecret',
     ]);

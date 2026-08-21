@@ -5,9 +5,9 @@ import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/jira_project_watch_list.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_port.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/protocol_exceptions.dart';
@@ -19,7 +19,7 @@ import 'package:fpdart/fpdart.dart';
 /// ROLE: Read-only Jira Cloud issue search via REST API v3 + JQL.
 /// CONTRACT: Returns [JiraIssueDto] rows for [UnifiedActivityFetcher].
 /// CONSTRAINTS: No remote writes. Auth: Basic (Atlassian email + API token).
-class JiraIssueSource implements AbsIActivitySource<JiraIssueDto>, AbsIDiscoverySource {
+class JiraIssueSource implements AbsIActivityPort<JiraIssueDto>, AbsIDiscoveryPort {
   JiraIssueSource(
     this._configRepository,
     this._userRepository,
@@ -71,7 +71,7 @@ class JiraIssueSource implements AbsIActivitySource<JiraIssueDto>, AbsIDiscovery
     }
     if (auth == null) return const [];
 
-    final projectKeys = parseJiraProjectKeys(cfg.settings['projectKeys']);
+    final projectKeys = (cfg.settings['projectKeys'] as Object?).parseJiraProjectKeys();
     final extraJql = (cfg.settings['extraJql'] ?? '').toString();
 
     final accountIds = linkedIdentities.map((i) => i.externalId).toSet().toList();

@@ -5,9 +5,12 @@ meta {
 }
 
 docs {
-  Lists Follow picker rows for the caller: open Phorge/Jira/Linear issues
-  they are assigned, watching, or reporting, plus GitHub/GitLab/Bitbucket
-  branches matching `q` (`owner/repo|branch`). Empty `q` skips git rows.
+  Lists Follow picker rows for the caller.
+
+  Empty `q` lists open Phorge/Jira/Linear issues the caller is assigned,
+  watching/subscribed, or reporting. A typed `q` searches any matching
+  Phorge/Jira/Linear issue (instance team/project allow-lists still apply)
+  plus GitHub/GitLab/Bitbucket branches (`owner/repo|branch`).
 }
 
 get {

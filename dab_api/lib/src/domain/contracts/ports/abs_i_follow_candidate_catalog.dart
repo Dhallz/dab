@@ -8,7 +8,7 @@ import '../../entities/user/follow_candidate.dart';
 abstract interface class AbsIFollowCandidateCatalog {
   String get providerId;
 
-  /// Involved/open issues, or title/key matches for [query].
+  /// Involved/open issues when [query] is empty; any matching issue otherwise.
   Future<Either<Failure, List<FollowCandidate>>> list({
     required String userId,
     required String query,

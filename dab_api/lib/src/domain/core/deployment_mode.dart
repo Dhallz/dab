@@ -27,14 +27,18 @@ const kAllowedSystemSettingKeys = {
   kDeploymentModeSettingKey,
 };
 
-/// Returns true when [raw] is the individual / small-team profile.
-bool isIndividualDeploymentMode(String? raw) {
-  final value = (raw ?? '').trim().toLowerCase();
-  return value == kDeploymentModeIndividual ||
-      value == kDeploymentModePersonalLegacy;
-}
+/// [ARCH: DOMAIN]
+/// ROLE: Deployment-mode predicates on a stored or inbound string.
+extension OnStringNullable on String? {
+  /// True when [this] is the individual / small-team profile.
+  bool get isIndividualDeploymentMode {
+    final value = (this ?? '').trim().toLowerCase();
+    return value == kDeploymentModeIndividual ||
+        value == kDeploymentModePersonalLegacy;
+  }
 
-/// Normalizes a stored or inbound value to one of the two canonical modes.
-String normalizeDeploymentMode(String? raw) => isIndividualDeploymentMode(raw)
-    ? kDeploymentModeIndividual
-    : kDeploymentModeManaged;
+  /// Normalizes a stored or inbound value to one of the two canonical modes.
+  String normalizeDeploymentMode() => isIndividualDeploymentMode
+      ? kDeploymentModeIndividual
+      : kDeploymentModeManaged;
+}

@@ -22,9 +22,7 @@ class SaveLinearTeamWatchList {
     if (listed.isLeft()) return Left(listed.getLeft().toNullable()!);
     final watch = listed.getOrElse((_) => throw StateError('watch list'));
     final allowed = {for (final t in watch.available) t.key};
-    final selected = parseLinearTeamKeys(
-      teamKeys,
-    ).where(allowed.contains).toList();
+    final selected = (teamKeys as Object?).parseLinearTeamKeys().where(allowed.contains).toList();
 
     final configs = (await _configs.getConfigs()).getOrElse(
       (_) => const <ProviderConfig>[],

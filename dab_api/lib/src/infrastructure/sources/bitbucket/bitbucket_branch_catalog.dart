@@ -26,7 +26,7 @@ class BitbucketBranchCatalog implements AbsIBitbucketBranchCatalog {
     required List<String> repos,
     ProviderConfig? orgConfig,
   }) async {
-    final headers = bitbucketAuthHeaders(settings);
+    final headers = settings.bitbucketAuthHeaders();
     if (headers == null) {
       return const Left(ValidationFailure('HTTP 401'));
     }
@@ -47,7 +47,7 @@ class BitbucketBranchCatalog implements AbsIBitbucketBranchCatalog {
         truncated = truncated || listed.truncated;
         names.addAll(listed.names);
       }
-      return Right(gitBranchListFromNames(names, truncated: truncated));
+      return Right(names.gitBranchListFromNames(truncated: truncated));
     } on JsonRestProtocolException catch (e) {
       if (e.statusCode == 401 || e.statusCode == 403) {
         return const Left(ValidationFailure('HTTP 401'));
@@ -114,7 +114,7 @@ class BitbucketBranchCatalog implements AbsIBitbucketBranchCatalog {
       if (workspace.isEmpty || slug.isEmpty) return null;
       return (workspace, slug);
     }
-    final workspace = bitbucketWorkspace(settings);
+    final workspace = settings.bitbucketWorkspace();
     if (workspace.isEmpty || trimmed.isEmpty) return null;
     return (workspace, trimmed);
   }

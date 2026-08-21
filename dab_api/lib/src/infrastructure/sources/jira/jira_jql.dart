@@ -30,14 +30,12 @@ JiraRequestAuth? jiraRequestAuth(
   Map<String, dynamic> settings, {
   ProviderConfig? orgConfig,
 }) {
-  final token = extractProviderToken('jira', settings);
+  final token = settings.extractProviderToken('jira');
   if (token.isEmpty) return null;
 
-  final browseHost = normalizeJiraCloudHost(
-    (settings['instanceUrl'] ?? orgConfig?.baseUrl ?? '').toString(),
-  );
+  final browseHost = (settings['instanceUrl'] ?? orgConfig?.baseUrl ?? '').toString().normalizeJiraCloudHost();
 
-  if (isOauthCredential(settings)) {
+  if (settings.isOauthCredential) {
     final cloudId = (settings['cloudId'] ?? '').toString().trim();
     if (cloudId.isEmpty) return null;
     return JiraRequestAuth(
@@ -64,11 +62,15 @@ JiraRequestAuth? jiraRequestAuth(
   );
 }
 
-String jiraUtcDateTimeLiteral(DateTime utc) {
-  final u = utc.toUtc();
-  String two(int v) => v.toString().padLeft(2, '0');
-  return '${u.year}-${two(u.month)}-${two(u.day)} '
-      '${two(u.hour)}:${two(u.minute)}';
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: JQL UTC datetime literal (`yyyy-MM-dd HH:mm`).
+extension OnDateTime on DateTime {
+  String jiraUtcDateTimeLiteral() {
+    final u = toUtc();
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${u.year}-${two(u.month)}-${two(u.day)} '
+        '${two(u.hour)}:${two(u.minute)}';
+  }
 }
 
 /// Builds a JQL clause for issue search within [startInclusiveUtc, endInclusiveUtc]
@@ -84,8 +86,8 @@ String? buildIssuesSearchJql({
   required bool authoredOnly,
   Iterable<String>? accountIds,
 }) {
-  final startLit = jiraUtcDateTimeLiteral(startInclusiveUtc);
-  final endLit = jiraUtcDateTimeLiteral(endInclusiveUtc);
+  final startLit = startInclusiveUtc.jiraUtcDateTimeLiteral();
+  final endLit = endInclusiveUtc.jiraUtcDateTimeLiteral();
 
   final projectKeys = <String>[];
   for (final p in projectKeysRaw) {

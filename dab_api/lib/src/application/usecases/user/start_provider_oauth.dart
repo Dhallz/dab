@@ -33,7 +33,7 @@ class StartProviderOauth {
     required String providerId,
   }) async {
     final id = providerId.trim().toLowerCase();
-    if (!isOauthUserProvider(id)) {
+    if (!id.isOauthUserProvider) {
       return const Left(
         ValidationFailure('This provider does not support OAuth connect'),
       );
@@ -49,7 +49,7 @@ class StartProviderOauth {
             orgConfig?.baseUrl ??
             '')
         .toString();
-    final spec = oauthSpecFor(id, instanceUrl: instanceUrl);
+    final spec = id.oauthSpecFor(instanceUrl: instanceUrl);
     if (spec == null) {
       return const Left(ValidationFailure('Unknown OAuth provider'));
     }
@@ -67,9 +67,7 @@ class StartProviderOauth {
     }
 
     final publicResult = await _settings.getSetting('public_api_url');
-    final publicBase = canonicalizePublicApiBase(
-      publicResult.getOrElse((_) => null),
-    );
+    final publicBase = (publicResult.getOrElse((_) => null)).canonicalizePublicApiBase();
     if (publicBase.isEmpty) {
       return const Left(
         ValidationFailure(

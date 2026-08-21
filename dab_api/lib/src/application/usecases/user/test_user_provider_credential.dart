@@ -22,7 +22,7 @@ class TestUserProviderCredential {
     Map<String, dynamic>? settings,
   }) async {
     final id = providerId.trim().toLowerCase();
-    if (!isKnownProviderId(id)) {
+    if (!id.isKnownProviderId) {
       return const Left(ValidationFailure('Unknown provider'));
     }
     final org = (await _configs.getConfigs())
@@ -34,10 +34,7 @@ class TestUserProviderCredential {
       final stored = await _credentials.get(userId: userId, providerId: id);
       userSettings = stored.getOrElse((_) => null)?.settings ?? const {};
     }
-    final merged = overlayProviderSecrets(
-      orgSettings: org?.settings ?? const {},
-      userSettings: userSettings,
-    );
+    final merged = (org?.settings ?? const {}).overlayProviderSecrets(userSettings);
     settings?.forEach((key, value) {
       if (value != null) merged[key] = value;
     });

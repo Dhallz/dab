@@ -5,7 +5,7 @@ void main() {
   group('decodeGitHubWebhookPayload', () {
     test('parses raw JSON', () {
       const body = '{"ref":"refs/heads/main","zen":"ping"}';
-      final map = decodeGitHubWebhookPayload(body);
+      final map = body.decodeGitHubWebhookPayload();
       expect(map, isNotNull);
       expect(map!['ref'], 'refs/heads/main');
     });
@@ -15,14 +15,14 @@ void main() {
       const inner = '{"ref":"refs/heads/main"}';
       final encoded = Uri.encodeQueryComponent(inner);
       final body = 'payload=$encoded';
-      final map = decodeGitHubWebhookPayload(body);
+      final map = body.decodeGitHubWebhookPayload();
       expect(map, isNotNull);
       expect(map!['ref'], 'refs/heads/main');
     });
 
     test('returns null for garbage', () {
-      expect(decodeGitHubWebhookPayload('not-json'), isNull);
-      expect(decodeGitHubWebhookPayload(''), isNull);
+      expect(('not-json').decodeGitHubWebhookPayload(), isNull);
+      expect(('').decodeGitHubWebhookPayload(), isNull);
     });
   });
 }

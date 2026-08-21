@@ -68,14 +68,14 @@ void main() async {
   final registry = ConnectorRegistry();
   registry.register<PhorgeTaskBundleDto>(
     TypedConnectorPair<PhorgeTaskBundleDto>(
-      source: taskSource,
+      port: taskSource,
       providerId: 'phorge',
       mapItemToActivities: (bundle, users) => bundle.toActivities(users),
     ),
   );
   registry.register<PhorgeRevisionDto>(
     TypedConnectorPair<PhorgeRevisionDto>(
-      source: revisionSource,
+      port: revisionSource,
       providerId: 'phorge',
       mapItemToActivities: (data, users) => data.toActivities(users),
     ),
@@ -186,10 +186,7 @@ class _EmptyCredentialResolver implements AbsICredentialResolver {
     required Map<String, dynamic> orgSettings,
     Map<String, dynamic>? userSettings,
   }) {
-    return overlayProviderSecrets(
-      orgSettings: orgSettings,
-      userSettings: userSettings,
-    );
+    return orgSettings.overlayProviderSecrets(userSettings);
   }
 }
 

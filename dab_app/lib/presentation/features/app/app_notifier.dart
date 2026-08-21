@@ -74,7 +74,7 @@ class AppNotifier extends Notifier<AppState> {
 
   /// Updates deployment mode without a full [init] (avoids a global loading flash).
   void setDeploymentMode(String mode) {
-    state = state.copyWith(deploymentMode: normalizeDeploymentMode(mode));
+    state = state.copyWith(deploymentMode: mode.normalizeDeploymentMode());
   }
 
   /// Updates org timezone without a full [init].

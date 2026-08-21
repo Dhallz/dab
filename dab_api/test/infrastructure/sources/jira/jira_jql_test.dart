@@ -60,14 +60,14 @@ void main() {
   group('normalizeJiraCloudHost', () {
     test('parses host without scheme', () {
       expect(
-        normalizeJiraCloudHost('acme.atlassian.net'),
+        ('acme.atlassian.net').normalizeJiraCloudHost(),
         'acme.atlassian.net',
       );
     });
 
     test('strips path from full URL', () {
       expect(
-        normalizeJiraCloudHost('https://acme.atlassian.net/foo'),
+        ('https://acme.atlassian.net/foo').normalizeJiraCloudHost(),
         'acme.atlassian.net',
       );
     });

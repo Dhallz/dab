@@ -8,7 +8,7 @@ The Domain layer is the heart of the system. It contains the business rules and 
 
 1. **Entities**: Define the core data models (`Activity`, `User`, `ProviderMetadata`).
 2. **Provider DTOs + extensions**: **`dtos/`** hold provider-native shapes, JSON→DTO factories, and co-located **`extension OnXDto on XDto`** entries that implement **`toActivities(List<User>)`**. Watch-list parsers live next to the entity or under **`core/{id}_scope.dart`**.
-3. **Contracts (`contracts/`)**: Outbound seams. **`ports/`** for I/O that is not our database (`AbsIActivitySource`, live ingest, OAuth, catalogs, `AbsIPhorgeFacade`). **`repositories/`** for Postgres `AbsI*` / `I*` interfaces.
+3. **Contracts (`contracts/`)**: Outbound seams. **`ports/`** for I/O that is not our database (`AbsIActivityPort`, live ingest, OAuth, catalogs, `AbsIPhorgeFacade`). **`repositories/`** for Postgres `AbsI*` / `I*` interfaces.
 4. **Failures**: Define systematic failure cases (e.g., `DatabaseFailure`, `AuthFailure`) under **`core/failures/`**.
 
 ---
@@ -17,7 +17,7 @@ The Domain layer is the heart of the system. It contains the business rules and 
 
 - **🚫 NO INFRASTRUCTURE IMPORTS**: This layer must **NEVER** import from `infrastructure/` or `application/`. It must only import from within `domain/` or external pure-logic packages (e.g., `dart_mappable`, `uuid`).
 - **🚫 NO SIDE EFFECTS**: Entities and mapping extensions must be pure and predictable. No API calls or database queries are allowed here.
-- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `AbsIActivitySource`, `AbsILiveFeedStore`, `AbsIWebhookRequestAuthenticator`).
+- **✅ CONTRACTS FIRST**: All external system interactions must be defined via **Interfaces** (e.g., `AbsIActivityPort`, `AbsILiveFeedStore`, `AbsIWebhookRequestAuthenticator`).
 
 ---
 
@@ -28,4 +28,4 @@ Extensions on each DTO (e.g. `OnPhorgeTaskBundleDto`) encode how a Slack message
 ---
 
 > [!CAUTION]
-> If you are adding a new platform (e.g. GitHub), add **`AbsIActivitySource<T>`** Infrastructure + DTO(s) under **`domain/dtos/`**, **`toActivities`** on the DTO, then register **`TypedConnectorPair<T>`** in **`register_activity_connectors`**.
+> If you are adding a new platform (e.g. GitHub), add **`AbsIActivityPort<T>`** (Domain), an infrastructure **Source** that implements it, DTO(s) under **`domain/dtos/`**, **`toActivities`** on the DTO, then register **`TypedConnectorPair<T>`** in **`register_activity_connectors`**.

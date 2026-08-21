@@ -5,21 +5,12 @@ import '../localization/l10n_extension.dart';
 import '../styles/activity_category_styles.dart';
 import '../styles/app_icons.dart';
 import '../styles/provider_styles.dart';
-
-/// True when [value] is a UUID or a long numeric Figma user id, not a name.
-bool looksLikeOpaqueUserId(String value) {
-  final text = value.trim();
-  if (text.isEmpty) return false;
-  if (RegExp(r'^[0-9]{8,}$').hasMatch(text)) return true;
-  return RegExp(
-    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-    caseSensitive: false,
-  ).hasMatch(text);
-}
+import 'activity_follow_extensions.dart';
+import 'activity_provider_extensions.dart';
+import 'string_extensions.dart';
 
 /// [ARCH: PRESENTATION_CORE]
 /// ROLE: UI-specific extensions for the [Activity] entity.
-/// CONSTRAINTS: Only methods requiring [BuildContext] or UI tokens go here.
 extension OnActivity on Activity {
   ActivityStyle style(BuildContext context) {
     final theme = Theme.of(context);
@@ -130,7 +121,25 @@ extension OnActivity on Activity {
       if (linked.isNotEmpty) return linked;
     }
     final author = authorName.trim();
-    if (author.isNotEmpty && !looksLikeOpaqueUserId(author)) return author;
+    if (author.isNotEmpty && !author.looksLikeOpaqueUserId) return author;
     return '';
   }
+
+  /// Title shown on a Dashboard card. Strips a matching `[branch]` prefix.
+  String get dashboardHeadline {
+    final headline = title.trim();
+    final branch = provider.gitBranchLabel;
+    if (branch == null) return headline;
+    final prefix = '[$branch]';
+    if (!headline.startsWith(prefix)) return headline;
+    return headline.substring(prefix.length).trim();
+  }
+
+  /// Local-banner subtitle for Directed vs Following.
+  String get dashboardInboxLaneSubtitle =>
+      isFollowLane ? 'Following' : 'Directed';
+
+  /// Whether this is a quiet Follow pin rendered in the Following feed.
+  bool get isDashboardWatchingPlaceholder =>
+      id.startsWith(kDashboardWatchingPlaceholderIdPrefix);
 }

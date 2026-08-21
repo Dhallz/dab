@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../presentation/core/extensions/activity_category_l10n.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../../presentation/core/extensions/string_extensions.dart';
 import '../../../../../presentation/core/localization/app_localizations.dart';
 import '../../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../../presentation/core/widgets/activity_provider_icon.dart';
@@ -111,7 +112,7 @@ class _ActivityCardState extends ConsumerState<ActivityCard> {
     final author = widget.activity.authorName.trim();
     final displayAuthorName = resolved.isNotEmpty
         ? resolved
-        : (author.isNotEmpty && !looksLikeOpaqueUserId(author) ? author : '');
+        : (author.isNotEmpty && !author.looksLikeOpaqueUserId ? author : '');
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),

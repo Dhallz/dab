@@ -27,7 +27,7 @@ class GitLabBranchCatalog implements AbsIGitLabBranchCatalog {
     required List<String> repos,
     ProviderConfig? orgConfig,
   }) async {
-    final token = extractProviderToken('gitlab', settings);
+    final token = settings.extractProviderToken('gitlab');
     if (token.isEmpty) {
       return const Left(ValidationFailure('HTTP 401'));
     }
@@ -48,7 +48,7 @@ class GitLabBranchCatalog implements AbsIGitLabBranchCatalog {
         truncated = truncated || listed.truncated;
         names.addAll(listed.names);
       }
-      return Right(gitBranchListFromNames(names, truncated: truncated));
+      return Right(names.gitBranchListFromNames(truncated: truncated));
     } on JsonRestProtocolException catch (e) {
       if (e.statusCode == 401 || e.statusCode == 403) {
         return const Left(ValidationFailure('HTTP 401'));
@@ -65,8 +65,8 @@ class GitLabBranchCatalog implements AbsIGitLabBranchCatalog {
     required String repo,
     required int remaining,
   }) async {
-    final apiBase = gitLabApiBase(settings, orgConfig?.baseUrl ?? '');
-    final headers = gitLabAuthHeaders(settings);
+    final apiBase = settings.gitLabApiBase(orgConfig?.baseUrl ?? '');
+    final headers = settings.gitLabAuthHeaders();
     final encoded = Uri.encodeComponent(repo);
     final names = <String>[];
     var truncated = false;

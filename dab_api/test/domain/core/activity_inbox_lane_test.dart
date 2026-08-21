@@ -18,11 +18,11 @@ void main() {
 
   test('withInboxLaneId keeps directed seeds stable', () {
     expect(
-      withInboxLaneId('phorge-tx-1-u-ada', ActivityInboxLane.directed),
+      ('phorge-tx-1-u-ada').withInboxLaneId(ActivityInboxLane.directed),
       'phorge-tx-1-u-ada',
     );
     expect(
-      withInboxLaneId('phorge-tx-1-u-ada', ActivityInboxLane.follow),
+      ('phorge-tx-1-u-ada').withInboxLaneId(ActivityInboxLane.follow),
       'phorge-tx-1-u-ada|follow',
     );
   });

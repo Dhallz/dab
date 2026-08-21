@@ -143,7 +143,7 @@ extension OnPhorgeTaskBundleDto on PhorgeTaskBundleDto {
         if (recipient == null) continue;
         activities.add(
           Activity(
-            id: withInboxLaneId('phorge-tx-${tx.id}-$targetId', lane).v5Uuid,
+            id: ('phorge-tx-${tx.id}-$targetId').withInboxLaneId(lane).v5Uuid,
             userId: recipient.id,
             senderUserId: senderUserId ?? author?.id,
             authorName: activity.authorName,

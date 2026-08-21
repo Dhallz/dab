@@ -25,7 +25,7 @@ class GitHubBranchCatalog implements AbsIGitHubBranchCatalog {
     required List<String> repos,
     ProviderConfig? orgConfig,
   }) async {
-    final token = extractProviderToken('github', settings);
+    final token = settings.extractProviderToken('github');
     if (token.isEmpty) {
       return const Left(ValidationFailure('HTTP 401'));
     }
@@ -46,7 +46,7 @@ class GitHubBranchCatalog implements AbsIGitHubBranchCatalog {
         truncated = truncated || listed.truncated;
         names.addAll(listed.names);
       }
-      return Right(gitBranchListFromNames(names, truncated: truncated));
+      return Right(names.gitBranchListFromNames(truncated: truncated));
     } on JsonRestProtocolException catch (e) {
       if (e.statusCode == 401 || e.statusCode == 403) {
         return const Left(ValidationFailure('HTTP 401'));

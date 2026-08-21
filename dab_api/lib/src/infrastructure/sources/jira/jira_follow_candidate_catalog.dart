@@ -11,13 +11,12 @@ import '../../protocols/rest/json_rest_protocol.dart';
 import 'jira_jql.dart';
 
 /// [ARCH: INFRASTRUCTURE]
-/// ROLE: Lists the caller's open Jira issues for the Follow picker. Read-only.
+/// ROLE: Lists Jira issues for the Follow picker. Read-only.
+/// CONTRACT: Empty [query] is involved (assignee/watcher/reporter). A typed
+/// query searches any issue in the instance [projectKeys] allow-list (or all
+/// projects when that list is empty).
 class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
-  JiraFollowCandidateCatalog(
-    this._configs,
-    this._credentials,
-    this._jsonRest,
-  );
+  JiraFollowCandidateCatalog(this._configs, this._credentials, this._jsonRest);
 
   final AbsIProviderConfigRepository _configs;
   final AbsICredentialResolver _credentials;
@@ -55,9 +54,11 @@ class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     final auth = jiraRequestAuth(merged, orgConfig: org);
     if (auth == null) return const [];
 
-    final projectKeys = parseJiraProjectKeys(org.settings['projectKeys']);
+    final projectKeys = (org.settings['projectKeys'] as Object?).parseJiraProjectKeys();
     final q = query.trim();
-    final jql = _involvedJql(projectKeys: projectKeys, query: q);
+    final jql = q.isEmpty
+        ? _involvedJql(projectKeys: projectKeys)
+        : _searchJql(projectKeys: projectKeys, query: q);
     if (jql == null) return const [];
 
     final uri = Uri.parse('${auth.apiBase}/rest/api/3/search/jql').replace(
@@ -95,10 +96,9 @@ class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     return out;
   }
 
-  String? _involvedJql({
-    required List<String> projectKeys,
-    required String query,
-  }) {
+  static final _issueKey = RegExp(r'^([A-Za-z][A-Za-z0-9_]*)-(\d+)$');
+
+  String _involvedJql({required List<String> projectKeys}) {
     final parts = <String>[
       'resolution = Unresolved',
       '(assignee = currentUser() OR watcher = currentUser() OR reporter = currentUser())',
@@ -106,14 +106,27 @@ class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     if (projectKeys.isNotEmpty) {
       parts.add('project in (${projectKeys.join(', ')})');
     }
-    if (query.isNotEmpty) {
-      final escaped = query.replaceAll('"', '\\"');
-      final keyish = RegExp(r'^[A-Za-z][A-Za-z0-9_]+-\d+$').hasMatch(query);
-      parts.add(
-        keyish
-            ? 'key = "$escaped"'
-            : '(summary ~ "$escaped" OR key = "$escaped")',
-      );
+    return '${parts.join(' AND ')} ORDER BY updated DESC';
+  }
+
+  /// Workspace search by issue key or summary. Returns null when [projectKeys]
+  /// excludes the typed project.
+  String? _searchJql({
+    required List<String> projectKeys,
+    required String query,
+  }) {
+    final escaped = query.replaceAll('"', '\\"');
+    final key = _issueKey.firstMatch(query);
+    if (key != null) {
+      final project = key.group(1)!;
+      if (projectKeys.isNotEmpty && !projectKeys.contains(project)) {
+        return null;
+      }
+      return 'key = "$escaped" ORDER BY updated DESC';
+    }
+    final parts = <String>['(summary ~ "$escaped" OR key = "$escaped")'];
+    if (projectKeys.isNotEmpty) {
+      parts.add('project in (${projectKeys.join(', ')})');
     }
     return '${parts.join(' AND ')} ORDER BY updated DESC';
   }

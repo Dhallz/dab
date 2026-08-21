@@ -98,10 +98,7 @@ extension OnFigmaFileDto on FigmaFileDto {
             ? 'Edited recently'
             : 'last edited by $displayAuthor';
         final fileTitle = fileName.trim().isEmpty ? key : fileName.trim();
-        final idSeed = withInboxLaneId(
-          'figma|$key|touched|$targetId',
-          lane,
-        );
+        final idSeed = ('figma|$key|touched|$targetId').withInboxLaneId(lane);
         events.add(
           Activity(
             id: _figmaFileActivityUuid.v5(Namespace.url.value, idSeed),
@@ -113,7 +110,7 @@ extension OnFigmaFileDto on FigmaFileDto {
             ),
             title: fileTitle,
             content: headline,
-            url: figmaFileUrl(key),
+            url: key.figmaFileUrl(),
             authorName: displayAuthor,
             authorAvatarUrl: mappedAuthor?.avatarUrl ?? owner.avatarUrl,
             commentCount: 0,
@@ -150,7 +147,7 @@ extension OnFigmaFileDto on FigmaFileDto {
       if (recipient == null) continue;
       final body = (commentMessage ?? '').trim();
       final seed = fanOut
-          ? withInboxLaneId('figma|$key|comment|$cid|$targetId', lane)
+          ? ('figma|$key|comment|$cid|$targetId').withInboxLaneId(lane)
           : 'figma|$key|comment|$cid';
       final fileTitle = fileName.trim().isEmpty ? key : fileName.trim();
       events.add(
@@ -161,7 +158,7 @@ extension OnFigmaFileDto on FigmaFileDto {
           provider: FigmaFileProvider(fileKey: key, commentId: cid),
           title: fileTitle,
           content: body.isEmpty ? '(no comment body)' : body,
-          url: figmaFileUrl(key),
+          url: key.figmaFileUrl(),
           authorName: displayAuthor,
           authorAvatarUrl: (mappedAuthor ?? recipient).avatarUrl,
           commentCount: 1,

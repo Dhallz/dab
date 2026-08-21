@@ -33,7 +33,7 @@ class CompleteProviderOauth {
     required String state,
   }) async {
     final id = providerId.trim().toLowerCase();
-    if (!isOauthUserProvider(id)) {
+    if (!id.isOauthUserProvider) {
       return const Left(ValidationFailure('Unknown OAuth provider'));
     }
     if (code.trim().isEmpty || state.trim().isEmpty) {
@@ -57,7 +57,7 @@ class CompleteProviderOauth {
             orgConfig?.baseUrl ??
             '')
         .toString();
-    final spec = oauthSpecFor(id, instanceUrl: instanceUrl);
+    final spec = id.oauthSpecFor(instanceUrl: instanceUrl);
     if (spec == null) {
       return const Left(ValidationFailure('Unknown OAuth provider'));
     }

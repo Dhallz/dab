@@ -54,9 +54,7 @@ class ProviderConfigRepository extends Repository
         orgTimezoneId: resolveOrgTimezoneId(
           payload['systemTimezone']?.toString(),
         ),
-        deploymentMode: normalizeDeploymentMode(
-          payload['deploymentMode']?.toString(),
-        ),
+        deploymentMode: (payload['deploymentMode']?.toString()).normalizeDeploymentMode(),
       );
     });
   }

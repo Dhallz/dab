@@ -55,7 +55,7 @@ class ProviderConfigRepository implements AbsIProviderConfigRepository {
               isActive: Value(config.isActive ? 1 : 0),
               iconUrl: Value(config.iconUrl),
               settings: Value(jsonEncode(config.settings)),
-              updatedAt: Value(toPgDateTime(DateTime.now())),
+              updatedAt: Value((DateTime.now()).toPgDateTime()),
             ),
           ));
       return Right(config);

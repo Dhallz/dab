@@ -86,7 +86,7 @@ extension OnBitbucketCommitDto on BitbucketCommitDto {
         Activity(
           id: _bitbucketCommitUuid.v5(
             Namespace.url.value,
-            withInboxLaneId(stable, lane),
+            stable.withInboxLaneId(lane),
           ),
           userId: user.id,
           senderUserId: senderUserId ?? userId,

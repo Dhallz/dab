@@ -9,9 +9,9 @@ import 'package:dab_api/src/domain/dtos/bitbucket/bitbucket_commit_mapping.dart'
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_discovery_port.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/rest/json_rest_protocol.dart';
@@ -28,7 +28,7 @@ import 'package:fpdart/fpdart.dart';
 /// API token). The commits endpoint has no date filters — pagination stops
 /// once rows fall before the window.
 class BitbucketCommitSource
-    implements AbsIActivitySource<BitbucketCommitDto>, AbsIDiscoverySource {
+    implements AbsIActivityPort<BitbucketCommitDto>, AbsIDiscoveryPort {
   BitbucketCommitSource(
     this._configRepository,
     this._userRepository,
@@ -57,21 +57,21 @@ class BitbucketCommitSource
       userIds: users.map((u) => u.id),
       providerId: 'bitbucket',
     );
-    var auth = bitbucketAuthHeaders(cfg.settings);
+    var auth = cfg.settings.bitbucketAuthHeaders();
     if (auth == null) {
       for (final user in users) {
         final merged = _credentials.overlay(
           orgSettings: cfg.settings,
           userSettings: userSettings[user.id],
         );
-        auth = bitbucketAuthHeaders(merged);
+        auth = merged.bitbucketAuthHeaders();
         if (auth != null) break;
       }
     }
     if (auth == null) return const [];
 
-    final workspace = bitbucketWorkspace(cfg.settings);
-    final repos = bitbucketRepos(cfg.settings);
+    final workspace = cfg.settings.bitbucketWorkspace();
+    final repos = cfg.settings.bitbucketRepos();
     if (workspace.isEmpty || repos.isEmpty) return const [];
 
     final accountToUser = <String, String>{};
@@ -95,15 +95,10 @@ class BitbucketCommitSource
 
     for (final repo in repos) {
       final fullRepo = repo.contains('/') ? repo : '$workspace/$repo';
-      final refs = gitExplorerPollRefs(
-        repo: fullRepo,
-        instanceRepos: [
+      final refs = userSettings.gitExplorerPollRefs(repo: fullRepo, instanceRepos: [
           for (final item in repos)
             item.contains('/') ? item : '$workspace/$item',
-        ],
-        configuredBranch: instanceBranch,
-        userSettingsById: userSettings,
-      );
+        ], configuredBranch: instanceBranch);
       for (final ref in refs) {
         final revision = (ref ?? '').trim();
         final commitsPath = revision.isEmpty
@@ -162,8 +157,8 @@ class BitbucketCommitSource
     final cfg = await _activeBitbucketConfig();
     if (cfg == null) return const Right(null);
 
-    final auth = bitbucketAuthHeaders(cfg.settings);
-    final workspace = bitbucketWorkspace(cfg.settings);
+    final auth = cfg.settings.bitbucketAuthHeaders();
+    final workspace = cfg.settings.bitbucketWorkspace();
     if (auth == null || workspace.isEmpty) return const Right(null);
 
     final query = name.trim().toLowerCase();
@@ -212,15 +207,19 @@ class BitbucketCommitSource
   }
 }
 
-/// Auth headers for Bitbucket REST. OAuth access tokens use Bearer.
-Map<String, String>? bitbucketAuthHeaders(Map<String, dynamic> settings) {
-  final secret = extractProviderToken('bitbucket', settings);
-  if (secret.isEmpty) return null;
-  if (isOauthCredential(settings)) {
-    return {'Authorization': 'Bearer $secret', 'Accept': 'application/json'};
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Auth headers for Bitbucket REST. OAuth access tokens use Bearer.
+extension OnProviderSettings on Map {
+  /// Auth headers for Bitbucket REST. OAuth access tokens use Bearer.
+  Map<String, String>? bitbucketAuthHeaders() {
+    final secret = extractProviderToken('bitbucket');
+    if (secret.isEmpty) return null;
+    if (isOauthCredential) {
+      return {'Authorization': 'Bearer $secret', 'Accept': 'application/json'};
+    }
+    final username = (this['username'] ?? '').toString().trim();
+    if (username.isEmpty) return null;
+    final encoded = base64Encode(utf8.encode('$username:$secret'));
+    return {'Authorization': 'Basic $encoded', 'Accept': 'application/json'};
   }
-  final username = (settings['username'] ?? '').toString().trim();
-  if (username.isEmpty) return null;
-  final encoded = base64Encode(utf8.encode('$username:$secret'));
-  return {'Authorization': 'Basic $encoded', 'Accept': 'application/json'};
 }

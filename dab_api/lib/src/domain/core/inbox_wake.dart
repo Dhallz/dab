@@ -12,19 +12,25 @@ const kInboxWakeLaneKey = 'lane';
 const kInboxWakeActivityIdKey = 'activityId';
 
 /// FCM `data` map: type, inbox lane, activity id. No title or content.
-Map<String, String> inboxWakeData(Activity activity) {
-  return {
-    kInboxWakeTypeKey: kInboxWakeType,
-    kInboxWakeLaneKey: activity.inboxLane.name,
-    kInboxWakeActivityIdKey: activity.id,
-  };
+extension OnActivity on Activity {
+  /// FCM `data` map: type, inbox lane, activity id. No title or content.
+  Map<String, String> inboxWakeData() {
+    return {
+      kInboxWakeTypeKey: kInboxWakeType,
+      kInboxWakeLaneKey: inboxLane.name,
+      kInboxWakeActivityIdKey: id,
+    };
+  }
 }
 
-/// True when [data] is a wake and does not leak activity copy.
-bool isInboxWakeData(Map<String, String> data) {
-  if (data[kInboxWakeTypeKey] != kInboxWakeType) return false;
-  if (data.containsKey('title') || data.containsKey('content')) return false;
-  final lane = data[kInboxWakeLaneKey] ?? '';
-  final id = data[kInboxWakeActivityIdKey] ?? '';
-  return (lane == 'directed' || lane == 'follow') && id.isNotEmpty;
+/// True when this map is a wake and does not leak activity copy.
+extension OnInboxWakeMap on Map<String, String> {
+  /// True when this map is a wake and does not leak activity copy.
+  bool get isInboxWakeData {
+    if (this[kInboxWakeTypeKey] != kInboxWakeType) return false;
+    if (containsKey('title') || containsKey('content')) return false;
+    final lane = this[kInboxWakeLaneKey] ?? '';
+    final id = this[kInboxWakeActivityIdKey] ?? '';
+    return (lane == 'directed' || lane == 'follow') && id.isNotEmpty;
+  }
 }

@@ -34,7 +34,7 @@
 | Failure | `AppFailure` (sealed) | `failures.dart` | `lib/domain/core/` |
 | Repository Interface | `IAuthRepository` | `abs_i_auth_repository.dart` | `lib/domain/repositories/` |
 | Repository Base (abstract) | `IRepository` | `abs_i_repository.dart` | `lib/domain/repositories/core/` |
-| Domain port (API) | `AbsIActivitySource` | `abs_i_activity_source.dart` | `dab_api/.../contracts/ports/` |
+| Domain port (API) | `AbsIActivityPort` | `abs_i_activity_port.dart` | `dab_api/.../contracts/ports/` |
 | Domain repository (API) | `AbsIAuthRepository` | `abs_i_auth_repository.dart` | `dab_api/.../contracts/repositories/` |
 | Repository Impl | `AuthRepository` | `auth_repository.dart` | `lib/infrastructure/repositories/` |
 | Use Case | `Login` | `login.dart` | `lib/domain/usecases/[feature]/` |
@@ -48,16 +48,21 @@
 
 API `abstract interface` contracts under `domain/contracts/` use class prefix `AbsI` and file prefix `abs_i_` (ports and repositories). `IUserRepository` is the remaining `abstract class` exception.
 
-### API provider I/O (`dab_api` `infrastructure/sources/`)
+### API provider I/O (`dab_api`)
+
+Domain **ports** are interfaces under `domain/contracts/ports/`. **Source** is the infrastructure fetcher that implements a port — never the port itself.
 
 Do **not** use `*Service` under `sources/` — that suffix is for application orchestration and infra core (`RedisService`, `PresenceService`).
 
-| Role | Class / file | Domain port |
-|---|---|---|
-| Activity or directory fetch | `{Provider}{Resource}Source` / `*_source.dart` | `AbsIActivitySource` / `AbsIDiscoverySource` |
-| Read-only pick list | `{Provider}{Resource}Catalog` / `*_catalog.dart` | `AbsI*Catalog` |
-| Discord Gateway WebSocket | `DiscordGatewayClient` / `discord_gateway_client.dart` | talks to `AbsIDiscordLiveIngestor` |
-| Phorge multi-source facade | `PhorgeFacade` / `phorge_facade.dart` | `AbsIPhorgeFacade` |
+| Suffix | Layer | Class / file | Meaning |
+|---|---|---|---|
+| **Port** | Domain `contracts/ports/` | `AbsIActivityPort` / `abs_i_activity_port.dart` | Interface for provider fetch or lookup (`AbsIDiscoveryPort`, `AbsIFigmaFileMetaPort`) |
+| **Source** | Infra `sources/` only | `{Provider}{Resource}Source` / `*_source.dart` | Concrete provider fetcher (`GitHubCommitSource`, `FigmaFileSource`) |
+| **Catalog** | Domain port + infra impl | `{Provider}{Resource}Catalog` / `*_catalog.dart` | Read-only pick list (`AbsI*Catalog`) |
+| **Facade** | Domain port + infra impl | `PhorgeFacade` / `phorge_facade.dart` | Composes several sources (`AbsIPhorgeFacade`) |
+| **Gateway** | Infra Discord client only | `DiscordGatewayClient` / `discord_gateway_client.dart` | Discord Gateway WebSocket; talks to `AbsIDiscordLiveIngestor` |
+| **Client** | Domain port + infra | `AbsIOauthTokenClient`, `AbsIPushWakeClient` | Outbound HTTP to a non-activity vendor API |
+| **Store** | Domain port + infra | `AbsILiveFeedStore`, `AbsIOauthStateStore` | Ephemeral persistence |
 
 Keep “Gateway” only when it is Discord’s product name. A compose-sources wrapper is a **facade**, not a gateway.
 
@@ -157,10 +162,10 @@ Keep “Gateway” only when it is Discord’s product name. A compose-sources w
   ├── [name]_notifier.dart  ← Riverpod `Notifier` + `…NotifierProvider`
   ├── [name]_state.dart     ← uses ViewStatus, always isolated file
   ├── models/               ← feature-local enums and data classes
-  └── widgets/              ← extracted UI components, strictly one per file
+  └── widgets/              ← one widget per file; subfolder for parent + children
   ```
 
-- **One Widget Per File:** Strictly enforced. No private widgets (`_MyWidget`) or functions returning `Widget` in layout files.
+- **One Widget Per File:** Strictly enforced. No extra widget classes in view, layout, or widget files. Dashboard-only widgets stay under `dashboard/widgets/`. When a parent needs several files, put them in a named subfolder.
 
 - **Status Management:** Use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) in all states.
 

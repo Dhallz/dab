@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/app_text_styles.dart';
-import 'dashboard_activity_card.dart';
+import 'dashboard_activity_card/dashboard_activity_card.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: One Timeline row — clock time, connecting rail, and activity card.

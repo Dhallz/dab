@@ -1,6 +1,7 @@
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/activity/activity_category.dart';
 import 'package:dab_app/presentation/core/extensions/activity_extensions.dart';
+import 'package:dab_app/presentation/core/extensions/string_extensions.dart';
 import 'package:dab_app/presentation/core/styles/activity_category_styles.dart';
 import 'package:dab_app/presentation/core/styles/app_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,10 +28,13 @@ void main() {
   }
 
   test('looksLikeOpaqueUserId detects Figma ids and UUIDs', () {
-    expect(looksLikeOpaqueUserId('948500924847399940'), isTrue);
-    expect(looksLikeOpaqueUserId('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'), isTrue);
-    expect(looksLikeOpaqueUserId('dhallz'), isFalse);
-    expect(looksLikeOpaqueUserId('Alice'), isFalse);
+    expect('948500924847399940'.looksLikeOpaqueUserId, isTrue);
+    expect(
+      'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'.looksLikeOpaqueUserId,
+      isTrue,
+    );
+    expect('dhallz'.looksLikeOpaqueUserId, isFalse);
+    expect('Alice'.looksLikeOpaqueUserId, isFalse);
   });
 
   test('senderDisplayName prefers linked sender then handle', () {

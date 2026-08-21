@@ -100,7 +100,7 @@ extension OnDiscordMessageDto on DiscordMessageDto {
       final owner = usersById[targetUserId];
       if (owner == null) continue;
       final stableId = fanOut
-          ? withInboxLaneId('$messageId-$targetUserId', lane)
+          ? ('$messageId-$targetUserId').withInboxLaneId(lane)
           : messageId;
       activities.add(
         Activity(

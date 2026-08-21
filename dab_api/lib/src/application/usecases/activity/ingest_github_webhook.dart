@@ -113,9 +113,7 @@ class IngestGitHubWebhook {
     }
     final fullNameNormalized = fullNameRaw.toLowerCase();
 
-    final allowedRepos = extractConfiguredGithubRepos(
-      githubConfig.settings,
-    ).map((r) => r.toLowerCase()).toSet();
+    final allowedRepos = githubConfig.settings.extractConfiguredGithubRepos().map((r) => r.toLowerCase()).toSet();
     if (!allowedRepos.contains(fullNameNormalized)) {
       return const Right(
         GitHubWebhookIngestionResult.ignored('repo_not_configured'),
@@ -173,7 +171,7 @@ class IngestGitHubWebhook {
       );
     }
 
-    final instanceRepos = extractConfiguredGithubRepos(githubConfig.settings);
+    final instanceRepos = githubConfig.settings.extractConfiguredGithubRepos();
     final settingsByUser =
         await _credentials?.getUserSettingsForUsers(
           userIds: users.map((u) => u.id),
@@ -226,13 +224,7 @@ class IngestGitHubWebhook {
           ? null
           : userIdByLogin[loginCandidate.toLowerCase()];
 
-      final watchers = gitInboxWatchers(
-        userSettingsById: settingsByUser,
-        repo: fullNameRaw,
-        branch: branch,
-        instanceRepos: instanceRepos,
-        senderUserId: userIdForLogin,
-      );
+      final watchers = settingsByUser.gitInboxWatchers(repo: fullNameRaw, branch: branch, instanceRepos: instanceRepos, senderUserId: userIdForLogin);
       if (watchers.isEmpty && followers.isEmpty) continue;
 
       final commitMessage =

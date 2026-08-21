@@ -13,7 +13,10 @@ import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../protocols/graphql/graphql_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE]
-/// ROLE: Lists the caller's open Linear issues for the Follow picker. Read-only.
+/// ROLE: Lists Linear issues for the Follow picker. Read-only.
+/// CONTRACT: Empty [query] is involved (assignee/creator/subscriber). A typed
+/// query searches any issue in the instance [teamKeys] allow-list (or all
+/// teams when that list is empty).
 class LinearFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   LinearFollowCandidateCatalog(
     this._configs,
@@ -65,22 +68,32 @@ query DabFollowCandidates(\$filter: IssueFilter, \$first: Int!) {
       orgSettings: org.settings,
       userSettings: userSettings,
     );
-    final apiKey = extractProviderToken('linear', merged);
+    final apiKey = merged.extractProviderToken('linear');
     if (apiKey.isEmpty) return const [];
 
-    final teamKeys = parseLinearTeamKeys(org.settings['teamKeys']);
-    final identityId = await _linearExternalId(userId);
+    final teamKeys = (org.settings['teamKeys'] as Object?).parseLinearTeamKeys();
     final rawEndpoint = (merged['apiBaseUrl'] ?? '').toString().trim();
     final endpoint = Uri.parse(rawEndpoint.isEmpty ? _endpoint : rawEndpoint);
+    final q = query.trim();
+    if (q.isNotEmpty) {
+      final filter = _searchFilter(query: q, teamKeys: teamKeys);
+      if (filter == null) return const [];
+      try {
+        return await _fetch(endpoint: endpoint, apiKey: apiKey, filter: filter);
+      } catch (_) {
+        return const [];
+      }
+    }
+
+    final identityId = await _linearExternalId(userId);
     try {
       return await _fetch(
         endpoint: endpoint,
         apiKey: apiKey,
-        filter: _issueFilter(
-          query: query,
-          teamKeys: teamKeys,
+        filter: _involvedIssueFilter(
           identityId: identityId,
           includeSubscribers: true,
+          teamKeys: teamKeys,
         ),
       );
     } catch (_) {
@@ -88,11 +101,10 @@ query DabFollowCandidates(\$filter: IssueFilter, \$first: Int!) {
         return await _fetch(
           endpoint: endpoint,
           apiKey: apiKey,
-          filter: _issueFilter(
-            query: query,
-            teamKeys: teamKeys,
+          filter: _involvedIssueFilter(
             identityId: identityId,
             includeSubscribers: false,
+            teamKeys: teamKeys,
           ),
         );
       } catch (_) {
@@ -111,42 +123,52 @@ query DabFollowCandidates(\$filter: IssueFilter, \$first: Int!) {
     return id.isEmpty ? null : id;
   }
 
+  static final _issueKey = RegExp(r'^([A-Za-z][A-Za-z0-9_]*)-(\d+)$');
+
+  /// Workspace search: identifier (`ENG-42`) or title, not involvement.
+  /// Returns null when [teamKeys] excludes the typed team.
+  Map<String, dynamic>? _searchFilter({
+    required String query,
+    required List<String> teamKeys,
+  }) {
+    final key = _issueKey.firstMatch(query);
+    if (key != null) {
+      final team = key.group(1)!;
+      if (teamKeys.isNotEmpty && !teamKeys.contains(team)) return null;
+      return {
+        'team': {
+          'key': {'eq': team},
+        },
+        'number': {'eq': int.parse(key.group(2)!)},
+      };
+    }
+    return {
+      if (teamKeys.isNotEmpty)
+        'team': {
+          'key': {'in': teamKeys},
+        },
+      'title': {'containsIgnoreCase': query},
+    };
+  }
+
   /// Linear [IssueFilter] for issues assigned to, created by, or subscribed by
   /// the caller. Uses the linked Linear user id when present so an org API key
   /// still matches the DAB user (`isMe` would be the key owner instead).
-  Map<String, dynamic> _issueFilter({
-    required String query,
-    required List<String> teamKeys,
+  Map<String, dynamic> _involvedIssueFilter({
     required String? identityId,
     required bool includeSubscribers,
+    required List<String> teamKeys,
   }) {
     final involved = _involvedFilter(
       identityId: identityId,
       includeSubscribers: includeSubscribers,
     );
-    final q = query.trim();
     return <String, dynamic>{
       if (teamKeys.isNotEmpty)
         'team': {
           'key': {'in': teamKeys},
         },
-      if (q.isEmpty)
-        ...involved
-      else
-        'and': [
-          involved,
-          {
-            'or': [
-              {
-                'title': {'containsIgnoreCase': q},
-              },
-              if (RegExp(r'^[A-Za-z][A-Za-z0-9_]*-\d+$').hasMatch(q))
-                {
-                  'number': {'eq': int.parse(q.split('-').last)},
-                },
-            ],
-          },
-        ],
+      ...involved,
     };
   }
 

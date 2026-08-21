@@ -58,7 +58,7 @@ class GetLinearTeamWatchList {
     var listed = await listWith(userSettings);
     if (listed.isLeft() &&
         _isUnauthorized(listed.getLeft().toNullable()!) &&
-        isOauthCredential(userSettings)) {
+        userSettings.isOauthCredential) {
       userSettingsResult = await _oauth.ensureFresh(
         userId: userId,
         providerId: 'linear',
@@ -74,7 +74,7 @@ class GetLinearTeamWatchList {
     }
 
     final available = listed.getOrElse((_) => const <LinearTeam>[]);
-    final selected = parseLinearTeamKeys(org?.settings['teamKeys']);
+    final selected = (org?.settings['teamKeys'] as Object?).parseLinearTeamKeys();
     final byKey = {for (final team in available) team.key: team};
     for (final key in selected) {
       byKey.putIfAbsent(key, () => LinearTeam(key: key, name: key));

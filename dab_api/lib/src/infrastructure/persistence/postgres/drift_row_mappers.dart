@@ -4,35 +4,51 @@ import 'package:dab_api/src/domain/entities/user/user_role.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/app_database.dart';
 import 'package:drift_postgres/drift_postgres.dart';
 
-User userFromUsersRow(UsersTableData row) {
-  return User(
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    avatarUrl: row.avatarUrl,
-    passwordHash: row.passwordHash,
-    role: UserRole.values.firstWhere(
-      (e) => e.name.toLowerCase() == row.role.toLowerCase(),
-      orElse: () => UserRole.standard,
-    ),
-    phorgePhid: row.phorgePhid,
-    phorgeUsername: row.phorgeUsername,
-    createdAt: row.createdAt.dateTime,
-    updatedAt: row.updatedAt?.dateTime,
-  );
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Maps a Drift users row to the domain [User] entity.
+extension OnUsersTableData on UsersTableData {
+  User toUser() {
+    return User(
+      id: id,
+      name: name,
+      email: email,
+      avatarUrl: avatarUrl,
+      passwordHash: passwordHash,
+      role: UserRole.values.firstWhere(
+        (e) => e.name.toLowerCase() == role.toLowerCase(),
+        orElse: () => UserRole.standard,
+      ),
+      phorgePhid: phorgePhid,
+      phorgeUsername: phorgeUsername,
+      createdAt: createdAt.dateTime,
+      updatedAt: updatedAt?.dateTime,
+    );
+  }
 }
 
-Session sessionFromSessionsRow(SessionsTableData row) {
-  return Session(
-    id: row.id,
-    userId: row.userId,
-    refreshToken: row.refreshToken,
-    expiresAt: row.expiresAt.dateTime,
-    deviceInfo: row.deviceInfo,
-  );
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Maps a Drift sessions row to the domain [Session] entity.
+extension OnSessionsTableData on SessionsTableData {
+  Session toSession() {
+    return Session(
+      id: id,
+      userId: userId,
+      refreshToken: refreshToken,
+      expiresAt: expiresAt.dateTime,
+      deviceInfo: deviceInfo,
+    );
+  }
 }
 
-PgDateTime toPgDateTime(DateTime value) => PgDateTime(value);
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Wraps a [DateTime] as Drift Postgres `timestamptz`.
+extension OnDateTime on DateTime {
+  PgDateTime toPgDateTime() => PgDateTime(this);
+}
 
-PgDateTime? toPgDateTimeOrNull(DateTime? value) =>
-    value != null ? PgDateTime(value) : null;
+/// [ARCH: INFRASTRUCTURE]
+/// ROLE: Wraps an optional [DateTime] as Drift Postgres `timestamptz`.
+extension OnDateTimeNullable on DateTime? {
+  PgDateTime? toPgDateTimeOrNull() =>
+      this != null ? PgDateTime(this!) : null;
+}

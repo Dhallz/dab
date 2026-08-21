@@ -7,7 +7,7 @@ import '../../../domain/dtos/figma/figma_file_dto.dart';
 import '../../../domain/entities/figma/figma_file_meta.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_identity_status.dart';
-import '../../../domain/contracts/ports/abs_i_figma_file_gateway.dart';
+import '../../../domain/contracts/ports/abs_i_figma_file_meta_port.dart';
 import '../../../domain/contracts/ports/abs_i_live_feed_store.dart';
 import '../../../domain/contracts/ports/abs_i_presence_broadcaster.dart';
 import '../../../domain/contracts/repositories/abs_i_activity_follow_repository.dart';
@@ -32,7 +32,7 @@ class IngestFigmaWebhook {
   final AbsILiveFeedStore _liveFeed;
   final LiveIngestPersister _persister;
   final AbsIActivityFollowRepository? _follows;
-  final AbsIFigmaFileGateway? _fileGateway;
+  final AbsIFigmaFileMetaPort? _fileMetaPort;
 
   IngestFigmaWebhook(
     this._userRepository,
@@ -43,9 +43,9 @@ class IngestFigmaWebhook {
     ActivityLivePublisher? livePublisher,
     LiveIngestPersister? persister,
     AbsIActivityFollowRepository? follows,
-    AbsIFigmaFileGateway? fileGateway,
+    AbsIFigmaFileMetaPort? fileMetaPort,
   }) : _follows = follows,
-       _fileGateway = fileGateway,
+       _fileMetaPort = fileMetaPort,
        _persister =
            persister ??
            LiveIngestPersister(
@@ -95,15 +95,15 @@ class IngestFigmaWebhook {
       );
     }
 
-    final fileKeys = parseFigmaFileKeys(figmaConfig.settings['fileKeys']);
-    final teamIds = parseFigmaTeamIds(
-      figmaConfig.settings['teamIds'] ?? figmaConfig.settings['teamId'],
-    );
+    final fileKeys = (figmaConfig.settings['fileKeys'] as Object?).parseFigmaFileKeys();
+    final teamIds = ((figmaConfig.settings['teamIds'] ??
+            figmaConfig.settings['teamId']) as Object?)
+        .parseFigmaTeamIds();
     final teamId = (payload['team_id'] ?? payload['teamId'] ?? '')
         .toString()
         .trim();
-    if (!figmaFileKeyAllowed(fileKey, fileKeys) ||
-        !figmaTeamIdAllowed(teamId, teamIds)) {
+    if (!fileKey.figmaFileKeyAllowed(fileKeys) ||
+        !teamId.figmaTeamIdAllowed(teamIds)) {
       return const Right(
         FigmaWebhookIngestionResult.ignored('file_not_allowed'),
       );
@@ -182,7 +182,7 @@ class IngestFigmaWebhook {
 
     FigmaFileMeta? meta;
     try {
-      meta = await _fileGateway?.fetchFileMeta(fileKey);
+      meta = await _fileMetaPort?.fetchFileMeta(fileKey);
     } catch (_) {
       meta = null;
     }
@@ -262,7 +262,7 @@ class IngestFigmaWebhook {
 
     FigmaFileMeta? meta;
     try {
-      meta = await _fileGateway?.fetchFileMeta(fileKey);
+      meta = await _fileMetaPort?.fetchFileMeta(fileKey);
     } catch (_) {
       meta = null;
     }
@@ -344,7 +344,7 @@ class IngestFigmaWebhook {
   }
 
   String? _handleOf(Map<String, dynamic>? user) {
-    final label = figmaAuthorLabelFromUser(user);
+    final label = (user as Object?).figmaAuthorLabelFromUser();
     return label.isEmpty ? null : label;
   }
 

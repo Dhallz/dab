@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
+import '../../../core/extensions/activity_extensions.dart';
 import '../../../core/extensions/activity_category_l10n.dart';
 import '../../../core/localization/l10n_extension.dart';
 import '../../../core/styles/app_icons.dart';
@@ -10,8 +11,7 @@ import '../../../core/styles/app_spacing.dart';
 import '../../../core/styles/provider_icon_resolver.dart';
 import '../../../core/widgets/dab_glass_surface.dart';
 import '../models/dashboard_feed_group.dart';
-import '../models/dashboard_watching_placeholder.dart';
-import 'dashboard_activity_card.dart';
+import 'dashboard_activity_card/dashboard_activity_card.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: One Dashboard-style glass container for a category or provider group.
@@ -99,7 +99,7 @@ class DashboardFeedGroupContainer extends StatelessWidget {
                 activity: activity,
                 onArchive:
                     activity.archived ||
-                        isDashboardWatchingPlaceholder(activity)
+                        activity.isDashboardWatchingPlaceholder
                     ? null
                     : () => onArchive?.call(activity),
                 onUnarchive: activity.archived

@@ -114,7 +114,7 @@ extension OnJiraIssueDto on JiraIssueDto {
         if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
         if (browseUrl.trim().isNotEmpty) bodyParts.add(browseUrl.trim());
         final idSeed = fanOut
-            ? withInboxLaneId('$fingerprint|$targetId', lane)
+            ? ('$fingerprint|$targetId').withInboxLaneId(lane)
             : fingerprint;
         events.add(
           Activity(
@@ -154,10 +154,7 @@ extension OnJiraIssueDto on JiraIssueDto {
         final recipient = userById[targetId];
         if (recipient == null) continue;
         final cidSeed = fanOut
-            ? withInboxLaneId(
-                'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}|$targetId',
-                lane,
-              )
+            ? ('jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}|$targetId').withInboxLaneId(lane)
             : 'jira|${siteHost.trim().toLowerCase()}|$issueKey|comment|${comment.id}';
         final cid = _jiraIssueActivityUuid.v5(Namespace.url.value, cidSeed);
         final commentBody = comment.body.trim();

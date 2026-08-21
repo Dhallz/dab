@@ -26,7 +26,7 @@ class UserRepository implements IUserRepository {
   Future<Either<DatabaseFailure, List<User>>> getUsers() async {
     try {
       final rows = await _db.select(_db.usersTable).get();
-      return right(rows.map(userFromUsersRow).toList());
+      return right(rows.map((row) => row.toUser()).toList());
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -42,7 +42,7 @@ class UserRepository implements IUserRepository {
       if (row == null) {
         return left(NotFoundFailure('User not found: $id'));
       }
-      return right(userFromUsersRow(row));
+      return right(row.toUser());
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -55,7 +55,7 @@ class UserRepository implements IUserRepository {
       final row = await (_db.select(
         _db.usersTable,
       )..where((t) => t.email.equals(email))).getSingleOrNull();
-      return right(row != null ? userFromUsersRow(row) : null);
+      return right(row != null ? row.toUser() : null);
     } catch (e) {
       return left(DatabaseFailure(e.toString()));
     }
@@ -77,7 +77,7 @@ class UserRepository implements IUserRepository {
       final rows = await query.get();
       return right(
         rows
-            .map((row) => userFromUsersRow(row.readTable(_db.usersTable)))
+            .map((row) => (row.readTable(_db.usersTable)).toUser())
             .toList(),
       );
     } catch (e) {
@@ -100,8 +100,8 @@ class UserRepository implements IUserRepository {
               role: Value(user.role.name),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
-              createdAt: toPgDateTime(user.createdAt),
-              updatedAt: Value(toPgDateTime(DateTime.now())),
+              createdAt: user.createdAt.toPgDateTime(),
+              updatedAt: Value((DateTime.now()).toPgDateTime()),
               avatarUrl: Value(user.avatarUrl),
             ),
           );
@@ -206,8 +206,8 @@ class UserRepository implements IUserRepository {
         externalId: identity.externalId,
         externalUsername: Value(identity.externalUsername),
         status: Value(identity.status.name),
-        createdAt: Value(toPgDateTime(identity.createdAt)),
-        updatedAt: Value(toPgDateTimeOrNull(identity.updatedAt)),
+        createdAt: Value(identity.createdAt.toPgDateTime()),
+        updatedAt: Value(identity.updatedAt.toPgDateTimeOrNull()),
       );
       await _db.into(_db.userIdentitiesTable).insertOnConflictUpdate(companion);
       return right(identity);

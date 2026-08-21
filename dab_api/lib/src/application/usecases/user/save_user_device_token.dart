@@ -20,7 +20,7 @@ class SaveUserDeviceToken {
   }) async {
     final platformId = platform.trim().toLowerCase();
     final value = token.trim();
-    if (!isDeviceTokenPlatform(platformId)) {
+    if (!platformId.isDeviceTokenPlatform) {
       return const Left(
         ValidationFailure('platform must be android or ios'),
       );

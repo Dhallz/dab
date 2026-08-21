@@ -152,14 +152,14 @@ void main() {
     test('prefers explicit apiBaseUrl, then instance URL, then gitlab.com',
         () {
       expect(
-        gitLabApiBase(const {'apiBaseUrl': 'https://x.example.com/api/v4/'}),
+        (const {'apiBaseUrl': 'https://x.example.com/api/v4/'}).gitLabApiBase(),
         'https://x.example.com/api/v4',
       );
       expect(
-        gitLabApiBase(const {}, 'https://gitlab.example.com'),
+        (const {}).gitLabApiBase('https://gitlab.example.com'),
         'https://gitlab.example.com/api/v4',
       );
-      expect(gitLabApiBase(const {}), 'https://gitlab.com/api/v4');
+      expect((const {}).gitLabApiBase(), 'https://gitlab.com/api/v4');
     });
   });
 

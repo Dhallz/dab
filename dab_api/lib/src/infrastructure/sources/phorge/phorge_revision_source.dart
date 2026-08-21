@@ -1,19 +1,19 @@
 import 'package:dab_api/src/domain/core/provider_credential_keys.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_revision/phorge_revision_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: Low-level I/O for Phorge Differential Revisions (Code Reviews).
-/// CONTRACT: Implements [AbsIActivitySource] for [PhorgeRevisionDto].
+/// CONTRACT: Implements [AbsIActivityPort] for [PhorgeRevisionDto].
 /// CONSTRAINTS: Must be READ-ONLY. Logic is restricted to API coordination and DTO mapping.
 ///
 /// This source handles binary protocol communication with Phorge to retrieve
 /// Differential Revisions (D-numbers) within specific time bounds.
-class PhorgeRevisionSource implements AbsIActivitySource<PhorgeRevisionDto> {
+class PhorgeRevisionSource implements AbsIActivityPort<PhorgeRevisionDto> {
   final ConduitProtocol _client;
   final AbsICredentialResolver _credentials;
   final AbsIProviderConfigRepository _configs;
@@ -81,7 +81,7 @@ class PhorgeRevisionSource implements AbsIActivitySource<PhorgeRevisionDto> {
     final all = (await _configs.getConfigs()).getOrElse((_) => []);
     final org = all.where((c) => c.id == 'phorge').firstOrNull;
     final orgSettings = org?.settings ?? const <String, dynamic>{};
-    var token = extractProviderToken('phorge', orgSettings);
+    var token = orgSettings.extractProviderToken('phorge');
     if (token.isNotEmpty) return token;
     final userSettings = await _credentials.getUserSettingsForUsers(
       userIds: users.map((u) => u.id),
@@ -92,7 +92,7 @@ class PhorgeRevisionSource implements AbsIActivitySource<PhorgeRevisionDto> {
         orgSettings: orgSettings,
         userSettings: userSettings[user.id],
       );
-      token = extractProviderToken('phorge', merged);
+      token = merged.extractProviderToken('phorge');
       if (token.isNotEmpty) return token;
     }
     return null;

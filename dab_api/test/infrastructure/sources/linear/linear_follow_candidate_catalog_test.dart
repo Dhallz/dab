@@ -165,6 +165,42 @@ void main() {
     expect(rows.single.objectKey, 'ENG-1');
     expect(_containsIsMe(filter), isTrue);
   });
+
+  test('typed identifier searches any issue, not involvement', () async {
+    Map<String, dynamic>? filter;
+    when(
+      () => graphql.execute(
+        any(),
+        bearerToken: any(named: 'bearerToken'),
+        document: any(named: 'document'),
+        variables: any(named: 'variables'),
+      ),
+    ).thenAnswer((invocation) async {
+      final variables =
+          invocation.namedArguments[#variables] as Map<String, dynamic>;
+      filter = variables['filter'] as Map<String, dynamic>?;
+      return {
+        'issues': {
+          'nodes': [
+            {
+              'identifier': 'ENG-42',
+              'title': 'Unrelated ticket',
+              'url': 'https://linear.app/acme/issue/ENG-42',
+            },
+          ],
+        },
+      };
+    });
+
+    final result = await catalog.list(userId: 'u-1', query: 'ENG-42');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows.single.objectKey, 'ENG-42');
+    expect(_containsAssigneeId(filter, 'linear-user-ada'), isFalse);
+    expect(_containsIsMe(filter), isFalse);
+    expect(filter?['number'], {'eq': 42});
+    expect((filter?['team'] as Map?)?['key'], {'eq': 'ENG'});
+    verifyNever(() => users.getIdentity(any(), any()));
+  });
 }
 
 bool _containsAssigneeId(Object? node, String id) {

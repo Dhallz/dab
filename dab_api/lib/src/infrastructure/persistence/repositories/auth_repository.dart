@@ -27,7 +27,7 @@ class AuthRepository implements AbsIAuthRepository {
       final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.email.equals(email))).getSingleOrNull();
-      return Right(row != null ? userFromUsersRow(row) : null);
+      return Right(row != null ? row.toUser() : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by email: $e'));
     }
@@ -40,7 +40,7 @@ class AuthRepository implements AbsIAuthRepository {
       final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.id.equals(id))).getSingleOrNull();
-      return Right(row != null ? userFromUsersRow(row) : null);
+      return Right(row != null ? row.toUser() : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by ID: $e'));
     }
@@ -61,8 +61,8 @@ class AuthRepository implements AbsIAuthRepository {
               role: Value(user.role.name),
               phorgePhid: Value(user.phorgePhid),
               phorgeUsername: Value(user.phorgeUsername),
-              createdAt: toPgDateTime(user.createdAt),
-              updatedAt: Value(toPgDateTimeOrNull(user.updatedAt)),
+              createdAt: user.createdAt.toPgDateTime(),
+              updatedAt: Value(user.updatedAt.toPgDateTimeOrNull()),
             ),
           );
       return const Right(null);
@@ -78,7 +78,7 @@ class AuthRepository implements AbsIAuthRepository {
       final rows = await (_db.select(
         _db.usersTable,
       )..where((u) => u.phorgePhid.isNotNull())).get();
-      return Right(rows.map(userFromUsersRow).toList());
+      return Right(rows.map((row) => row.toUser()).toList());
     } catch (e) {
       return Left(DatabaseFailure('Error finding users with phorge: $e'));
     }
@@ -95,7 +95,7 @@ class AuthRepository implements AbsIAuthRepository {
               id: session.id,
               userId: session.userId,
               refreshToken: session.refreshToken,
-              expiresAt: toPgDateTime(session.expiresAt),
+              expiresAt: session.expiresAt.toPgDateTime(),
               deviceInfo: Value(session.deviceInfo),
             ),
           );
@@ -116,7 +116,7 @@ class AuthRepository implements AbsIAuthRepository {
                 ..where((s) => s.refreshToken.equals(token))
                 ..limit(1))
               .getSingleOrNull();
-      return Right(row != null ? sessionFromSessionsRow(row) : null);
+      return Right(row != null ? row.toSession() : null);
     } catch (e) {
       return Left(DatabaseFailure('Error finding session: $e'));
     }
@@ -166,7 +166,7 @@ class AuthRepository implements AbsIAuthRepository {
   Future<Either<DatabaseFailure, List<User>>> findAllUsers() async {
     try {
       final rows = await _db.select(_db.usersTable).get();
-      return Right(rows.map(userFromUsersRow).toList());
+      return Right(rows.map((row) => row.toUser()).toList());
     } catch (e) {
       return Left(DatabaseFailure('Error retrieving all users: $e'));
     }

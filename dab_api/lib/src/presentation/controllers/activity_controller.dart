@@ -290,7 +290,7 @@ class ActivityController {
     );
     if (authRejected != null) return authRejected;
 
-    final decoded = decodeGitHubWebhookPayload(body);
+    final decoded = body.decodeGitHubWebhookPayload();
     if (decoded == null) {
       return Response.badRequest(
         body: Body.fromString(

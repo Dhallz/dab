@@ -6,7 +6,7 @@ import '../../../core/styles/app_text_styles.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import '../models/explorer_item.dart';
-import 'explorer_top_activity_kind_summary_buttons.dart';
+import 'explorer_top_activity_kind_summary_buttons/explorer_top_activity_kind_summary_buttons.dart';
 import 'explorer_top_heat_bar.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]

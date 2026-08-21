@@ -52,11 +52,8 @@ class GetGitWatchList {
     if (userSettings == null) {
       return const Left(ValidationFailure('Connect this git host before choosing watches'));
     }
-    final selected = effectiveWatchedRepos(
-      settings: userSettings,
-      instanceRepos: instance,
-    );
-    final branches = parseWatchedBranches(userSettings);
+    final selected = userSettings.effectiveWatchedRepos(instance);
+    final branches = userSettings.parseWatchedBranches();
     final available = {
       for (final repo in [...instance, ...selected])
         if (repo.trim().isNotEmpty) repo.trim(),
@@ -72,9 +69,9 @@ class GetGitWatchList {
 
   List<String> _instanceRepos(String id, Map<String, dynamic> settings) {
     return switch (id) {
-      'github' => extractConfiguredGithubRepos(settings),
-      'gitlab' => gitLabProjects(settings),
-      'bitbucket' => bitbucketRepos(settings),
+      'github' => settings.extractConfiguredGithubRepos(),
+      'gitlab' => settings.gitLabProjects(),
+      'bitbucket' => settings.bitbucketRepos(),
       _ => const [],
     };
   }

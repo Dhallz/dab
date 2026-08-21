@@ -12,7 +12,7 @@ import '../explorer_notifier.dart';
 import '../explorer_state.dart';
 import '../models/explorer_date_mode.dart';
 import 'explorer_calendar_header.dart';
-import 'explorer_date_selector.dart';
+import 'explorer_date_selector/explorer_date_selector.dart';
 import 'explorer_range_mode_date_selector.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]

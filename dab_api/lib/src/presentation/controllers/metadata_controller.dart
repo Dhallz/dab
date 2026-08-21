@@ -119,9 +119,7 @@ class MetadataController {
       final modeResult = await sl<AbsISystemSettingsRepository>().getSetting(
         kDeploymentModeSettingKey,
       );
-      final deploymentMode = normalizeDeploymentMode(
-        modeResult.getOrElse((_) => null),
-      );
+      final deploymentMode = (modeResult.getOrElse((_) => null)).normalizeDeploymentMode();
 
       return Response.ok(
         body: Body.fromString(

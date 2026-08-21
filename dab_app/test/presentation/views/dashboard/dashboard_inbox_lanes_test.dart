@@ -1,8 +1,8 @@
 import 'package:dab_app/domain/entities/activity/activity.dart';
 import 'package:dab_app/domain/entities/user/activity_follow.dart';
 import 'package:dab_app/domain/entities/user/follow_candidate.dart';
+import 'package:dab_app/presentation/core/extensions/activity_extensions.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_state.dart';
-import 'package:dab_app/presentation/views/dashboard/models/dashboard_watching_placeholder.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Activity _activity({
@@ -83,7 +83,7 @@ void main() {
       var state = DashboardState(activities: [directed], follows: [pin]);
       expect(state.watchingPins.single.displayTitle, '[T1] Task');
       expect(state.followedFeed.single.title, '[T1] Task');
-      expect(isDashboardWatchingPlaceholder(state.followedFeed.single), isTrue);
+      expect(state.followedFeed.single.isDashboardWatchingPlaceholder, isTrue);
 
       final followLane = Activity(
         id: 'f-1',
@@ -132,7 +132,7 @@ void main() {
       var state = const DashboardState(follows: [pin]);
       expect(state.watchingPins.single.displayTitle, 'acme/app · feature/foo');
       expect(state.followedFeed.single.title, 'acme/app · feature/foo');
-      expect(isDashboardWatchingPlaceholder(state.followedFeed.single), isTrue);
+      expect(state.followedFeed.single.isDashboardWatchingPlaceholder, isTrue);
 
       final followLane = Activity(
         id: 'f-git',
@@ -186,8 +186,8 @@ void main() {
         '[T1] Quiet',
         '[T2] later',
       ]);
-      expect(isDashboardWatchingPlaceholder(state.followedFeed.first), isTrue);
-      expect(isDashboardWatchingPlaceholder(state.followedFeed.last), isFalse);
+      expect(state.followedFeed.first.isDashboardWatchingPlaceholder, isTrue);
+      expect(state.followedFeed.last.isDashboardWatchingPlaceholder, isFalse);
     },
   );
 }

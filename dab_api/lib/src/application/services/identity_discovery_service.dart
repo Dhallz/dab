@@ -5,7 +5,7 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import '../../domain/contracts/repositories/abs_i_user_repository.dart';
-import '../../domain/contracts/ports/abs_i_discovery_source.dart';
+import '../../domain/contracts/ports/abs_i_discovery_port.dart';
 
 /// [ARCH: APPLICATION_SERVICE]
 /// ROLE: Orchestrator for automated identity resolution across providers.
@@ -15,7 +15,7 @@ import '../../domain/contracts/ports/abs_i_discovery_source.dart';
 class IdentityDiscoveryService {
   final IUserRepository _userRepo;
   final AbsIProviderConfigRepository _configRepo;
-  final Map<String, AbsIDiscoverySource> _discoverySources;
+  final Map<String, AbsIDiscoveryPort> _discoverySources;
   final _uuid = const Uuid();
 
   IdentityDiscoveryService(

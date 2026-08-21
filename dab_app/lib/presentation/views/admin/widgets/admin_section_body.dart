@@ -3,7 +3,7 @@ import 'package:dab_app/presentation/views/admin/admin_state.dart';
 import 'package:dab_app/presentation/views/admin/models/admin_section.dart';
 import 'package:dab_app/presentation/views/admin/widgets/identities_tab.dart';
 import 'package:dab_app/presentation/views/admin/widgets/providers_tab.dart';
-import 'package:dab_app/presentation/views/admin/widgets/security_tab.dart';
+import 'package:dab_app/presentation/views/admin/widgets/security_tab/security_tab.dart';
 import 'package:flutter/material.dart';
 
 class AdminSectionBody extends StatelessWidget {

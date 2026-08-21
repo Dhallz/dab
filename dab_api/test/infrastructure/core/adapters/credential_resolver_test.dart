@@ -51,10 +51,7 @@ void main() {
   });
 
   test('empty user secret does not blank the org token', () {
-    final merged = overlayProviderSecrets(
-      orgSettings: {'api.token': 'org'},
-      userSettings: {'api.token': '  '},
-    );
+    final merged = ({'api.token': 'org'}).overlayProviderSecrets({'api.token': '  '});
     expect(merged['api.token'], 'org');
   });
 

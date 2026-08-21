@@ -42,8 +42,8 @@ class ActivityFollowRepository implements AbsIActivityFollowRepository {
               objectKey: follow.objectKey,
               title: Value(follow.title),
               url: Value(follow.url),
-              createdAt: Value(toPgDateTime(follow.createdAt)),
-              updatedAt: Value(toPgDateTime(now)),
+              createdAt: Value(follow.createdAt.toPgDateTime()),
+              updatedAt: Value(now.toPgDateTime()),
             ),
             onConflict: DoUpdate(
               (_) => ActivityFollowsTableCompanion(
@@ -53,7 +53,7 @@ class ActivityFollowRepository implements AbsIActivityFollowRepository {
                 url: follow.url == null
                     ? const Value.absent()
                     : Value(follow.url),
-                updatedAt: Value(toPgDateTime(now)),
+                updatedAt: Value(now.toPgDateTime()),
               ),
               target: [
                 _db.activityFollowsTable.userId,

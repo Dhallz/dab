@@ -17,7 +17,7 @@ class SaveSystemSettings {
       }
       var value = entry.value;
       if (entry.key == kDeploymentModeSettingKey) {
-        value = normalizeDeploymentMode(value);
+        value = value.normalizeDeploymentMode();
       }
       final res = await _repo.setSetting(entry.key, value);
       if (res.isLeft()) {

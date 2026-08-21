@@ -20,32 +20,32 @@ void main() {
   }
 
   test('inboxWakeData is lane and id only', () {
-    final data = inboxWakeData(activity(lane: ActivityInboxLane.follow));
+    final data = (activity(lane: ActivityInboxLane.follow)).inboxWakeData();
     expect(data, {
       'type': 'inbox_wake',
       'lane': 'follow',
       'activityId': 'a-1',
     });
-    expect(isInboxWakeData(data), isTrue);
+    expect(data.isInboxWakeData, isTrue);
   });
 
   test('isInboxWakeData rejects activity copy', () {
     expect(
-      isInboxWakeData({
+      ({
         'type': 'inbox_wake',
         'lane': 'directed',
         'activityId': 'a-1',
         'title': 'Secret title',
-      }),
+      }).isInboxWakeData,
       isFalse,
     );
     expect(
-      isInboxWakeData({
+      ({
         'type': 'inbox_wake',
         'lane': 'directed',
         'activityId': 'a-1',
         'content': 'Secret body',
-      }),
+      }).isInboxWakeData,
       isFalse,
     );
   });

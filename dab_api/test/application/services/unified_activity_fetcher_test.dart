@@ -10,7 +10,7 @@ import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -22,7 +22,7 @@ class _MockProviderConfigRepo extends Mock
 
 class _MockUserRepo extends Mock implements IUserRepository {}
 
-class _DelayedSource implements AbsIActivitySource<String> {
+class _DelayedSource implements AbsIActivityPort<String> {
   _DelayedSource(this._onFetch);
   final Future<List<String>> Function() _onFetch;
 
@@ -37,7 +37,7 @@ class _DelayedSource implements AbsIActivitySource<String> {
   }
 }
 
-class _FakeSource implements AbsIActivitySource<String> {
+class _FakeSource implements AbsIActivityPort<String> {
   List<User> lastUsers = [];
 
   @override
@@ -86,7 +86,7 @@ void main() {
     registry = ConnectorRegistry()
       ..register<String>(
         TypedConnectorPair<String>(
-          source: source,
+          port: source,
           providerId: 'github',
           mapItemToActivities: _fakeGithubMapRow,
         ),
@@ -177,7 +177,7 @@ void main() {
     registry = ConnectorRegistry()
       ..register<String>(
         TypedConnectorPair<String>(
-          source: delayed,
+          port: delayed,
           providerId: 'github',
           mapItemToActivities: _fakeGithubMapRow,
         ),

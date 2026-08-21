@@ -34,7 +34,7 @@ class GetSystemSettings {
                 'allowed_domain': domain ?? '',
                 'public_api_url': publicApiUrl ?? '',
                 kSystemTimezoneSettingKey: resolveOrgTimezoneId(timezone),
-                kDeploymentModeSettingKey: normalizeDeploymentMode(mode),
+                kDeploymentModeSettingKey: mode.normalizeDeploymentMode(),
               }),
             ),
           ),

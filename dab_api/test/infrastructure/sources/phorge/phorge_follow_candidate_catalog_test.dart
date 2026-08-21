@@ -162,6 +162,33 @@ void main() {
     final rows = result.getOrElse((_) => throw StateError('left'));
     expect(rows.single.objectKey, 'PHID-TASK-3');
   });
+
+  test('typed T-id searches any task without involvement', () async {
+    when(() => users.getUser('u-1')).thenAnswer(
+      (_) async => Right(TestData.user(id: 'u-1', phorgeUsername: null)),
+    );
+    when(
+      () => conduit.call(any(), any(), apiToken: any(named: 'apiToken')),
+    ).thenAnswer((invocation) async {
+      final method = invocation.positionalArguments[0] as String;
+      expect(method, 'maniphest.search');
+      final params = invocation.positionalArguments[1] as Map;
+      final constraints = params['constraints'] as Map;
+      expect(constraints['ids'], [12]);
+      expect(constraints.containsKey('assigned'), isFalse);
+      expect(constraints.containsKey('authorPHIDs'), isFalse);
+      expect(constraints.containsKey('subscriberPHIDs'), isFalse);
+      return {
+        'data': [_task(phid: 'PHID-TASK-12', id: 12, name: 'Follow me')],
+      };
+    });
+
+    final result = await catalog.list(userId: 'u-1', query: 'T12');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows.single.objectKey, 'PHID-TASK-12');
+    expect(rows.single.title, '[T12] Follow me');
+    verifyNever(() => users.getUser(any()));
+  });
 }
 
 Map<String, dynamic> _task({

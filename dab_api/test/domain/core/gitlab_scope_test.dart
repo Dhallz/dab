@@ -4,33 +4,31 @@ import 'package:test/test.dart';
 void main() {
   test('unwraps Dart List.toString wrappers from Admin projects', () {
     expect(
-      gitLabProjects({
+      ({
         'projects': ['[[team-dhallz-io/gitlab.dhallz.io]]'],
-      }),
+      }).gitLabProjects(),
       ['team-dhallz-io/gitlab.dhallz.io'],
     );
     expect(
-      gitLabProjects({
+      ({
         'projects': [
           ['team-dhallz-io/gitlab.dhallz.io'],
         ],
-      }),
+      }).gitLabProjects(),
       ['team-dhallz-io/gitlab.dhallz.io'],
     );
     expect(
-      normalizeGitLabProject('[team-dhallz-io/gitlab.dhallz.io]'),
+      ('[team-dhallz-io/gitlab.dhallz.io]').normalizeGitLabProject(),
       'team-dhallz-io/gitlab.dhallz.io',
     );
   });
 
   test('parses GitLab project URLs and numeric ids', () {
     expect(
-      normalizeGitLabProject(
-        'https://gitlab.com/team-dhallz-io/gitlab.dhallz.io/-/tree/develop',
-      ),
+      ('https://gitlab.com/team-dhallz-io/gitlab.dhallz.io/-/tree/develop').normalizeGitLabProject(),
       'team-dhallz-io/gitlab.dhallz.io',
     );
-    expect(normalizeGitLabProject('123456'), '123456');
-    expect(normalizeGitLabProject('not-a-project'), isNull);
+    expect(('123456').normalizeGitLabProject(), '123456');
+    expect(('not-a-project').normalizeGitLabProject(), isNull);
   });
 }

@@ -31,7 +31,7 @@ query DabTeams(\$first: Int!, \$after: String) {
     required Map<String, dynamic> settings,
     ProviderConfig? orgConfig,
   }) async {
-    final token = extractProviderToken('linear', settings);
+    final token = settings.extractProviderToken('linear');
     if (token.isEmpty) {
       return const Left(ValidationFailure('Linear credentials are incomplete'));
     }

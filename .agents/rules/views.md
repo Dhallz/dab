@@ -24,9 +24,11 @@ views/
     ├── layouts/
     │   ├── explorer_view_desktop.dart
     │   └── explorer_view_mobile.dart
-    ├── widgets/
+    ├── widgets/                     ← one public widget class per file
     └── models/
 ```
+
+When a parent widget needs child widgets, put them in a subfolder named after the parent (for example `widgets/dashboard_follow_search/dashboard_follow_search.dart` and `dashboard_follow_search_menu.dart`). Feature-only widgets stay under that feature’s `widgets/` folder (`dashboard/widgets`, not `core/widgets`).
 
 Do **not** add presentation `*_event.dart` hierarchies; **user actions** are **notifier methods** on the screen’s `Notifier`.
 
@@ -39,7 +41,8 @@ Do **not** add presentation `*_event.dart` hierarchies; **user actions** are **n
 | `*_view.dart` | Schedule init (`started(...)`), delegate to `LayoutBuilder` | Own business rules beyond routing glue |
 | `*_notifier.dart` | Orchestrate use cases, expose methods for UI actions | Call HTTP or DB directly |
 | `*_state.dart` | Single immutable snapshot | Heavy computation — prefer extensions (`OnFooState`) |
-| `*_view_desktop.dart` / `*_view_mobile.dart` | Layout only | Provide repositories / Dio |
+| `*_view_desktop.dart` / `*_view_mobile.dart` | Layout only | Extra widget classes; repositories / Dio |
+| `widgets/*.dart` | One public widget class (plus its `State` if stateful) | Extra widget classes in the same file |
 
 ---
 

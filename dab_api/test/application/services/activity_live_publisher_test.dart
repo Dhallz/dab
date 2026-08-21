@@ -1,5 +1,5 @@
 import 'package:dab_api/src/application/services/activity_live_publisher.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_client.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_device_token_repository.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
@@ -15,7 +15,7 @@ class _MockPresence extends Mock implements PresenceService {}
 
 class _MockTokens extends Mock implements AbsIUserDeviceTokenRepository {}
 
-class _MockWake extends Mock implements AbsIPushWakeGateway {}
+class _MockWake extends Mock implements AbsIPushWakeClient {}
 
 void main() {
   late _MockRedis redis;

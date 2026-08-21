@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/models/view_status.dart';
-import '../../../core/navigation/app_route.dart';
 import '../../../core/widgets/dab_mesh_background.dart';
 import '../../../core/widgets/dab_glass_surface.dart';
-import '../../../features/app/app_notifier.dart';
-import '../auth_form_notifier.dart';
-import '../auth_state.dart';
-import '../widgets/auth_form.dart';
+import '../widgets/auth_form_panel.dart';
 
 /// Mobile auth screen — static chrome is a [StatelessWidget]; only the form
 /// subtree watches [authFormNotifierProvider].
@@ -50,9 +43,9 @@ class AuthViewMobile extends StatelessWidget {
                 const SizedBox(height: 48),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
-                  child: DabGlassSurface(
-                    padding: const EdgeInsets.all(32),
-                    child: _AuthFormPanel(),
+                  child: const DabGlassSurface(
+                    padding: EdgeInsets.all(32),
+                    child: AuthFormPanel(),
                   ),
                 ),
               ],
@@ -60,48 +53,6 @@ class AuthViewMobile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AuthFormPanel extends ConsumerStatefulWidget {
-  @override
-  ConsumerState<_AuthFormPanel> createState() => _AuthFormPanelState();
-}
-
-class _AuthFormPanelState extends ConsumerState<_AuthFormPanel> {
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final state = ref.watch(authFormNotifierProvider);
-
-    ref.listen<AuthState>(authFormNotifierProvider, (previous, next) {
-      if (next.status == ViewStatus.success) {
-        context.go(AppRoute.homeDashboard.path);
-      } else if (next.status == ViewStatus.failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage ?? l10n.authErrorFailed),
-          ),
-        );
-      }
-    });
-
-    final appState = ref.watch(appNotifierProvider);
-
-    return AuthForm(
-      state: state,
-      isSystemConfigured: appState.isSystemConfigured,
-      onEmailChanged: (v) =>
-          ref.read(authFormNotifierProvider.notifier).setEmail(v),
-      onPasswordChanged: (v) =>
-          ref.read(authFormNotifierProvider.notifier).setPassword(v),
-      onNameChanged: (v) =>
-          ref.read(authFormNotifierProvider.notifier).setName(v),
-      onSubmitted: () =>
-          ref.read(authFormNotifierProvider.notifier).submit(ref),
-      onModeToggled: () =>
-          ref.read(authFormNotifierProvider.notifier).toggleMode(),
     );
   }
 }

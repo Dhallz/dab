@@ -6,11 +6,11 @@ void main() {
   final resolver = OauthClientCredentialResolver(Config());
 
   test('readOauthSetting skips JSON null and the string null', () {
-    expect(readOauthSetting({'clientId': null}, const ['clientId']), isNull);
-    expect(readOauthSetting({'clientId': 'null'}, const ['clientId']), isNull);
-    expect(readOauthSetting({'clientId': '  '}, const ['clientId']), isNull);
+    expect(({'clientId': null}).readOauthSetting(const ['clientId']), isNull);
+    expect(({'clientId': 'null'}).readOauthSetting(const ['clientId']), isNull);
+    expect(({'clientId': '  '}).readOauthSetting(const ['clientId']), isNull);
     expect(
-      readOauthSetting({'clientId': '"abc-client"'}, const ['clientId']),
+      ({'clientId': '"abc-client"'}).readOauthSetting(const ['clientId']),
       'abc-client',
     );
   });

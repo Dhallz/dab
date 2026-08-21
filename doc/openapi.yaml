@@ -1247,10 +1247,11 @@ paths:
         Returns objects the caller can Follow from the Dashboard Following
         search. Empty `q` lists open Phorge/Jira/Linear issues where the
         caller is assignee, watcher/subscriber, or reporter. A typed `q`
-        also includes GitHub/GitLab/Bitbucket branches on Admin-allow-listed
-        repos whose repo or branch name matches. Git rows use
-        `objectKey` `owner/repo|branch` and `kind` `gitBranch`. This is not
-        `GET /activities/search`.
+        searches any matching Phorge/Jira/Linear issue (instance team/project
+        allow-lists still apply) and also includes GitHub/GitLab/Bitbucket
+        branches on Admin-allow-listed repos whose repo or branch name matches.
+        Git rows use `objectKey` `owner/repo|branch` and `kind` `gitBranch`.
+        This is not `GET /activities/search`.
       security:
         - bearerAuth: []
       parameters:

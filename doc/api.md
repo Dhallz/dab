@@ -22,9 +22,10 @@ graph TD
         D_Ext[Payload → Activity (OnXDto.toActivities)]
         D_Ent[Entities]
         D_Repo[Repository Interfaces]
+        D_Port[AbsIActivityPort]
     end
     subgraph "Infrastructure Layer"
-        I_Prov[AbsIActivitySource]
+        I_Src[Sources]
         I_Repo[Repository Impls]
         I_DB[Database]
     end
@@ -32,12 +33,13 @@ graph TD
     A_Serv --> A_Sync
     A_Sync --> A_Reg
     A_Reg -->|resolves mapping| D_Ext
-    A_Reg -->|resolves| I_Prov
+    A_Reg -->|resolves| D_Port
     D_Ext -->|transforms| D_Ent
     A_Serv --> D_Repo
     I_Repo -->|implements| D_Repo
     I_Repo --> I_DB
-    I_Prov -->|reads from| Ext[External APIs]
+    I_Src -->|implements| D_Port
+    I_Src -->|reads from| Ext[External APIs]
 ```
 
 ---
@@ -60,7 +62,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 - **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
-- **`contracts/`:** All outbound seams. **`ports/`** — I/O that is not our Postgres (`AbsIActivitySource<T>`, `AbsIDiscoverySource`, catalogs, `AbsILiveFeedStore` / `AbsIPresenceBroadcaster` / `AbsIAccessTokenIssuer`, `AbsIWebhookRequestAuthenticator`, `AbsIDiscordLiveIngestor`, plus `AbsIPhorgeFacade` for Phorge directory/sprint/task/revision facade). Other providers poll through `AbsIActivitySource`, not a dedicated facade. **`repositories/`** — abstract Postgres contracts (`AbsI*` / `I*`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
+- **`contracts/`:** All outbound seams. **`ports/`** — I/O that is not our Postgres (`AbsIActivityPort<T>`, `AbsIDiscoveryPort`, catalogs, `AbsILiveFeedStore` / `AbsIPresenceBroadcaster` / `AbsIAccessTokenIssuer`, `AbsIWebhookRequestAuthenticator`, `AbsIDiscordLiveIngestor`, plus `AbsIPhorgeFacade` for Phorge directory/sprint/task/revision facade). Other providers poll through `AbsIActivityPort`, not a dedicated facade. **`repositories/`** — abstract Postgres contracts (`AbsI*` / `I*`). Return `Either<Failure, T>` via `fpdart`. **`IUserRepository.getUser`** returns **`NotFoundFailure`** when the row is absent and **`DatabaseFailure`** on query errors.
 
 - **DTO mapping extensions:** Business rules for transforming each provider payload type into a `DAB Activity`.
 
@@ -70,13 +72,13 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`AbsIActivitySource` implementations (`sources/`):** Implement the domain port `AbsIActivitySource<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, `DiscordGatewayClient`) also lives here. File suffixes: `*_source.dart` (poll/fetch), `*_catalog.dart` (pick lists), `DiscordGatewayClient`, `PhorgeFacade`. Never `*Service` in this folder.
+- **`AbsIActivityPort` implementations (`sources/`):** Implement the domain port `AbsIActivityPort<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, `DiscordGatewayClient`) also lives here. File suffixes: `*_source.dart` (poll/fetch), `*_catalog.dart` (pick lists), `DiscordGatewayClient`, `PhorgeFacade`. Never `*Service` in this folder.
 
-- **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `AbsIActivitySource`.
+- **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `AbsIActivityPort`.
 
 - **`persistence/`:** All durable/cache stores. **`postgres/`** — Drift schema, DAOs, `MigrationStrategy` (never hand-edit `*.g.dart`). **`redis/`** — live feed, Vegas clock, ingest dedup. **`repositories/`** — AbsI* implementations (TBT `leftOuterJoin` hydration, including `PostgresHealthRepository`).
 
-- **`core/`:** Cross-cutting leftovers. **`config/`** — env loading. **`security/`** — JWT, bcrypt, HMAC primitives, `SettingsCipher`. **`http/`** — inbound payload helpers. **`adapters/`** — OAuth, credential overlay, identity probe, webhook authenticator. **`realtime/`** — `PresenceService`, data-only `AbsIPushWakeGateway` (FCM HTTP v1 in production, no-op in development). **`logging/`** — structured logging.
+- **`core/`:** Cross-cutting leftovers. **`config/`** — env loading. **`security/`** — JWT, bcrypt, HMAC primitives, `SettingsCipher`. **`http/`** — inbound payload helpers. **`adapters/`** — OAuth, credential overlay, identity probe, webhook authenticator. **`realtime/`** — `PresenceService`, data-only `AbsIPushWakeClient` (FCM HTTP v1 in production, no-op in development). **`logging/`** — structured logging.
 
 - **Relative URL Strategy:** Providers generate relative paths (e.g., `/T123`). The DAB app resolves full URLs using `baseUrl` from `ProviderConfig`.
 

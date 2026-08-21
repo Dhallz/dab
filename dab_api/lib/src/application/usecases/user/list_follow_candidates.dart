@@ -8,7 +8,7 @@ import 'get_git_branch_list.dart';
 import 'get_git_watch_list.dart';
 
 /// [ARCH: APPLICATION_USECASE]
-/// ROLE: Lists Follow picker rows: involved issues plus matching git branches.
+/// ROLE: Lists Follow picker rows: issues (any matching query) plus git branches.
 class ListFollowCandidates {
   ListFollowCandidates(
     this._issueCatalogs,

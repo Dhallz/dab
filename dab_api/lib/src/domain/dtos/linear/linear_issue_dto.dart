@@ -125,7 +125,7 @@ extension OnLinearIssueDto on LinearIssueDto {
         if (statusTrim.isNotEmpty) bodyParts.add('Status: $statusTrim');
         if (urlTrim.isNotEmpty) bodyParts.add(urlTrim);
         final idSeed = fanOut
-            ? withInboxLaneId('linear|$fingerprint|$targetId', lane)
+            ? ('linear|$fingerprint|$targetId').withInboxLaneId(lane)
             : 'linear|$fingerprint';
         events.add(
           Activity(
@@ -165,10 +165,7 @@ extension OnLinearIssueDto on LinearIssueDto {
         final recipient = userById[targetId];
         if (recipient == null) continue;
         final cidSeed = fanOut
-            ? withInboxLaneId(
-                'linear|$key|comment|${comment.id}|$targetId',
-                lane,
-              )
+            ? ('linear|$key|comment|${comment.id}|$targetId').withInboxLaneId(lane)
             : 'linear|$key|comment|${comment.id}';
         final commentBody = comment.body.trim();
         events.add(

@@ -13,7 +13,9 @@ import '../../../domain/contracts/repositories/abs_i_user_repository.dart';
 import '../../protocols/conduit/conduit_protocol.dart';
 
 /// [ARCH: INFRASTRUCTURE]
-/// ROLE: Lists the caller's open Phorge tasks for the Follow picker. Read-only.
+/// ROLE: Lists Phorge tasks for the Follow picker. Read-only.
+/// CONTRACT: Empty [query] is involved (assigned/authored/subscribed). A typed
+/// query searches any Maniphest task by id (`T12`) or text.
 class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   PhorgeFollowCandidateCatalog(
     this._configs,
@@ -56,17 +58,20 @@ class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
       orgSettings: org.settings,
       userSettings: userSettings,
     );
-    final token = extractProviderToken('phorge', merged);
+    final token = merged.extractProviderToken('phorge');
     if (token.isEmpty) return const [];
-
-    final phid = await _resolvePhid(userId: userId, token: token);
-    if (phid.isEmpty) return const [];
 
     final q = query.trim();
     final browseOrigin = phorgeInstanceUrl(
       instanceUrl: (merged['instanceUrl'] ?? '').toString(),
       baseUrl: org.baseUrl,
     );
+    if (q.isNotEmpty) {
+      return _searchByQuery(token: token, browseOrigin: browseOrigin, query: q);
+    }
+
+    final phid = await _resolvePhid(userId: userId, token: token);
+    if (phid.isEmpty) return const [];
     final assigned = await _searchOpenOrAny(
       token: token,
       browseOrigin: browseOrigin,
@@ -141,6 +146,39 @@ class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
       return (nested['phid'] ?? '').toString().trim();
     }
     return '';
+  }
+
+  static final _taskId = RegExp(r'^T?(\d+)$', caseSensitive: false);
+
+  Future<List<FollowCandidate>> _searchByQuery({
+    required String token,
+    required String? browseOrigin,
+    required String query,
+  }) async {
+    final idMatch = _taskId.firstMatch(query);
+    if (idMatch != null) {
+      return _searchSafe(
+        token: token,
+        browseOrigin: browseOrigin,
+        constraints: {
+          'ids': [int.parse(idMatch.group(1)!)],
+        },
+      );
+    }
+    final open = await _searchSafe(
+      token: token,
+      browseOrigin: browseOrigin,
+      constraints: {
+        'statuses': ['open'],
+        'query': query,
+      },
+    );
+    if (open.isNotEmpty) return open;
+    return _searchSafe(
+      token: token,
+      browseOrigin: browseOrigin,
+      constraints: {'query': query},
+    );
   }
 
   Future<List<FollowCandidate>> _searchOpenOrAny({

@@ -21,75 +21,91 @@ const kFollowableProviderIds = {
 /// Git hosts that pin a single repo + branch on Following.
 const kGitFollowProviderIds = {'github', 'gitlab', 'bitbucket'};
 
-/// Whether [providerId] can be stored on `activity_follows`.
-bool isFollowableProviderId(String providerId) =>
-    kFollowableProviderIds.contains(providerId.trim().toLowerCase());
+/// [ARCH: DOMAIN]
+/// ROLE: Followable vs git-follow provider-id predicates.
+extension OnString on String {
+  /// Whether [this] can be stored on `activity_follows`.
+  bool get isFollowableProviderId =>
+      kFollowableProviderIds.contains(trim().toLowerCase());
 
-/// Whether [providerId] uses `repo|branch` Follow keys.
-bool isGitFollowProviderId(String providerId) =>
-    kGitFollowProviderIds.contains(providerId.trim().toLowerCase());
-
-/// Ingest provider id for [provider], or null when Follow does not apply.
-String? followProviderIdFor(ActivityProvider provider) {
-  return switch (provider) {
-    PhorgeTaskProvider() || PhorgeRevisionProvider() => 'phorge',
-    JiraIssueProvider() => 'jira',
-    LinearIssueProvider() => 'linear',
-    SlackMessageProvider() => 'slack',
-    DiscordMessageProvider() => 'discord',
-    GitHubCommitProvider() => 'github',
-    GitLabCommitProvider() => 'gitlab',
-    BitbucketCommitProvider() => 'bitbucket',
-    FigmaFileProvider() => 'figma',
-    GenericProvider() => null,
-  };
+  /// Whether [this] uses `repo|branch` Follow keys.
+  bool get isGitFollowProviderId =>
+      kGitFollowProviderIds.contains(trim().toLowerCase());
 }
 
-/// Opaque object key stored on `activity_follows`, or null when un-followable.
-String? followObjectKeyFor(ActivityProvider provider) {
-  return switch (provider) {
-    PhorgeTaskProvider(:final taskPhid) => _nonEmpty(taskPhid),
-    PhorgeRevisionProvider(:final revisionId) => _nonEmpty(revisionId),
-    JiraIssueProvider(:final issueKey) => _nonEmpty(issueKey),
-    LinearIssueProvider(:final identifier) => _nonEmpty(identifier),
-    SlackMessageProvider(
-      :final workspaceId,
-      :final channelId,
-      :final threadTs,
-      :final messageTs,
-    ) =>
-      slackFollowObjectKey(
-        workspaceId: workspaceId,
-        channelId: channelId ?? '',
-        threadTs: threadTs,
-        messageTs: messageTs,
+/// [ARCH: DOMAIN]
+/// ROLE: Follow ingest id and object key for a sealed activity provider.
+extension OnActivityProvider on ActivityProvider {
+  /// Ingest provider id, or null when Follow does not apply.
+  String? get followProviderId {
+    return switch (this) {
+      PhorgeTaskProvider() || PhorgeRevisionProvider() => 'phorge',
+      JiraIssueProvider() => 'jira',
+      LinearIssueProvider() => 'linear',
+      SlackMessageProvider() => 'slack',
+      DiscordMessageProvider() => 'discord',
+      GitHubCommitProvider() => 'github',
+      GitLabCommitProvider() => 'gitlab',
+      BitbucketCommitProvider() => 'bitbucket',
+      FigmaFileProvider() => 'figma',
+      GenericProvider() => null,
+    };
+  }
+
+  /// Opaque object key stored on `activity_follows`, or null when un-followable.
+  String? get followObjectKey {
+    return switch (this) {
+      PhorgeTaskProvider(:final taskPhid) => _nonEmpty(taskPhid),
+      PhorgeRevisionProvider(:final revisionId) => _nonEmpty(revisionId),
+      JiraIssueProvider(:final issueKey) => _nonEmpty(issueKey),
+      LinearIssueProvider(:final identifier) => _nonEmpty(identifier),
+      SlackMessageProvider(
+        :final workspaceId,
+        :final channelId,
+        :final threadTs,
+        :final messageTs,
+      ) =>
+        slackFollowObjectKey(
+          workspaceId: workspaceId,
+          channelId: channelId ?? '',
+          threadTs: threadTs,
+          messageTs: messageTs,
+        ),
+      DiscordMessageProvider(
+        :final guildId,
+        :final channelId,
+        :final messageId,
+        :final replyToId,
+      ) =>
+        discordFollowObjectKey(
+          guildId: guildId,
+          channelId: channelId ?? '',
+          messageId: (replyToId ?? '').trim().isNotEmpty ? replyToId : messageId,
+        ),
+      GitHubCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
+        repo,
+        branch,
       ),
-    DiscordMessageProvider(
-      :final guildId,
-      :final channelId,
-      :final messageId,
-      :final replyToId,
-    ) =>
-      discordFollowObjectKey(
-        guildId: guildId,
-        channelId: channelId ?? '',
-        messageId: (replyToId ?? '').trim().isNotEmpty ? replyToId : messageId,
+      GitLabCommitProvider(:final project, :final branch) => gitFollowObjectKey(
+        project,
+        branch,
       ),
-    GitHubCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
-      repo,
-      branch,
-    ),
-    GitLabCommitProvider(:final project, :final branch) => gitFollowObjectKey(
-      project,
-      branch,
-    ),
-    BitbucketCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
-      repo,
-      branch,
-    ),
-    FigmaFileProvider(:final fileKey) => _nonEmpty(fileKey),
-    GenericProvider() => null,
-  };
+      BitbucketCommitProvider(:final repo, :final branch) => gitFollowObjectKey(
+        repo,
+        branch,
+      ),
+      FigmaFileProvider(:final fileKey) => _nonEmpty(fileKey),
+      GenericProvider() => null,
+    };
+  }
+
+  /// Combined Follow ref, or null when un-followable.
+  String? get followObjectRefFor {
+    final providerId = followProviderId;
+    final objectKey = followObjectKey;
+    if (providerId == null || objectKey == null) return null;
+    return followObjectRef(providerId, objectKey);
+  }
 }
 
 /// Slack thread key: workspace + channel + thread root ts.
@@ -176,14 +192,6 @@ String? gitFollowObjectKey(String? repo, String? branch) {
 /// Stable Dashboard state key: ingest provider id plus object key.
 String followObjectRef(String providerId, String objectKey) =>
     '$providerId\u001f$objectKey';
-
-/// Combined Follow ref for [provider], or null when un-followable.
-String? followObjectRefFor(ActivityProvider provider) {
-  final providerId = followProviderIdFor(provider);
-  final objectKey = followObjectKeyFor(provider);
-  if (providerId == null || objectKey == null) return null;
-  return followObjectRef(providerId, objectKey);
-}
 
 /// Rebuilds a followable [ActivityProvider] from a stored pin key.
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/dashboard_island_bar_content.dart';
-import '../widgets/dashboard_live_feed_scope.dart';
+import '../widgets/dashboard_live_feed_scope/dashboard_live_feed_scope.dart';
 
 class DashboardViewMobile extends StatelessWidget {
   const DashboardViewMobile({super.key});

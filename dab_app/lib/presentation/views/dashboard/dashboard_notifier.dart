@@ -12,12 +12,12 @@ import '../../../domain/entities/system/app_settings.dart';
 import '../../../domain/entities/user/activity_follow.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../services/service_locator.dart';
+import '../../core/extensions/activity_extensions.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/models/view_status.dart';
 import '../../features/app/app_lifecycle.dart';
 import '../../features/app/app_notifier.dart';
 import 'dashboard_state.dart';
-import 'models/dashboard_activity_copy.dart';
 import 'models/dashboard_feed_mode.dart';
 import 'models/dashboard_provider_health.dart';
 
@@ -197,7 +197,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
       enabled: settings.inboxNotificationsEnabled,
       windowFocused: focused,
       notificationId: '${activity.id}:${activity.inboxLane.name}',
-      title: dashboardActivityHeadline(activity),
+      title: activity.dashboardHeadline,
       body: activity.isFollowLane
           ? l10n.inboxNotificationFollowing
           : l10n.inboxNotificationDirected,
@@ -243,8 +243,8 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   }
 
   Future<void> follow(Activity activity) async {
-    final providerId = followProviderIdFor(activity.provider);
-    final objectKey = followObjectKeyFor(activity.provider);
+    final providerId = activity.provider.followProviderId;
+    final objectKey = activity.provider.followObjectKey;
     if (providerId == null || objectKey == null) return;
     final ref = followObjectRef(providerId, objectKey);
     if (state.followedObjectRefs.contains(ref)) return;
@@ -338,8 +338,8 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
   }
 
   Future<void> unfollow(Activity activity) async {
-    final providerId = followProviderIdFor(activity.provider);
-    final objectKey = followObjectKeyFor(activity.provider);
+    final providerId = activity.provider.followProviderId;
+    final objectKey = activity.provider.followObjectKey;
     if (providerId == null || objectKey == null) return;
     await unfollowPin(
       ActivityFollow(providerId: providerId, objectKey: objectKey),

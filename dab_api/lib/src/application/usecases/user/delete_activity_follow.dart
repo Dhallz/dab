@@ -18,7 +18,7 @@ class DeleteActivityFollow {
   }) async {
     final id = providerId.trim().toLowerCase();
     final key = objectKey.trim();
-    if (!isFollowableProviderId(id) || key.isEmpty) {
+    if (!id.isFollowableProviderId || key.isEmpty) {
       return const Left(
         ValidationFailure(
           'Follow is only available for Phorge, Jira, Linear, Slack, Discord, '
@@ -26,7 +26,7 @@ class DeleteActivityFollow {
         ),
       );
     }
-    if (isGitFollowProviderId(id) && parseGitFollowObjectKey(key) == null) {
+    if (id.isGitFollowProviderId && parseGitFollowObjectKey(key) == null) {
       return const Left(
         ValidationFailure('Git Follow requires owner/repo and a branch'),
       );

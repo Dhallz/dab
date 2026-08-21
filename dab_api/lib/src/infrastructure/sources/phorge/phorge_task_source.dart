@@ -6,7 +6,7 @@ import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_dto.dart'
 import 'package:dab_api/src/domain/dtos/phorge/phorge_task/phorge_task_wire_fields_dto.dart';
 import 'package:dab_api/src/domain/dtos/phorge/phorge_transaction/phorge_transaction_dto.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_source.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_activity_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -14,7 +14,7 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 
 /// [ARCH: INFRASTRUCTURE_SOURCE]
 /// ROLE: low-level I/O for Phorge (Phabricator) Tasks and Transactions.
-/// CONTRACT: Implements [AbsIActivitySource] for [PhorgeTaskBundleDto].
+/// CONTRACT: Implements [AbsIActivityPort] for [PhorgeTaskBundleDto].
 /// CONSTRAINTS: Must be READ-ONLY. Logic is restricted to API coordination and DTO mapping.
 ///
 /// This source handles the complex multi-step fetching logic required by Phorge:
@@ -22,7 +22,7 @@ import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.da
 /// 2. Task hydration (fetching full task details for discovered transactions).
 /// 3. Bundling (pairing transactions with their parent tasks).
 class PhorgeTaskSource
-    implements AbsIActivitySource<PhorgeTaskBundleDto>, AbsIPhorgeTaskHydrator {
+    implements AbsIActivityPort<PhorgeTaskBundleDto>, AbsIPhorgeTaskHydrator {
   final ConduitProtocol _client;
   final AbsICredentialResolver _credentials;
   final AbsIProviderConfigRepository _configs;
@@ -364,7 +364,7 @@ class PhorgeTaskSource
     final all = (await _configs.getConfigs()).getOrElse((_) => []);
     final org = all.where((c) => c.id == 'phorge').firstOrNull;
     final orgSettings = org?.settings ?? const <String, dynamic>{};
-    var token = extractProviderToken('phorge', orgSettings);
+    var token = orgSettings.extractProviderToken('phorge');
     if (token.isNotEmpty) return token;
     final userSettings = await _credentials.getUserSettingsForUsers(
       userIds: users.map((u) => u.id),
@@ -375,7 +375,7 @@ class PhorgeTaskSource
         orgSettings: orgSettings,
         userSettings: userSettings[user.id],
       );
-      token = extractProviderToken('phorge', merged);
+      token = merged.extractProviderToken('phorge');
       if (token.isNotEmpty) return token;
     }
     return null;

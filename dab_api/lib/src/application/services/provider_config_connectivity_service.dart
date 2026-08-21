@@ -77,7 +77,7 @@ class ProviderConfigConnectivityService {
       );
     }
 
-    final repos = extractConfiguredGithubRepos(config.settings);
+    final repos = config.settings.extractConfiguredGithubRepos();
     final polling = await _githubPolling(
       token: token,
       apiBaseUrl: apiBaseUrl,
@@ -143,8 +143,8 @@ class ProviderConfigConnectivityService {
       );
     }
 
-    final projects = gitLabProjects(config.settings);
-    final apiBase = gitLabApiBase(config.settings, normalizedUrl);
+    final projects = config.settings.gitLabProjects();
+    final apiBase = config.settings.gitLabApiBase(normalizedUrl);
     final polling = await _gitlabPolling(
       token: token,
       apiBase: apiBase,
@@ -181,8 +181,8 @@ class ProviderConfigConnectivityService {
       );
     }
 
-    final workspace = bitbucketWorkspace(config.settings);
-    final repos = bitbucketRepos(config.settings);
+    final workspace = config.settings.bitbucketWorkspace();
+    final repos = config.settings.bitbucketRepos();
     final polling = await _bitbucketPolling(
       username: username,
       secret: secret,
@@ -280,7 +280,7 @@ class ProviderConfigConnectivityService {
       );
     }
 
-    final channels = discordChannelIds(config.settings);
+    final channels = config.settings.discordChannelIds();
     final polling = await _discordPolling(botToken: botToken, channels: channels);
     final live = await _resolveLive(config, 'discord');
     return Right(buildReport(core: core, live: live, polling: polling));
@@ -428,7 +428,7 @@ class ProviderConfigConnectivityService {
       final response = await http
           .get(
             Uri.parse('$kFigmaApiBase/v1/me'),
-            headers: figmaAuthHeaders(token),
+            headers: token.figmaAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
@@ -458,10 +458,10 @@ class ProviderConfigConnectivityService {
     ProviderConfig config,
     String token,
   ) async {
-    final fileKeys = parseFigmaFileKeys(config.settings['fileKeys']);
-    final teamIds = parseFigmaTeamIds(
-      config.settings['teamIds'] ?? config.settings['teamId'],
-    );
+    final fileKeys = (config.settings['fileKeys'] as Object?).parseFigmaFileKeys();
+    final teamIds = ((config.settings['teamIds'] ?? config.settings['teamId'])
+            as Object?)
+        .parseFigmaTeamIds();
     if (fileKeys.isEmpty && teamIds.isEmpty) {
       return const ProviderSectionResult(
         status: ConnectivitySectionStatus.success,
@@ -475,7 +475,7 @@ class ProviderConfigConnectivityService {
         final response = await http
             .get(
               Uri.parse('$kFigmaApiBase/v1/files/$key/meta'),
-              headers: figmaAuthHeaders(token),
+              headers: token.figmaAuthHeaders(),
             )
             .timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) {
@@ -494,7 +494,7 @@ class ProviderConfigConnectivityService {
       final response = await http
           .get(
             Uri.parse('$kFigmaApiBase/v1/teams/$teamId/projects'),
-            headers: figmaAuthHeaders(token),
+            headers: token.figmaAuthHeaders(),
           )
           .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) {

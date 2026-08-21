@@ -86,7 +86,7 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_access_token_issuer.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_discord_live_ingestor.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_meta_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_live_feed_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_presence_broadcaster.dart';
@@ -104,7 +104,7 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_state_store.dart'
 import 'package:dab_api/src/domain/contracts/ports/abs_i_oauth_token_client.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_webhook_request_authenticator.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_client.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_device_token_repository.dart';
 // domain
@@ -181,7 +181,7 @@ import 'package:dab_api/src/infrastructure/sources/phorge/phorge_revision_source
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_task_source.dart';
 import 'package:dab_api/src/infrastructure/sources/phorge/phorge_user_source.dart';
 import 'package:dab_api/src/infrastructure/sources/slack/slack_message_source.dart';
-import 'package:dab_api/src/infrastructure/core/realtime/fcm_http_v1_push_wake_gateway.dart';
+import 'package:dab_api/src/infrastructure/core/realtime/fcm_http_v1_push_wake_client.dart';
 import 'package:dab_api/src/infrastructure/core/realtime/presence_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
@@ -364,7 +364,7 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GitLabCommitSource>(gitlabSource);
   sl.registerSingleton<BitbucketCommitSource>(bitbucketSource);
   sl.registerSingleton<FigmaFileSource>(figmaSource);
-  sl.registerSingleton<AbsIFigmaFileGateway>(figmaSource);
+  sl.registerSingleton<AbsIFigmaFileMetaPort>(figmaSource);
 
   // Application Orchestration: Mapping Sources to Mappers (single registration site)
   final registry = ConnectorRegistry();
@@ -423,8 +423,8 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<PresenceService>(PresenceService());
   sl.registerSingleton<AbsIPresenceBroadcaster>(sl<PresenceService>());
   sl.registerSingleton<LoggingService>(LoggingService());
-  sl.registerSingleton<AbsIPushWakeGateway>(
-    FcmHttpV1PushWakeGateway.resolve(config, client: sl<http.Client>()),
+  sl.registerSingleton<AbsIPushWakeClient>(
+    FcmHttpV1PushWakeClient.resolve(config, client: sl<http.Client>()),
   );
   sl.registerSingleton<ProviderCapabilityCatalog>(ProviderCapabilityCatalog());
   sl.registerSingleton<ActivityLivePublisher>(
@@ -432,7 +432,7 @@ Future<void> serviceLocator() async {
       sl<AbsILiveFeedStore>(),
       sl<AbsIPresenceBroadcaster>(),
       tokens: sl<AbsIUserDeviceTokenRepository>(),
-      wake: sl<AbsIPushWakeGateway>(),
+      wake: sl<AbsIPushWakeClient>(),
     ),
   );
   sl.registerSingleton<LiveIngestPersister>(
@@ -616,7 +616,7 @@ Future<void> serviceLocator() async {
       livePublisher: sl<ActivityLivePublisher>(),
       persister: sl<LiveIngestPersister>(),
       follows: sl<AbsIActivityFollowRepository>(),
-      fileGateway: sl<AbsIFigmaFileGateway>(),
+      fileMetaPort: sl<AbsIFigmaFileMetaPort>(),
     ),
   );
   sl.registerSingleton<IngestGitLabWebhook>(

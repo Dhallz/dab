@@ -26,13 +26,13 @@ class UserDeviceTokenRepository implements AbsIUserDeviceTokenRepository {
               userId: token.userId,
               platform: token.platform,
               token: token.token,
-              createdAt: Value(toPgDateTime(token.createdAt)),
-              updatedAt: Value(toPgDateTime(now)),
+              createdAt: Value(token.createdAt.toPgDateTime()),
+              updatedAt: Value(now.toPgDateTime()),
             ),
             onConflict: DoUpdate(
               (_) => UserDeviceTokensTableCompanion(
                 platform: Value(token.platform),
-                updatedAt: Value(toPgDateTime(now)),
+                updatedAt: Value(now.toPgDateTime()),
               ),
               target: [
                 _db.userDeviceTokensTable.userId,

@@ -7,7 +7,7 @@ import 'package:dab_api/src/domain/entities/user/user.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
 import 'package:dab_api/src/domain/entities/user/user_role.dart';
-import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_gateway.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_meta_port.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
@@ -31,7 +31,7 @@ class _MockPresenceService extends Mock implements PresenceService {}
 
 class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
 
-class _MockFigmaGateway extends Mock implements AbsIFigmaFileGateway {}
+class _MockFigmaFileMetaPort extends Mock implements AbsIFigmaFileMetaPort {}
 
 void main() {
   late _MockUserRepository userRepository;
@@ -40,7 +40,7 @@ void main() {
   late _MockRedisService redisService;
   late _MockPresenceService presenceService;
   late _MockFollows follows;
-  late _MockFigmaGateway gateway;
+  late _MockFigmaFileMetaPort fileMetaPort;
   late IngestFigmaWebhook useCase;
 
   final user = User(
@@ -130,7 +130,7 @@ void main() {
     redisService = _MockRedisService();
     presenceService = _MockPresenceService();
     follows = _MockFollows();
-    gateway = _MockFigmaGateway();
+    fileMetaPort = _MockFigmaFileMetaPort();
 
     useCase = IngestFigmaWebhook(
       userRepository,
@@ -139,7 +139,7 @@ void main() {
       redisService,
       presenceService,
       follows: follows,
-      fileGateway: gateway,
+      fileMetaPort: fileMetaPort,
     );
 
     when(
@@ -177,7 +177,7 @@ void main() {
         objectKey: any(named: 'objectKey'),
       ),
     ).thenAnswer((_) async => const Right([]));
-    when(() => gateway.fetchFileMeta(any())).thenAnswer((_) async => null);
+    when(() => fileMetaPort.fetchFileMeta(any())).thenAnswer((_) async => null);
   });
 
   test('Directed mention plus Follow overlap emits two lanes', () async {
@@ -255,7 +255,7 @@ void main() {
         objectKey: 'Abc123File',
       ),
     ).thenAnswer((_) async => const Right(['u-bob']));
-    when(() => gateway.fetchFileMeta('Abc123File')).thenAnswer(
+    when(() => fileMetaPort.fetchFileMeta('Abc123File')).thenAnswer(
       (_) async => FigmaFileMeta(
         fileKey: 'Abc123File',
         name: 'DAB',
@@ -290,7 +290,7 @@ void main() {
     when(
       () => redisService.reserveIngestionEventId(any(), any()),
     ).thenAnswer((_) async => true);
-    when(() => gateway.fetchFileMeta('Abc123File')).thenAnswer(
+    when(() => fileMetaPort.fetchFileMeta('Abc123File')).thenAnswer(
       (_) async => FigmaFileMeta(
         fileKey: 'Abc123File',
         name: 'DAB',
@@ -323,7 +323,7 @@ void main() {
         objectKey: 'Abc123File',
       ),
     ).thenAnswer((_) async => const Right(['u-bob']));
-    when(() => gateway.fetchFileMeta('Abc123File')).thenAnswer((_) async => null);
+    when(() => fileMetaPort.fetchFileMeta('Abc123File')).thenAnswer((_) async => null);
 
     final out = await useCase.execute(
       payload: {

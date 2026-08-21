@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/activity/activity.dart';
 import '../../../../../presentation/core/extensions/activity_extensions.dart';
+import '../../../../../presentation/core/extensions/string_extensions.dart';
 import '../../../../../presentation/core/localization/l10n_extension.dart';
 import '../../../../../presentation/core/styles/app_icons.dart';
 import 'activity_avatar.dart';
@@ -65,7 +66,7 @@ class ActivityFooter extends StatelessWidget {
   }
 
   String _formatAuthorLabel() {
-    final author = looksLikeOpaqueUserId(providerAuthorName)
+    final author = providerAuthorName.looksLikeOpaqueUserId
         ? ''
         : providerAuthorName.trim();
     if (author.isEmpty) {

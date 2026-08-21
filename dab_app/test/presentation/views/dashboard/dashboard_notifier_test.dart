@@ -432,7 +432,7 @@ void main() {
 
     final notifier = container.read(dashboardNotifierProvider.notifier);
     final activity = container.read(dashboardNotifierProvider).activities.first;
-    expect(followObjectKeyFor(activity.provider), isNull);
+    expect(activity.provider.followObjectKey, isNull);
     await notifier.follow(activity);
     verifyNever(
       () => userRepository.saveMyActivityFollow(

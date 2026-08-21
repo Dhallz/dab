@@ -43,7 +43,7 @@ class ActivityRepository implements AbsIActivityRepository {
                 authorName: activity.authorName,
                 authorAvatarUrl: Value(activity.authorAvatarUrl),
                 commentCount: Value(activity.commentCount),
-                createdAt: toPgDateTime(activity.createdAt),
+                createdAt: activity.createdAt.toPgDateTime(),
               ),
             );
 
@@ -188,7 +188,7 @@ class ActivityRepository implements AbsIActivityRepository {
                 authorName: activity.authorName,
                 authorAvatarUrl: Value(activity.authorAvatarUrl),
                 commentCount: Value(activity.commentCount),
-                createdAt: toPgDateTime(activity.createdAt),
+                createdAt: activity.createdAt.toPgDateTime(),
               ),
             );
         final provider = activity.provider;

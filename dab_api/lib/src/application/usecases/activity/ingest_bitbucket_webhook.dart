@@ -116,7 +116,7 @@ class IngestBitbucketWebhook {
     }
 
     final allowedRepos = {
-      for (final item in bitbucketRepos(bitbucketConfig.settings))
+      for (final item in bitbucketConfig.settings.bitbucketRepos())
         item.toLowerCase(),
     };
     if (allowedRepos.isNotEmpty && !allowedRepos.contains(repo.toLowerCase())) {
@@ -149,7 +149,7 @@ class IngestBitbucketWebhook {
 
     var attributableCommits = 0;
     final toPersist = <Activity>[];
-    final instanceRepos = bitbucketRepos(bitbucketConfig.settings);
+    final instanceRepos = bitbucketConfig.settings.bitbucketRepos();
     final settingsByUser =
         await _credentials?.getUserSettingsForUsers(
           userIds: users.map((u) => u.id),
@@ -178,13 +178,7 @@ class IngestBitbucketWebhook {
           emailToUser: emailToUser,
         );
         if (dto == null) continue;
-        final watchers = gitInboxWatchers(
-          userSettingsById: settingsByUser,
-          repo: repo,
-          branch: branch?.isEmpty == true ? null : branch,
-          instanceRepos: instanceRepos,
-          senderUserId: dto.userId,
-        );
+        final watchers = settingsByUser.gitInboxWatchers(repo: repo, branch: branch?.isEmpty == true ? null : branch, instanceRepos: instanceRepos, senderUserId: dto.userId);
         final followKey = gitFollowObjectKey(
           repo,
           branch?.isEmpty == true ? null : branch,

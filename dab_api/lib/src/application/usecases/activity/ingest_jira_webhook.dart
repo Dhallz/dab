@@ -136,10 +136,10 @@ class IngestJiraWebhook {
       );
     }
 
-    var host = normalizeJiraCloudHost(jiraConfig.baseUrl);
+    var host = jiraConfig.baseUrl.normalizeJiraCloudHost();
     if (host.isEmpty) {
       final selfUrl = (issue['self'] ?? '').toString();
-      host = normalizeJiraCloudHost(selfUrl);
+      host = selfUrl.normalizeJiraCloudHost();
     }
     if (host.isEmpty) {
       return const Right(JiraWebhookIngestionResult.ignored('missing_host'));
@@ -200,9 +200,7 @@ class IngestJiraWebhook {
         ? (project['key'] ?? '').toString().trim()
         : '';
 
-    final watchedProjects = parseJiraProjectKeys(
-      jiraConfig.settings['projectKeys'],
-    );
+    final watchedProjects = (jiraConfig.settings['projectKeys'] as Object?).parseJiraProjectKeys();
     if (watchedProjects.isNotEmpty &&
         projectKey.isNotEmpty &&
         !watchedProjects.contains(projectKey)) {
