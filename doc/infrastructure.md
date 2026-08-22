@@ -1,7 +1,6 @@
 # DAB Infrastructure — Technical Blueprint
 
-> **Linear source:** [Dab Infrastructure](https://linear.app/dev-activity-board/document/dab-infrastructure-339365576c10) · Last synced: 2026-04-08  
-> **Stack:** Dart + Relic · PostgreSQL + Drift · Redis (Vegas) · WebSocket · Docker Compose
+> **Stack:** Dart + Relic · PostgreSQL + Drift (schema **22**) · Redis (Vegas) · WebSocket · Docker Compose
 
 ---
 
@@ -51,7 +50,7 @@ DAB implements **Table-per-Type (TBT)** polymorphic schema to ensure strict meta
 ### Schema Overview
 
 ```
-activities                  ← Base table: id, userId (recipient), senderUserId, providerName, title, content, author, createdAt
+activities                  ← Base table: id, userId (recipient), senderUserId, providerName, title, content, author, createdAt. Live `archived` / `inboxLane` are Redis JSON, not columns.
   └── activity_phorge            ← Phorge metadata: taskPhid, revisionId, tags
   └── activity_github_commit    ← GitHub commit metadata: repo, branch
   └── activity_gitlab_commit    ← GitLab commit metadata: project, branch
@@ -60,9 +59,11 @@ activities                  ← Base table: id, userId (recipient), senderUserId
   └── activity_linear_issue     ← Linear issue metadata: identifier, teamKey, status
   └── activity_slack_message    ← Slack metadata: workspaceId, channelId, threadTs, messageTs
   └── activity_discord_message  ← Discord metadata: guildId, channelId, messageId, replyToId
+  └── activity_figma_file       ← Figma metadata: fileKey, commentId, last-touched handle (schema 22)
 
 activity_follows            ← Per-user Follow pins: userId, providerId, objectKey, title, url
 user_device_tokens          ← Per-user FCM/APNs tokens: platform, token
+group_members               ← Group membership
 ```
 
 - **Relational integrity:** Child tables reference `activities.id` with `CASCADE DELETE`.
@@ -82,13 +83,15 @@ user_device_tokens          ← Per-user FCM/APNs tokens: platform, token
 | `activity_linear_issue` | Linear issue-specific metadata |
 | `activity_slack_message` | Slack message-specific metadata |
 | `activity_discord_message` | Discord message-specific metadata |
+| `activity_figma_file` | Figma file-specific metadata (schema 22) |
 | `users` | DAB user accounts |
 | `user_identities` | External provider account linkage |
 | `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
-| `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Optional `title` / `url` display snapshot. Indexed `(provider_id, object_key)` for ingest lookup. Schema version 20. |
-| `user_device_tokens` | Per-user FCM/APNs registration tokens for data-only inbox wakes. Unique `(user_id, token)`. `platform` is `android` or `ios`. Schema version 21. |
+| `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Optional `title` / `url` display snapshot. Indexed `(provider_id, object_key)` for ingest lookup. Schema 19 table; title/url in schema 20. |
+| `user_device_tokens` | Per-user FCM/APNs registration tokens for data-only inbox wakes. Unique `(user_id, token)`. `platform` is `android` or `ios`. Schema 21. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |
+| `group_members` | Group membership |
 | `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |
 | `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`) |
 
@@ -106,9 +109,10 @@ individual mode) for instance bots and OAuth apps, or in
 OAuth CSRF/PKCE state lives in Redis `oauth:state:{id}` (TTL ~10 minutes). Changing
 `DAB_CREDENTIALS_KEY` invalidates stored user tokens.
 
-A background `ActivityLivePollScheduler` ticks immediately on API start, then
-every ~45s, filling Redis + WebSocket when webhooks are absent. It skips a
-provider whose `live:last_ingest:{id}` is fresh.
+`ActivityLivePollScheduler` starts at boot for DI stability. It does **not**
+publish authored poll rows into the live inbox. Dashboard inbound rows come
+from webhooks and the Discord Gateway only. Explorer still polls on demand via
+`UnifiedActivityFetcher`.
 
 ---
 
@@ -185,7 +189,7 @@ are in **[deployment.md](./deployment.md)**.
 
 ```bash
 # Start all services (API + PostgreSQL + Redis)
-cd dab_api && docker-compose up -d
+cd dab_api && docker compose up -d
 ```
 
 ### Service Map
@@ -227,10 +231,10 @@ The app defaults to `http://localhost:9080` and `ws://localhost:9080/ws`
 
 | Guardrail | Mechanism |
 |---|---|
-| **Auth enforcement** | JWT Middleware on all protected routes |
-| **Domain lockdown** | Rejects registrations outside `DAB_ALLOWED_DOMAIN` |
-| **Bootstrap lock** | Platform locked until first admin completes setup (`AdminController`) |
-| **Envelope pattern** | All responses wrapped in `{ data, meta }` — never raw JSON |
+| **Auth enforcement** | JWT middleware on protected route prefixes |
+| **Domain lockdown** | `CreateUserByAdmin` honors `allowed_domain_enabled` / `allowed_domain` (env `DAB_ALLOWED_DOMAIN` fallback). Existing accounts are grandfathered; login is never blocked by the toggle. |
+| **Bootstrap lock** | `RegisterUser` is open only while zero users exist; honors `DAB_INITIAL_ADMIN_EMAIL` |
+| **Envelope pattern** | Data endpoints wrap `{ data, meta }`. Health, webhook ACKs, and OAuth HTML do not. |
 
 ### Required Environment Variables (`.env`)
 
@@ -253,17 +257,12 @@ DAB_ALLOWED_DOMAIN=
 APP_ENV=
 PORT=8080
 DAB_INITIAL_ADMIN_EMAIL=
-DAB_GITHUB_OAUTH_CLIENT_ID=
-DAB_GITHUB_OAUTH_CLIENT_SECRET=
-DAB_GITLAB_OAUTH_CLIENT_ID=
-DAB_GITLAB_OAUTH_CLIENT_SECRET=
-DAB_LINEAR_OAUTH_CLIENT_ID=
-DAB_LINEAR_OAUTH_CLIENT_SECRET=
-DAB_BITBUCKET_OAUTH_CLIENT_ID=
-DAB_BITBUCKET_OAUTH_CLIENT_SECRET=
-DAB_JIRA_OAUTH_CLIENT_ID=
-DAB_JIRA_OAUTH_CLIENT_SECRET=
+DAB_{PROVIDER}_OAUTH_CLIENT_ID=
+DAB_{PROVIDER}_OAUTH_CLIENT_SECRET=
+FCM_SERVICE_ACCOUNT_JSON=
 ```
+
+OAuth env names follow `DAB_{PROVIDER}_OAUTH_CLIENT_ID` / `_SECRET` (GitHub, GitLab, Bitbucket, Jira, Linear, Figma). `FCM_SERVICE_ACCOUNT_JSON` is optional; without it inbox wakes are a no-op.
 
 `DATABASE_URL` / `REDIS_URL` win when set (Railway). Discrete `DB_*` /
 `REDIS_HOST` are what Compose uses. Postgres TLS stays **off** unless

@@ -42,7 +42,7 @@ The ultra-lean, sub-second real-time dashboard for DAB. Experience **high-frame-
 ## 🛠️ Performance Stack
 - **State:** Riverpod notifiers + immutable `@MappableClass` states
 - **Persistence:** ObjectBox (local-first explorer cache)
-- **DI:** GetIt via `ServiceLocator`
+- **DI:** Custom `ServiceLocator` (`sl`) — not GetIt
 - **Visuals:** Material 3 + custom glass design tokens
 
 ---

@@ -1,6 +1,5 @@
 # DAB — Code Conventions
 
-> **Linear source:** [Code Conventions](https://linear.app/dev-activity-board/document/code-conventions-d237039dad44) · Last synced: 2026-04-08  
 > Applies to **both** `dab_api/` and `dab_app/`. Package-specific additions are noted where applicable.
 
 ---
@@ -114,6 +113,7 @@ Keep “Gateway” only when it is Discord’s product name. A compose-sources w
 | App metadata (version / build) | `package_info_plus` |
 | Local OS banners | `flutter_local_notifications` (desktop; copy stays on device) |
 | External browser (OAuth Connect) | `url_launcher` |
+| DI | Custom `ServiceLocator` singleton (`lib/services/service_locator.dart`) — not GetIt |
 | Testing | `mocktail` (`ProviderContainer` / overrides for notifiers) |
 
 ---
@@ -138,7 +138,9 @@ Keep “Gateway” only when it is Discord’s product name. A compose-sources w
 - **Style:** Use getters for transformations / utilities that don't require parameters.
 - **Location:**
   - On domain entities → same file, below the class.
-  - On external classes → `core/extensions/` in the relevant layer (e.g., `dio_extensions.dart`).
+  - On feature `*State` → same `*_state.dart` file.
+  - On presentation or infrastructure helpers → `core/extensions/` in that layer, **one file per receiver class** (`activity_extensions.dart` → `OnActivity`).
+  - Do not add free functions when a typed `On*` extension is the natural home. Named-arg builders with no single receiver (for example `inboxLaneTargets`, Admin webhook URL builders) may stay as functions.
 
 ### Error Handling
 
@@ -165,7 +167,7 @@ Keep “Gateway” only when it is Discord’s product name. A compose-sources w
   └── widgets/              ← one widget per file; subfolder for parent + children
   ```
 
-- **One Widget Per File:** Strictly enforced. No extra widget classes in view, layout, or widget files. Dashboard-only widgets stay under `dashboard/widgets/`. When a parent needs several files, put them in a named subfolder.
+- **One Widget Per File:** Strictly enforced. No extra widget classes in view, layout, or widget files. When a parent needs several files, put them in a named subfolder of `widgets/` (for example `dashboard/widgets/dashboard_follow_search/`). A single extracted widget with no siblings sits beside the other feature widgets.
 
 - **Status Management:** Use the unified `ViewStatus` enum (`initial`, `loading`, `success`, `failure`) in all states.
 

@@ -1,0 +1,21 @@
+meta {
+  name: Unarchive Live Activity
+  type: http
+  seq: 6
+}
+
+docs {
+  POST /activities/live/:id/unarchive — sets archived=false on the caller's Redis inbox entry.
+}
+
+post {
+  url: {{baseUrl}}/activities/live/{{activityId}}/unarchive
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 404", function() {
+    expect([200, 404]).to.include(res.status);
+  });
+}

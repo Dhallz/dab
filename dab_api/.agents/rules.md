@@ -35,7 +35,7 @@ dab_api/lib/src/
 
 ## ⚙️ Key Architectural Patterns
 
-### Source / DTO-extension pattern
+### Port / Source / DTO-extension pattern
 New provider integrations must follow this pattern precisely:
 
 1. **`AbsIActivityPort`** (Domain) — interface for fetching raw DTO payloads. Infrastructure **Sources** implement it.
@@ -46,8 +46,8 @@ Never merge HTTP fetch logic into the DTO extensions.
 
 ### Vegas Sync Protocol
 - Every write increments the Redis `syncToken`.
-- Clients send `X-Sync-Token` headers; the **Vegas Middleware** returns `304 Not Modified` on no-op reads.
-- Do not bypass or short-circuit the Vegas Middleware — it is a performance-critical guardrail.
+- Clients send `X-Sync-Token` on **`GET /activities`**. Vegas returns `304 Not Modified` when the token is current.
+- **`GET /activities/search`** and **`GET /activities/live`** skip the 304 gate (they still may return `meta.syncToken`).
 
 ### Table-Per-Type (TBT) Persistence
 - **`activities`** table holds shared fields for all activity types.
@@ -68,7 +68,7 @@ Never merge HTTP fetch logic into the DTO extensions.
 - After any Drift schema change run:  
   `dart run build_runner build --delete-conflicting-outputs`
 - Column naming: `snake_case`. Table naming: plural `snake_case` (e.g., `provider_configs`).
-- Every table must have a `created_at` and `updated_at` column using Drift's `dateTime()`.
+- Table timestamps follow each table contract; `created_at` is standard on activity rows. Additional timestamp columns are added only when behavior needs them.
 
 ---
 
@@ -84,9 +84,9 @@ Never merge HTTP fetch logic into the DTO extensions.
 
 ## 🔐 Security Rules (API-Specific)
 
-- JWT signing/verification lives exclusively in `infrastructure/security/`.
+- JWT signing/verification lives exclusively in `infrastructure/core/security/`.
 - Passwords are hashed with `bcrypt` — no SHA/MD5 substitutes.
-- Token expiry and secret configuration come from `AppConfig` (env-sourced) — never hardcoded.
+- Token expiry and secret configuration come from `Config` (env-sourced) — never hardcoded.
 - Refresh tokens must be stored in the DB and validated on every use (no stateless refresh logic).
 
 ---
@@ -95,7 +95,7 @@ Never merge HTTP fetch logic into the DTO extensions.
 
 - Test file mirrors source path: `lib/src/application/usecases/foo.dart` → `test/application/usecases/foo_test.dart`.
 - Use `mocktail` for all mocks. Mock at repository / source **interfaces**, not concrete classes.
-- Use `TestData` factories from `test/helpers/test_data.dart` for all fixture data.
+- Use `TestData` factories from `test/test_factories.dart` for all fixture data.
 - Integration tests (real DB/Redis) must be tagged `@Tags(['integration'])` and excluded from CI unit runs.
 - Always run `dart analyze && dart test` before declaring a task complete.
 
@@ -109,4 +109,4 @@ Never merge HTTP fetch logic into the DTO extensions.
 | Run tests | `dart test` |
 | Run single test | `dart test test/path/to/foo_test.dart` |
 | Rebuild generated code | `dart run build_runner build --delete-conflicting-outputs` |
-| Start API (dev) | `dart run bin/server.dart` (or via docker-compose) |
+| Start API (dev) | `dart run bin/dab_api.dart` (or `docker compose up -d`) |

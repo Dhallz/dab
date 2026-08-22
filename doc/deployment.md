@@ -42,7 +42,8 @@ VM-service debugging.
 
 ## Railway
 
-The API is a **long-running** process (Discord Gateway, live poller, `/ws`).
+The API is a **long-running** process (Discord Gateway, daily live-feed purge, `/ws`).
+`ActivityLivePollScheduler` is started at boot but does not refill the inbox.
 Use **one replica**, never sleep / scale-to-zero.
 
 ### Project
@@ -69,7 +70,7 @@ Railway injects `DATABASE_URL` and `REDIS_URL`. Prefer those over copying
 | `JWT_SECRET` | Compose dev value | long random; never the compiled default |
 | `DAB_CREDENTIALS_KEY` | optional (falls back to JWT) | set once; changing it invalidates stored user tokens |
 | `DAB_INITIAL_ADMIN_EMAIL` | optional | bootstrap admin |
-| `DAB_*_OAUTH_CLIENT_ID` / `_SECRET` | as needed | as needed |
+| `DAB_*_OAUTH_CLIENT_ID` / `_SECRET` | as needed | `DAB_{PROVIDER}_OAUTH_*` for GitHub, GitLab, Bitbucket, Jira, Linear, Figma |
 | `FCM_SERVICE_ACCOUNT_JSON` | unset (wake is a no-op) | Google service-account JSON **or** a file path. Required only to send data-only inbox wakes when the user has no WebSocket session. Tokens are still stored via `PUT /users/me/device-tokens`. Wake payloads never include activity title or body. |
 
 After the first healthy deploy:

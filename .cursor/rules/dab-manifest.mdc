@@ -36,7 +36,7 @@ Keep supporting artifacts in sync with code changes.
 ### 4. Package-specific rules
 
 - **DAB API**: `dab-api-package.mdc` (source: `dab_api/.agents/rules.md`) — Relic, Drift, server patterns.
-- **DAB App**: `dab-app-package.mdc` (source: `dab_app/.agents/rules.md`) — Riverpod, go_router, ObjectBox, GetIt.
+- **DAB App**: `dab-app-package.mdc` (source: `dab_app/.agents/rules.md`) — Riverpod, go_router, ObjectBox, custom `ServiceLocator`.
 
 ### 5. Workflows (opt-in / manual)
 

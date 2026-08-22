@@ -14,24 +14,24 @@ This is the primary entry point for AI agent rules in the DAB repository. To mai
 
 ### 1. Global Project Rules
 These apply to all packages and establish core architectural and behavioral standards.
-- **[Global Project Rules](file:///Users/dhallz/git/dab/.agents/rules/global.md)**: Clean Architecture mapping, tech stack constraints (Dart/Flutter), and general agent behavior.
+- **[Global Project Rules](rules/global.md)**: Clean Architecture mapping, tech stack constraints (Dart/Flutter), and general agent behavior.
 
 ### 2. Pattern Rules
 Detailed prescriptive patterns that must be followed when writing specific types of code. These apply across both packages.
-- **[Functional Programming](file:///Users/dhallz/git/dab/.agents/rules/functional-programming.md)**: `Either`, `fpdart`, `AppFailure`, `guardedCall` — never throw as control flow.
-- **[Data Classes](file:///Users/dhallz/git/dab/.agents/rules/data-classes.md)**: Entity anatomy, `dart_mappable`, immutability, sealed classes, `build_runner`.
-- **[Views](file:///Users/dhallz/git/dab/.agents/rules/views.md)**: View hierarchy, Riverpod notifier/state patterns, layout breakpoints, naming.
+- **[Functional Programming](rules/functional-programming.md)**: `Either`, `fpdart`, `AppFailure`, `guardedCall` — never throw as control flow.
+- **[Data Classes](rules/data-classes.md)**: Entity anatomy, `dart_mappable`, immutability, sealed classes, `build_runner`.
+- **[Views](rules/views.md)**: View hierarchy, Riverpod notifier/state patterns, layout breakpoints, naming.
 
 ### 3. Maintenance Rules
 Specific guidelines for keeping supporting artifacts in sync with codebase changes.
-- **[Documentation Maintenance](file:///Users/dhallz/git/dab/.agents/rules/doc-maintenance.md)**: Rules for updating `doc/*.md` files.
-- **[Bruno Collection Maintenance](file:///Users/dhallz/git/dab/.agents/rules/bruno-maintenance.md)**: Rules for updating the API collection in `bruno/`.
-- **[Git commits](file:///Users/dhallz/git/dab/.agents/rules/commit.md)**: Commit only when the user explicitly asks; one commit per request; issue-key subjects when applicable (e.g. DAB-40); no AI/tool attribution in commit messages.
+- **[Documentation Maintenance](rules/doc-maintenance.md)**: Rules for updating `doc/*.md` files.
+- **[Bruno Collection Maintenance](rules/bruno-maintenance.md)**: Rules for updating the API collection in `bruno/`.
+- **[Git commits](rules/commit.md)**: Commit only when the user explicitly asks; one commit per request; issue-key subjects when applicable (e.g. DAB-40); no AI/tool attribution in commit messages.
 
 ### 4. Package-Specific Rules
 Each major package contains its own refined rules in its local `.agents/` folder.
-- **[DAB API Rules](file:///Users/dhallz/git/dab/dab_api/.agents/rules.md)**: Specifics for Relic, Drift, and Server-side patterns.
-- **[DAB App Rules](file:///Users/dhallz/git/dab/dab_app/.agents/rules.md)**: Specifics for Riverpod, go_router, ObjectBox, and GetIt.
+- **[DAB API Rules](../dab_api/.agents/rules.md)**: Relic, Drift, and server-side patterns.
+- **[DAB App Rules](../dab_app/.agents/rules.md)**: Riverpod, go_router, ObjectBox, and custom `ServiceLocator`.
 
 ---
 

@@ -1,74 +1,37 @@
-# DAB API: Architectural Manifesto 🏛️ ⚙️
+# DAB API architecture
 
-This document serves as the **Supreme Source of Truth** for the DAB API architecture. All future AI agents and developers working on this project **MUST** strictly adhere to the patterns and constraints defined here.
-
----
-
-## 🎨 Clean Architecture: The Core Layers
-
-The DAB API is built on a strictly layered Clean Architecture, designed to decouple business rules (The "What") from infrastructure implementation (The "How").
-
-### 1. Domain Layer (`lib/src/domain`)
-- **Role**: Defines the absolute business logic and data contracts of the system.
-- **Folders**: `entities/`, `dtos/`, `contracts/` (`ports/` + `repositories/`), `core/`.
-- **Components**:
-    - **Entities & provider DTOs**: Pure data models (Activity, User, ProviderMetadata). `dtos/` carry remote row shapes plus co-located **`extension OnDto`** mappings — **business interpretation only**, no infrastructure dependencies.
-    - **Interfaces**: Abstract contracts (`AbsI*`, domain ports) under `contracts/` that define what the system needs without specifying how to fetch it.
-- **STRICT CONSTRAINT**: **ZERO IMPORTS** from Infrastructure or Application layers. This layer is isolated and pure.
-
-### 2. Application Layer (`lib/src/application`)
-- **Role**: Coordinates the system's "Use Cases" and manages domain/infrastructure interaction.
-- **Components**:
-    - **Services**: Orchestration logic like `UnifiedActivityFetcher`, `ConnectorRegistry`, and `LiveIngestPersister`.
-    - **UseCases**: Encapsulate high-level application flows (e.g., `FetchRemoteActivities`).
-- **STRICT CONSTRAINT**: No direct knowledge of databases or specific external APIs (that logic belongs in the Infrastructure layer).
-
-### 3. Infrastructure Layer (`lib/src/infrastructure`)
-- **Role**: Implements the contracts defined in Domain using specific technologies (PostgreSQL, Conduit, HTTP).
-- **Folders**: `sources/` (provider I/O), `protocols/` (outbound wire adapters), `persistence/` (postgres, redis, AbsI* repositories), `core/` (config, security, http, adapters, realtime, logging).
-- **Components**:
-    - **Sources**: Specialized fetchers (e.g., `PhorgeTaskSource`) that handle raw I/O and protocol management for a specific data type.
-    - **Repositories**: Handle SQL persistence and polymorphic data hydration (Table-Per-Type).
-- **STRICT CONSTRAINT**: **READ-ONLY Domain Purity**. DAB is an observer; write operations to external systems are strictly forbidden within the activity stream.
-
-### 4. Presentation Layer (`lib/src/presentation`)
-- **Role**: The "Entry Points" for external consumers (REST Controllers, WebSocket Middleware).
-- **Components**:
-    - **Controllers**: Thin wrappers that purely delegate to Application UseCases.
-    - **Middleware**: Handles cross-cutting concerns like "Vegas Sync" (high-performance staleness checks).
+Canonical detail lives in **[doc/architecture.md](../doc/architecture.md)** and
+**[doc/api.md](../doc/api.md)**. This file is a package-local summary only.
 
 ---
 
-## 🏗️ Core Architectural Patterns
+## Layers
 
-### 🧩 The Source / payload-extension pattern
-We separate the "Doing" (I/O) from the "Thinking" (Mapping) to ensure the system is **Open-Closed** for new data types.
-1.  **AbsIActivityPort** (Domain): Interface for fetching raw data as a specialized DTO. Infrastructure Sources implement it.
-2.  **`extension OnXDto`** (Domain): Implements **`toActivities(List<User>)`** — transforms that payload into zero or more **`Activity`** values.
-3.  **TypedConnectorPair** (+ **`providerId`**) / **ConnectorRegistry**: Registered in **`register_activity_connectors`** — binds Source + mapping + metadata id filtering.
+```
+Domain → Application → Infrastructure → Presentation
+```
 
-### 🔄 The Vegas Pattern (Sync Protocol)
-DAB avoids unnecessary database reads by using a Redis-backed versioning system:
-1.  Every write increases a `syncToken`.
-2.  Clients send their `syncToken` in the `X-Sync-Token` header.
-3.  The **Vegas Middleware** compares the token. If nothing has changed, it returns `304 Not Modified` instantly.
+| Layer | Path | Role |
+|---|---|---|
+| Domain | `lib/src/domain` | Entities, `dtos/` + `OnXDto.toActivities`, `contracts/ports` + `contracts/repositories`. **Zero** imports from Application or Infrastructure. |
+| Application | `lib/src/application` | Use cases and orchestration (`UnifiedActivityFetcher`, `ConnectorRegistry`, `LiveIngestPersister`). No SQL or HTTP protocol code. |
+| Infrastructure | `lib/src/infrastructure` | **Sources** implement domain **Ports**. Protocols, Drift, Redis, adapters. Read-only toward external providers. |
+| Presentation | `lib/src/presentation` | Thin Relic controllers and middleware. |
 
-### 🗄️ TBT (Table-Per-Type) Persistence
-To avoid the "Big JSON Blob" anti-pattern, we use relational polymorphism:
-- Base `activities` table holds shared fields.
-- Child tables (e.g. `activity_phorge`) hold specific metadata.
-- Repository implementations perform `leftOuterJoin` to hydrate the sealed `ActivityProvider` hierarchy.
+DI is GetIt (`sl<T>()`) in `lib/src/service_locator.dart`.
 
 ---
 
-## 🛡️ Guardrails for AI Agents
+## Port / Source / DTO
 
-1.  **Don't Break Domain Purity**: Never add an infrastructure import to `lib/src/domain`.
-2.  **Use the Service Locator**: Dependencies are managed via `GetIt` (`sl<T>()`). Do not instantiate services manually inside controllers or usecases.
-3.  **Relative URLs Only**: External links must be relative (e.g. `/T123`). Full URL construction happens at the client level or is derived from provider config.
-4.  **Follow the Mappable Pattern**: All entities must use `dart_mappable` for serialization and type-safe fan-out.
+1. **`AbsIActivityPort<T>`** (Domain) — fetch contract.
+2. **Source** (Infrastructure) — implements the port; returns DTOs.
+3. **`extension OnXDto.toActivities`** (Domain) — maps to `Activity`.
+4. **`TypedConnectorPair<T>`** in `register_activity_connectors` — composition root.
 
----
+Vegas (`X-Sync-Token` → 304) applies only to **`GET /activities`**. Live inbox
+and Explorer search skip it. TBT child tables hydrate `ActivityProvider`;
+`archived` / `inboxLane` live on Redis JSON, not Postgres columns.
 
-> [!IMPORTANT]
-> **Reading this document is a requirement for all code modifications.** If an agent proposes a change that violates these principles, they have FAILED in their task.
+`ActivityLivePollScheduler` is started at boot and does **not** publish authored
+poll rows into the Dashboard inbox.

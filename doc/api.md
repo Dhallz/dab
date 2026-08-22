@@ -1,7 +1,6 @@
 # DAB API — Backend Architecture
 
-> **Linear source:** [Dab Api](https://linear.app/dev-activity-board/document/dab-api-8608282c089c) · Last synced: 2026-04-08  
-> **Package:** `dab_api/` · Runtime: Dart + Relic · DB: PostgreSQL (Drift) · Cache: Redis · SDK: `^3.9.2`
+> **Package:** `dab_api/` · Runtime: Dart + Relic · DB: PostgreSQL (Drift, schema **22**) · Cache: Redis · SDK: `^3.9.2`
 
 ---
 
@@ -50,15 +49,7 @@ graph TD
 
 The innermost layer. **No imports from Infrastructure or Application.**
 
-- **Entities:** Pure data classes using `dart_mappable`. Current entities:
-  - `Activity` — normalized event with `ActivityProvider` sealed metadata
-  - `ActivityProvider` — sealed hierarchy for provider-specific payloads
-  - `User` — DAB user with role (`admin`, `manager`, `standard`), group, and active state
-  - `UserIdentity` — Maps a DAB user to an external platform. States: `linked`, `pending`, `failed`.
-  - `Group` — organizational grouping
-  - `Session` — active auth session (JWT + refresh token)
-  - `ProviderConfig` — external tool configuration (`name`, `baseUrl`, `iconUrl`, `configJson`)
-  - `ProviderMetadata` — registered connector metadata
+- **Entities:** Pure data classes using `dart_mappable`. Canonical list: [architecture.md](./architecture.md) §3.
 
 - **`dtos/`:** Provider-native shapes (e.g. `GitHubCommitDto`, `SlackMessageDto`, `PhorgeTaskBundleDto`). Sources return these; **`extension OnDto.toActivities(...)`** maps them to `Activity` — all without importing Infrastructure.
 
@@ -72,7 +63,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 **Key constraint:** Read-only. DAB is an observer. Providers must **never** implement mutation endpoints.
 
-- **`AbsIActivityPort` implementations (`sources/`):** Implement the domain port `AbsIActivityPort<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Provider I/O that is not a poll source (catalogs, `DiscordGatewayClient`) also lives here. File suffixes: `*_source.dart` (poll/fetch), `*_catalog.dart` (pick lists), `DiscordGatewayClient`, `PhorgeFacade`. Never `*Service` in this folder.
+- **`AbsIActivityPort` implementations (`sources/`):** Implement the domain port `AbsIActivityPort<T>`; return `domain/dtos` types — never full domain `Activity` entities (mapping stays on Domain DTO extensions). Other provider I/O in this folder: catalogs (`*_catalog.dart`), `DiscordGatewayClient`, `PhorgeFacade`. Never `*Service` here.
 
 - **`protocols/`:** Outbound wire adapters. **Generic:** `JsonRestProtocol` (GitHub, GitLab, Bitbucket, Jira, Discord REST), `GraphqlProtocol` (Linear). **Provider-specific** when the envelope is unique: `ConduitProtocol` (Phorge), `SlackWebProtocol` (Slack `ok` JSON). Sources decide *what* to pull; protocols own *how* requests are encoded. Failures surface as `ProtocolException` subtypes — **no raw response bodies** on exceptions. Not protocols: watch-list parsers, webhook HMAC verifiers, OAuth token exchange, `AbsIActivityPort`.
 
@@ -88,7 +79,7 @@ The innermost layer. **No imports from Infrastructure or Application.**
 
 Orchestrates use cases. Use cases return `Either<Failure, T>` where failures matter; controllers map `Left` to HTTP status. **`UnifiedActivityFetcher`** logs per-connector errors via an injected log callback (e.g. `LoggingService.record`) without importing infrastructure types.
 
-- **`ConnectorRegistry`:** Holds **`TypedConnectorPair<T>`** entries. **`register_activity_connectors.dart`** is the single bootstrap function that registers every source + mapper pair.
+- **`ConnectorRegistry`:** Holds **`TypedConnectorPair<T>`** entries. **`register_activity_connectors.dart`** is the single bootstrap that registers every Source + mapper pair.
 
 - **`UnifiedActivityFetcher`:** Orchestrates **parallel fetching** across all registered providers. If **`getConfigs()`** fails, emits a **WARNING** log and skips all connectors (empty active set). Per-connector failures still log WARNING and return an empty slice for that provider only.
 
@@ -108,7 +99,7 @@ Thin entry points only. No business logic.
 
 | Controller | Path | Key Responsibilities |
 |---|---|---|
-| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` for the signed-in user's inbound inbox). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook`) — HMAC/shared-secret via `AbsIWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
+| `ActivityController` | `/activities*`, `/ws`, `/integrations/*/webhook`, `/integrations/slack/events` | Historical feed (`/activities`), **dashboard `GET /activities/live`** is **Redis-backed only** (optional `?includeArchived=true`; omit `scope` or use `user` for the signed-in inbound inbox; `scope=global` is still accepted by the API but unused by Dashboard). Live-feed triage (`POST /activities/live/:id/archive`, `POST /activities/live/:id/unarchive`), provider push receivers (`/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook`) — HMAC/shared-secret via `AbsIWebhookRequestAuthenticator`, then ingest use case. Historical **`GET /activities/search`** (UnifiedActivityFetcher polling only — no Postgres merge), WebSocket `/ws`. Archived live entries stay in Redis (nightly purge). `ActivityPurgeScheduler`. `ActivityLivePollScheduler` is retained for DI but does **not** publish authored poll rows into the live inbox. |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public (no JWT) OAuth redirect. Validates Redis `oauth:state:{id}`, exchanges the code, persists via `SaveUserProviderCredential`. Returns HTML. Never includes tokens. |
 | `AdminController` | `/admin/*` | Identity list/summary, manual link, resolve workflow, delete link (`DELETE /admin/identities/:id`), admin user creation (`POST /admin/users`) and role management |
 | `AuthController` | `/auth/*` | Bootstrap-only register (open while zero users exist; first user becomes admin), login, refresh token |
@@ -119,6 +110,7 @@ Thin entry points only. No business logic.
 
 #### Middleware
 
+- **Global error handler + request logger:** Mounted on `/` in `bin/dab_api.dart`.
 - **Vegas Middleware:** Applies only to **`GET /activities`** under the `/activities` mount. Compares client `X-Sync-Token` against Redis version and returns **`304 Not Modified`** when unchanged. **`GET /activities/search`** and **`GET /activities/live`** skip this gate.
 - **JWT Middleware:** Validates signed tokens on all protected sub-routes.
 - **WebSocket auth guard:** `/ws` is protected by JWT middleware and uses request-context identity for scoped delivery.
@@ -154,8 +146,9 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 |---|---|
 | Application | `ConnectorRegistry`, `UnifiedActivityFetcher`, activity/auth use-case containers |
 | Services | `PresenceService`, `LoggingService`, `IdentityDiscoveryService` |
-| Repositories | `ActivityRepository`, `AuthRepository`, `UserRepository`, `ProviderConfigRepository` |
+| Repositories | `ActivityRepository`, `AuthRepository`, `UserRepository`, `ProviderConfigRepository`, follow / credential / device-token / system-settings repos |
 | Protocols | `ConduitProtocol`, `JsonRestProtocol`, `GraphqlProtocol`, `SlackWebProtocol` (`Http*` implementations, singletons) |
+| Ports (infra impls) | Sources, catalogs, `DiscordGatewayClient`, `PhorgeFacade`, `FcmHttpV1PushWakeClient` / `NoopPushWakeClient` |
 
 **Rule:** `singleton` for stateful services, `factory` for stateless use cases.
 
@@ -168,7 +161,7 @@ All registrations in `lib/src/service_locator.dart`. Use `sl<T>()` to resolve.
 | Phorge | ✅ Active | Conduit REST API | Herald webhook (HMAC-SHA256) |
 | GitHub | ✅ Active (Commits v1) | REST | Push webhook (`X-Hub-Signature-256`) |
 | Slack | ✅ Active (Messages v1) | Slack Web API | Events API webhook |
-| Jira | ✅ Active (issues v1) | REST + discovery | Webhook (`X-Hub-Signature` HMAC) |
+| Jira | ✅ Active (issues + comments v1) | REST + discovery | Webhook (`X-Hub-Signature` HMAC) |
 | Linear | ✅ Active (issues + comments v1) | GraphQL + discovery | Webhook (`linear-signature` HMAC) |
 | Discord | ✅ Active (messages v1) | REST + discovery | Gateway WebSocket client (`MESSAGE_CREATE`) |
 | GitLab | ✅ Active (commits v1) | REST + discovery | Push Hook webhook (`X-Gitlab-Token`) |
@@ -383,6 +376,6 @@ Successful webhook/event ingest paths call `RedisService.recordLiveIngestSuccess
 | Analyze | `dart analyze` |
 | Run tests | `dart test` |
 | Start server | `dart run bin/dab_api.dart` |
-| Start via Docker | `cd dab_api && docker-compose up -d` |
+| Start via Docker | `cd dab_api && docker compose up -d` |
 | Regenerate code | `dart run build_runner build --delete-conflicting-outputs` |
 | Health check | `curl http://localhost:9080/health` |

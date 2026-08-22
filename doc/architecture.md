@@ -51,8 +51,8 @@ dab_api/lib/src/
 │   ├── persistence/     ← postgres/ (Drift), redis/, repositories/ (AbsI* impls)
 │   └── core/            ← config/, security/, http/, adapters/, realtime/, logging/
 └── presentation/
-    ├── controllers/     ← Relic HTTP controllers (8 controllers: activity, oauth, admin, auth, group, health, metadata, user)
-    └── middlewares/     ← Vegas Middleware, JWT Middleware
+    ├── controllers/     ← Relic HTTP controllers (8): Activity, Oauth, Admin, Auth, Group, Health, Metadata, User
+    └── middlewares/     ← Global error handler, request logger, JWT, Vegas, Admin role
 ```
 
 ### App Package Layer Map
@@ -85,32 +85,35 @@ dab_app/lib/
 
 | Entity | Description |
 |---|---|
-| `Activity` | Normalized activity event (shared base). Carries `ActivityProvider` metadata. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. Includes a live-feed-only `archived` flag (default `false`) used by the Dashboard triage workflow, and `inboxLane` (`directed` \| `follow`) so Dashboard can show two independent rows when a user is both a directed recipient and a follower. Missing/legacy JSON is treated as directed. |
-| `ActivityProvider` | Sealed hierarchy — discriminated union for provider-specific metadata (Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, Figma files, …) |
-| `User` | DAB user — `id`, `email`, `role` (`UserRole`), optional `linkedProviderIds` (non-secret Directory hint) |
-| `UserIdentity` | Maps a DAB user to an external account. State tracked via `UserIdentityStatus` (`linked`, `pending`, `failed`). Self-connect whoami writes `linked` immediately. |
-| `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh tokens or PAT). Encrypted at rest. Fetch key, not a visibility ACL. Jira/Linear OAuth access tokens are refreshed from the stored refresh token when expired. |
+| `Activity` | Normalized event. Live ingest sets `userId` to the **inbox recipient** and optional `senderUserId` to the linked actor. `archived` (default `false`) and `inboxLane` (`directed` \| `follow`) are **live-feed JSON fields** stored in Redis, not Postgres columns. Missing/legacy JSON is treated as directed. |
+| `ActivityProvider` | Sealed hierarchy — Phorge tasks/revisions, GitHub/GitLab/Bitbucket commits, Slack/Discord messages, Jira/Linear issues, Figma files |
+| `User` | DAB user — `id`, `name`, `email`, `role` (`UserRole`), optional legacy `phorgePhid` / `phorgeUsername`. |
+| `UserIdentity` | Maps a DAB user to an external account. `UserIdentityStatus`: `linked`, `pending`, `failed`. Self-connect whoami writes `linked` immediately. |
+| `UserProviderCredential` | Per-user provider secrets (OAuth access/refresh or PAT). Encrypted at rest. Fetch key, not a visibility ACL. Jira/Linear OAuth access tokens refresh from the stored refresh token when expired. |
+| `UserDeviceToken` | Per-user FCM/APNs registration (`platform` `android` \| `ios`, token). Used for data-only inbox wakes when no WebSocket session exists. |
 | `JiraProject` / `JiraProjectWatchList` | Jira Cloud projects visible to a connected user, plus instance `projectKeys` used as the Explorer ingest allow-list (not Dashboard targeting). |
 | `LinearTeam` / `LinearTeamWatchList` | Linear teams visible to a connected user, plus instance `teamKeys` used as the Explorer ingest allow-list. |
 | `GitWatchList` | Per-user git watches (`watchedRepos` / `watchedBranches` on the user credential). Instance `repos` / `projects` remain the Admin ingest allow-list. Watched branches also feed Explorer git polling refs. |
 | `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
 | `FollowCandidate` | One Dashboard Following-picker row (`providerId`, `objectKey`, `title`, optional `url`, `kind` `issue` \| `gitBranch` \| `file`). |
-| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, plus optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, Figma `file_key`, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
-| `Group` | Team / organizational group |
-| `Session` | Active auth session holding JWT + refresh token |
-| `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson`) |
-| `ProviderMetadata` | Metadata about a registered provider connector |
+| `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, Figma `file_key`, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo\|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
+| `FigmaFileMeta` | File name / folder snapshot used when mapping Figma comments and last-edited heartbeats. |
+| `SprintContext` | Optional sprint metadata attached to provider payloads (Phorge). |
+| `ProviderConnectivityReport` | Admin **Try** result: Core / Live / Polling section statuses. |
+| `Group` | Team / organizational group (`GroupType`). Membership is `group_members`. |
+| `Session` | Active auth session (JWT + refresh token). |
+| `ProviderConfig` | Global config for an external provider (`name`, `baseUrl`, `iconUrl`, `configJson` / `settings`). |
+| `ProviderMetadata` | Registered connector metadata for `/metadata/providers`. |
 
 ### App Entities (`dab_app/lib/domain/entities/`)
 
-Contains API-aligned entities plus client-only domain models (for example `ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, and `AppSettings`).
-`AppSettings` stores persisted user preferences including `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale` with neutral surfaces and the same DAB indigo primary as `dab`), optional `localeCode`, and `inboxNotificationsEnabled` (default **on** — OS banners for Directed and Following while the desktop window is unfocused). An `islandBarSelections` map remains on the ObjectBox record (no schema migration) but is unused in the UI — home branches use per-view toolbars rather than those stored checkboxes.
+Contains API-aligned entities plus client-only models (`ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, `AppSettings`, `SystemStatus`, `ExplorerCacheClearRequest`, `Presence`, `AuthResponse`, `ActivityFollow`, `FollowCandidate`, git/Jira/Linear watch lists). Client `User` includes `linkedProviderIds` (Directory hint; not a secret).
 
-The Dashboard additionally introduces:
+`AppSettings` stores `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale`), optional `localeCode`, and `inboxNotificationsEnabled` (default **on** — OS banners for Directed and Following while the desktop window is unfocused). An `islandBarSelections` map remains on the ObjectBox record but is unused — home branches use per-view toolbars.
 
 | Entity | Description |
 |---|---|
-| `ActivityLiveEvent` | Sealed discriminated union over the WS live stream — `ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`. |
+| `ActivityLiveEvent` | Sealed WS union — `ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`. |
 
 ObjectBox records for cache/storage remain in the Infrastructure layer.
 
@@ -203,14 +206,15 @@ Every provider has a push path: webhooks for GitHub, GitLab, Bitbucket, Phorge
 (Herald), Jira, Linear, Figma (JSON passcode), and Slack (Events API); Discord uses the outbound
 `DiscordGatewayClient` WebSocket client since Discord has no message webhooks.
 Insights with `authoredOnly=false` uses an org token when present; otherwise
-sources union per-user authored fetches (work not attributed to a connected
-identity is omitted).
+Sources union per-user authored fetches (work not attributed to a connected
+identity is omitted). `ActivityLivePollScheduler` is started at boot for DI
+stability; it does **not** publish authored poll rows into the live inbox.
 
 ---
 
 ## 5. Key Shared Patterns
 
-### Source / payload extension pattern
+### Port / Source / DTO extension
 
 ```
 AbsIActivityPort (Domain)  ← implemented by Sources (Infrastructure) ─── fetches raw DTOs ──►  extension OnXDto → toActivities [Domain]
@@ -218,9 +222,9 @@ AbsIActivityPort (Domain)  ← implemented by Sources (Infrastructure) ───
                                                                      maps to Activity entity
 ```
 
-- `AbsIActivityPort`: Domain interface for provider fetch. Infrastructure Sources handle raw I/O, auth, rate-limiting — no business logic.
-- `extension OnXDto`: Pure transformation (`toActivities`) — no I/O.
-- `TypedConnectorPair` (+ `providerId`): Registered in `register_activity_connectors` at composition root; binds a Source row type to mapping + config id filtering. `ConnectorRegistry` stores the type-erased `RegisteredConnectorPair` so fetch iteration does not widen mappers to `dynamic` (avoids Dart contravariance runtime errors).
+- **`AbsIActivityPort`:** Domain interface for provider fetch. Infrastructure **Sources** handle raw I/O, auth, rate-limiting — no business mapping.
+- **`extension OnXDto`:** Pure `toActivities` — no I/O.
+- **`TypedConnectorPair` (+ `providerId`):** Registered in `register_activity_connectors` at composition root. `ConnectorRegistry` stores type-erased `RegisteredConnectorPair` so fetch iteration does not widen mappers to `dynamic`.
 
 ### Vegas Sync Pattern
 
@@ -240,7 +244,7 @@ Client request  ──►  Vegas Middleware
 ### Table-Per-Type (TBT) Persistence
 
 ```
-activities               ← shared fields (id, userId recipient, senderUserId, title, content, createdAt)
+activities               ← shared fields (id, userId recipient, senderUserId, title, content, createdAt). `archived` and `inboxLane` are **not** SQL columns; they live on Redis live-feed JSON.
 activity_phorge            ← Phorge-specific metadata (taskPhid, revisionId, tags)
 activity_github_commit     ← GitHub commit metadata (repo, branch)
 activity_gitlab_commit     ← GitLab commit metadata (project, branch)
@@ -266,17 +270,7 @@ tenants).
 
 ### Envelope Response Pattern
 
-Envelope responses are used on the data endpoints that expose structured `data/meta` payloads:
-
-```json
-{
-  "data": { ... },
-  "meta": {
-    "syncToken": 42,
-    "timestamp": "2026-04-08T00:00:00Z"
-  }
-}
-```
+Envelope responses are used on **data** endpoints that expose structured `data` / `meta` payloads (`GET /activities`, `/activities/search`, `/activities/live`, directory lists, configs). Health checks, OAuth callback HTML, webhook ACKs, and some error bodies are not envelopes.
 
 When `meta.syncToken` is present, the client `VegasInterceptor` persists it locally.
 
@@ -286,13 +280,14 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook` | Fetch historical feed, fetch **Redis-only** live feed (`/activities/live`, user-scoped inbound inbox), receive provider push webhooks (Slack Events, GitHub/GitLab/Bitbucket push, Phorge Herald, Jira, Linear, Figma), search activities (**polling-only** via `GET /activities/search` for Explorer; no Postgres merge), and serve authenticated realtime stream |
-| `AdminController` | `/admin` | User management (creation + roles) + identity review/link/resolve |
-| `AuthController` | `/auth` | Register, login, refresh token |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook` | Historical feed, Redis live inbox (`GET /activities/live`), archive/unarchive, provider push receivers, Explorer search (`GET /activities/search`), authenticated `/ws` |
+| `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public OAuth redirect; HTML response; no tokens in the page |
+| `AdminController` | `/admin` | User management + identity review/link/resolve |
+| `AuthController` | `/auth` | Bootstrap register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
-| `HealthController` | `/health` | API + DB health checks |
-| `MetadataController` | `/metadata`, `/admin/system-settings` | Provider configs, status, provider capability metadata, admin config test/save, system settings (domain validation toggle + allowed domain) |
-| `UserController` | `/users` | User profile, identity linking, self-serve credentials, git watches, git branch listing, Dashboard object Follow pins (`/users/me/follows`), Follow picker rows (`GET /users/me/follows/candidates`), and device tokens (`PUT/DELETE /users/me/device-tokens`) |
+| `HealthController` | `/health` | API + DB health (plain JSON, not the data envelope) |
+| `MetadataController` | `/metadata`, `/admin/system-settings`, `/admin/configs` | Provider configs, status, capabilities, admin config test/save, system settings |
+| `UserController` | `/users` | Directory, credentials, git watches/branches, Follow pins + candidates, device tokens |
 
 ---
 

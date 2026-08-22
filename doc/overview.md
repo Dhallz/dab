@@ -28,7 +28,7 @@ DAB is a centralized engine that aggregates every signal a developer needs into 
 
 DAB is **not a SaaS** — it is private-first infrastructure that you own and audit.
 
-- **Deployment:** Self-hosted via Docker Compose locally, or a single always-on Railway replica — see [deployment.md](./deployment.md). No hidden SaaS dependencies in the product itself.
+- **Deployment:** Self-hosted via Docker Compose locally, or one always-on Railway replica — see [deployment.md](./deployment.md). No hidden SaaS dependencies in the product itself.
 - **Data Security:** Provider credentials and operational data stay inside your infrastructure. TLS/encryption-at-rest policies are deployment-controlled.
 - **Hybrid Ingestion Logic:**
   - **Push (Webhooks):** Real-time triggers for modern stacks (GitHub, Slack).
@@ -44,23 +44,21 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 - **Activity Attribution:** Automatically generates a chronological work log based on real-time events.
 - **Visibility Without Micro-management:** Leads can monitor team velocity and meeting ROI using objective, sovereign data.
 
-### Example Activity Log (March 3, 2026 — @John)
+### Example activity log
 | Time | Provider | Activity |
 |---|---|---|
 | 09:12 | Phorge | Commented on **T2222** (*"Refactored event bus"*) |
-| 11:34 | Jira | Updated **T1258** (*"Blocked by API latency"*) |
-| 14:05 | Slack | Huddle — 24m with @Jenny (Topic: Schema Migration) |
-| 16:22 | Teams | Meeting with @Robert (*"Includes searchable transcription"*) |
+| 11:34 | Jira | Updated **DAB-1258** (*"Blocked by API latency"*) |
+| 14:05 | Slack | Mention in **#schema** — @Jenny |
+| 16:22 | GitHub | Pushed to **dab/main** (*"Align inbox lanes"*) |
 
 ---
 
 ## 5. Open Source & The "Thermal" Roadmap
 
 - **Auditability:** Open-source allows your security team to verify encryption primitives and data handling.
-- **Temperature-Based Prioritization:** Features are sorted by "Temperature" (Community Heat):
-  - **Hot:** High-demand integrations (Linear, GitHub Actions) or critical bug fixes.
-  - **Cold:** Niche UI tweaks or rare provider requests.
-- **Extensibility:** Adding a custom internal tool is as simple as implementing **`AbsIActivityPort<T>`**, defining the payload shape under **`domain/dtos/`**, adding **`extension OnTDto`** with **`toActivities`**, and registering a **`TypedConnectorPair<T>`**.
+- **Temperature-Based Prioritization:** Features are sorted by community demand (Hot vs Cold).
+- **Extensibility:** A new provider is **`AbsIActivityPort<T>`** (Domain) + infrastructure **Source** + **`domain/dtos/`** shape + **`extension OnTDto.toActivities`** + **`TypedConnectorPair<T>`** in `register_activity_connectors`.
 
 ---
 
@@ -79,7 +77,7 @@ DAB transforms "Noise" into a searchable "Narrative." It automates the "What did
 | App Networking | Dio + WebSocket (`web_socket_channel`) |
 | Serialization | dart_mappable (both packages) |
 | Error Handling | fpdart `Either<Failure, T>` |
-| Deployment | Docker Compose |
+| Deployment | Docker Compose (local) · Railway (hosted, one replica) |
 
 ---
 

@@ -279,19 +279,16 @@ paths:
     get:
       summary: Get live dashboard activities from Redis.
       description: |
-        Retrieves Redis-backed live activities for Dashboard realtime hydration.
-        This endpoint is dedicated to live data and does not query Postgres directly.
+        Redis-only live inbox. Does not query Postgres. Dashboard hydrates with
+        the signed-in user scope (omit `scope` or pass `user`). `scope=global`
+        is accepted by the API but unused by the app.
 
         **Query Parameters**:
-        - `limit` (optional, 1..100): Max number of events to read. Default: 50.
+        - `limit` (optional, 1..100): Max events. Default: 50.
         - `scope` (optional): `user` (default) or `global`.
+        - `includeArchived` (optional): `true` / `1` to include archived rows. Default: omitted (hidden).
 
-        ### Live Data Mapping
-        | API Field | Redis Key | Role |
-        | :--- | :--- | :--- |
-        | `data[]` | `activities:user:{id}` | User-scoped rolling feed |
-        | `data[]` | `activities:global` | Global rolling feed |
-        | `meta.syncToken` | `dab:version` | Vegas version clock |
+        Vegas 304 does **not** apply. `meta.syncToken` is still returned.
       security:
         - bearerAuth: []
       parameters:
@@ -310,6 +307,12 @@ paths:
             type: string
             enum: [user, global]
             default: user
+        - name: includeArchived
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Successful Redis live-data envelope
@@ -336,6 +339,8 @@ paths:
                         enum: [user, global]
                       limit:
                         type: integer
+                      includeArchived:
+                        type: boolean
                       syncToken:
                         type: string
                       timestamp:
@@ -343,6 +348,42 @@ paths:
                         format: date-time
         '400':
           description: Invalid query parameter
+  /activities/live/{id}/archive:
+    post:
+      summary: Archive a live-feed activity for the caller.
+      description: |
+        Flips `archived=true` on the caller's Redis inbox entry.
+        Returns 404 when the id is not in `activities:user:{id}` (already purged or never fanned out).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated live-feed entry
+        '404':
+          description: Activity not in the caller's live feed
+  /activities/live/{id}/unarchive:
+    post:
+      summary: Unarchive a live-feed activity for the caller.
+      description: Flips `archived=false` on the caller's Redis inbox entry.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated live-feed entry
+        '404':
+          description: Activity not in the caller's live feed
   /integrations/slack/events:
     post:
       summary: Slack Events API webhook receiver.

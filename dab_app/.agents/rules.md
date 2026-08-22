@@ -9,7 +9,7 @@ description: Package-specific rules for DAB App
 > These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
 > Always read the global rules first.
 
-**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · go_router · ObjectBox · Dio · dart_mappable · GetIt (`ServiceLocator`)
+**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · go_router · ObjectBox · Dio · dart_mappable · custom `ServiceLocator` (`sl`)
 
 ---
 
@@ -28,13 +28,9 @@ dab_app/lib/
 │   ├── repositories/  ← Concrete implementations of domain interfaces
 │   └── core/          ← Interceptors, ObjectBox setup, storage helpers
 ├── presentation/
-│   ├── features/      ← Feature modules (auth/, app/, …)
-│   │   └── <feature>/
-│   │       ├── *_notifier.dart ← Riverpod Notifier + provider
-│   │       ├── widgets/       ← Feature-specific widgets
-│   │       └── screens/       ← Screen-level compositions
-│   ├── core/          ← Shared widgets, theming, routing helpers
-│   └── views/         ← Top-level view compositions (router root etc.)
+│   ├── features/      ← Cross-cutting notifiers (auth/, app/)
+│   ├── views/         ← Screen modules (`[name]_view`, layouts, notifier, state, widgets/)
+│   └── core/          ← navigation/, styles/, widgets/, extensions/, localization/
 ├── services/
 │   └── service_locator.dart  ← Single file for all DI registrations
 └── main.dart
@@ -54,7 +50,7 @@ dab_app/lib/
 
 ## 🗺️ Navigation Rules (go_router)
 
-- All routes are declared in a single router configuration file (e.g., `presentation/core/router.dart`).
+- All routes are declared in `presentation/core/navigation/app_route.dart` and wired in `app_router.dart`.
 - Use **named routes** — never push raw path strings from business logic or use cases.
 - Route guards (redirect logic) live in the router configuration, not in widgets or notifiers.
 - Never import a screen file directly into another screen to perform navigation.
@@ -66,7 +62,7 @@ dab_app/lib/
 - The `objectbox.g.dart` and `objectbox-model.json` files are **generated** — never hand-edit them.
 - After any ObjectBox entity change run:  
   `dart run build_runner build --delete-conflicting-outputs`
-- Entity classes live in `domain/entities/` but are annotated with `@Entity()` — keep the annotation minimal (IDs only in the domain model where possible).
+- ObjectBox `@Entity()` records live in `infrastructure/core/local/records/` — never on Domain entities.
 - All ObjectBox I/O is isolated inside `infrastructure/datasources/` — the domain never touches `Store` or `Box` directly.
 
 ---

@@ -1,40 +1,41 @@
-# DAB — Dev Activity Board · Documentation
+# DAB — Documentation
 
-> **The Open-Source, Self-Hosted Event Bus for Modern Engineering Teams**
-
-This folder is the **single source of truth** for all project documentation.  
-It is maintained as part of the codebase and must be kept up to date with every meaningful change.
+This folder is the **single source of truth** for project documentation. Package
+READMEs (`README.md`, `dab_api/README.md`, `dab_app/README.md`) are onboarding
+only; they must not contradict these files.
 
 ---
 
-## 📚 Document Index
+## Document index
 
-| File | Description |
+| File | Contents |
 |---|---|
-| [overview.md](./overview.md) | What DAB is, the problem it solves, and the high-level design |
-| [architecture.md](./architecture.md) | Full cross-package architecture, layer rules, and data flow |
-| [api.md](./api.md) | DAB API (backend) — layers, patterns, endpoints, DI |
-| [app.md](./app.md) | DAB App (Flutter client) — layers, Riverpod, routing, design system |
-| [infrastructure.md](./infrastructure.md) | Infrastructure stack — PostgreSQL, Redis, WebSocket, Docker |
-| [deployment.md](./deployment.md) | Local Docker Compose and Railway (env, TLS, Flutter `DAB_API_BASE`) |
-| [conventions.md](./conventions.md) | Coding standards and naming rules for both packages |
-| [openapi.yaml](./openapi.yaml) | OpenAPI contract aligned with Bruno API definitions |
+| [overview.md](./overview.md) | Product problem, solution, provider status |
+| [architecture.md](./architecture.md) | Clean Architecture, entities, cross-package data flow |
+| [api.md](./api.md) | `dab_api` layers, controllers, provider ingestion |
+| [app.md](./app.md) | `dab_app` layers, views, Riverpod, design system |
+| [infrastructure.md](./infrastructure.md) | PostgreSQL, Redis, WebSocket, Docker |
+| [deployment.md](./deployment.md) | Local Compose and Railway |
+| [conventions.md](./conventions.md) | Naming, stack, testing |
+| [openapi.yaml](./openapi.yaml) | HTTP contract (aligned with `bruno/` and `dab_api` routes) |
 
 ---
 
-## 🔄 Doc Maintenance Rule
+## Maintenance
 
-Documentation in this folder is **living code**.  
-After any change that affects architecture, public API contracts, entities, or conventions, the relevant doc file **must** be updated in the same commit / PR.
+After a change that affects architecture, public API, entities, views, or
+conventions, update the matching file in the same PR. See
+[`.agents/rules/doc-maintenance.md`](../.agents/rules/doc-maintenance.md).
 
-See [`.agents/rules/doc-maintenance.md`](../.agents/rules/doc-maintenance.md) for the enforced agent rule.
+Do not add ad-hoc docs outside `doc/`. Plans and working notes belong in
+`.agents/brain/`, not here.
 
 ---
 
-## 🔗 Canonical Sources
+## Related sources
 
-- **Linear Project**: [DAB – Dev Activity Board](https://linear.app/dev-activity-board/project/dab-dev-activity-board-724c38eaef1b)
-- **Linear Documents** (master copies synced into this folder):
+- **Linear project:** [DAB – Dev Activity Board](https://linear.app/dev-activity-board/project/dab-dev-activity-board-724c38eaef1b)
+- **Linear documents** (historical copies; **this folder wins** if they diverge):
   - [Dab Infrastructure](https://linear.app/dev-activity-board/document/dab-infrastructure-339365576c10)
   - [Dab API](https://linear.app/dev-activity-board/document/dab-api-8608282c089c)
   - [Dab Client](https://linear.app/dev-activity-board/document/dab-client-05e24723cfe7)

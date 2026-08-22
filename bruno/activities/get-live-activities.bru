@@ -5,19 +5,13 @@ meta {
 }
 
 docs {
-  Retrieves Redis-backed live activities for Dashboard realtime hydration.
-  This endpoint is dedicated to live data and does not query Postgres directly.
+  Redis-only live inbox. Does not query Postgres. Dashboard omits `scope` (user inbox).
+  `scope=global` is accepted by the API but unused by the app.
 
   **Query Parameters**:
-  - `limit` (optional, 1..100): Max number of events to read. Default: 50.
+  - `limit` (optional, 1..100): Default 50.
   - `scope` (optional): `user` (default) or `global`.
-
-  ### Live Data Mapping
-  | API Field | Redis Key | Role |
-  | :--- | :--- | :--- |
-  | `data[]` | `activities:user:{id}` | User-scoped rolling feed |
-  | `data[]` | `activities:global` | Global rolling feed |
-  | `meta.syncToken` | `dab:version` | Vegas version clock |
+  - `includeArchived` (optional): `true` / `1` to include archived rows.
 }
 
 get {

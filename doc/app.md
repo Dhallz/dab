@@ -1,6 +1,5 @@
 # DAB App — Flutter Client Architecture
 
-> **Linear source:** [Dab Client](https://linear.app/dev-activity-board/document/dab-client-05e24723cfe7) · Last synced: 2026-04-08  
 > **Package:** `dab_app/` · Framework: Flutter · SDK: `^3.9.2`
 
 ---
@@ -49,23 +48,16 @@ graph TD
 
 Pure Dart. Zero Flutter or third-party framework imports.
 
-- **Entities:** Business objects — no "Entity" suffix. Current entities include:
-  - `Activity` — normalized activity event
-  - `ActivityCategory` — canonical activity classification enum
-  - `ActivitySearchQuery` — shared activity filter contract across local/remote search
-  - `ActivityProvider` — sealed hierarchy for provider-specific payloads
-  - `User` — DAB user with role, group, and provider identity links
-  - `UserIdentity` — maps DAB user to external provider account
-  - `Group` — organizational grouping
-  - `ProviderConfig` — external tool settings (`baseUrl`, `iconUrl`, `configJson`)
-  - `Presence` — real-time online/offline status
-  - `AuthResponse` — JWT + refresh token pair
-  - `AppSettings` — persisted client settings (`appThemeVariant`: Light, DAB dark, or grayscale Dark with DAB indigo accent; optional `localeCode`; `inboxNotificationsEnabled` default on; per-view `islandBarSelections`; `syncToken`)
-  - `SprintContext` — optional sprint metadata attached to provider payloads
+- **Entities:** Business objects — no "Entity" suffix. API-aligned types plus:
+  - `Activity`, `ActivityProvider`, `ActivityCategory`, `ActivitySearchQuery`, `ActivityLiveEvent`
+  - `ActivityFollow`, `FollowCandidate`, `GitWatchList`, `GitBranchList`, `JiraProject` / `JiraProjectWatchList`, `LinearTeam` / `LinearTeamWatchList`
+  - `User` (`linkedProviderIds` Directory hint), `UserIdentity`, `Group`
+  - `ProviderConfig`, `ProviderConnectivityReport`, `SystemStatus`
+  - `Presence`, `AuthResponse`, `AppSettings`, `SprintContext`, `ExplorerCacheClearRequest`
 
 - **Entities use `dart_mappable`** for serialization, equality, and `copyWith`.
 
-- **Extension-First:** Any helper on an entity is an `extension OnUser on User` co-located in the **same file**.
+- **Extension-First:** Helpers on an entity are `extension OnUser on User` in the **same file**. Presentation copy/layout helpers live in `lib/presentation/core/extensions/` — **one file per receiver** (`OnActivity.dashboardHeadline`, `OnActivityFollow.watchingPlaceholderActivity`).
 
 - **Use Cases:** Atomic business actions (e.g., `Login`, `FetchActivities`).
 
@@ -73,7 +65,7 @@ Pure Dart. Zero Flutter or third-party framework imports.
 
 - **Repository Interfaces:** `abstract interface class I[Name]Repository extends IRepository`. Returns `Either<AppFailure, T>`.
 
-- **Failures:** Sealed `AppFailure` hierarchy — `ServerFailure`, `NetworkFailure`, `CacheFailure`, `AuthFailure`, etc.
+- **Failures:** Sealed `AppFailure` — `ServerFailure`, `NetworkFailure`, `AuthFailure`, `ValidationFailure`, `UnknownFailure`.
 
 ---
 
@@ -129,8 +121,9 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 
 | View | Role | State Pattern |
 |---|---|---|
-| **Splash** | App bootstrap + redirect | Always **DAB-branded** (`AppTheme.dab`): mesh background, brand icon + marks + spinner; **`package_info_plus`** shows **Version {semver}+{build}** at bottom after async load. Routing waits **≥ 1s** on-screen then `context.go` once auth resolved (`splash_route_resolution.dart`). **GoRouter** loads splash at **`/`** with **`NoTransitionPage`** (no entry animation). **Auth** and the **home `StatefulShellRoute`** use a shared **fade** (`CustomTransitionPage` in `fade_transition_page.dart`) when replacing splash. Global **`redirect`** treats **`/`** and **`/auth`** as public so cold start is not forced straight to auth before splash runs; protected **`/home/*`** etc. still redirect guests to **`/auth`**. |
-| **Login** | Auth gate | Form via `AuthFormNotifier`; session in `authNotifierProvider`. The register toggle is shown **only while `isSystemConfigured` is false** (bootstrap): the first registered user becomes admin; afterwards self-registration is closed and accounts are created from the Admin Console. |
+| **Splash** | App bootstrap + redirect | Always **DAB-branded** (`AppTheme.dab`): mesh background, brand icon + marks + spinner; **`package_info_plus`** shows **Version {semver}+{build}** at bottom after async load. Routing waits **≥ 1s** on-screen then `context.go` once auth resolved (`splashDestinationPath` in `splash_route_resolution.dart`). **GoRouter** loads splash at **`/`** with **`NoTransitionPage`** (no entry animation). **Auth** and the **home `StatefulShellRoute`** use a shared **fade** (`CustomTransitionPage` in `fade_transition_page.dart`) when replacing splash. Global **`redirect`** treats **`/`** and **`/auth`** as public so cold start is not forced straight to auth before splash runs; protected **`/home/*`** etc. still redirect guests to **`/auth`**. |
+| **Auth** | Auth gate (`AuthView`) | Form via `AuthFormNotifier`; session in `authNotifierProvider`. The register toggle is shown **only while `isSystemConfigured` is false** (bootstrap): the first registered user becomes admin; afterwards self-registration is closed and accounts are created from the Admin Console. |
+| **Home** | Shell around home tabs | `HomeView` + `StatefulNavigationShell` (`/home/dashboard`, `/home/explorer`, `/home/insight`, `/home/admin`). Not a data screen. |
 | **Dashboard** | Personal inbound inbox | Initial hydration from `GET /activities/live` (user scope; never `scope=global`), then live updates via authenticated `/ws` (`ACTIVITY_RECEIVED` to the signed-in recipient only). While the desktop window is **unfocused**, `DashboardNotifier` may show an OS-local banner (`flutter_local_notifications`) with the card headline and Directed/Following subtitle — copy stays on device. Focused (`AppLifecycleState.resumed`) skips banners. Archive/unarchive does not notify. Always shows **two panes**: **Directed at you** (mentions, assignments, CCs, git watches) and **Following** (later updates on Follow-pinned objects). Wide layouts are a **2:1** side-by-side split (Directed larger); narrow layouts stack Directed over a shorter Following strip. Separation is whitespace (`AppSpacing.sectionGap`), not a divider. Each pane has its own scroll. Overlap (mentioned **and** Following) yields two independent inbox items. The Following pane has a focused autocomplete field (`GET /users/me/follows/candidates`) for Phorge/Jira/Linear issues (empty query is involved; a typed query searches any matching ticket in the team/project allow-list), Figma files (when typed), and, when typed, Admin-allow-listed git branches. Suggestions appear in a floating overlay only while the field is focused. Git Settings watches stay Directed; an explicit `owner/repo|branch` Follow is the only git path onto Following. Per-item Archive/Unarchive and Follow/Unfollow on followable cards (including git commits that carry a branch). Archive flags live on `activities:user:{id}`. The toolbar switches **Timeline / Category / Provider** layout (`DashboardFeedMode`, session-only), last-sync, and the show-archived chip; directed/following/archived counts are in the desktop sidebar (and the mobile toolbar). |
 | **Explorer** | Historical activity browser | Chronological strip with selectable timeframe; on load selects **all** directory users (`selectedUserIds`) then narrows to the signed-in user when matched (same breadth as Insights for the logged-in path). Sidebar **Providers** and **Activities** lists include admin-**activated** providers on first paint from cached app configs. Connection-test warning/failure (common when Live webhooks are unset) does **not** hide a provider. Green still comes from an Admin test **or** a healthy user credential (Settings → **Connect with Figma**). Figma comments map to **Message** (generic chat icon, not Slack); last-edited maps to **Generic**. Explorer groups comments by file: the card title is **`[folder_name] file name`** when Figma meta includes a folder (for example `[dajo. Plugin] DAB`), otherwise the file name; history rows are the **comment text and author**. Sender is the Figma handle or linked DAB name, never a Figma user id. Explorer polling needs **file keys or file URLs** (Admin Polling) and/or Figma **Follow** pins — Connect OAuth cannot list a team, so an empty catalog returns no Figma rows even after Connect succeeds. The Follow picker accepts a pasted `figma.com/design/…` URL. Figma live webhooks still require a Professional+ Figma team. Directory notes teammates who have not connected a selected provider. **Clear cache and refresh** (toolbar) evicts ObjectBox rows for the active day or range across all browsable providers, then refetches from provider APIs. Each selected provider is searched in parallel (`GET /activities/search?providers=` one id); rows paint as that call returns. A **linear** progress bar stays at the top of the list until every selected provider finishes — the circle spinner is not used on this feed. |
 | **Insights** | Filterable behavior analytics | KPI + trend + provider/type/user breakdowns with details table; search uses **`authoredOnly=false`** for team-aggregate provider queries (Explorer keeps **`true`**). Provider and activity-type filters match Explorer: activated providers with a **green** org test or user credential appear and stay synced with `appNotifierProvider`. The toolbar is the date range plus Today / 7d / 30d / Custom presets. |
@@ -143,10 +136,10 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 - **Mobile layout** stacks the same panes at **2:1** height (`DashboardViewMobile`); Directed on top, Following a shorter strip below. Both stay on screen with independent scroll. There is no Directed/Following tab switch. The panes are separated by `AppSpacing.sectionGap` whitespace, not a divider.
 - Sidebar content is directed/following/archived counts plus provider health chips from `DashboardState`. Health is one row per **Admin-activated** provider, colored from `appNotifierProvider.providerConnectionStatuses` (green until a connection test **and** credential both fail). Connected Settings credentials are applied **before** org Admin tests so chips do not flash red while Live webhook probes run. Quiet providers with no live events stay green. `lastEventAt` is optional metadata and does not drive color.
 - Each pane splits `visibleActivities` on `Activity.inboxLane` (`directedVisible` / `followedVisible`; missing/legacy JSON is directed). Timeline / Category / Provider layout applies independently per pane. Timeline mode draws a vertical **HH:mm rail** to the left of each `DashboardActivityCard` (org timezone via `orgLocalFromUtc`), with a date crumb when the org-calendar day changes. **Following** uses the same rail without the 72px time column (`compact: true`); clock time lives on the card so the 1/3-width pane can show the subject. **Category** mode groups that pane's subset into one glass container per `ActivityCategory` (Commit, Revision, Task, Message, Generic), including quiet types with an empty hint. **Provider** mode uses one container per Admin-activated provider from `providerHealth` (quiet providers keep an empty column) plus any extra names that appear only on the feed. Category and Provider use a **responsive masonry** grid (`MasonryGridView`): column count is `min(itemCount, 3, width ~/ 320)` so leftover viewport width **widens** tiles instead of adding skinny kanban columns, and each container sizes to its content.
-- Each `DashboardActivityCard` exposes an Archive action (trashcan) or Unarchive (refresh) routed through **`dashboardNotifierProvider`** with **optimistic UI** and rollback on failure. Followable cards also expose Follow / Following (bookmark) next to Archive. Follow pins hydrate with the live feed from `GET /users/me/follows`. The Following pane search (`DashboardFollowSearch`) is a normal text field: suggestions from `GET /users/me/follows/candidates` appear in a floating overlay only while the field is focused. The field and overlay share a tap-region group so choosing a row Follows it before the overlay dismisses. Following immediately shows a placeholder **card in the Following feed** from the card’s title (and optional url); that card hides once a Follow-lane live event exists for the same object, and unfollow stays on the live card bookmark. `PUT /users/me/follows` stores the title/url snapshot. Dashboard does not reuse Explorer’s grouped `ActivityCard`. The same cards are used in every feed mode.
-- **Live feed card copy:** Slack uses channel label + truncated summary as the headline, **From** `{sender}` via **`dashboardActivityFromAuthor`**, archived badge via **`dashboardCardArchivedBadge`**, then full message below. Sidebar provider rows use **`dashboardProviderHealth*`** status labels. Git commits use the **commit subject** as the headline (`dashboardActivityHeadline` strips a legacy `[branch] ` prefix on already-ingested live rows). Branch sits on the meta line with **From** **`{linked DAB user name} (@{GitHub login})`** on GitHub, then the remaining commit description. Following cards are compact (smaller padding, unpadded glyph, no chevron).
+- Each `DashboardActivityCard` exposes an Archive action (trashcan) or Unarchive (refresh) routed through **`dashboardNotifierProvider`** with **optimistic UI** and rollback on failure. Followable cards also expose Follow / Following (bookmark) next to Archive. Follow pins hydrate with the live feed from `GET /users/me/follows`. The Following pane search (`DashboardFollowSearch`) is a normal text field: suggestions from `GET /users/me/follows/candidates` appear in a floating overlay only while the field is focused. The field and overlay share a tap-region group so choosing a row Follows it before the overlay dismisses. Following immediately shows a placeholder **card in the Following feed** via **`OnActivityFollow.watchingPlaceholderActivity`**; that card hides once a Follow-lane live event exists for the same object, and unfollow stays on the live card bookmark. `PUT /users/me/follows` stores the title/url snapshot. Dashboard does not reuse Explorer’s grouped `ActivityCard`. The same cards are used in every feed mode.
+- **Live feed card copy:** Headline is **`OnActivity.dashboardHeadline`**. **From** uses l10n `dashboardActivityFromAuthor` with **`OnActivity.senderDisplayName`** (never a raw provider user id). Archived badge is l10n `dashboardCardArchivedBadge`. Sidebar health chips use l10n `dashboardProviderHealth*`. Following cards are compact (smaller padding, unpadded glyph, no chevron). Lane subtitle uses **`OnActivity.dashboardInboxLaneSubtitle`**.
 - Remote `ACTIVITY_ARCHIVED` / `ACTIVITY_UNARCHIVED` events on the WS stream are surfaced as `ActivityLiveEvent` subtypes (`ActivityReceivedEvent`, `ActivityArchivedEvent`, `ActivityUnarchivedEvent`) and merged into the same list by flipping the entry's `archived` flag in place.
-- After a new live row is prepended, if Settings inbox banners are on and the window is not focused, `NotifyInboxActivity` shows a local OS banner (headline via `dashboardActivityHeadline`; subtitle Directed vs Following). Remote FCM wakes (later mobile) are data-only and never carry activity copy.
+- After a new live row is prepended, if Settings inbox banners are on and the window is not focused, `NotifyInboxActivity` shows a local OS banner (headline via `OnActivity.dashboardHeadline`; subtitle Directed vs Following). Remote FCM wakes (later mobile) are data-only and never carry activity copy.
 - The toolbar hosts exclusive Timeline / Category / Provider `DabToggleChip`s, last-sync, and the show-archived chip. Directed/following/archived counts are in the desktop sidebar (and the mobile toolbar). A reconnect notice can appear above both panes after a WS gap.
 
 #### Explorer Historical Cache Strategy
@@ -164,7 +157,7 @@ The home shell branding uses `brandShortName` / `brandTagline` (`DAB` / **Dev Ac
 
 ### 4. Services Layer (`lib/services/`)
 
-- `ServiceLocator` — centralizes all dependency instantiation and injection. This is the only place dependencies are wired together. REST and WebSocket origins come from `ApiBaseUrl` (`--dart-define=DAB_API_BASE`, default local Docker). Hosted API: [deployment.md](./deployment.md).
+- `ServiceLocator` — custom singleton in `lib/services/service_locator.dart` (not GetIt). This is the only place dependencies are wired. REST and WebSocket origins come from `ApiBaseUrl` (`--dart-define=DAB_API_BASE`, default local Docker). Hosted API: [deployment.md](./deployment.md).
 
 ---
 
@@ -217,7 +210,7 @@ All routes are declared in `presentation/core/navigation/app_route.dart` and wir
 - Token refresh handled entirely by `AuthInterceptor` — presentation code must not trigger refresh manually.
 - A 401 on a protected route with no refresh token, or a failed refresh, clears the local session and `authNotifierProvider` so the router returns to Login. That avoids a zombie session where Settings still looks signed-in but `oauth/start` has no Bearer token.
 - On logout: clear session via **`authNotifierProvider`** / routing **and** secure storage atomically.
-- **Phorge Identity Linking:** Client maps `User.ownerPHID` to their DAB `userId` to filter personal backlogs.
+- **Identity linking:** Mentions and watches target the signed-in user through `user_identities` (Connect whoami or Admin link). The client `User.linkedProviderIds` list is a Directory hint only.
 
 ---
 
@@ -227,13 +220,13 @@ The project uses a unified design system centered around Material 3 roles, imple
 
 | Token Category | File | Description |
 |---|---|---|
-| **Colors** | [app_colors.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_colors.dart) | M3 roles + Electric Indigo (`#6366F1`) & Glass Tokens |
-| **Spacing** | [app_spacing.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_spacing.dart) | Base 4px grid (tiny=4, small=8, medium=16, large=24) |
-| **Typography** | [app_text_styles.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_text_styles.dart) | **Mona Sans** for UI, **JetBrains Mono** for monospaced text |
-| **Layout** | [app_layout.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_layout.dart) | Viewport constraints, standard border radii (12-24px) |
-| **Icons** | [app_icons.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_icons.dart) | Centralized icon map for the application (`flutty_heroicons` for non-provider UI, `simple_icons` for provider brands) |
-| **Themes** | [app_theme.dart](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/styles/app_theme.dart) | `AppTheme.light` (warm neutral canvas, white elevated cards with soft shadow, stone foreground roles, soft input borders, frosted glass with neutral grey border; icons stay primary/indigo; shared `SelectionTile` / Explorer `DirectoryTile` use neutral surface fills and grey borders—no primary glow), `AppTheme.dab`, `AppTheme.greyscale`. `checkboxTheme` / `chipTheme` / `switchTheme` match toolbar chips. |
-| **Control kit** | [core/widgets](file:///Users/dhallz/git/dab/dab_app/lib/presentation/core/widgets/) | Shared chrome: `DabGlassSurface`, `DabToggleChip`, `DabIslandStat`, `ActivityProviderIcon`, `SelectionTile`, `ViewToolbar`. |
+| **Colors** | `lib/presentation/core/styles/app_colors.dart` | M3 roles + Electric Indigo (`#6366F1`) & glass tokens |
+| **Spacing** | `lib/presentation/core/styles/app_spacing.dart` | Base 4px grid (tiny=4, small=8, medium=16, large=24) |
+| **Typography** | `lib/presentation/core/styles/app_text_styles.dart` | **Mona Sans** for UI, **JetBrains Mono** for monospaced text |
+| **Layout** | `lib/presentation/core/styles/app_layout.dart` | Viewport constraints, standard border radii (12-24px) |
+| **Icons** | `lib/presentation/core/styles/app_icons.dart` | Centralized icon map (`flutty_heroicons` for non-provider UI, `simple_icons` for provider brands) |
+| **Themes** | `lib/presentation/core/styles/app_theme.dart` | `AppTheme.light` (warm neutral canvas, white elevated cards with soft shadow, stone foreground roles, soft input borders, frosted glass with neutral grey border; icons stay primary/indigo; shared `SelectionTile` / Explorer `DirectoryTile` use neutral surface fills and grey borders—no primary glow), `AppTheme.dab`, `AppTheme.greyscale`. `checkboxTheme` / `chipTheme` / `switchTheme` match toolbar chips. |
+| **Control kit** | `lib/presentation/core/widgets/` | Shared chrome: `DabGlassSurface`, `DabToggleChip`, `DabIslandStat`, `ActivityProviderIcon`, `SelectionTile`, `ViewToolbar`. |
 
 ### Premium Glassmorphism
 - **Surface**: `AppColors.glassSurface` (low opacity slate) + backdrop blur `σ 8–12`.
