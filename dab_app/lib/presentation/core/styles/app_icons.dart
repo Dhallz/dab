@@ -74,5 +74,6 @@ class AppIcons {
   static final IconData openExternal = HeroIcons.arrowTopRightOnSquare.outline;
   static final IconData calendar = HeroIcons.calendarDays.outline;
   static final IconData insights = HeroIcons.chartBar.outline;
+  static final IconData reports = HeroIcons.documentText.outline;
   static final IconData admin = HeroIcons.shieldCheck.outline;
 }

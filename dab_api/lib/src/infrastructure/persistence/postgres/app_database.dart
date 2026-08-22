@@ -1,5 +1,7 @@
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activities_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_follows_table.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/tables/daily_report_lines_table.dart';
+import 'package:dab_api/src/infrastructure/persistence/postgres/tables/daily_reports_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_bitbucket_commit_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_discord_message_table.dart';
 import 'package:dab_api/src/infrastructure/persistence/postgres/tables/activity_figma_file_table.dart';
@@ -44,6 +46,8 @@ part 'app_database.g.dart';
     UserIdentitiesTable,
     UserProviderCredentialsTable,
     ActivityFollowsTable,
+    DailyReportsTable,
+    DailyReportLinesTable,
     UserDeviceTokensTable,
     SystemSettingsTable,
   ],
@@ -52,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -245,6 +249,10 @@ INSERT INTO provider_configs (id, name, base_url, is_active, icon_url, settings,
 VALUES ('figma', 'Figma', 'https://www.figma.com', 1, 'https://static.figma.com/app/icon/1/favicon.png', '{}', NOW())
 ON CONFLICT (id) DO NOTHING;
 ''');
+      }
+      if (from < 23) {
+        await m.createTable(dailyReportsTable);
+        await m.createTable(dailyReportLinesTable);
       }
     },
     beforeOpen: (details) async {

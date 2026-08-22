@@ -97,6 +97,8 @@ dab_app/lib/
 | `GitBranchList` | Unique branch names listed from GitHub/GitLab/Bitbucket for the Settings searchable watch picker. |
 | `FollowCandidate` | One Dashboard Following-picker row (`providerId`, `objectKey`, `title`, optional `url`, `kind` `issue` \| `gitBranch` \| `file`). |
 | `ActivityFollow` | Per-user Dashboard object Follow pin (`providerId` + `objectKey`, optional `title` / `url` snapshot) for Phorge, Jira, Linear, Slack, Discord, Figma `file_key`, and a GitHub/GitLab/Bitbucket **repo + branch** (`owner/repo\|branch`). Settings `watchedRepos` / `watchedBranches` stay Directed. |
+| `DailyReport` | Personal org-calendar daily report (`userId` + `date` `YYYY-MM-DD`, `includeFollowing`). Notes stay in DAB. |
+| `DailyReportLine` | Curated report row: `subjectKey` (provider + object + **occurrence** — commit sha / comment id / message ts, not git Follow `owner/repo\|branch` alone), `included`, `note`, `role` (`directed` \| `authored` \| `both`), snapshot `title` / `url` / `occurredAt` / `providerId`. |
 | `FigmaFileMeta` | File name / folder snapshot used when mapping Figma comments and last-edited heartbeats. |
 | `SprintContext` | Optional sprint metadata attached to provider payloads (Phorge). |
 | `ProviderConnectivityReport` | Admin **Try** result: Core / Live / Polling section statuses. |
@@ -107,7 +109,7 @@ dab_app/lib/
 
 ### App Entities (`dab_app/lib/domain/entities/`)
 
-Contains API-aligned entities plus client-only models (`ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, `AppSettings`, `SystemStatus`, `ExplorerCacheClearRequest`, `Presence`, `AuthResponse`, `ActivityFollow`, `FollowCandidate`, git/Jira/Linear watch lists). Client `User` includes `linkedProviderIds` (Directory hint; not a secret).
+Contains API-aligned entities plus client-only models (`ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, `AppSettings`, `SystemStatus`, `ExplorerCacheClearRequest`, `Presence`, `AuthResponse`, `ActivityFollow`, `FollowCandidate`, `DailyReport`, `DailyReportLine`, git/Jira/Linear watch lists). Client `User` includes `linkedProviderIds` (Directory hint; not a secret).
 
 `AppSettings` stores `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale`), optional `localeCode`, and `inboxNotificationsEnabled` (default **on** — OS banners for Directed and Following while the desktop window is unfocused). An `islandBarSelections` map remains on the ObjectBox record but is unused — home branches use per-view toolbars.
 
@@ -287,7 +289,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health (plain JSON, not the data envelope) |
 | `MetadataController` | `/metadata`, `/admin/system-settings`, `/admin/configs` | Provider configs, status, capabilities, admin config test/save, system settings |
-| `UserController` | `/users` | Directory, credentials, git watches/branches, Follow pins + candidates, device tokens |
+| `UserController` | `/users` | Directory, credentials, git watches/branches, Follow pins + candidates, personal daily reports, device tokens |
 
 ---
 

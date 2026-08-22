@@ -7,6 +7,8 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/daily_report.dart';
+import '../../domain/entities/user/daily_report_line.dart';
 import '../../domain/entities/user/follow_candidate.dart';
 import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
@@ -139,5 +141,17 @@ abstract class IUserRepository {
   Future<Either<AppFailure, void>> deleteMyActivityFollow({
     required String providerId,
     required String objectKey,
+  });
+
+  /// Self-serve: personal daily report for an org-calendar day (`YYYY-MM-DD`).
+  Future<Either<AppFailure, DailyReport>> getMyDailyReport({
+    required String date,
+  });
+
+  /// Self-serve: upsert the caller's curated daily report for [date].
+  Future<Either<AppFailure, DailyReport>> saveMyDailyReport({
+    required String date,
+    required bool includeFollowing,
+    required List<DailyReportLine> lines,
   });
 }

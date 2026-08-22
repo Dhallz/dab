@@ -7,6 +7,7 @@ import 'package:relic/relic.dart';
 import '../../application/containers/user_usecases.dart';
 import '../../application/services/identity_discovery_service.dart';
 import '../../domain/core/failures/failure.dart';
+import '../../domain/entities/user/daily_report_line.dart';
 import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
@@ -512,6 +513,121 @@ class UserController {
         ),
       ),
     );
+  }
+
+  Future<Response> getMyDailyReport(Request request) async {
+    final userId = userIdProperty.get(request);
+    final date = (request.pathParameters.raw[#date] ?? '').toString();
+    final result = await _user.getMyDailyReport.execute(
+      userId: userId,
+      date: date,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (report) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': report.toApiMap(),
+            'meta': {
+              'dataType': 'daily_report',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> saveMyDailyReport(Request request) async {
+    final userId = userIdProperty.get(request);
+    final date = (request.pathParameters.raw[#date] ?? '').toString();
+    try {
+      final bodyStr = await request.readAsString();
+      final data = bodyStr.trim().isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(bodyStr);
+      if (data is! Map) {
+        return Response.badRequest(
+          body: Body.fromString(
+            jsonEncode({'error': 'Body must be a JSON object'}),
+            mimeType: MimeType.json,
+          ),
+        );
+      }
+      final includeFollowing = data['includeFollowing'] == true;
+      final rawLines = data['lines'];
+      final lines = <DailyReportLine>[];
+      if (rawLines is List) {
+        for (final item in rawLines) {
+          if (item is! Map) continue;
+          lines.add(
+            DailyReportLine.fromApiMap(Map<String, dynamic>.from(item)),
+          );
+        }
+      }
+      final result = await _user.saveMyDailyReport.execute(
+        userId: userId,
+        date: date,
+        includeFollowing: includeFollowing,
+        lines: lines,
+      );
+      return result.fold(
+        (failure) {
+          if (failure is ValidationFailure) {
+            return Response.badRequest(
+              body: Body.fromString(
+                jsonEncode({'error': failure.message}),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+          return Response.internalServerError(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        },
+        (report) => Response.ok(
+          body: Body.fromString(
+            jsonEncode({
+              'data': report.toApiMap(),
+              'meta': {
+                'dataType': 'daily_report',
+                'timestamp': DateTime.now().toIso8601String(),
+              },
+            }),
+            mimeType: MimeType.json,
+          ),
+        ),
+      );
+    } catch (e) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({
+            'error': 'Invalid request body',
+            'details': e.toString(),
+          }),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
   }
 
   Future<Response> listMyFollowCandidates(Request request) async {

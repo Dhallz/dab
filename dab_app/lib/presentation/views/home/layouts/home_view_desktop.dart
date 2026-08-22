@@ -52,7 +52,7 @@ class HomeViewDesktop extends ConsumerWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
-    if (index == 3) {
+    if (index == 4) {
       ref
           .read(appNotifierProvider.notifier)
           .refreshIdentityResolutionBadge(ref.read(authNotifierProvider));

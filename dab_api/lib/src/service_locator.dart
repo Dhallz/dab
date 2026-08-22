@@ -62,10 +62,12 @@ import 'package:dab_api/src/application/usecases/user/complete_provider_oauth.da
 import 'package:dab_api/src/application/usecases/user/delete_user_provider_credential.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_branch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
+import 'package:dab_api/src/application/usecases/user/get_my_daily_report.dart';
 import 'package:dab_api/src/application/usecases/user/list_follow_candidates.dart';
 import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
 import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/delete_activity_follow.dart';
+import 'package:dab_api/src/application/usecases/user/save_my_daily_report.dart';
 import 'package:dab_api/src/application/usecases/user/save_user_device_token.dart';
 import 'package:dab_api/src/application/usecases/user/delete_user_device_token.dart';
 import 'package:dab_api/src/application/usecases/user/get_jira_project_watch_list.dart';
@@ -106,6 +108,7 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_webhook_request_authent
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_provider_credential_repository.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_push_wake_client.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_follow_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_daily_report_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_device_token_repository.dart';
 // domain
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_activity_repository.dart';
@@ -149,6 +152,7 @@ import 'package:dab_api/src/infrastructure/persistence/repositories/provider_con
 import 'package:dab_api/src/infrastructure/persistence/repositories/provider_metadata_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_provider_credential_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/activity_follow_repository.dart';
+import 'package:dab_api/src/infrastructure/persistence/repositories/daily_report_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_device_token_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/user_repository.dart';
 import 'package:dab_api/src/infrastructure/core/adapters/credential_resolver.dart';
@@ -255,6 +259,9 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<AbsIActivityFollowRepository>(
     ActivityFollowRepository(db),
+  );
+  sl.registerSingleton<AbsIDailyReportRepository>(
+    DailyReportRepository(db),
   );
   sl.registerSingleton<AbsIUserDeviceTokenRepository>(
     UserDeviceTokenRepository(db),
@@ -863,6 +870,12 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<DeleteUserDeviceToken>(
     DeleteUserDeviceToken(sl<AbsIUserDeviceTokenRepository>()),
   );
+  sl.registerSingleton<GetMyDailyReport>(
+    GetMyDailyReport(sl<AbsIDailyReportRepository>()),
+  );
+  sl.registerSingleton<SaveMyDailyReport>(
+    SaveMyDailyReport(sl<AbsIDailyReportRepository>()),
+  );
 
   // Group
   sl.registerSingleton<GetGroups>(GetGroups(sl<IUserRepository>()));
@@ -1001,6 +1014,8 @@ Future<void> serviceLocator() async {
       deleteActivityFollow: sl<DeleteActivityFollow>(),
       saveUserDeviceToken: sl<SaveUserDeviceToken>(),
       deleteUserDeviceToken: sl<DeleteUserDeviceToken>(),
+      getMyDailyReport: sl<GetMyDailyReport>(),
+      saveMyDailyReport: sl<SaveMyDailyReport>(),
     ),
   );
 

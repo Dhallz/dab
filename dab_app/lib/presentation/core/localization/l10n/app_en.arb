@@ -40,6 +40,59 @@
   "@navExplorer": {
     "description": "navExplorer: Explorer"
   },
+  "navReports": "Reports",
+  "@navReports": {
+    "description": "Home tab for personal daily-report authoring."
+  },
+  "reportsDateToday": "Today",
+  "@reportsDateToday": {
+    "description": "Reports toolbar date label when the org-calendar day is loading."
+  },
+  "reportsFollowingToggle": "Following",
+  "@reportsFollowingToggle": {
+    "description": "Reports toolbar chip — include Follow-lane live rows."
+  },
+  "reportsCopy": "Copy",
+  "@reportsCopy": {
+    "description": "Reports toolbar action — copy Markdown to the clipboard."
+  },
+  "reportsDownload": "Download",
+  "@reportsDownload": {
+    "description": "Reports toolbar action — download Markdown as a .md file."
+  },
+  "reportsCopied": "Copied Markdown",
+  "@reportsCopied": {
+    "description": "SnackBar after copying the daily-report Markdown."
+  },
+  "reportsDownloaded": "Saved {path}",
+  "@reportsDownloaded": {
+    "description": "SnackBar after downloading the daily-report Markdown.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "reportsNoteHint": "Note (optional)",
+  "@reportsNoteHint": {
+    "description": "Hint on a report line note field. Notes stay in DAB."
+  },
+  "reportsEmpty": "No activity for today yet",
+  "@reportsEmpty": {
+    "description": "Empty state when today's Directed ∪ authored pool is empty."
+  },
+  "reportsRoleDirected": "Directed",
+  "@reportsRoleDirected": {
+    "description": "Chip for inbound report lines."
+  },
+  "reportsRoleAuthored": "Authored",
+  "@reportsRoleAuthored": {
+    "description": "Chip for activity the signed-in user did."
+  },
+  "reportsRoleBoth": "Both",
+  "@reportsRoleBoth": {
+    "description": "Chip when a line is both inbound and authored."
+  },
   "navAdmin": "Admin",
   "@navAdmin": {
     "description": "navAdmin: Admin"

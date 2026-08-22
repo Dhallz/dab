@@ -24,6 +24,7 @@ class HomeMobileNav extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tabs = [
       context.l10n.dashboardTitle,
+      context.l10n.navReports,
       context.l10n.navExplorer,
       context.l10n.insightsTitle,
       if (showAdminTab) context.l10n.navAdmin,
@@ -36,7 +37,7 @@ class HomeMobileNav extends StatelessWidget {
         itemCount: tabs.length,
         itemBuilder: (context, index) {
           final isSelected = navigationShell.currentIndex == index;
-          final isAdminTab = showAdminTab && index == 3;
+          final isAdminTab = showAdminTab && index == 4;
           final showBadge = isAdminTab && adminTabBadgeCount > 0;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,

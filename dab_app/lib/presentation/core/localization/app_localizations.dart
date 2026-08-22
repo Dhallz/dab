@@ -166,6 +166,78 @@ abstract class AppLocalizations {
   /// **'Explorer'**
   String get navExplorer;
 
+  /// Home tab for personal daily-report authoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get navReports;
+
+  /// Reports toolbar date label when the org-calendar day is loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get reportsDateToday;
+
+  /// Reports toolbar chip — include Follow-lane live rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get reportsFollowingToggle;
+
+  /// Reports toolbar action — copy Markdown to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get reportsCopy;
+
+  /// Reports toolbar action — download Markdown as a .md file.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get reportsDownload;
+
+  /// SnackBar after copying the daily-report Markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied Markdown'**
+  String get reportsCopied;
+
+  /// SnackBar after downloading the daily-report Markdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {path}'**
+  String reportsDownloaded(String path);
+
+  /// Hint on a report line note field. Notes stay in DAB.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get reportsNoteHint;
+
+  /// Empty state when today's Directed ∪ authored pool is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity for today yet'**
+  String get reportsEmpty;
+
+  /// Chip for inbound report lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Directed'**
+  String get reportsRoleDirected;
+
+  /// Chip for activity the signed-in user did.
+  ///
+  /// In en, this message translates to:
+  /// **'Authored'**
+  String get reportsRoleAuthored;
+
+  /// Chip when a line is both inbound and authored.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get reportsRoleBoth;
+
   /// navAdmin: Admin
   ///
   /// In en, this message translates to:

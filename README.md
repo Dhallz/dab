@@ -69,6 +69,9 @@ Native clients for Desktop (Windows, Mac, Linux) and Mobile (Android, iOS).
   you pin). Archive, unfollow, live WebSocket, optional local OS banners while
   the window is unfocused. Standing in a Slack channel or owning a Jira project
   does **not** flood the inbox.
+- **Reports** — A personal daily report for org-calendar today: Directed-at-you
+  union what you authored. Curate lines, add DAB-only notes, copy or download
+  Markdown. Nothing is posted back to providers.
 - **Explorer** — Historical activity browser across providers, with an
   org-calendar date strip and a local cache.
 - **Insights** — Team-level KPIs and breakdowns without turning DAB into a

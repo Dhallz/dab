@@ -15,9 +15,11 @@ import '../usecases/user/start_provider_oauth.dart';
 import '../usecases/user/sync_phorge_users.dart';
 import '../usecases/user/test_user_provider_credential.dart';
 import '../usecases/user/delete_activity_follow.dart';
+import '../usecases/user/get_my_daily_report.dart';
 import '../usecases/user/list_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/save_activity_follow.dart';
+import '../usecases/user/save_my_daily_report.dart';
 import '../usecases/user/save_user_device_token.dart';
 import '../usecases/user/delete_user_device_token.dart';
 
@@ -44,6 +46,8 @@ class UserUseCases {
   final DeleteActivityFollow deleteActivityFollow;
   final SaveUserDeviceToken saveUserDeviceToken;
   final DeleteUserDeviceToken deleteUserDeviceToken;
+  final GetMyDailyReport getMyDailyReport;
+  final SaveMyDailyReport saveMyDailyReport;
 
   UserUseCases({
     required this.getUserById,
@@ -68,5 +72,7 @@ class UserUseCases {
     required this.deleteActivityFollow,
     required this.saveUserDeviceToken,
     required this.deleteUserDeviceToken,
+    required this.getMyDailyReport,
+    required this.saveMyDailyReport,
   });
 }

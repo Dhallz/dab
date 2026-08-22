@@ -62,6 +62,8 @@ activities                  ← Base table: id, userId (recipient), senderUserId
   └── activity_figma_file       ← Figma metadata: fileKey, commentId, last-touched handle (schema 22)
 
 activity_follows            ← Per-user Follow pins: userId, providerId, objectKey, title, url
+daily_reports               ← Per-user daily report header: userId, reportDate, includeFollowing (schema 23)
+  └── daily_report_lines        ← Curated lines: subjectKey, included, note, role, snapshot fields; cascade delete
 user_device_tokens          ← Per-user FCM/APNs tokens: platform, token
 group_members               ← Group membership
 ```
@@ -88,6 +90,8 @@ group_members               ← Group membership
 | `user_identities` | External provider account linkage |
 | `user_provider_credentials` | Per-user provider secrets (AES-256 encrypted `settings` JSON). Unique `(user_id, provider_id)`. |
 | `activity_follows` | Per-user Dashboard object Follow pins. Unique `(user_id, provider_id, object_key)`. Optional `title` / `url` display snapshot. Indexed `(provider_id, object_key)` for ingest lookup. Schema 19 table; title/url in schema 20. |
+| `daily_reports` | Per-user org-calendar daily report header. Unique `(user_id, report_date)`. `include_following` is 0/1. Schema 23. |
+| `daily_report_lines` | Curated lines on a daily report. Unique `(report_id, subject_key)`. Cascade delete with the parent report. Schema 23. |
 | `user_device_tokens` | Per-user FCM/APNs registration tokens for data-only inbox wakes. Unique `(user_id, token)`. `platform` is `android` or `ios`. Schema 21. |
 | `sessions` | Active auth sessions |
 | `groups` | Organizational groups |

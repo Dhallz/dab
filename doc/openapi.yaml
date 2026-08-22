@@ -1383,6 +1383,95 @@ paths:
           description: Follow pin removed
         '400':
           description: Missing body or unsupported provider
+  /users/me/day-reports/{date}:
+    get:
+      summary: Get my daily report
+      description: |
+        Returns the authenticated user's curated daily report for an
+        org-calendar `{date}` (`YYYY-MM-DD`). Missing reports return **200**
+        with empty `lines` and `includeFollowing: false`, not 404.
+        Notes are DAB-only and are never posted to providers.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      responses:
+        '200':
+          description: Daily report envelope (`data.userId`, `date`, `includeFollowing`, `lines`)
+        '400':
+          description: Date is not `YYYY-MM-DD`
+    put:
+      summary: Save my daily report
+      description: |
+        Upserts the caller's daily report for `{date}` and replaces curated
+        lines. Body `{ "includeFollowing": false, "lines": [ { "subjectKey":
+        "github|acme/app|abc1234", "included": true, "note": "Shipped login",
+        "role": "authored" } ] }`. `subjectKey` is provider + object +
+        occurrence (commit sha, comment id, message ts) — not git Follow
+        `owner/repo|branch` alone. Notes stay in DAB.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                includeFollowing:
+                  type: boolean
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [subjectKey]
+                    properties:
+                      subjectKey:
+                        type: string
+                      included:
+                        type: boolean
+                      note:
+                        type: string
+                      role:
+                        type: string
+                        enum: [directed, authored, both]
+                      title:
+                        type: string
+                      url:
+                        type: string
+                      occurredAt:
+                        type: string
+                        format: date-time
+                      providerId:
+                        type: string
+            example:
+              includeFollowing: false
+              lines:
+                - subjectKey: github|acme/app|abc1234
+                  included: true
+                  note: Shipped login
+                  role: authored
+                  title: Fix login
+                  providerId: github
+      responses:
+        '200':
+          description: Saved daily report
+        '400':
+          description: Invalid date or missing subjectKey
   /users/me/device-tokens:
     put:
       summary: Save my device token

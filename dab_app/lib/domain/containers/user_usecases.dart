@@ -7,6 +7,7 @@ import '../usecases/user/get_user.dart';
 import '../usecases/user/get_users.dart';
 import '../usecases/user/list_my_credentials.dart';
 import '../usecases/user/delete_my_activity_follow.dart';
+import '../usecases/user/get_my_daily_report.dart';
 import '../usecases/user/list_my_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/list_my_git_branches.dart';
@@ -16,6 +17,7 @@ import '../usecases/user/list_my_linear_teams.dart';
 import '../usecases/user/save_group.dart';
 import '../usecases/user/save_my_activity_follow.dart';
 import '../usecases/user/save_my_credential.dart';
+import '../usecases/user/save_my_daily_report.dart';
 import '../usecases/user/save_my_git_watches.dart';
 import '../usecases/user/save_my_jira_projects.dart';
 import '../usecases/user/save_my_linear_teams.dart';
@@ -45,6 +47,8 @@ class UserUseCases {
   final ListMyFollowCandidates listMyFollowCandidates;
   final SaveMyActivityFollow saveMyActivityFollow;
   final DeleteMyActivityFollow deleteMyActivityFollow;
+  final GetMyDailyReport getMyDailyReport;
+  final SaveMyDailyReport saveMyDailyReport;
 
   UserUseCases(IUserRepository repository)
     : createUser = CreateUser(repository),
@@ -68,5 +72,7 @@ class UserUseCases {
       listMyActivityFollows = ListMyActivityFollows(repository),
       listMyFollowCandidates = ListMyFollowCandidates(repository),
       saveMyActivityFollow = SaveMyActivityFollow(repository),
-      deleteMyActivityFollow = DeleteMyActivityFollow(repository);
+      deleteMyActivityFollow = DeleteMyActivityFollow(repository),
+      getMyDailyReport = GetMyDailyReport(repository),
+      saveMyDailyReport = SaveMyDailyReport(repository);
 }

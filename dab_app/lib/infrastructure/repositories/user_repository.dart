@@ -9,6 +9,8 @@ import '../../domain/entities/user/user_identity.dart';
 import '../../domain/entities/user/user_identity_status.dart';
 import '../../domain/entities/user/user_provider_credential_summary.dart';
 import '../../domain/entities/user/activity_follow.dart';
+import '../../domain/entities/user/daily_report.dart';
+import '../../domain/entities/user/daily_report_line.dart';
 import '../../domain/entities/user/follow_candidate.dart';
 import '../../domain/entities/user/git_branch_list.dart';
 import '../../domain/entities/user/git_watch_list.dart';
@@ -445,6 +447,36 @@ class UserRepository extends Repository implements IUserRepository {
         '/users/me/follows',
         data: {'providerId': providerId, 'objectKey': objectKey},
       );
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, DailyReport>> getMyDailyReport({
+    required String date,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get('/users/me/day-reports/$date');
+      final data = _getEnvelopeData(response);
+      return DailyReport.fromApiMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, DailyReport>> saveMyDailyReport({
+    required String date,
+    required bool includeFollowing,
+    required List<DailyReportLine> lines,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.put(
+        '/users/me/day-reports/$date',
+        data: {
+          'includeFollowing': includeFollowing,
+          'lines': lines.map((line) => line.toApiMap()).toList(),
+        },
+      );
+      final data = _getEnvelopeData(response);
+      return DailyReport.fromApiMap(Map<String, dynamic>.from(data as Map));
     });
   }
 

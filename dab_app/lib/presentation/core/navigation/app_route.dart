@@ -3,6 +3,7 @@ import 'package:dab_app/presentation/views/auth/auth_view.dart';
 import 'package:dab_app/presentation/views/dashboard/dashboard_view.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_view.dart';
 import 'package:dab_app/presentation/views/insights/insights_view.dart';
+import 'package:dab_app/presentation/views/reports/reports_view.dart';
 import 'package:dab_app/presentation/views/settings/settings_view.dart';
 import 'package:dab_app/presentation/views/splash/splash_view.dart';
 import 'package:flutter/widgets.dart';
@@ -29,6 +30,11 @@ class AppRoute {
     'home_dashboard',
     '/home/dashboard',
     (context, state) => const DashboardView(),
+  );
+  static final homeReports = AppRoute._(
+    'home_reports',
+    '/home/reports',
+    (context, state) => const ReportsView(),
   );
   static final homeExplorer = AppRoute._(
     'home_explorer',

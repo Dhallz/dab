@@ -7283,6 +7283,1073 @@ class ActivityFollowsTableCompanion
   }
 }
 
+class $DailyReportsTableTable extends DailyReportsTable
+    with TableInfo<$DailyReportsTableTable, DailyReportsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyReportsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES users(id) ON DELETE CASCADE',
+  );
+  static const VerificationMeta _reportDateMeta = const VerificationMeta(
+    'reportDate',
+  );
+  @override
+  late final GeneratedColumn<String> reportDate = GeneratedColumn<String>(
+    'report_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _includeFollowingMeta = const VerificationMeta(
+    'includeFollowing',
+  );
+  @override
+  late final GeneratedColumn<int> includeFollowing = GeneratedColumn<int>(
+    'include_following',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> createdAt =
+      GeneratedColumn<PgDateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+        defaultValue: now(),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    reportDate,
+    includeFollowing,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_reports';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyReportsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('report_date')) {
+      context.handle(
+        _reportDateMeta,
+        reportDate.isAcceptableOrUnknown(data['report_date']!, _reportDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reportDateMeta);
+    }
+    if (data.containsKey('include_following')) {
+      context.handle(
+        _includeFollowingMeta,
+        includeFollowing.isAcceptableOrUnknown(
+          data['include_following']!,
+          _includeFollowingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {userId, reportDate},
+  ];
+  @override
+  DailyReportsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyReportsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      reportDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}report_date'],
+      )!,
+      includeFollowing: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}include_following'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $DailyReportsTableTable createAlias(String alias) {
+    return $DailyReportsTableTable(attachedDatabase, alias);
+  }
+}
+
+class DailyReportsTableData extends DataClass
+    implements Insertable<DailyReportsTableData> {
+  final String id;
+  final String userId;
+  final String reportDate;
+
+  /// Stored as 0/1 in Postgres (avoids BOOL vs driver mapping issues).
+  final int includeFollowing;
+  final PgDateTime createdAt;
+  final PgDateTime? updatedAt;
+  const DailyReportsTableData({
+    required this.id,
+    required this.userId,
+    required this.reportDate,
+    required this.includeFollowing,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['report_date'] = Variable<String>(reportDate);
+    map['include_following'] = Variable<int>(includeFollowing);
+    map['created_at'] = Variable<PgDateTime>(
+      createdAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    return map;
+  }
+
+  DailyReportsTableCompanion toCompanion(bool nullToAbsent) {
+    return DailyReportsTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      reportDate: Value(reportDate),
+      includeFollowing: Value(includeFollowing),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory DailyReportsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyReportsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      reportDate: serializer.fromJson<String>(json['reportDate']),
+      includeFollowing: serializer.fromJson<int>(json['includeFollowing']),
+      createdAt: serializer.fromJson<PgDateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<PgDateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'reportDate': serializer.toJson<String>(reportDate),
+      'includeFollowing': serializer.toJson<int>(includeFollowing),
+      'createdAt': serializer.toJson<PgDateTime>(createdAt),
+      'updatedAt': serializer.toJson<PgDateTime?>(updatedAt),
+    };
+  }
+
+  DailyReportsTableData copyWith({
+    String? id,
+    String? userId,
+    String? reportDate,
+    int? includeFollowing,
+    PgDateTime? createdAt,
+    Value<PgDateTime?> updatedAt = const Value.absent(),
+  }) => DailyReportsTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    reportDate: reportDate ?? this.reportDate,
+    includeFollowing: includeFollowing ?? this.includeFollowing,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  DailyReportsTableData copyWithCompanion(DailyReportsTableCompanion data) {
+    return DailyReportsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      reportDate: data.reportDate.present
+          ? data.reportDate.value
+          : this.reportDate,
+      includeFollowing: data.includeFollowing.present
+          ? data.includeFollowing.value
+          : this.includeFollowing,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyReportsTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('reportDate: $reportDate, ')
+          ..write('includeFollowing: $includeFollowing, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    reportDate,
+    includeFollowing,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyReportsTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.reportDate == this.reportDate &&
+          other.includeFollowing == this.includeFollowing &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DailyReportsTableCompanion
+    extends UpdateCompanion<DailyReportsTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> reportDate;
+  final Value<int> includeFollowing;
+  final Value<PgDateTime> createdAt;
+  final Value<PgDateTime?> updatedAt;
+  final Value<int> rowid;
+  const DailyReportsTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.reportDate = const Value.absent(),
+    this.includeFollowing = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyReportsTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String reportDate,
+    this.includeFollowing = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       reportDate = Value(reportDate);
+  static Insertable<DailyReportsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? reportDate,
+    Expression<int>? includeFollowing,
+    Expression<PgDateTime>? createdAt,
+    Expression<PgDateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (reportDate != null) 'report_date': reportDate,
+      if (includeFollowing != null) 'include_following': includeFollowing,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyReportsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? reportDate,
+    Value<int>? includeFollowing,
+    Value<PgDateTime>? createdAt,
+    Value<PgDateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return DailyReportsTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      reportDate: reportDate ?? this.reportDate,
+      includeFollowing: includeFollowing ?? this.includeFollowing,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (reportDate.present) {
+      map['report_date'] = Variable<String>(reportDate.value);
+    }
+    if (includeFollowing.present) {
+      map['include_following'] = Variable<int>(includeFollowing.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<PgDateTime>(
+        createdAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyReportsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('reportDate: $reportDate, ')
+          ..write('includeFollowing: $includeFollowing, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DailyReportLinesTableTable extends DailyReportLinesTable
+    with TableInfo<$DailyReportLinesTableTable, DailyReportLinesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyReportLinesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reportIdMeta = const VerificationMeta(
+    'reportId',
+  );
+  @override
+  late final GeneratedColumn<String> reportId = GeneratedColumn<String>(
+    'report_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES daily_reports (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _subjectKeyMeta = const VerificationMeta(
+    'subjectKey',
+  );
+  @override
+  late final GeneratedColumn<String> subjectKey = GeneratedColumn<String>(
+    'subject_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _includedMeta = const VerificationMeta(
+    'included',
+  );
+  @override
+  late final GeneratedColumn<int> included = GeneratedColumn<int>(
+    'included',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('directed'),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> occurredAt =
+      GeneratedColumn<PgDateTime>(
+        'occurred_at',
+        aliasedName,
+        true,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  @override
+  late final GeneratedColumn<String> providerId = GeneratedColumn<String>(
+    'provider_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    reportId,
+    subjectKey,
+    included,
+    note,
+    role,
+    title,
+    url,
+    occurredAt,
+    providerId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_report_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyReportLinesTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('report_id')) {
+      context.handle(
+        _reportIdMeta,
+        reportId.isAcceptableOrUnknown(data['report_id']!, _reportIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reportIdMeta);
+    }
+    if (data.containsKey('subject_key')) {
+      context.handle(
+        _subjectKeyMeta,
+        subjectKey.isAcceptableOrUnknown(data['subject_key']!, _subjectKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectKeyMeta);
+    }
+    if (data.containsKey('included')) {
+      context.handle(
+        _includedMeta,
+        included.isAcceptableOrUnknown(data['included']!, _includedMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {reportId, subjectKey},
+  ];
+  @override
+  DailyReportLinesTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyReportLinesTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      reportId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}report_id'],
+      )!,
+      subjectKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_key'],
+      )!,
+      included: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}included'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      ),
+      occurredAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}occurred_at'],
+      ),
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_id'],
+      ),
+    );
+  }
+
+  @override
+  $DailyReportLinesTableTable createAlias(String alias) {
+    return $DailyReportLinesTableTable(attachedDatabase, alias);
+  }
+}
+
+class DailyReportLinesTableData extends DataClass
+    implements Insertable<DailyReportLinesTableData> {
+  final String id;
+  final String reportId;
+  final String subjectKey;
+
+  /// Stored as 0/1 in Postgres (avoids BOOL vs driver mapping issues).
+  final int included;
+  final String? note;
+  final String role;
+  final String? title;
+  final String? url;
+  final PgDateTime? occurredAt;
+  final String? providerId;
+  const DailyReportLinesTableData({
+    required this.id,
+    required this.reportId,
+    required this.subjectKey,
+    required this.included,
+    this.note,
+    required this.role,
+    this.title,
+    this.url,
+    this.occurredAt,
+    this.providerId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['report_id'] = Variable<String>(reportId);
+    map['subject_key'] = Variable<String>(subjectKey);
+    map['included'] = Variable<int>(included);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['role'] = Variable<String>(role);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || url != null) {
+      map['url'] = Variable<String>(url);
+    }
+    if (!nullToAbsent || occurredAt != null) {
+      map['occurred_at'] = Variable<PgDateTime>(
+        occurredAt,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (!nullToAbsent || providerId != null) {
+      map['provider_id'] = Variable<String>(providerId);
+    }
+    return map;
+  }
+
+  DailyReportLinesTableCompanion toCompanion(bool nullToAbsent) {
+    return DailyReportLinesTableCompanion(
+      id: Value(id),
+      reportId: Value(reportId),
+      subjectKey: Value(subjectKey),
+      included: Value(included),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      role: Value(role),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      url: url == null && nullToAbsent ? const Value.absent() : Value(url),
+      occurredAt: occurredAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(occurredAt),
+      providerId: providerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(providerId),
+    );
+  }
+
+  factory DailyReportLinesTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyReportLinesTableData(
+      id: serializer.fromJson<String>(json['id']),
+      reportId: serializer.fromJson<String>(json['reportId']),
+      subjectKey: serializer.fromJson<String>(json['subjectKey']),
+      included: serializer.fromJson<int>(json['included']),
+      note: serializer.fromJson<String?>(json['note']),
+      role: serializer.fromJson<String>(json['role']),
+      title: serializer.fromJson<String?>(json['title']),
+      url: serializer.fromJson<String?>(json['url']),
+      occurredAt: serializer.fromJson<PgDateTime?>(json['occurredAt']),
+      providerId: serializer.fromJson<String?>(json['providerId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'reportId': serializer.toJson<String>(reportId),
+      'subjectKey': serializer.toJson<String>(subjectKey),
+      'included': serializer.toJson<int>(included),
+      'note': serializer.toJson<String?>(note),
+      'role': serializer.toJson<String>(role),
+      'title': serializer.toJson<String?>(title),
+      'url': serializer.toJson<String?>(url),
+      'occurredAt': serializer.toJson<PgDateTime?>(occurredAt),
+      'providerId': serializer.toJson<String?>(providerId),
+    };
+  }
+
+  DailyReportLinesTableData copyWith({
+    String? id,
+    String? reportId,
+    String? subjectKey,
+    int? included,
+    Value<String?> note = const Value.absent(),
+    String? role,
+    Value<String?> title = const Value.absent(),
+    Value<String?> url = const Value.absent(),
+    Value<PgDateTime?> occurredAt = const Value.absent(),
+    Value<String?> providerId = const Value.absent(),
+  }) => DailyReportLinesTableData(
+    id: id ?? this.id,
+    reportId: reportId ?? this.reportId,
+    subjectKey: subjectKey ?? this.subjectKey,
+    included: included ?? this.included,
+    note: note.present ? note.value : this.note,
+    role: role ?? this.role,
+    title: title.present ? title.value : this.title,
+    url: url.present ? url.value : this.url,
+    occurredAt: occurredAt.present ? occurredAt.value : this.occurredAt,
+    providerId: providerId.present ? providerId.value : this.providerId,
+  );
+  DailyReportLinesTableData copyWithCompanion(
+    DailyReportLinesTableCompanion data,
+  ) {
+    return DailyReportLinesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      reportId: data.reportId.present ? data.reportId.value : this.reportId,
+      subjectKey: data.subjectKey.present
+          ? data.subjectKey.value
+          : this.subjectKey,
+      included: data.included.present ? data.included.value : this.included,
+      note: data.note.present ? data.note.value : this.note,
+      role: data.role.present ? data.role.value : this.role,
+      title: data.title.present ? data.title.value : this.title,
+      url: data.url.present ? data.url.value : this.url,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyReportLinesTableData(')
+          ..write('id: $id, ')
+          ..write('reportId: $reportId, ')
+          ..write('subjectKey: $subjectKey, ')
+          ..write('included: $included, ')
+          ..write('note: $note, ')
+          ..write('role: $role, ')
+          ..write('title: $title, ')
+          ..write('url: $url, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('providerId: $providerId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    reportId,
+    subjectKey,
+    included,
+    note,
+    role,
+    title,
+    url,
+    occurredAt,
+    providerId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyReportLinesTableData &&
+          other.id == this.id &&
+          other.reportId == this.reportId &&
+          other.subjectKey == this.subjectKey &&
+          other.included == this.included &&
+          other.note == this.note &&
+          other.role == this.role &&
+          other.title == this.title &&
+          other.url == this.url &&
+          other.occurredAt == this.occurredAt &&
+          other.providerId == this.providerId);
+}
+
+class DailyReportLinesTableCompanion
+    extends UpdateCompanion<DailyReportLinesTableData> {
+  final Value<String> id;
+  final Value<String> reportId;
+  final Value<String> subjectKey;
+  final Value<int> included;
+  final Value<String?> note;
+  final Value<String> role;
+  final Value<String?> title;
+  final Value<String?> url;
+  final Value<PgDateTime?> occurredAt;
+  final Value<String?> providerId;
+  final Value<int> rowid;
+  const DailyReportLinesTableCompanion({
+    this.id = const Value.absent(),
+    this.reportId = const Value.absent(),
+    this.subjectKey = const Value.absent(),
+    this.included = const Value.absent(),
+    this.note = const Value.absent(),
+    this.role = const Value.absent(),
+    this.title = const Value.absent(),
+    this.url = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyReportLinesTableCompanion.insert({
+    required String id,
+    required String reportId,
+    required String subjectKey,
+    this.included = const Value.absent(),
+    this.note = const Value.absent(),
+    this.role = const Value.absent(),
+    this.title = const Value.absent(),
+    this.url = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       reportId = Value(reportId),
+       subjectKey = Value(subjectKey);
+  static Insertable<DailyReportLinesTableData> custom({
+    Expression<String>? id,
+    Expression<String>? reportId,
+    Expression<String>? subjectKey,
+    Expression<int>? included,
+    Expression<String>? note,
+    Expression<String>? role,
+    Expression<String>? title,
+    Expression<String>? url,
+    Expression<PgDateTime>? occurredAt,
+    Expression<String>? providerId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (reportId != null) 'report_id': reportId,
+      if (subjectKey != null) 'subject_key': subjectKey,
+      if (included != null) 'included': included,
+      if (note != null) 'note': note,
+      if (role != null) 'role': role,
+      if (title != null) 'title': title,
+      if (url != null) 'url': url,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (providerId != null) 'provider_id': providerId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyReportLinesTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? reportId,
+    Value<String>? subjectKey,
+    Value<int>? included,
+    Value<String?>? note,
+    Value<String>? role,
+    Value<String?>? title,
+    Value<String?>? url,
+    Value<PgDateTime?>? occurredAt,
+    Value<String?>? providerId,
+    Value<int>? rowid,
+  }) {
+    return DailyReportLinesTableCompanion(
+      id: id ?? this.id,
+      reportId: reportId ?? this.reportId,
+      subjectKey: subjectKey ?? this.subjectKey,
+      included: included ?? this.included,
+      note: note ?? this.note,
+      role: role ?? this.role,
+      title: title ?? this.title,
+      url: url ?? this.url,
+      occurredAt: occurredAt ?? this.occurredAt,
+      providerId: providerId ?? this.providerId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (reportId.present) {
+      map['report_id'] = Variable<String>(reportId.value);
+    }
+    if (subjectKey.present) {
+      map['subject_key'] = Variable<String>(subjectKey.value);
+    }
+    if (included.present) {
+      map['included'] = Variable<int>(included.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<PgDateTime>(
+        occurredAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (providerId.present) {
+      map['provider_id'] = Variable<String>(providerId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyReportLinesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('reportId: $reportId, ')
+          ..write('subjectKey: $subjectKey, ')
+          ..write('included: $included, ')
+          ..write('note: $note, ')
+          ..write('role: $role, ')
+          ..write('title: $title, ')
+          ..write('url: $url, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('providerId: $providerId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $UserDeviceTokensTableTable extends UserDeviceTokensTable
     with TableInfo<$UserDeviceTokensTableTable, UserDeviceTokensTableData> {
   @override
@@ -7964,6 +9031,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $UserProviderCredentialsTableTable(this);
   late final $ActivityFollowsTableTable activityFollowsTable =
       $ActivityFollowsTableTable(this);
+  late final $DailyReportsTableTable dailyReportsTable =
+      $DailyReportsTableTable(this);
+  late final $DailyReportLinesTableTable dailyReportLinesTable =
+      $DailyReportLinesTableTable(this);
   late final $UserDeviceTokensTableTable userDeviceTokensTable =
       $UserDeviceTokensTableTable(this);
   late final $SystemSettingsTableTable systemSettingsTable =
@@ -7971,6 +9042,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index idxActivityFollowsObject = Index(
     'idx_activity_follows_object',
     'CREATE INDEX idx_activity_follows_object ON activity_follows (provider_id, object_key)',
+  );
+  late final Index idxDailyReportsUserDate = Index(
+    'idx_daily_reports_user_date',
+    'CREATE INDEX idx_daily_reports_user_date ON daily_reports (user_id, report_date)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -7995,9 +9070,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     userIdentitiesTable,
     userProviderCredentialsTable,
     activityFollowsTable,
+    dailyReportsTable,
+    dailyReportLinesTable,
     userDeviceTokensTable,
     systemSettingsTable,
     idxActivityFollowsObject,
+    idxDailyReportsUserDate,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -8081,6 +9159,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('group_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'daily_reports',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('daily_report_lines', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -14730,6 +15815,804 @@ typedef $$ActivityFollowsTableTableProcessedTableManager =
       ActivityFollowsTableData,
       PrefetchHooks Function()
     >;
+typedef $$DailyReportsTableTableCreateCompanionBuilder =
+    DailyReportsTableCompanion Function({
+      required String id,
+      required String userId,
+      required String reportDate,
+      Value<int> includeFollowing,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$DailyReportsTableTableUpdateCompanionBuilder =
+    DailyReportsTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> reportDate,
+      Value<int> includeFollowing,
+      Value<PgDateTime> createdAt,
+      Value<PgDateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$DailyReportsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $DailyReportsTableTable,
+          DailyReportsTableData
+        > {
+  $$DailyReportsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $DailyReportLinesTableTable,
+    List<DailyReportLinesTableData>
+  >
+  _dailyReportLinesTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.dailyReportLinesTable,
+        aliasName: $_aliasNameGenerator(
+          db.dailyReportsTable.id,
+          db.dailyReportLinesTable.reportId,
+        ),
+      );
+
+  $$DailyReportLinesTableTableProcessedTableManager
+  get dailyReportLinesTableRefs {
+    final manager = $$DailyReportLinesTableTableTableManager(
+      $_db,
+      $_db.dailyReportLinesTable,
+    ).filter((f) => f.reportId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _dailyReportLinesTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$DailyReportsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyReportsTableTable> {
+  $$DailyReportsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reportDate => $composableBuilder(
+    column: $table.reportDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get includeFollowing => $composableBuilder(
+    column: $table.includeFollowing,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> dailyReportLinesTableRefs(
+    Expression<bool> Function($$DailyReportLinesTableTableFilterComposer f) f,
+  ) {
+    final $$DailyReportLinesTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.dailyReportLinesTable,
+          getReferencedColumn: (t) => t.reportId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$DailyReportLinesTableTableFilterComposer(
+                $db: $db,
+                $table: $db.dailyReportLinesTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$DailyReportsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyReportsTableTable> {
+  $$DailyReportsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reportDate => $composableBuilder(
+    column: $table.reportDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get includeFollowing => $composableBuilder(
+    column: $table.includeFollowing,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyReportsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyReportsTableTable> {
+  $$DailyReportsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get reportDate => $composableBuilder(
+    column: $table.reportDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get includeFollowing => $composableBuilder(
+    column: $table.includeFollowing,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<PgDateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> dailyReportLinesTableRefs<T extends Object>(
+    Expression<T> Function($$DailyReportLinesTableTableAnnotationComposer a) f,
+  ) {
+    final $$DailyReportLinesTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.dailyReportLinesTable,
+          getReferencedColumn: (t) => t.reportId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$DailyReportLinesTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.dailyReportLinesTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$DailyReportsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyReportsTableTable,
+          DailyReportsTableData,
+          $$DailyReportsTableTableFilterComposer,
+          $$DailyReportsTableTableOrderingComposer,
+          $$DailyReportsTableTableAnnotationComposer,
+          $$DailyReportsTableTableCreateCompanionBuilder,
+          $$DailyReportsTableTableUpdateCompanionBuilder,
+          (DailyReportsTableData, $$DailyReportsTableTableReferences),
+          DailyReportsTableData,
+          PrefetchHooks Function({bool dailyReportLinesTableRefs})
+        > {
+  $$DailyReportsTableTableTableManager(
+    _$AppDatabase db,
+    $DailyReportsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyReportsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyReportsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyReportsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> reportDate = const Value.absent(),
+                Value<int> includeFollowing = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyReportsTableCompanion(
+                id: id,
+                userId: userId,
+                reportDate: reportDate,
+                includeFollowing: includeFollowing,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String reportDate,
+                Value<int> includeFollowing = const Value.absent(),
+                Value<PgDateTime> createdAt = const Value.absent(),
+                Value<PgDateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyReportsTableCompanion.insert(
+                id: id,
+                userId: userId,
+                reportDate: reportDate,
+                includeFollowing: includeFollowing,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DailyReportsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({dailyReportLinesTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (dailyReportLinesTableRefs) db.dailyReportLinesTable,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (dailyReportLinesTableRefs)
+                    await $_getPrefetchedData<
+                      DailyReportsTableData,
+                      $DailyReportsTableTable,
+                      DailyReportLinesTableData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$DailyReportsTableTableReferences
+                          ._dailyReportLinesTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$DailyReportsTableTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).dailyReportLinesTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.reportId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DailyReportsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyReportsTableTable,
+      DailyReportsTableData,
+      $$DailyReportsTableTableFilterComposer,
+      $$DailyReportsTableTableOrderingComposer,
+      $$DailyReportsTableTableAnnotationComposer,
+      $$DailyReportsTableTableCreateCompanionBuilder,
+      $$DailyReportsTableTableUpdateCompanionBuilder,
+      (DailyReportsTableData, $$DailyReportsTableTableReferences),
+      DailyReportsTableData,
+      PrefetchHooks Function({bool dailyReportLinesTableRefs})
+    >;
+typedef $$DailyReportLinesTableTableCreateCompanionBuilder =
+    DailyReportLinesTableCompanion Function({
+      required String id,
+      required String reportId,
+      required String subjectKey,
+      Value<int> included,
+      Value<String?> note,
+      Value<String> role,
+      Value<String?> title,
+      Value<String?> url,
+      Value<PgDateTime?> occurredAt,
+      Value<String?> providerId,
+      Value<int> rowid,
+    });
+typedef $$DailyReportLinesTableTableUpdateCompanionBuilder =
+    DailyReportLinesTableCompanion Function({
+      Value<String> id,
+      Value<String> reportId,
+      Value<String> subjectKey,
+      Value<int> included,
+      Value<String?> note,
+      Value<String> role,
+      Value<String?> title,
+      Value<String?> url,
+      Value<PgDateTime?> occurredAt,
+      Value<String?> providerId,
+      Value<int> rowid,
+    });
+
+final class $$DailyReportLinesTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $DailyReportLinesTableTable,
+          DailyReportLinesTableData
+        > {
+  $$DailyReportLinesTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $DailyReportsTableTable _reportIdTable(_$AppDatabase db) =>
+      db.dailyReportsTable.createAlias(
+        $_aliasNameGenerator(
+          db.dailyReportLinesTable.reportId,
+          db.dailyReportsTable.id,
+        ),
+      );
+
+  $$DailyReportsTableTableProcessedTableManager get reportId {
+    final $_column = $_itemColumn<String>('report_id')!;
+
+    final manager = $$DailyReportsTableTableTableManager(
+      $_db,
+      $_db.dailyReportsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_reportIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DailyReportLinesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyReportLinesTableTable> {
+  $$DailyReportLinesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectKey => $composableBuilder(
+    column: $table.subjectKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get included => $composableBuilder(
+    column: $table.included,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$DailyReportsTableTableFilterComposer get reportId {
+    final $$DailyReportsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.reportId,
+      referencedTable: $db.dailyReportsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyReportsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.dailyReportsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyReportLinesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyReportLinesTableTable> {
+  $$DailyReportLinesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectKey => $composableBuilder(
+    column: $table.subjectKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get included => $composableBuilder(
+    column: $table.included,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$DailyReportsTableTableOrderingComposer get reportId {
+    final $$DailyReportsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.reportId,
+      referencedTable: $db.dailyReportsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyReportsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.dailyReportsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyReportLinesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyReportLinesTableTable> {
+  $$DailyReportLinesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectKey => $composableBuilder(
+    column: $table.subjectKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get included =>
+      $composableBuilder(column: $table.included, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
+
+  $$DailyReportsTableTableAnnotationComposer get reportId {
+    final $$DailyReportsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.reportId,
+          referencedTable: $db.dailyReportsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$DailyReportsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.dailyReportsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$DailyReportLinesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyReportLinesTableTable,
+          DailyReportLinesTableData,
+          $$DailyReportLinesTableTableFilterComposer,
+          $$DailyReportLinesTableTableOrderingComposer,
+          $$DailyReportLinesTableTableAnnotationComposer,
+          $$DailyReportLinesTableTableCreateCompanionBuilder,
+          $$DailyReportLinesTableTableUpdateCompanionBuilder,
+          (DailyReportLinesTableData, $$DailyReportLinesTableTableReferences),
+          DailyReportLinesTableData,
+          PrefetchHooks Function({bool reportId})
+        > {
+  $$DailyReportLinesTableTableTableManager(
+    _$AppDatabase db,
+    $DailyReportLinesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyReportLinesTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DailyReportLinesTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DailyReportLinesTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> reportId = const Value.absent(),
+                Value<String> subjectKey = const Value.absent(),
+                Value<int> included = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<PgDateTime?> occurredAt = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyReportLinesTableCompanion(
+                id: id,
+                reportId: reportId,
+                subjectKey: subjectKey,
+                included: included,
+                note: note,
+                role: role,
+                title: title,
+                url: url,
+                occurredAt: occurredAt,
+                providerId: providerId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String reportId,
+                required String subjectKey,
+                Value<int> included = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<PgDateTime?> occurredAt = const Value.absent(),
+                Value<String?> providerId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyReportLinesTableCompanion.insert(
+                id: id,
+                reportId: reportId,
+                subjectKey: subjectKey,
+                included: included,
+                note: note,
+                role: role,
+                title: title,
+                url: url,
+                occurredAt: occurredAt,
+                providerId: providerId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DailyReportLinesTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({reportId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (reportId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.reportId,
+                                referencedTable:
+                                    $$DailyReportLinesTableTableReferences
+                                        ._reportIdTable(db),
+                                referencedColumn:
+                                    $$DailyReportLinesTableTableReferences
+                                        ._reportIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DailyReportLinesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyReportLinesTableTable,
+      DailyReportLinesTableData,
+      $$DailyReportLinesTableTableFilterComposer,
+      $$DailyReportLinesTableTableOrderingComposer,
+      $$DailyReportLinesTableTableAnnotationComposer,
+      $$DailyReportLinesTableTableCreateCompanionBuilder,
+      $$DailyReportLinesTableTableUpdateCompanionBuilder,
+      (DailyReportLinesTableData, $$DailyReportLinesTableTableReferences),
+      DailyReportLinesTableData,
+      PrefetchHooks Function({bool reportId})
+    >;
 typedef $$UserDeviceTokensTableTableCreateCompanionBuilder =
     UserDeviceTokensTableCompanion Function({
       required String id,
@@ -15197,6 +17080,10 @@ class $AppDatabaseManager {
       );
   $$ActivityFollowsTableTableTableManager get activityFollowsTable =>
       $$ActivityFollowsTableTableTableManager(_db, _db.activityFollowsTable);
+  $$DailyReportsTableTableTableManager get dailyReportsTable =>
+      $$DailyReportsTableTableTableManager(_db, _db.dailyReportsTable);
+  $$DailyReportLinesTableTableTableManager get dailyReportLinesTable =>
+      $$DailyReportLinesTableTableTableManager(_db, _db.dailyReportLinesTable);
   $$UserDeviceTokensTableTableTableManager get userDeviceTokensTable =>
       $$UserDeviceTokensTableTableTableManager(_db, _db.userDeviceTokensTable);
   $$SystemSettingsTableTableTableManager get systemSettingsTable =>

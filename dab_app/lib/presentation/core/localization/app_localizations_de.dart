@@ -39,6 +39,44 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navExplorer => 'Explorer';
 
   @override
+  String get navReports => 'Berichte';
+
+  @override
+  String get reportsDateToday => 'Heute';
+
+  @override
+  String get reportsFollowingToggle => 'Following';
+
+  @override
+  String get reportsCopy => 'Kopieren';
+
+  @override
+  String get reportsDownload => 'Download';
+
+  @override
+  String get reportsCopied => 'Markdown kopiert';
+
+  @override
+  String reportsDownloaded(String path) {
+    return 'Gespeichert $path';
+  }
+
+  @override
+  String get reportsNoteHint => 'Notiz (optional)';
+
+  @override
+  String get reportsEmpty => 'Noch keine Aktivität für heute';
+
+  @override
+  String get reportsRoleDirected => 'Eingehend';
+
+  @override
+  String get reportsRoleAuthored => 'Verfasst';
+
+  @override
+  String get reportsRoleBoth => 'Beides';
+
+  @override
   String get navAdmin => 'Verwaltung';
 
   @override

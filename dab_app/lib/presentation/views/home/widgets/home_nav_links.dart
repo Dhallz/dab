@@ -24,6 +24,7 @@ class HomeNavLinks extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tabs = [
       context.l10n.dashboardTitle,
+      context.l10n.navReports,
       context.l10n.navExplorer,
       context.l10n.insightsTitle,
       if (showAdminTab) context.l10n.navAdmin,
@@ -31,7 +32,7 @@ class HomeNavLinks extends StatelessWidget {
     return Row(
       children: List.generate(tabs.length, (index) {
         final isSelected = currentIndex == index;
-        final isAdminTab = showAdminTab && index == 3;
+        final isAdminTab = showAdminTab && index == 4;
         final showBadge = isAdminTab && adminTabBadgeCount > 0;
         return Padding(
           padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 20),
