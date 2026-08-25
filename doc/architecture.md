@@ -167,7 +167,9 @@ External Provider (Phorge, GitHub, Slack, …)
 The polling flow above powers Explorer (historical backfill). Figma poll keys
 come from Admin **file URLs/keys** and Follow pins — Connect OAuth cannot list
 a team. Explorer poll refreshes the Figma user access token before comments
-and retries once on HTTP 401. Dashboard is a
+and retries once on HTTP 401. `POST /mock/demo-day` unions typed screenshot
+rows into that search path from Redis `demo:search:{userId}:{date}` so Explorer
+can render without linked identities or provider HTTP. Dashboard is a
 **personal inbound inbox**: live ingest fans out one row per recipient
 (`Activity.userId`), records the linked actor as `senderUserId`, and delivers
 `ACTIVITY_RECEIVED` with `broadcastToUser(recipient)`. The app hydrates
@@ -282,7 +284,7 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 
 | Controller | Base Path | Responsibility |
 |---|---|---|
-| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook` | Historical feed, Redis live inbox (`GET /activities/live`), archive/unarchive, provider push receivers, Explorer search (`GET /activities/search`), authenticated `/ws` |
+| `ActivityController` | `/activities`, `/ws`, `/integrations/slack/events`, `/integrations/{github,phorge,jira,linear,gitlab,bitbucket,figma}/webhook`, `/mock/*` | Historical feed, Redis live inbox (`GET /activities/live`), archive/unarchive, provider push receivers, Explorer search (`GET /activities/search`), screenshot seed (`POST /mock/demo-day`), authenticated `/ws` |
 | `OauthController` | `GET /integrations/{provider}/oauth/callback` | Public OAuth redirect; HTML response; no tokens in the page |
 | `AdminController` | `/admin` | User management + identity review/link/resolve |
 | `AuthController` | `/auth` | Bootstrap register, login, refresh token |

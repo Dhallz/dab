@@ -100,6 +100,8 @@ Future<void> main() async {
     ..use('/ws', AuthMiddleware().call)
     ..get('/ws', ActivityController().wsHandler)
     ..post('/mock/activity', ActivityController().createMock)
+    ..use('/mock/demo-day', AuthMiddleware().call)
+    ..post('/mock/demo-day', ActivityController().seedDemoDay)
     // Auth only on /metadata/providers — Relic's use(prefix) wraps ALL deeper
     // routes under that prefix, so use('/metadata', …) also wrapped /configs and /status.
     ..use('/metadata/providers', AuthMiddleware().call)

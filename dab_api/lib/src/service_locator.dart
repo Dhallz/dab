@@ -33,6 +33,7 @@ import 'package:dab_api/src/application/usecases/activity/ingest_phorge_webhook.
 import 'package:dab_api/src/application/usecases/activity/ingest_slack_event.dart';
 import 'package:dab_api/src/application/usecases/activity/log_activity.dart';
 import 'package:dab_api/src/application/usecases/activity/search_activities.dart';
+import 'package:dab_api/src/application/usecases/activity/seed_demo_day.dart';
 import 'package:dab_api/src/application/usecases/activity/unarchive_live_activity.dart';
 import 'package:dab_api/src/application/usecases/auth/authenticate_user.dart';
 import 'package:dab_api/src/application/usecases/auth/count_unresolved_identities.dart';
@@ -91,6 +92,7 @@ import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_facade.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_access_token_issuer.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_credential_resolver.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_discord_live_ingestor.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_demo_activity_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_figma_file_meta_port.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_live_feed_store.dart';
 import 'package:dab_api/src/domain/contracts/ports/abs_i_phorge_task_hydrator.dart';
@@ -139,6 +141,7 @@ import 'package:dab_api/src/infrastructure/persistence/postgres/app_database.dar
 import 'package:dab_api/src/infrastructure/persistence/postgres/postgres_client.dart';
 import 'package:dab_api/src/infrastructure/persistence/repositories/postgres_health_repository.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_client.dart';
+import 'package:dab_api/src/infrastructure/persistence/redis/redis_demo_activity_store.dart';
 import 'package:dab_api/src/infrastructure/persistence/redis/redis_service.dart';
 import 'package:dab_api/src/infrastructure/core/logging/logging_service.dart';
 import 'package:dab_api/src/infrastructure/protocols/conduit/conduit_protocol.dart';
@@ -410,6 +413,9 @@ Future<void> serviceLocator() async {
     RedisService(redisClient, sl<AbsISystemSettingsRepository>()),
   );
   sl.registerSingleton<AbsILiveFeedStore>(sl<RedisService>());
+  sl.registerSingleton<AbsIDemoActivityStore>(
+    RedisDemoActivityStore(redisClient),
+  );
   sl.registerSingleton<AbsIWebhookRequestAuthenticator>(
     WebhookRequestAuthenticator(
       sl<AbsIProviderConfigRepository>(),
@@ -459,6 +465,7 @@ Future<void> serviceLocator() async {
     sl<AbsIProviderConfigRepository>(),
     sl<IUserRepository>(),
     sl<LoggingService>().record,
+    demoStore: sl<AbsIDemoActivityStore>(),
   );
   sl.registerSingleton<UnifiedActivityFetcher>(fetcher);
 
@@ -552,6 +559,21 @@ Future<void> serviceLocator() async {
   );
   sl.registerSingleton<SearchActivities>(
     SearchActivities(sl<AbsIAuthRepository>(), sl<FetchRemoteActivities>()),
+  );
+  sl.registerSingleton<SeedDemoDay>(
+    SeedDemoDay(
+      auth: sl<AbsIAuthRepository>(),
+      configs: sl<AbsIProviderConfigRepository>(),
+      settings: sl<AbsISystemSettingsRepository>(),
+      activities: sl<AbsIActivityRepository>(),
+      liveFeed: sl<AbsILiveFeedStore>(),
+      presence: sl<AbsIPresenceBroadcaster>(),
+      demoStore: sl<AbsIDemoActivityStore>(),
+      follows: sl<AbsIActivityFollowRepository>(),
+      reports: sl<AbsIDailyReportRepository>(),
+      isEnabled: () => sl<Config>().enableMock,
+      livePublisher: sl<ActivityLivePublisher>(),
+    ),
   );
   sl.registerSingleton<IngestGitHubWebhook>(
     IngestGitHubWebhook(
@@ -1004,6 +1026,7 @@ Future<void> serviceLocator() async {
       ingestSlackEvent: sl<IngestSlackEvent>(),
       logActivity: sl<LogActivity>(),
       searchActivities: sl<SearchActivities>(),
+      seedDemoDay: sl<SeedDemoDay>(),
       unarchiveLiveActivity: sl<UnarchiveLiveActivity>(),
     ),
   );

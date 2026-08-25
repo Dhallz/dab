@@ -140,6 +140,7 @@ Redis serves as the high-speed **versional clock** and fan-out engine.
 | `activities:global` | LIST | Rolling ingest copy (not used by Dashboard hydrate) |
 | `activities:user:{id}` | LIST | Personal inbound inbox (last 100 items); Dashboard hydrate + archive flags |
 | `activities:date:{yyyy-mm-dd}` | ZSET | Temporal sharding for date-range queries |
+| `demo:search:{userId}:{date}` | LIST | Screenshot seed for Explorer / Insights / Reports search (`POST /mock/demo-day`) |
 | `insights:stats:{yyyy-mm-dd}` | HASH | Real-time counts per provider category |
 | `insights:rankings:{yyyy-mm-dd}:{category}` | ZSET | Category leaderboard by contribution |
 | `insights:rankings:{yyyy-mm-dd}:total` | ZSET | Global team leaderboard by contribution |
@@ -149,7 +150,8 @@ The **dashboard** `GET /activities/live` response is built exclusively from the
 signed-in user's Redis inbox (`activities:user:{id}`); it never queries Postgres
 and does not use `scope=global`. Explorer uses **`GET /activities/search`**,
 which aggregates **provider APIs via `UnifiedActivityFetcher`** (no Postgres in
-that handler).
+that handler) and unions Redis `demo:search:{userId}:{date}` so a screenshot
+seed can fill Explorer without linked identities or provider HTTP.
 
 Live events reach these keys through provider push receivers: Slack Events API
 (`POST /integrations/slack/events`), signed push webhooks for GitHub, GitLab,
@@ -259,6 +261,7 @@ JWT_EXPIRY_MINUTES=60
 DAB_CREDENTIALS_KEY=
 DAB_ALLOWED_DOMAIN=
 APP_ENV=
+DAB_ENABLE_MOCK=
 PORT=8080
 DAB_INITIAL_ADMIN_EMAIL=
 DAB_{PROVIDER}_OAUTH_CLIENT_ID=
@@ -267,6 +270,8 @@ FCM_SERVICE_ACCOUNT_JSON=
 ```
 
 OAuth env names follow `DAB_{PROVIDER}_OAUTH_CLIENT_ID` / `_SECRET` (GitHub, GitLab, Bitbucket, Jira, Linear, Figma). `FCM_SERVICE_ACCOUNT_JSON` is optional; without it inbox wakes are a no-op.
+
+`DAB_ENABLE_MOCK` enables JWT `POST /mock/demo-day` when `APP_ENV` is not `development`; unset follows `APP_ENV`.
 
 `DATABASE_URL` / `REDIS_URL` win when set (Railway). Discrete `DB_*` /
 `REDIS_HOST` are what Compose uses. Postgres TLS stays **off** unless

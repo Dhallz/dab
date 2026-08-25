@@ -869,6 +869,86 @@ class ActivityController {
     );
   }
 
+  Future<Response> seedDemoDay(Request request) async {
+    final callerId = userIdProperty.get(request);
+    Map<String, dynamic> data = {};
+    try {
+      final body = await request.readAsString();
+      if (body.trim().isNotEmpty) {
+        final decoded = jsonDecode(body);
+        if (decoded is! Map) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': 'Body must be a JSON object'}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        data = Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {
+      return Response.badRequest(
+        body: Body.fromString(
+          jsonEncode({'error': 'Invalid JSON body'}),
+          mimeType: MimeType.json,
+        ),
+      );
+    }
+
+    final rawUserId = data['userId']?.toString().trim() ?? '';
+    final result = await _activity.seedDemoDay.execute(
+      userId: rawUserId.isNotEmpty ? rawUserId : callerId,
+      date: data['date']?.toString() ?? '',
+    );
+    return result.fold(
+      (failure) {
+        final message = failure.message;
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        if (failure is AuthFailure) {
+          return Response.forbidden(
+            body: Body.fromString(
+              jsonEncode({'error': message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        if (failure is NotFoundFailure) {
+          return Response.notFound(
+            body: Body.fromString(
+              jsonEncode({'error': message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (seeded) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': seeded.toMap(),
+            'meta': {
+              'dataType': 'object:demo_day',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
   Response? _webhookAuthResponse(
     WebhookAuthStatus status, {
     required String missingSecret,

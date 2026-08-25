@@ -12,6 +12,7 @@ import '../usecases/activity/ingest_phorge_webhook.dart';
 import '../usecases/activity/ingest_slack_event.dart';
 import '../usecases/activity/log_activity.dart';
 import '../usecases/activity/search_activities.dart';
+import '../usecases/activity/seed_demo_day.dart';
 import '../usecases/activity/unarchive_live_activity.dart';
 
 class ActivityUseCases {
@@ -29,6 +30,7 @@ class ActivityUseCases {
   final IngestSlackEvent ingestSlackEvent;
   final LogActivity logActivity;
   final SearchActivities searchActivities;
+  final SeedDemoDay seedDemoDay;
   final UnarchiveLiveActivity unarchiveLiveActivity;
 
   ActivityUseCases({
@@ -46,6 +48,7 @@ class ActivityUseCases {
     required this.ingestSlackEvent,
     required this.logActivity,
     required this.searchActivities,
+    required this.seedDemoDay,
     required this.unarchiveLiveActivity,
   });
 }

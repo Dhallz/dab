@@ -150,6 +150,15 @@ class Config {
 
   bool get isDevelopment => _getEnv('APP_ENV', 'development') == 'development';
 
+  /// Screenshot seed (`POST /mock/demo-day`). On in development, or when
+  /// `DAB_ENABLE_MOCK=true`. Explicit `false` disables even in development.
+  bool get enableMock {
+    final flag = _getEnv('DAB_ENABLE_MOCK', '').trim().toLowerCase();
+    if (flag == 'true' || flag == '1') return true;
+    if (flag == 'false' || flag == '0') return false;
+    return isDevelopment;
+  }
+
   /// Google FCM HTTP v1 service-account JSON or a path to that file.
   ///
   /// Empty in development; wake is a no-op when unset or unreadable.

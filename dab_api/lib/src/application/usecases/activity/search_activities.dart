@@ -6,8 +6,9 @@ import 'fetch_remote_activities.dart';
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Orchestrates on-demand activity search by user and time range.
 /// CONTRACT: Runs [FetchRemoteActivities] only — **`GET /activities/search`** aggregates
-/// provider APIs via [UnifiedActivityFetcher]. **Does not** query PostgreSQL; ingested rows
-/// on disk are surfaced elsewhere (`GET /activities`, live Redis fan-out).
+/// provider APIs via [UnifiedActivityFetcher] and unions screenshot seed rows.
+/// **Does not** query PostgreSQL; ingested rows on disk are surfaced elsewhere
+/// (`GET /activities`, live Redis fan-out).
 /// CONSTRAINTS: Only searches for valid DAB users. Returns an empty list on fetch failure.
 class SearchActivities {
   final AbsIAuthRepository _authRepo;

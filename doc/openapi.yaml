@@ -212,6 +212,11 @@ paths:
           - `false`: Returns transactions **authored by** OR **addressed to** (@mentions) the target users.
         - `users`: (Optional) Comma-separated list of User UUIDs. Defaults to current caller.
         - `providers`: (Optional) Comma-separated provider config ids (e.g. `slack,phorge`). Omit to poll every active connector.
+
+        Connector polls still require a linked identity. Rows written by
+        `POST /mock/demo-day` are unioned from Redis `demo:search:{userId}:{date}`
+        after that gate so Explorer/Insights/Reports search can render a
+        screenshot day without provider HTTP.
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
@@ -2263,4 +2268,42 @@ paths:
       responses:
         '200':
           description: Mock activity broadcasted
+  /mock/demo-day:
+    post:
+      summary: Seed a screenshot-ready demo day.
+      description: |
+        Authenticated development helper. Writes typed provider activities into
+        Postgres, Redis live feeds, Follow pins, a daily report, and
+        `demo:search:{userId}:{date}` for Explorer search.
+
+        Enabled when `DAB_ENABLE_MOCK=true` or `APP_ENV=development`.
+        Omit `date` to seed the organization calendar today (required for
+        Dashboard UTC-day visibility). Omit `userId` to seed the caller.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  description: Org-calendar day `YYYY-MM-DD`. Empty or omitted seeds today.
+                userId:
+                  type: string
+                  description: Target user id. Empty or omitted seeds the caller.
+            example:
+              date: '2026-08-24'
+              userId: '11111111-1111-1111-1111-111111111111'
+      responses:
+        '200':
+          description: Demo day seeded
+        '400':
+          description: Invalid date
+        '403':
+          description: Mock seed disabled
+        '404':
+          description: User not found
 

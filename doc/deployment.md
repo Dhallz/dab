@@ -67,6 +67,7 @@ Railway injects `DATABASE_URL` and `REDIS_URL`. Prefer those over copying
 | `REDIS_PASSWORD` | unset | omit if `REDIS_URL` has a password |
 | `PORT` | `8080` in container | injected by Railway |
 | `APP_ENV` | unset / `development` | `production` (rejects the default `JWT_SECRET`) |
+| `DAB_ENABLE_MOCK` | unset (follows `APP_ENV`) | omit / `false`. `true` enables JWT `POST /mock/demo-day` even in production |
 | `JWT_SECRET` | Compose dev value | long random; never the compiled default |
 | `DAB_CREDENTIALS_KEY` | optional (falls back to JWT) | set once; changing it invalidates stored user tokens |
 | `DAB_INITIAL_ADMIN_EMAIL` | optional | bootstrap admin |

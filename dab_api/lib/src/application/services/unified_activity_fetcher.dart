@@ -1,6 +1,7 @@
 import 'package:dab_api/src/application/services/connector_registry.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/user/user.dart';
+import 'package:dab_api/src/domain/contracts/ports/abs_i_demo_activity_store.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
 import 'package:dab_api/src/domain/entities/user/user_identity_status.dart';
@@ -16,6 +17,7 @@ class UnifiedActivityFetcher {
   final ConnectorRegistry _registry;
   final AbsIProviderConfigRepository _configRepo;
   final IUserRepository _userRepo;
+  final AbsIDemoActivityStore? _demoStore;
 
   /// Structured log sink (e.g. `sl<LoggingService>().record`); keeps Application free of I/O types.
   final void Function(
@@ -33,8 +35,9 @@ class UnifiedActivityFetcher {
     this._registry,
     this._configRepo,
     this._userRepo,
-    this._log,
-  );
+    this._log, {
+    AbsIDemoActivityStore? demoStore,
+  }) : _demoStore = demoStore;
 
   /// Aggregates and synchronizes activities from all registered sources.
   ///
@@ -43,7 +46,8 @@ class UnifiedActivityFetcher {
   /// 2. Iterates over all pairs in the [_registry].
   /// 3. Triggers [source.fetchRawData] in parallel.
   /// 4. Maps raw rows to Domain [Activity] entities via each [RegisteredConnectorPair.mapItemToActivities].
-  /// 5. Flattens and sorts the final results by [createdAt] descending.
+  /// 5. Unions [AbsIDemoActivityStore] rows (screenshot seed) after the identity gate.
+  /// 6. Flattens and sorts the final results by [createdAt] descending.
   Future<List<Activity>> fetchAll({
     required List<User> users,
     required DateTime start,
@@ -103,6 +107,17 @@ class UnifiedActivityFetcher {
     final results = await Future.wait(aggregationTasks);
     // Flatten the List<List<Activity>> into a single List<Activity>
     final allActivities = results.expand((list) => list).toList();
+
+    final demo = await _demoStore?.list(
+      userIds: users.map((user) => user.id).toList(),
+      start: start,
+      end: end,
+      providerIds: providerIds,
+      authoredOnly: authoredOnly,
+    );
+    if (demo != null && demo.isNotEmpty) {
+      allActivities.addAll(demo);
+    }
 
     // Temporal Sort: Ensure the most recent activity is first.
     allActivities.sort((a, b) => b.createdAt.compareTo(a.createdAt));
