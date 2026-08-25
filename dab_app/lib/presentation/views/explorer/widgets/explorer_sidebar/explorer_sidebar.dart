@@ -2,78 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../core/models/directory_selection_mode.dart';
+import '../../../../core/widgets/activity_category_checklist.dart';
+import '../../../../core/widgets/directory_create_group_button.dart';
+import '../../../../core/widgets/directory_group_actions.dart';
+import '../../../../core/widgets/directory_panel.dart';
+import '../../../../core/widgets/filter_sidebar.dart';
+import '../../../../core/widgets/filter_sidebar_section_spec.dart';
+import '../../../../core/widgets/provider_filter_checklist.dart';
 import '../../explorer_notifier.dart';
-import '../../explorer_state.dart';
-import 'activity_filter_checklist.dart';
-import 'directory_list.dart';
-import 'directory_toggle.dart';
-import 'explorer_sidebar_section.dart';
-import 'provider_filter_checklist.dart';
 
-class ExplorerSidebar extends ConsumerStatefulWidget {
+/// [ARCH: PRESENTATION_WIDGET]
+/// ROLE: Explorer composer for [FilterSidebar] — Directory, Activities, Providers.
+class ExplorerSidebar extends ConsumerWidget {
   const ExplorerSidebar({super.key});
 
   @override
-  ConsumerState<ExplorerSidebar> createState() => _ExplorerSidebarState();
-}
-
-class _ExplorerSidebarState extends ConsumerState<ExplorerSidebar> {
-  bool _isDirectoryExpanded = true;
-  bool _isActivitiesExpanded = true;
-  bool _isProvidersExpanded = true;
-
-  void _toggleDirectory() {
-    setState(() => _isDirectoryExpanded = !_isDirectoryExpanded);
-  }
-
-  void _toggleActivities() {
-    setState(() => _isActivitiesExpanded = !_isActivitiesExpanded);
-  }
-
-  void _toggleProviders() {
-    setState(() => _isProvidersExpanded = !_isProvidersExpanded);
-  }
-
-  List<_SidebarSectionConfig> _buildSections(ExplorerState state) {
-    return [
-      _SidebarSectionConfig(
-        title: context.l10n.explorerSectionDirectory,
-        isExpanded: _isDirectoryExpanded,
-        onToggle: _toggleDirectory,
-        child: Column(
-          children: [
-            DirectoryToggle(directoryType: state.directoryType),
-            const SizedBox(height: AppSpacing.m),
-            DirectoryList(state: state),
-          ],
-        ),
-      ),
-      _SidebarSectionConfig(
-        title: context.l10n.explorerSectionActivities,
-        isExpanded: _isActivitiesExpanded,
-        onToggle: _toggleActivities,
-        child: ActivityFilterChecklist(
-          availableCategories: state.availableActivityCategories,
-          selectedCategories: state.selectedActivityCategories,
-        ),
-      ),
-      _SidebarSectionConfig(
-        title: context.l10n.explorerSectionProviders,
-        isExpanded: _isProvidersExpanded,
-        onToggle: _toggleProviders,
-        child: ProviderFilterChecklist(
-          availableProviders: state.availableProviders,
-          selectedProviders: state.selectedProviders,
-        ),
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Rebuild when directory or filter selections change, not on date/items alone.
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(
       explorerNotifierProvider.select(
         (s) => (
@@ -90,76 +35,63 @@ class _ExplorerSidebarState extends ConsumerState<ExplorerSidebar> {
       ),
     );
     final state = ref.read(explorerNotifierProvider);
+    final notifier = ref.read(explorerNotifierProvider.notifier);
 
-    final sections = _buildSections(state);
-    final directorySection = sections.first;
-    final activitiesSection = sections[1];
-    final providersSection = sections[2];
-
-    return AppSidebar(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (directorySection.isExpanded)
-                Expanded(
-                  flex: 1,
-                  child: SingleChildScrollView(
-                    child: ExplorerSidebarSection(
-                      title: directorySection.title,
-                      isExpanded: directorySection.isExpanded,
-                      onToggle: directorySection.onToggle,
-                      child: directorySection.child,
-                    ),
-                  ),
-                ),
-              if (!directorySection.isExpanded) ...[
-                ExplorerSidebarSection(
-                  title: directorySection.title,
-                  isExpanded: directorySection.isExpanded,
-                  onToggle: directorySection.onToggle,
-                  child: directorySection.child,
-                ),
-                const Expanded(child: SizedBox.shrink()),
-              ],
-              const SizedBox(height: AppSpacing.l),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ExplorerSidebarSection(
-                    title: activitiesSection.title,
-                    isExpanded: activitiesSection.isExpanded,
-                    onToggle: activitiesSection.onToggle,
-                    child: activitiesSection.child,
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-                  ExplorerSidebarSection(
-                    title: providersSection.title,
-                    isExpanded: providersSection.isExpanded,
-                    onToggle: providersSection.onToggle,
-                    child: providersSection.child,
-                  ),
-                ],
-              ),
-            ],
+    return FilterSidebar(
+      sections: [
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionDirectory,
+          fillsRemainingSpace: true,
+          child: DirectoryPanel(
+            showGroups: true,
+            selectionMode: DirectorySelectionMode.multi,
+            directoryType: state.directoryType,
+            users: state.users,
+            groups: state.groups,
+            selectedUserIds: state.selectedUserIds,
+            selectedGroupIds: state.selectedGroupIds,
+            onDirectoryTypeChanged: notifier.setDirectoryType,
+            onUserTap: notifier.toggleUser,
+            onGroupTap: notifier.toggleGroup,
+            userSubtitle: (user) {
+              final missing = state.selectedProviders
+                  .where(
+                    (provider) => !user.linkedProviderIds.contains(provider),
+                  )
+                  .toList();
+              if (missing.isEmpty) return null;
+              return context.l10n.explorerUserNotConnected(missing.first);
+            },
+            groupTrailing: (group) => DirectoryGroupActions(
+              group: group,
+              users: state.users,
+              onRename: notifier.renameGroup,
+              onSaveMembers: notifier.saveGroup,
+              onDelete: notifier.deleteGroup,
+            ),
+            groupsFooter: DirectoryCreateGroupButton(
+              availableUsers: state.users,
+              onCreated: notifier.saveGroup,
+            ),
+          ),
+        ),
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionActivities,
+          child: ActivityCategoryChecklist(
+            availableCategories: state.availableActivityCategories,
+            selectedCategories: state.selectedActivityCategories,
+            onToggle: notifier.toggleActivityCategory,
+          ),
+        ),
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionProviders,
+          child: ProviderFilterChecklist(
+            availableProviders: state.availableProviders,
+            selectedProviders: state.selectedProviders,
+            onToggle: notifier.toggleProvider,
           ),
         ),
       ],
     );
   }
-}
-
-class _SidebarSectionConfig {
-  final String title;
-  final bool isExpanded;
-  final VoidCallback onToggle;
-  final Widget child;
-
-  const _SidebarSectionConfig({
-    required this.title,
-    required this.isExpanded,
-    required this.onToggle,
-    required this.child,
-  });
 }

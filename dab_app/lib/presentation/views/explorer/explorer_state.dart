@@ -10,7 +10,7 @@ import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/user/user.dart';
 import '../../core/extensions/activity_extensions.dart';
 import '../../core/extensions/string_extensions.dart';
-import 'models/directory_type.dart';
+import '../../core/models/directory_type.dart';
 import 'models/explorer_activity_kind_summary.dart';
 import 'models/explorer_date_mode.dart';
 import 'models/explorer_item.dart';

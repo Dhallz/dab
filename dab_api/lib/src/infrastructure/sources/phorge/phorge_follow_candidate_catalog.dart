@@ -15,7 +15,7 @@ import '../../protocols/conduit/conduit_protocol.dart';
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists Phorge tasks for the Follow picker. Read-only.
 /// CONTRACT: Empty [query] is involved (assigned/authored/subscribed). A typed
-/// query searches any Maniphest task by id (`T12`) or text.
+/// query matches any Maniphest task by id (`T12` / `12`) **and** title text.
 class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   PhorgeFollowCandidateCatalog(
     this._configs,
@@ -156,15 +156,15 @@ class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     required String query,
   }) async {
     final idMatch = _taskId.firstMatch(query);
-    if (idMatch != null) {
-      return _searchSafe(
-        token: token,
-        browseOrigin: browseOrigin,
-        constraints: {
-          'ids': [int.parse(idMatch.group(1)!)],
-        },
-      );
-    }
+    final byId = idMatch == null
+        ? const <FollowCandidate>[]
+        : await _searchSafe(
+            token: token,
+            browseOrigin: browseOrigin,
+            constraints: {
+              'ids': [int.parse(idMatch.group(1)!)],
+            },
+          );
     final open = await _searchSafe(
       token: token,
       browseOrigin: browseOrigin,
@@ -173,12 +173,27 @@ class PhorgeFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
         'query': query,
       },
     );
-    if (open.isNotEmpty) return open;
-    return _searchSafe(
-      token: token,
-      browseOrigin: browseOrigin,
-      constraints: {'query': query},
-    );
+    final byText = open.isNotEmpty
+        ? open
+        : await _searchSafe(
+            token: token,
+            browseOrigin: browseOrigin,
+            constraints: {'query': query},
+          );
+    return _mergeCandidates(byId, byText);
+  }
+
+  List<FollowCandidate> _mergeCandidates(
+    List<FollowCandidate> first,
+    List<FollowCandidate> second,
+  ) {
+    final seen = <String>{};
+    final out = <FollowCandidate>[];
+    for (final row in [...first, ...second]) {
+      if (!seen.add(row.objectKey)) continue;
+      out.add(row);
+    }
+    return out;
   }
 
   Future<List<FollowCandidate>> _searchOpenOrAny({

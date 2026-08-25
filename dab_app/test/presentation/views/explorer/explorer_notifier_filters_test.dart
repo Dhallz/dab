@@ -22,7 +22,7 @@ import 'package:dab_app/presentation/features/app/app_state.dart';
 import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_notifier.dart';
 import 'package:dab_app/presentation/views/explorer/explorer_state.dart';
-import 'package:dab_app/presentation/views/explorer/models/directory_type.dart';
+import 'package:dab_app/presentation/core/models/directory_type.dart';
 import 'package:dab_app/presentation/views/explorer/models/explorer_date_mode.dart';
 import 'package:dab_app/presentation/views/explorer/models/explorer_item.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

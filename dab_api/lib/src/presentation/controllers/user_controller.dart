@@ -515,6 +515,63 @@ class UserController {
     );
   }
 
+  Future<Response> listMyDailyReports(Request request) async {
+    final userId = userIdProperty.get(request);
+    final result = await _user.listMyDailyReports.execute(userId: userId);
+    return _dailyReportDatesResponse(result);
+  }
+
+  Future<Response> listUserDailyReports(Request request) async {
+    final callerId = userIdProperty.get(request);
+    final targetUserId = (request.pathParameters.raw[#id] ?? '').toString();
+    final result = await _user.listUserDailyReports.execute(
+      callerId: callerId,
+      targetUserId: targetUserId,
+    );
+    return _dailyReportDatesResponse(result);
+  }
+
+  Response _dailyReportDatesResponse(Either<Failure, List<String>> result) {
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        if (failure is AuthFailure) {
+          return Response.forbidden(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (dates) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': dates,
+            'meta': {
+              'dataType': 'list:daily_report_date',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
   Future<Response> getMyDailyReport(Request request) async {
     final userId = userIdProperty.get(request);
     final date = (request.pathParameters.raw[#date] ?? '').toString();
@@ -526,6 +583,55 @@ class UserController {
       (failure) {
         if (failure is ValidationFailure) {
           return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        return Response.internalServerError(
+          body: Body.fromString(
+            jsonEncode({'error': failure.message}),
+            mimeType: MimeType.json,
+          ),
+        );
+      },
+      (report) => Response.ok(
+        body: Body.fromString(
+          jsonEncode({
+            'data': report.toApiMap(),
+            'meta': {
+              'dataType': 'daily_report',
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+          }),
+          mimeType: MimeType.json,
+        ),
+      ),
+    );
+  }
+
+  Future<Response> getUserDailyReport(Request request) async {
+    final callerId = userIdProperty.get(request);
+    final targetUserId = (request.pathParameters.raw[#id] ?? '').toString();
+    final date = (request.pathParameters.raw[#date] ?? '').toString();
+    final result = await _user.getUserDailyReport.execute(
+      callerId: callerId,
+      targetUserId: targetUserId,
+      date: date,
+    );
+    return result.fold(
+      (failure) {
+        if (failure is ValidationFailure) {
+          return Response.badRequest(
+            body: Body.fromString(
+              jsonEncode({'error': failure.message}),
+              mimeType: MimeType.json,
+            ),
+          );
+        }
+        if (failure is AuthFailure) {
+          return Response.forbidden(
             body: Body.fromString(
               jsonEncode({'error': failure.message}),
               mimeType: MimeType.json,
@@ -591,6 +697,14 @@ class UserController {
         (failure) {
           if (failure is ValidationFailure) {
             return Response.badRequest(
+              body: Body.fromString(
+                jsonEncode({'error': failure.message}),
+                mimeType: MimeType.json,
+              ),
+            );
+          }
+          if (failure is AuthFailure) {
+            return Response.forbidden(
               body: Body.fromString(
                 jsonEncode({'error': failure.message}),
                 mimeType: MimeType.json,

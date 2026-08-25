@@ -8,8 +8,11 @@ import '../../../../domain/containers/user_usecases.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../../domain/entities/activity/activity_search_query.dart';
+import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../services/service_locator.dart';
+import '../../core/models/directory_target_user_ids.dart';
+import '../../core/models/directory_type.dart';
 import '../../core/models/view_status.dart';
 import '../../core/provider_browse_filter.dart';
 import '../../features/app/app_notifier.dart';
@@ -22,6 +25,8 @@ import 'models/insights_date_preset.dart';
 /// → [setDateRange]; `InsightsProviderToggled` → [toggleProvider];
 /// `InsightsActivityCategoryToggled` → [toggleActivityCategory];
 /// `InsightsUserToggled` → [toggleUser]; `InsightsRefreshRequested` → [refresh].
+/// Directory groups → [setDirectoryType], [toggleGroup], [renameGroup],
+/// [deleteGroup], [saveGroup].
 final insightsNotifierProvider =
     NotifierProvider.autoDispose<InsightsNotifier, InsightsState>(
       () => InsightsNotifier(
@@ -72,6 +77,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
       state,
     ).copyWith(status: ViewStatus.loading, errorMessage: null);
     final usersResult = await _userUseCases.getUsers.execute();
+    final groupsResult = await _userUseCases.getGroups.execute();
     final providerResult = await _metadataUseCases.getProviderConfigs.execute();
 
     var nextState = state;
@@ -83,6 +89,11 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         selectedUserIds: selectedUserIds,
       );
     });
+
+    groupsResult.fold(
+      (_) => null,
+      (groups) => nextState = nextState.copyWith(groups: groups),
+    );
 
     providerResult.fold((_) => null, (configs) {
       final app = ref.read(appNotifierProvider);
@@ -165,6 +176,11 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
     await _fetchInsights();
   }
 
+  Future<void> setDirectoryType(DirectoryType type) async {
+    state = state.copyWith(directoryType: type);
+    await _fetchInsights();
+  }
+
   Future<void> toggleUser(String userId) async {
     final selected = Set<String>.from(state.selectedUserIds);
     if (selected.contains(userId)) {
@@ -174,6 +190,86 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
     }
     state = state.copyWith(selectedUserIds: selected);
     await _fetchInsights();
+  }
+
+  Future<void> toggleGroup(String groupId) async {
+    final selected = Set<String>.from(state.selectedGroupIds);
+    if (selected.contains(groupId)) {
+      selected.remove(groupId);
+    } else {
+      selected.add(groupId);
+    }
+    state = state.copyWith(selectedGroupIds: selected);
+    await _fetchInsights();
+  }
+
+  Future<void> renameGroup(String groupId, String name) async {
+    final group = state.groups.cast<Group?>().firstWhere(
+      (g) => g?.id == groupId,
+      orElse: () => null,
+    );
+    if (group == null) return;
+    final result = await _userUseCases.saveGroup.execute(
+      group.copyWith(name: name),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (savedGroup) {
+        state = state.copyWith(
+          groups: [
+            for (final item in state.groups)
+              if (item.id == savedGroup.id) savedGroup else item,
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    final result = await _userUseCases.deleteGroup.execute(groupId);
+    await result.fold(
+      (failure) async {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (_) async {
+        state = state.copyWith(
+          groups: [for (final item in state.groups) if (item.id != groupId) item],
+          selectedGroupIds: {...state.selectedGroupIds}..remove(groupId),
+        );
+        await _fetchInsights();
+      },
+    );
+  }
+
+  Future<void> saveGroup(Group group) async {
+    final result = await _userUseCases.saveGroup.execute(group);
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ViewStatus.failure,
+          errorMessage: failure.message,
+        );
+      },
+      (savedGroup) {
+        final exists = state.groups.any((item) => item.id == savedGroup.id);
+        state = state.copyWith(
+          groups: exists
+              ? [
+                  for (final item in state.groups)
+                    if (item.id == savedGroup.id) savedGroup else item,
+                ]
+              : [...state.groups, savedGroup],
+        );
+      },
+    );
   }
 
   /// Reconciles provider and activity-type filters when admin activation or
@@ -268,7 +364,13 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
   }
 
   Future<void> _fetchInsights() async {
-    if (state.selectedUserIds.isEmpty ||
+    final targetUserIds = directoryTargetUserIds(
+      directoryType: state.directoryType,
+      selectedUserIds: state.selectedUserIds,
+      selectedGroupIds: state.selectedGroupIds,
+      groups: state.groups,
+    );
+    if (targetUserIds.isEmpty ||
         state.selectedProviders.isEmpty ||
         state.selectedActivityCategories.isEmpty) {
       state = state.copyWith(status: ViewStatus.success, activities: const []);
@@ -283,7 +385,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
       ActivitySearchQuery(
         startDate: state.startDate,
         endDate: state.endDate,
-        users: state.selectedUserIds.toList(),
+        users: targetUserIds.toList(),
         providers: state.selectedProviders,
         coverageProviders: Set<String>.from(state.selectedProviders),
         categories: state.selectedActivityCategories,

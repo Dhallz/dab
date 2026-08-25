@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/containers/metadata_usecases.dart';
 import '../../../domain/containers/system_usecases.dart';
+import '../../../domain/core/daily_report_lock_policy.dart';
 import '../../../domain/entities/system/app_settings.dart';
 import '../../../domain/entities/system/system_status.dart';
 import '../../../domain/entities/user/user_role.dart';
@@ -67,6 +68,8 @@ class AppNotifier extends Notifier<AppState> {
       isSystemConfigured: systemStatus.isSystemConfigured,
       orgTimezoneId: systemStatus.orgTimezoneId,
       deploymentMode: systemStatus.deploymentMode,
+      dailyReportLockOffsetDays: systemStatus.dailyReportLockOffsetDays,
+      dailyReportLockTime: systemStatus.dailyReportLockTime,
       status: ViewStatus.success,
     );
     unawaited(refreshProviderConnectionStatuses());
@@ -80,6 +83,14 @@ class AppNotifier extends Notifier<AppState> {
   /// Updates org timezone without a full [init].
   void setOrgTimezoneId(String timezoneId) {
     state = state.copyWith(orgTimezoneId: timezoneId);
+  }
+
+  /// Updates the Admin daily-report deadline without a full [init].
+  void setDailyReportLockPolicy(DailyReportLockPolicy policy) {
+    state = state.copyWith(
+      dailyReportLockOffsetDays: policy.offsetDays,
+      dailyReportLockTime: policy.time,
+    );
   }
 
   /// Refreshes admin identity-resolution badge count (no-op on API failure).

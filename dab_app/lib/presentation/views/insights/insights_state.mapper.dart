@@ -17,6 +17,8 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
       ViewStatusMapper.ensureInitialized();
       ActivityMapper.ensureInitialized();
       UserMapper.ensureInitialized();
+      GroupMapper.ensureInitialized();
+      DirectoryTypeMapper.ensureInitialized();
       ActivityCategoryMapper.ensureInitialized();
       InsightsDatePresetMapper.ensureInitialized();
     }
@@ -57,6 +59,27 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
   static const Field<InsightsState, Set<String>> _f$selectedUserIds = Field(
     'selectedUserIds',
     _$selectedUserIds,
+    opt: true,
+    def: const {},
+  );
+  static DirectoryType _$directoryType(InsightsState v) => v.directoryType;
+  static const Field<InsightsState, DirectoryType> _f$directoryType = Field(
+    'directoryType',
+    _$directoryType,
+    opt: true,
+    def: DirectoryType.users,
+  );
+  static List<Group> _$groups(InsightsState v) => v.groups;
+  static const Field<InsightsState, List<Group>> _f$groups = Field(
+    'groups',
+    _$groups,
+    opt: true,
+    def: const [],
+  );
+  static Set<String> _$selectedGroupIds(InsightsState v) => v.selectedGroupIds;
+  static const Field<InsightsState, Set<String>> _f$selectedGroupIds = Field(
+    'selectedGroupIds',
+    _$selectedGroupIds,
     opt: true,
     def: const {},
   );
@@ -119,6 +142,9 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
     #activities: _f$activities,
     #users: _f$users,
     #selectedUserIds: _f$selectedUserIds,
+    #directoryType: _f$directoryType,
+    #groups: _f$groups,
+    #selectedGroupIds: _f$selectedGroupIds,
     #availableProviders: _f$availableProviders,
     #selectedProviders: _f$selectedProviders,
     #availableActivityCategories: _f$availableActivityCategories,
@@ -135,6 +161,9 @@ class InsightsStateMapper extends ClassMapperBase<InsightsState> {
       activities: data.dec(_f$activities),
       users: data.dec(_f$users),
       selectedUserIds: data.dec(_f$selectedUserIds),
+      directoryType: data.dec(_f$directoryType),
+      groups: data.dec(_f$groups),
+      selectedGroupIds: data.dec(_f$selectedGroupIds),
       availableProviders: data.dec(_f$availableProviders),
       selectedProviders: data.dec(_f$selectedProviders),
       availableActivityCategories: data.dec(_f$availableActivityCategories),
@@ -210,6 +239,7 @@ abstract class InsightsStateCopyWith<$R, $In extends InsightsState, $Out>
   ListCopyWith<$R, Activity, ActivityCopyWith<$R, Activity, Activity>>
   get activities;
   ListCopyWith<$R, User, UserCopyWith<$R, User, User>> get users;
+  ListCopyWith<$R, Group, GroupCopyWith<$R, Group, Group>> get groups;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get availableProviders;
   $R call({
@@ -218,6 +248,9 @@ abstract class InsightsStateCopyWith<$R, $In extends InsightsState, $Out>
     List<Activity>? activities,
     List<User>? users,
     Set<String>? selectedUserIds,
+    DirectoryType? directoryType,
+    List<Group>? groups,
+    Set<String>? selectedGroupIds,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
     Set<ActivityCategory>? availableActivityCategories,
@@ -252,6 +285,13 @@ class _InsightsStateCopyWithImpl<$R, $Out>
         (v) => call(users: v),
       );
   @override
+  ListCopyWith<$R, Group, GroupCopyWith<$R, Group, Group>> get groups =>
+      ListCopyWith(
+        $value.groups,
+        (v, t) => v.copyWith.$chain(t),
+        (v) => call(groups: v),
+      );
+  @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get availableProviders => ListCopyWith(
     $value.availableProviders,
@@ -265,6 +305,9 @@ class _InsightsStateCopyWithImpl<$R, $Out>
     List<Activity>? activities,
     List<User>? users,
     Set<String>? selectedUserIds,
+    DirectoryType? directoryType,
+    List<Group>? groups,
+    Set<String>? selectedGroupIds,
     List<String>? availableProviders,
     Set<String>? selectedProviders,
     Set<ActivityCategory>? availableActivityCategories,
@@ -279,6 +322,9 @@ class _InsightsStateCopyWithImpl<$R, $Out>
       if (activities != null) #activities: activities,
       if (users != null) #users: users,
       if (selectedUserIds != null) #selectedUserIds: selectedUserIds,
+      if (directoryType != null) #directoryType: directoryType,
+      if (groups != null) #groups: groups,
+      if (selectedGroupIds != null) #selectedGroupIds: selectedGroupIds,
       if (availableProviders != null) #availableProviders: availableProviders,
       if (selectedProviders != null) #selectedProviders: selectedProviders,
       if (availableActivityCategories != null)
@@ -297,6 +343,9 @@ class _InsightsStateCopyWithImpl<$R, $Out>
     activities: data.get(#activities, or: $value.activities),
     users: data.get(#users, or: $value.users),
     selectedUserIds: data.get(#selectedUserIds, or: $value.selectedUserIds),
+    directoryType: data.get(#directoryType, or: $value.directoryType),
+    groups: data.get(#groups, or: $value.groups),
+    selectedGroupIds: data.get(#selectedGroupIds, or: $value.selectedGroupIds),
     availableProviders: data.get(
       #availableProviders,
       or: $value.availableProviders,

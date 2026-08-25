@@ -14,12 +14,14 @@ import 'reports_role_chip.dart';
 /// ROLE: One report row — include checkbox, inbound/authored chip, headline, note.
 class ReportsLineTile extends ConsumerStatefulWidget {
   final DailyReportLine line;
+  final bool readOnly;
   final ValueChanged<bool> onIncludedChanged;
   final ValueChanged<String> onNoteChanged;
 
   const ReportsLineTile({
     super.key,
     required this.line,
+    this.readOnly = false,
     required this.onIncludedChanged,
     required this.onNoteChanged,
   });
@@ -84,8 +86,9 @@ class _ReportsLineTileState extends ConsumerState<ReportsLineTile> {
             children: [
               Checkbox(
                 value: line.included,
-                onChanged: (value) =>
-                    widget.onIncludedChanged(value ?? false),
+                onChanged: widget.readOnly
+                    ? null
+                    : (value) => widget.onIncludedChanged(value ?? false),
               ),
               Expanded(
                 child: Column(
@@ -126,7 +129,7 @@ class _ReportsLineTileState extends ConsumerState<ReportsLineTile> {
               ),
             ],
           ),
-          if (line.included) ...[
+          if (line.included && !widget.readOnly) ...[
             const SizedBox(height: AppSpacing.s),
             TextField(
               controller: _noteController,
@@ -138,6 +141,14 @@ class _ReportsLineTileState extends ConsumerState<ReportsLineTile> {
                 hintText: context.l10n.reportsNoteHint,
                 isDense: true,
               ),
+            ),
+          ] else if (line.included &&
+              widget.readOnly &&
+              (line.note ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              line.note!,
+              style: AppTextStyles.bodyMedium.copyWith(color: scheme.onSurface),
             ),
           ],
         ],

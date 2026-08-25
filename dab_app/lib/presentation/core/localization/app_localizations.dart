@@ -172,23 +172,65 @@ abstract class AppLocalizations {
   /// **'Reports'**
   String get navReports;
 
-  /// Reports toolbar date label when the org-calendar day is loading.
+  /// Label for the current org-calendar day in the Reports date list.
   ///
   /// In en, this message translates to:
   /// **'Today'**
   String get reportsDateToday;
 
-  /// Reports toolbar chip — include Follow-lane live rows.
+  /// Sidebar section title for the dated report list.
   ///
   /// In en, this message translates to:
-  /// **'Following'**
-  String get reportsFollowingToggle;
+  /// **'Reports'**
+  String get reportsSectionReports;
+
+  /// Empty state when the selected person has no saved daily reports.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports yet'**
+  String get reportsNoSavedReports;
 
   /// Reports toolbar action — copy Markdown to the clipboard.
   ///
   /// In en, this message translates to:
   /// **'Copy'**
   String get reportsCopy;
+
+  /// Reports toolbar action — persist the open daily report.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get reportsSave;
+
+  /// SnackBar after a successful daily-report save.
+  ///
+  /// In en, this message translates to:
+  /// **'Report saved'**
+  String get reportsSaved;
+
+  /// Toolbar chip when the open own daily report is past the Admin deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get reportsLockedChip;
+
+  /// Toolbar chip when the open own daily report can still be edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get reportsUnlockedChip;
+
+  /// Toolbar chip counting down to the Admin daily-report deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Locks in {remaining}'**
+  String reportsLockCountdown(String remaining);
+
+  /// Banner on an own daily report that can no longer be edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing closed at {time} on {date} ({timezone}).'**
+  String reportsLockedBanner(String time, String date, String timezone);
 
   /// Reports toolbar action — download Markdown as a .md file.
   ///
@@ -219,6 +261,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No activity for today yet'**
   String get reportsEmpty;
+
+  /// Empty state when a teammate has no saved report for the selected day.
+  ///
+  /// In en, this message translates to:
+  /// **'No report for this day'**
+  String get reportsTeamEmpty;
+
+  /// Reports search field — pick extra activities onto today's report.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an activity…'**
+  String get reportsSearchHint;
+
+  /// Empty overlay when Reports activity search returns no rows.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching activities'**
+  String get reportsSearchEmpty;
 
   /// Chip for inbound report lines.
   ///
@@ -1129,6 +1189,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Organization timezone updated. Explorer cache was cleared.'**
   String get adminTimezoneSavedSnack;
+
+  /// Title for the global daily-report edit deadline on Admin Security.
+  ///
+  /// In en, this message translates to:
+  /// **'Report deadline'**
+  String get adminReportDeadlineTitle;
+
+  /// Subtitle for the global daily-report deadline panel.
+  ///
+  /// In en, this message translates to:
+  /// **'How long after a report date teammates can still edit that day’s report. Times use the organization timezone.'**
+  String get adminReportDeadlineSubtitle;
+
+  /// Label for the day offset of the daily-report deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock on'**
+  String get adminReportDeadlineOffsetLabel;
+
+  /// Deadline offset option: cutoff falls on the report’s own date.
+  ///
+  /// In en, this message translates to:
+  /// **'The report day'**
+  String get adminReportDeadlineOffsetReportDay;
+
+  /// Deadline offset option: cutoff falls on the following calendar day.
+  ///
+  /// In en, this message translates to:
+  /// **'The next day'**
+  String get adminReportDeadlineOffsetNextDay;
+
+  /// Deadline offset option for 2+ days after the report date.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days after the report date'**
+  String adminReportDeadlineOffsetDaysLater(int count);
+
+  /// Label for the wall-clock time of the daily-report deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'At'**
+  String get adminReportDeadlineTimeLabel;
+
+  /// Live preview of the configured daily-report deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'A report can be edited until {time} on {when}.'**
+  String adminReportDeadlinePreview(String time, String when);
+
+  /// Snack bar after saving the global daily-report deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Report deadline updated.'**
+  String get adminReportDeadlineSavedSnack;
 
   /// adminNonCompliantAccountsWarning: warning header listing accounts outside the allowed domain
   ///

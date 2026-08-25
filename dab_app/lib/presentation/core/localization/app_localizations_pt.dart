@@ -45,10 +45,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String get reportsDateToday => 'Hoje';
 
   @override
-  String get reportsFollowingToggle => 'Seguindo';
+  String get reportsSectionReports => 'Relatórios';
+
+  @override
+  String get reportsNoSavedReports => 'Ainda não há relatórios';
 
   @override
   String get reportsCopy => 'Copiar';
+
+  @override
+  String get reportsSave => 'Guardar';
+
+  @override
+  String get reportsSaved => 'Relatório guardado';
+
+  @override
+  String get reportsLockedChip => 'Bloqueado';
+
+  @override
+  String get reportsUnlockedChip => 'Desbloqueado';
+
+  @override
+  String reportsLockCountdown(String remaining) {
+    return 'Bloqueia em $remaining';
+  }
+
+  @override
+  String reportsLockedBanner(String time, String date, String timezone) {
+    return 'Edição encerrada às $time de $date ($timezone).';
+  }
 
   @override
   String get reportsDownload => 'Transferir';
@@ -66,6 +91,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get reportsEmpty => 'Ainda sem atividade de hoje';
+
+  @override
+  String get reportsTeamEmpty => 'Sem relatório para este dia';
+
+  @override
+  String get reportsSearchHint => 'Adicionar uma atividade…';
+
+  @override
+  String get reportsSearchEmpty => 'Nenhuma atividade correspondente';
 
   @override
   String get reportsRoleDirected => 'Recebido';
@@ -538,6 +572,39 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get adminTimezoneSavedSnack =>
       'Organization timezone updated. Explorer cache was cleared.';
+
+  @override
+  String get adminReportDeadlineTitle => 'Prazo dos relatórios';
+
+  @override
+  String get adminReportDeadlineSubtitle =>
+      'Quanto tempo depois da data do relatório ainda se pode editar. As horas usam o fuso da organização.';
+
+  @override
+  String get adminReportDeadlineOffsetLabel => 'Bloquear em';
+
+  @override
+  String get adminReportDeadlineOffsetReportDay => 'O dia do relatório';
+
+  @override
+  String get adminReportDeadlineOffsetNextDay => 'O dia seguinte';
+
+  @override
+  String adminReportDeadlineOffsetDaysLater(int count) {
+    return '$count dias após a data do relatório';
+  }
+
+  @override
+  String get adminReportDeadlineTimeLabel => 'Às';
+
+  @override
+  String adminReportDeadlinePreview(String time, String when) {
+    return 'Um relatório pode ser editado até $time $when.';
+  }
+
+  @override
+  String get adminReportDeadlineSavedSnack =>
+      'Prazo dos relatórios atualizado.';
 
   @override
   String get adminNonCompliantAccountsWarning =>

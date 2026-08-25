@@ -1,3 +1,4 @@
+import 'package:dab_app/domain/core/daily_report_lock_policy.dart';
 import 'package:dab_app/domain/core/deployment_mode.dart';
 import 'package:dab_app/domain/core/org_calendar.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
@@ -14,6 +15,7 @@ import 'deployment_mode_panel.dart';
 import 'domain_validation_panel.dart';
 import 'organization_timezone_panel.dart';
 import 'public_api_url_panel.dart';
+import 'report_deadline_panel.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
 /// ROLE: Admin Security section — domain validation settings and user
@@ -44,6 +46,8 @@ class _SecurityTabState extends State<SecurityTab> {
   late final TextEditingController _publicApiUrlController;
   late String _selectedTimezone;
   late String _deploymentMode;
+  late int _reportLockOffsetDays;
+  late String _reportLockTime;
 
   @override
   void initState() {
@@ -58,6 +62,12 @@ class _SecurityTabState extends State<SecurityTab> {
       widget.systemSettings[kSystemTimezoneSettingKey],
     );
     _deploymentMode = (widget.systemSettings[kDeploymentModeSettingKey]).normalizeDeploymentMode();
+    final reportLock = DailyReportLockPolicy.fromSettings(
+      offsetDays: widget.systemSettings[kDailyReportLockOffsetDaysKey],
+      time: widget.systemSettings[kDailyReportLockTimeKey],
+    );
+    _reportLockOffsetDays = reportLock.offsetDays;
+    _reportLockTime = reportLock.time;
   }
 
   @override
@@ -82,6 +92,15 @@ class _SecurityTabState extends State<SecurityTab> {
     if (nextMode !=
         (oldWidget.systemSettings[kDeploymentModeSettingKey]).normalizeDeploymentMode()) {
       _deploymentMode = nextMode;
+    }
+    final nextLock = DailyReportLockPolicy.fromSettings(
+      offsetDays: widget.systemSettings[kDailyReportLockOffsetDaysKey],
+      time: widget.systemSettings[kDailyReportLockTimeKey],
+    );
+    if (nextLock.offsetDays != _reportLockOffsetDays ||
+        nextLock.time != _reportLockTime) {
+      _reportLockOffsetDays = nextLock.offsetDays;
+      _reportLockTime = nextLock.time;
     }
   }
 
@@ -113,6 +132,8 @@ class _SecurityTabState extends State<SecurityTab> {
     String? timezone,
     String? deploymentMode,
     String? publicApiUrl,
+    int? reportLockOffsetDays,
+    String? reportLockTime,
   }) {
     final settings = Map<String, String>.from(widget.systemSettings);
     if (enabled != null) {
@@ -129,6 +150,12 @@ class _SecurityTabState extends State<SecurityTab> {
     }
     if (publicApiUrl != null) {
       settings['public_api_url'] = publicApiUrl;
+    }
+    if (reportLockOffsetDays != null) {
+      settings[kDailyReportLockOffsetDaysKey] = reportLockOffsetDays.toString();
+    }
+    if (reportLockTime != null) {
+      settings[kDailyReportLockTimeKey] = reportLockTime;
     }
     return widget.notifier.saveSystemSettings(settings);
   }
@@ -222,6 +249,29 @@ class _SecurityTabState extends State<SecurityTab> {
                       ],
                     ),
                   );
+                },
+              ),
+              const SizedBox(height: 24),
+              ReportDeadlinePanel(
+                offsetDays: _reportLockOffsetDays,
+                time: _reportLockTime,
+                onChanged: (policy) async {
+                  setState(() {
+                    _reportLockOffsetDays = policy.offsetDays;
+                    _reportLockTime = policy.time;
+                  });
+                  final messenger = ScaffoldMessenger.of(context);
+                  final savedMessage = l10n.adminReportDeadlineSavedSnack;
+                  final ok = await _saveSettings(
+                    reportLockOffsetDays: policy.offsetDays,
+                    reportLockTime: policy.time,
+                  );
+                  if (!mounted) return;
+                  if (ok) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(savedMessage)),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 24),

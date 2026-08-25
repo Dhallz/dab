@@ -148,6 +148,20 @@ abstract class IUserRepository {
     required String date,
   });
 
+  /// Team read: daily report for [userId] on [date]. 403 unless self/manager/admin.
+  Future<Either<AppFailure, DailyReport>> getUserDailyReport({
+    required String userId,
+    required String date,
+  });
+
+  /// Self-serve: org-calendar dates with a saved personal daily report, newest first.
+  Future<Either<AppFailure, List<String>>> listMyDailyReports();
+
+  /// Team read: saved daily-report dates for [userId]. 403 unless self/manager/admin.
+  Future<Either<AppFailure, List<String>>> listUserDailyReports({
+    required String userId,
+  });
+
   /// Self-serve: upsert the caller's curated daily report for [date].
   Future<Either<AppFailure, DailyReport>> saveMyDailyReport({
     required String date,

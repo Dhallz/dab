@@ -1,23 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/localization/l10n_extension.dart';
-import '../../../../domain/entities/group/group.dart';
-import '../../../../domain/entities/group/group_type.dart';
-import '../../../../domain/entities/user/user.dart';
-import '../explorer_notifier.dart';
+import '../../../domain/entities/group/group.dart';
+import '../../../domain/entities/group/group_type.dart';
+import '../../../domain/entities/user/user.dart';
+import '../localization/l10n_extension.dart';
 
-class CreateGroupDialog extends ConsumerStatefulWidget {
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Create a custom Directory group (name + members).
+class DirectoryCreateGroupDialog extends StatefulWidget {
   final List<User> availableUsers;
-  const CreateGroupDialog({super.key, required this.availableUsers});
+  final ValueChanged<Group> onCreated;
+
+  const DirectoryCreateGroupDialog({
+    super.key,
+    required this.availableUsers,
+    required this.onCreated,
+  });
 
   @override
-  ConsumerState<CreateGroupDialog> createState() => _CreateGroupDialogState();
+  State<DirectoryCreateGroupDialog> createState() =>
+      _DirectoryCreateGroupDialogState();
 }
 
-class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
+class _DirectoryCreateGroupDialogState
+    extends State<DirectoryCreateGroupDialog> {
   final _nameController = TextEditingController();
   final Set<String> _selectedUserIds = {};
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,10 +112,7 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
                         }
                       });
                     },
-                    title: Text(
-                      user.name,
-                      style: textTheme.bodySmall,
-                    ),
+                    title: Text(user.name, style: textTheme.bodySmall),
                     secondary: user.avatarUrl != null
                         ? CircleAvatar(
                             radius: 12,
@@ -147,22 +158,18 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
 
   void _onCreate() {
     final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      return;
-    }
-
+    if (name.isEmpty) return;
     final members = widget.availableUsers
-        .where((u) => _selectedUserIds.contains(u.id))
+        .where((user) => _selectedUserIds.contains(user.id))
         .toList();
-
-    final group = Group(
-      id: '', // Backend will generate UUID if empty
-      name: name,
-      type: GroupType.custom,
-      members: members,
+    widget.onCreated(
+      Group(
+        id: '',
+        name: name,
+        type: GroupType.custom,
+        members: members,
+      ),
     );
-
-    ref.read(explorerNotifierProvider.notifier).saveGroup(group);
     Navigator.pop(context);
   }
 }

@@ -97,7 +97,7 @@ group_members               ← Group membership
 | `groups` | Organizational groups |
 | `group_members` | Group membership |
 | `provider_configs` | External provider configuration (watch lists stay here; org tokens optional) |
-| `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`) |
+| `system_settings` | System-wide settings stored as key-value pairs (`allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`, `daily_report_lock_offset_days`, `daily_report_lock_time`) |
 
 Identity linkage (`user_identities`) is the runtime source of provider
 participation for activity fetchers. Legacy tenants with historical

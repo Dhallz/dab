@@ -167,6 +167,7 @@ void main() {
     when(() => users.getUser('u-1')).thenAnswer(
       (_) async => Right(TestData.user(id: 'u-1', phorgeUsername: null)),
     );
+    final idsQueries = <Map>[];
     when(
       () => conduit.call(any(), any(), apiToken: any(named: 'apiToken')),
     ).thenAnswer((invocation) async {
@@ -174,19 +175,48 @@ void main() {
       expect(method, 'maniphest.search');
       final params = invocation.positionalArguments[1] as Map;
       final constraints = params['constraints'] as Map;
-      expect(constraints['ids'], [12]);
+      idsQueries.add(Map<String, dynamic>.from(constraints));
       expect(constraints.containsKey('assigned'), isFalse);
       expect(constraints.containsKey('authorPHIDs'), isFalse);
       expect(constraints.containsKey('subscriberPHIDs'), isFalse);
-      return {
-        'data': [_task(phid: 'PHID-TASK-12', id: 12, name: 'Follow me')],
-      };
+      if (constraints['ids'] != null) {
+        expect(constraints['ids'], [12]);
+        return {
+          'data': [_task(phid: 'PHID-TASK-12', id: 12, name: 'Follow me')],
+        };
+      }
+      expect(constraints['query'], 'T12');
+      return {'data': <dynamic>[]};
     });
 
     final result = await catalog.list(userId: 'u-1', query: 'T12');
     final rows = result.getOrElse((_) => throw StateError('left'));
     expect(rows.single.objectKey, 'PHID-TASK-12');
     expect(rows.single.title, '[T12] Follow me');
+    expect(idsQueries.any((c) => c['ids'] != null), isTrue);
+    expect(idsQueries.any((c) => c['query'] == 'T12'), isTrue);
+    verifyNever(() => users.getUser(any()));
+  });
+
+  test('typed keyword searches Maniphest query text', () async {
+    when(() => users.getUser('u-1')).thenAnswer(
+      (_) async => Right(TestData.user(id: 'u-1', phorgeUsername: null)),
+    );
+    when(
+      () => conduit.call(any(), any(), apiToken: any(named: 'apiToken')),
+    ).thenAnswer((invocation) async {
+      final params = invocation.positionalArguments[1] as Map;
+      final constraints = params['constraints'] as Map;
+      expect(constraints['query'], 'login');
+      expect(constraints.containsKey('ids'), isFalse);
+      return {
+        'data': [_task(phid: 'PHID-TASK-9', id: 9, name: 'Fix login')],
+      };
+    });
+
+    final result = await catalog.list(userId: 'u-1', query: 'login');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows.single.title, '[T9] Fix login');
     verifyNever(() => users.getUser(any()));
   });
 }

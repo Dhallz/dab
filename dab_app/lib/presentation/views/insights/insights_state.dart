@@ -2,7 +2,9 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
+import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/user/user.dart';
+import '../../core/models/directory_type.dart';
 import '../../core/models/view_status.dart';
 import 'models/insights_date_preset.dart';
 import 'models/insights_detail_row.dart';
@@ -19,6 +21,9 @@ class InsightsState with InsightsStateMappable {
 
   final List<User> users;
   final Set<String> selectedUserIds;
+  final DirectoryType directoryType;
+  final List<Group> groups;
+  final Set<String> selectedGroupIds;
 
   final List<String> availableProviders;
   final Set<String> selectedProviders;
@@ -36,6 +41,9 @@ class InsightsState with InsightsStateMappable {
     this.activities = const [],
     this.users = const [],
     this.selectedUserIds = const {},
+    this.directoryType = DirectoryType.users,
+    this.groups = const [],
+    this.selectedGroupIds = const {},
     this.availableProviders = const [],
     this.selectedProviders = const {},
     this.availableActivityCategories = const {},

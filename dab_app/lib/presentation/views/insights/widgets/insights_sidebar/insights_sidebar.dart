@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../domain/entities/activity/activity_category.dart';
 import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_icons.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/styles/provider_icon_resolver.dart';
-import '../../../../core/widgets/app_sidebar.dart';
-import '../../../../core/widgets/selection_tile.dart';
+import '../../../../core/models/directory_selection_mode.dart';
+import '../../../../core/widgets/activity_category_checklist.dart';
+import '../../../../core/widgets/directory_create_group_button.dart';
+import '../../../../core/widgets/directory_group_actions.dart';
+import '../../../../core/widgets/directory_panel.dart';
+import '../../../../core/widgets/filter_sidebar.dart';
+import '../../../../core/widgets/filter_sidebar_section_spec.dart';
+import '../../../../core/widgets/provider_filter_checklist.dart';
 import '../../insights_notifier.dart';
-import 'insights_section_title.dart';
 
+/// [ARCH: PRESENTATION_WIDGET]
+/// ROLE: Insights composer for [FilterSidebar] — Directory, Activities, Providers.
 class InsightsSidebar extends ConsumerWidget {
   const InsightsSidebar({super.key});
 
@@ -20,8 +22,11 @@ class InsightsSidebar extends ConsumerWidget {
     ref.watch(
       insightsNotifierProvider.select(
         (s) => (
+          directoryType: s.directoryType,
           users: s.users,
+          groups: s.groups,
           selectedUserIds: s.selectedUserIds,
+          selectedGroupIds: s.selectedGroupIds,
           availableProviders: s.availableProviders,
           selectedProviders: s.selectedProviders,
           availableActivityCategories: s.availableActivityCategories,
@@ -31,81 +36,62 @@ class InsightsSidebar extends ConsumerWidget {
     );
     final state = ref.read(insightsNotifierProvider);
     final notifier = ref.read(insightsNotifierProvider.notifier);
-    final cs = Theme.of(context).colorScheme;
-    return AppSidebar(
-      children: [
-        Text(
-          context.l10n.insightsFiltersTitle,
-          style: AppTextStyles.titleMedium.copyWith(
-            color: cs.onSurface,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.m),
-        InsightsSectionTitle(title: context.l10n.insightsUsersSectionTitle),
-        ...state.users.map(
-          (user) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: SelectionTile(
-              label: user.name,
-              isSelected: state.selectedUserIds.contains(user.id),
-              avatarUrl: user.avatarUrl,
-              iconData: user.avatarUrl == null ? AppIcons.user : null,
-              onTap: () => notifier.toggleUser(user.id),
+
+    return FilterSidebar(
+      sections: [
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionDirectory,
+          fillsRemainingSpace: true,
+          child: DirectoryPanel(
+            showGroups: true,
+            selectionMode: DirectorySelectionMode.multi,
+            directoryType: state.directoryType,
+            users: state.users,
+            groups: state.groups,
+            selectedUserIds: state.selectedUserIds,
+            selectedGroupIds: state.selectedGroupIds,
+            onDirectoryTypeChanged: notifier.setDirectoryType,
+            onUserTap: notifier.toggleUser,
+            onGroupTap: notifier.toggleGroup,
+            userSubtitle: (user) {
+              final missing = state.selectedProviders
+                  .where(
+                    (provider) => !user.linkedProviderIds.contains(provider),
+                  )
+                  .toList();
+              if (missing.isEmpty) return null;
+              return context.l10n.explorerUserNotConnected(missing.first);
+            },
+            groupTrailing: (group) => DirectoryGroupActions(
+              group: group,
+              users: state.users,
+              onRename: notifier.renameGroup,
+              onSaveMembers: notifier.saveGroup,
+              onDelete: notifier.deleteGroup,
+            ),
+            groupsFooter: DirectoryCreateGroupButton(
+              availableUsers: state.users,
+              onCreated: notifier.saveGroup,
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.s),
-        InsightsSectionTitle(title: context.l10n.insightsProvidersSectionTitle),
-        ...state.availableProviders.map(
-          (provider) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: SelectionTile(
-              label: provider,
-              isSelected: state.selectedProviders.contains(provider),
-              iconData: ProviderIconResolver.resolveFallbackIcon(
-                context,
-                provider,
-              ),
-              onTap: () => notifier.toggleProvider(provider),
-            ),
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionActivities,
+          child: ActivityCategoryChecklist(
+            availableCategories: state.availableActivityCategories,
+            selectedCategories: state.selectedActivityCategories,
+            onToggle: notifier.toggleActivityCategory,
           ),
         ),
-        const SizedBox(height: AppSpacing.s),
-        InsightsSectionTitle(
-          title: context.l10n.insightsActivityTypesSectionTitle,
-        ),
-        ...state.availableActivityCategories.map(
-          (category) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: SelectionTile(
-              label: _categoryLabel(context, category),
-              isSelected: state.selectedActivityCategories.contains(category),
-              iconData: _iconFor(category),
-              onTap: () => notifier.toggleActivityCategory(category),
-            ),
+        FilterSidebarSectionSpec(
+          title: context.l10n.explorerSectionProviders,
+          child: ProviderFilterChecklist(
+            availableProviders: state.availableProviders,
+            selectedProviders: state.selectedProviders,
+            onToggle: notifier.toggleProvider,
           ),
         ),
       ],
     );
-  }
-
-  String _categoryLabel(BuildContext context, ActivityCategory category) {
-    return switch (category) {
-      ActivityCategory.commit => context.l10n.explorerActivityFilterCommit,
-      ActivityCategory.revision => context.l10n.explorerActivityFilterRevision,
-      ActivityCategory.task => context.l10n.explorerActivityFilterTask,
-      ActivityCategory.message => context.l10n.explorerActivityFilterMessage,
-      ActivityCategory.generic => context.l10n.explorerActivityFilterGeneric,
-    };
-  }
-
-  IconData _iconFor(ActivityCategory category) {
-    return switch (category) {
-      ActivityCategory.commit => AppIcons.commit,
-      ActivityCategory.revision => AppIcons.revision,
-      ActivityCategory.task => AppIcons.task,
-      ActivityCategory.message => AppIcons.chatMessage,
-      ActivityCategory.generic => AppIcons.genericActivity,
-    };
   }
 }

@@ -52,4 +52,3 @@ extension DirectoryTypeMapperExtension on DirectoryType {
     return MapperContainer.globals.toValue<DirectoryType>(this) as String;
   }
 }
-

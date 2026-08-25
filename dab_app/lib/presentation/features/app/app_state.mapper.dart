@@ -84,6 +84,21 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: kDeploymentModeManaged,
   );
+  static int _$dailyReportLockOffsetDays(AppState v) =>
+      v.dailyReportLockOffsetDays;
+  static const Field<AppState, int> _f$dailyReportLockOffsetDays = Field(
+    'dailyReportLockOffsetDays',
+    _$dailyReportLockOffsetDays,
+    opt: true,
+    def: kDefaultDailyReportLockOffsetDays,
+  );
+  static String _$dailyReportLockTime(AppState v) => v.dailyReportLockTime;
+  static const Field<AppState, String> _f$dailyReportLockTime = Field(
+    'dailyReportLockTime',
+    _$dailyReportLockTime,
+    opt: true,
+    def: kDefaultDailyReportLockTime,
+  );
   static bool _$isIndividualDeployment(AppState v) => v.isIndividualDeployment;
   static const Field<AppState, bool> _f$isIndividualDeployment = Field(
     'isIndividualDeployment',
@@ -101,6 +116,8 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     #unresolvedIdentityCount: _f$unresolvedIdentityCount,
     #providerConnectionStatuses: _f$providerConnectionStatuses,
     #deploymentMode: _f$deploymentMode,
+    #dailyReportLockOffsetDays: _f$dailyReportLockOffsetDays,
+    #dailyReportLockTime: _f$dailyReportLockTime,
     #isIndividualDeployment: _f$isIndividualDeployment,
   };
 
@@ -114,6 +131,8 @@ class AppStateMapper extends ClassMapperBase<AppState> {
       unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
       providerConnectionStatuses: data.dec(_f$providerConnectionStatuses),
       deploymentMode: data.dec(_f$deploymentMode),
+      dailyReportLockOffsetDays: data.dec(_f$dailyReportLockOffsetDays),
+      dailyReportLockTime: data.dec(_f$dailyReportLockTime),
     );
   }
 
@@ -201,6 +220,8 @@ abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     int? unresolvedIdentityCount,
     Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
     String? deploymentMode,
+    int? dailyReportLockOffsetDays,
+    String? dailyReportLockTime,
   });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -253,6 +274,8 @@ class _AppStateCopyWithImpl<$R, $Out>
     int? unresolvedIdentityCount,
     Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
     String? deploymentMode,
+    int? dailyReportLockOffsetDays,
+    String? dailyReportLockTime,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -265,6 +288,10 @@ class _AppStateCopyWithImpl<$R, $Out>
       if (providerConnectionStatuses != null)
         #providerConnectionStatuses: providerConnectionStatuses,
       if (deploymentMode != null) #deploymentMode: deploymentMode,
+      if (dailyReportLockOffsetDays != null)
+        #dailyReportLockOffsetDays: dailyReportLockOffsetDays,
+      if (dailyReportLockTime != null)
+        #dailyReportLockTime: dailyReportLockTime,
     }),
   );
   @override
@@ -286,6 +313,14 @@ class _AppStateCopyWithImpl<$R, $Out>
       or: $value.providerConnectionStatuses,
     ),
     deploymentMode: data.get(#deploymentMode, or: $value.deploymentMode),
+    dailyReportLockOffsetDays: data.get(
+      #dailyReportLockOffsetDays,
+      or: $value.dailyReportLockOffsetDays,
+    ),
+    dailyReportLockTime: data.get(
+      #dailyReportLockTime,
+      or: $value.dailyReportLockTime,
+    ),
   );
 
   @override

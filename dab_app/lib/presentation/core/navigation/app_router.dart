@@ -83,15 +83,6 @@ class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoute.homeReports.path,
-                name: AppRoute.homeReports.name,
-                builder: AppRoute.homeReports.view,
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
                 path: AppRoute.homeExplorer.path,
                 name: AppRoute.homeExplorer.name,
                 builder: AppRoute.homeExplorer.view,
@@ -104,6 +95,15 @@ class AppRouter {
                 path: AppRoute.homeInsight.path,
                 name: AppRoute.homeInsight.name,
                 builder: AppRoute.homeInsight.view,
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoute.homeReports.path,
+                name: AppRoute.homeReports.name,
+                builder: AppRoute.homeReports.view,
               ),
             ],
           ),

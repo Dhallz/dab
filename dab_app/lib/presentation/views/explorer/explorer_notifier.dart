@@ -12,12 +12,13 @@ import '../../../../domain/entities/activity/explorer_cache_clear_request.dart';
 import '../../../../domain/entities/group/group.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
 import '../../../../services/service_locator.dart';
+import '../../core/models/directory_target_user_ids.dart';
+import '../../core/models/directory_type.dart';
 import '../../core/models/view_status.dart';
 import '../../core/provider_browse_filter.dart';
 import '../../features/app/app_notifier.dart';
 import '../../views/admin/models/provider_connection_status.dart';
 import 'explorer_state.dart';
-import 'models/directory_type.dart';
 import 'models/explorer_date_mode.dart';
 import 'models/explorer_item.dart';
 
@@ -719,20 +720,11 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
   }
 
   Set<String> _resolveTargetUserIds() {
-    if (state.directoryType == DirectoryType.users) {
-      return Set<String>.from(state.selectedUserIds);
-    }
-
-    final ids = <String>{};
-    for (final groupId in state.selectedGroupIds) {
-      final group = state.groups.cast<Group?>().firstWhere(
-        (g) => g?.id == groupId,
-        orElse: () => null,
-      );
-      if (group != null) {
-        ids.addAll(group.members.map((m) => m.id));
-      }
-    }
-    return ids;
+    return directoryTargetUserIds(
+      directoryType: state.directoryType,
+      selectedUserIds: state.selectedUserIds,
+      selectedGroupIds: state.selectedGroupIds,
+      groups: state.groups,
+    );
   }
 }

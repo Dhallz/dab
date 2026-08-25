@@ -13,8 +13,8 @@ import 'jira_jql.dart';
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists Jira issues for the Follow picker. Read-only.
 /// CONTRACT: Empty [query] is involved (assignee/watcher/reporter). A typed
-/// query searches any issue in the instance [projectKeys] allow-list (or all
-/// projects when that list is empty).
+/// query matches summary **contains** or issue key (including `PROJ-n` when
+/// [query] is numeric and [projectKeys] is set).
 class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   JiraFollowCandidateCatalog(this._configs, this._credentials, this._jsonRest);
 
@@ -109,8 +109,9 @@ class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
     return '${parts.join(' AND ')} ORDER BY updated DESC';
   }
 
-  /// Workspace search by issue key or summary. Returns null when [projectKeys]
-  /// excludes the typed project.
+  /// Workspace search by summary contains, exact key, or `PROJ-{n}` when
+  /// [query] is numeric. Returns null when [projectKeys] excludes the typed
+  /// project.
   String? _searchJql({
     required List<String> projectKeys,
     required String query,
@@ -122,9 +123,20 @@ class JiraFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
       if (projectKeys.isNotEmpty && !projectKeys.contains(project)) {
         return null;
       }
-      return 'key = "$escaped" ORDER BY updated DESC';
     }
-    final parts = <String>['(summary ~ "$escaped" OR key = "$escaped")'];
+    final clauses = <String>[
+      'summary ~ "$escaped"',
+      'key = "$escaped"',
+    ];
+    if (key == null) {
+      final n = int.tryParse(query);
+      if (n != null) {
+        for (final project in projectKeys) {
+          clauses.add('key = "$project-$n"');
+        }
+      }
+    }
+    final parts = <String>['(${clauses.join(' OR ')})'];
     if (projectKeys.isNotEmpty) {
       parts.add('project in (${projectKeys.join(', ')})');
     }

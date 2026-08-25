@@ -115,8 +115,14 @@ Future<void> main() async {
     ..get('/users/me/follows', UserController().listMyFollows)
     ..put('/users/me/follows', UserController().saveMyFollow)
     ..delete('/users/me/follows', UserController().deleteMyFollow)
+    ..get('/users/me/day-reports', UserController().listMyDailyReports)
     ..get('/users/me/day-reports/:date', UserController().getMyDailyReport)
     ..put('/users/me/day-reports/:date', UserController().saveMyDailyReport)
+    ..get('/users/:id/day-reports', UserController().listUserDailyReports)
+    ..get(
+      '/users/:id/day-reports/:date',
+      UserController().getUserDailyReport,
+    )
     ..put('/users/me/device-tokens', UserController().saveMyDeviceToken)
     ..delete('/users/me/device-tokens', UserController().deleteMyDeviceToken)
     ..post(

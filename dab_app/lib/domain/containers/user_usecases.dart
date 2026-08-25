@@ -8,6 +8,9 @@ import '../usecases/user/get_users.dart';
 import '../usecases/user/list_my_credentials.dart';
 import '../usecases/user/delete_my_activity_follow.dart';
 import '../usecases/user/get_my_daily_report.dart';
+import '../usecases/user/get_user_daily_report.dart';
+import '../usecases/user/list_my_daily_reports.dart';
+import '../usecases/user/list_user_daily_reports.dart';
 import '../usecases/user/list_my_follow_candidates.dart';
 import '../usecases/user/list_my_activity_follows.dart';
 import '../usecases/user/list_my_git_branches.dart';
@@ -48,6 +51,9 @@ class UserUseCases {
   final SaveMyActivityFollow saveMyActivityFollow;
   final DeleteMyActivityFollow deleteMyActivityFollow;
   final GetMyDailyReport getMyDailyReport;
+  final GetUserDailyReport getUserDailyReport;
+  final ListMyDailyReports listMyDailyReports;
+  final ListUserDailyReports listUserDailyReports;
   final SaveMyDailyReport saveMyDailyReport;
 
   UserUseCases(IUserRepository repository)
@@ -74,5 +80,8 @@ class UserUseCases {
       saveMyActivityFollow = SaveMyActivityFollow(repository),
       deleteMyActivityFollow = DeleteMyActivityFollow(repository),
       getMyDailyReport = GetMyDailyReport(repository),
+      getUserDailyReport = GetUserDailyReport(repository),
+      listMyDailyReports = ListMyDailyReports(repository),
+      listUserDailyReports = ListUserDailyReports(repository),
       saveMyDailyReport = SaveMyDailyReport(repository);
 }

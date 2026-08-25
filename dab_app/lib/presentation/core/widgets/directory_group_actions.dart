@@ -1,116 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../domain/entities/group/group.dart';
-import '../../../../../domain/entities/user/user.dart';
-import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_icons.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/widgets/selection_tile.dart';
-import '../../explorer_notifier.dart';
-import '../../explorer_state.dart';
-import '../../models/directory_type.dart';
-import 'create_group_button.dart';
+import '../../../domain/entities/group/group.dart';
+import '../../../domain/entities/user/user.dart';
+import '../localization/l10n_extension.dart';
+import '../styles/app_icons.dart';
+import '../styles/app_spacing.dart';
 
-class DirectoryList extends ConsumerWidget {
-  final ExplorerState state;
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Overflow menu to rename, edit members, or delete a Directory group.
+class DirectoryGroupActions extends StatelessWidget {
+  final Group group;
+  final List<User> users;
+  final void Function(String groupId, String name) onRename;
+  final void Function(Group group) onSaveMembers;
+  final void Function(String groupId) onDelete;
 
-  const DirectoryList({super.key, required this.state});
+  const DirectoryGroupActions({
+    super.key,
+    required this.group,
+    required this.users,
+    required this.onRename,
+    required this.onSaveMembers,
+    required this.onDelete,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(explorerNotifierProvider.notifier);
-    final bool isUsers = state.directoryType == DirectoryType.users;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (isUsers)
-          ...state.users.map((u) {
-            final isSelected = state.selectedUserIds.contains(u.id);
-            final missing = state.selectedProviders
-                .where((p) => !u.linkedProviderIds.contains(p))
-                .toList();
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: SelectionTile(
-                label: u.name,
-                isSelected: isSelected,
-                avatarUrl: u.avatarUrl,
-                iconData: u.avatarUrl == null ? AppIcons.user : null,
-                subtitle: missing.isEmpty
-                    ? null
-                    : context.l10n.explorerUserNotConnected(missing.first),
-                onTap: () => notifier.toggleUser(u.id),
-              ),
-            );
-          })
-        else
-          ...state.groups.map((g) {
-            final isSelected = state.selectedGroupIds.contains(g.id);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: SelectionTile(
-                label: g.name,
-                isSelected: isSelected,
-                iconData: AppIcons.users,
-                trailing: _buildGroupActions(context, ref, g, state.users),
-                onTap: () => notifier.toggleGroup(g.id),
-              ),
-            );
-          }),
-        if (!isUsers) ...[
-          const SizedBox(height: AppSpacing.xs),
-          CreateGroupButton(availableUsers: state.users),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildGroupActions(
-    BuildContext context,
-    WidgetRef ref,
-    Group group,
-    List<User> users,
-  ) {
-    final notifier = ref.read(explorerNotifierProvider.notifier);
-    return PopupMenuButton<_GroupAction>(
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_DirectoryGroupAction>(
       tooltip: context.l10n.explorerGroupActions,
       icon: Icon(AppIcons.settings, size: AppSpacing.s + 2),
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: _GroupAction.editMembers,
+          value: _DirectoryGroupAction.editMembers,
           child: Text(context.l10n.explorerEditGroupMembers),
         ),
         PopupMenuItem(
-          value: _GroupAction.rename,
+          value: _DirectoryGroupAction.rename,
           child: Text(context.l10n.explorerRenameGroup),
         ),
         PopupMenuItem(
-          value: _GroupAction.delete,
+          value: _DirectoryGroupAction.delete,
           child: Text(context.l10n.explorerDeleteGroup),
         ),
       ],
       onSelected: (action) {
-        if (action == _GroupAction.editMembers) {
-          _showEditMembersDialog(context, ref, group, users);
-          return;
+        switch (action) {
+          case _DirectoryGroupAction.editMembers:
+            _showEditMembersDialog(context);
+          case _DirectoryGroupAction.rename:
+            _showRenameDialog(context);
+          case _DirectoryGroupAction.delete:
+            onDelete(group.id);
         }
-        if (action == _GroupAction.rename) {
-          _showRenameDialog(context, ref, group);
-          return;
-        }
-        notifier.deleteGroup(group.id);
       },
     );
   }
 
-  Future<void> _showRenameDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Group group,
-  ) async {
-    final notifier = ref.read(explorerNotifierProvider.notifier);
+  Future<void> _showRenameDialog(BuildContext context) async {
     final controller = TextEditingController(text: group.name);
     final renamed = await showDialog<String>(
       context: context,
@@ -138,20 +84,14 @@ class DirectoryList extends ConsumerWidget {
         );
       },
     );
-
+    controller.dispose();
     final nextName = renamed?.trim() ?? '';
     if (nextName.isEmpty || nextName == group.name) return;
     if (!context.mounted) return;
-    notifier.renameGroup(group.id, nextName);
+    onRename(group.id, nextName);
   }
 
-  Future<void> _showEditMembersDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Group group,
-    List<User> users,
-  ) async {
-    final notifier = ref.read(explorerNotifierProvider.notifier);
+  Future<void> _showEditMembersDialog(BuildContext context) async {
     final selectedUserIds = group.members.map((member) => member.id).toSet();
     final updatedIds = await showDialog<Set<String>>(
       context: context,
@@ -210,14 +150,12 @@ class DirectoryList extends ConsumerWidget {
         );
       },
     );
-
     if (updatedIds == null || !context.mounted) return;
-
     final updatedMembers = users
         .where((user) => updatedIds.contains(user.id))
         .toList();
-    notifier.saveGroup(group.copyWith(members: updatedMembers));
+    onSaveMembers(group.copyWith(members: updatedMembers));
   }
 }
 
-enum _GroupAction { editMembers, rename, delete }
+enum _DirectoryGroupAction { editMembers, rename, delete }

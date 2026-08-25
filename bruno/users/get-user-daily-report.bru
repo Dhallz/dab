@@ -1,0 +1,32 @@
+meta {
+  name: Get User Daily Report
+  type: http
+  seq: 21
+}
+
+docs {
+  Loads another user's (or the caller's) daily report for an org-calendar
+  day (`YYYY-MM-DD`). Standard users receive 403 unless `id` is self.
+  Managers and admins may read teammates. Missing reports return 200 with
+  empty `lines`. There is no PUT on this path.
+  Requires a signed-in user. Set `targetUserId` from Get Users.
+}
+
+get {
+  url: {{baseUrl}}/users/{{targetUserId}}/day-reports/2026-08-22
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200, 400, or 403", function() {
+    expect([200, 400, 403]).to.include(res.status);
+  });
+  test("Returns a daily report envelope when successful", function() {
+    if (res.status !== 200) return;
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.have.property("date");
+    expect(res.body.data).to.have.property("lines");
+    expect(res.body.data.lines).to.be.an("array");
+  });
+}

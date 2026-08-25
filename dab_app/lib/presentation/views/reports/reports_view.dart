@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/entities/user/user_role.dart';
 import '../../features/auth/auth_notifier.dart';
 import 'layouts/reports_view_desktop.dart';
 import 'layouts/reports_view_mobile.dart';
@@ -23,8 +24,11 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final connectedUserId = ref.read(authNotifierProvider).user?.id;
-      ref.read(reportsNotifierProvider.notifier).started(connectedUserId);
+      final user = ref.read(authNotifierProvider).user;
+      ref.read(reportsNotifierProvider.notifier).started(
+        connectedUserId: user?.id,
+        role: user?.role ?? UserRole.standard,
+      );
     });
   }
 

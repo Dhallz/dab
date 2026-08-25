@@ -10,6 +10,10 @@ docs {
 
   `deploymentMode` is `managed` (Admin-owned tokens) or `individual` (Settings PATs).
   Legacy stored values `organization` and `personal` are normalized on read.
+
+  Daily-report deadline (org-global): `dailyReportLockOffsetDays` (0–7, default 1) and
+  `dailyReportLockTime` (`HH:mm`, default `00:00`). A report for date D locks at
+  (D + offset) at that time in `systemTimezone`. Default is same-day editing (next-day midnight).
 }
 
 get {
@@ -27,5 +31,7 @@ tests {
     expect(res.body.data).to.have.property("systemTimezone");
     expect(res.body.data).to.have.property("deploymentMode");
     expect(["managed", "individual"]).to.include(res.body.data.deploymentMode);
+    expect(res.body.data).to.have.property("dailyReportLockOffsetDays");
+    expect(res.body.data).to.have.property("dailyReportLockTime");
   });
 }

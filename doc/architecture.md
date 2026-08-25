@@ -288,8 +288,8 @@ When `meta.syncToken` is present, the client `VegasInterceptor` persists it loca
 | `AuthController` | `/auth` | Bootstrap register, login, refresh token |
 | `GroupController` | `/groups` | Group management |
 | `HealthController` | `/health` | API + DB health (plain JSON, not the data envelope) |
-| `MetadataController` | `/metadata`, `/admin/system-settings`, `/admin/configs` | Provider configs, status, capabilities, admin config test/save, system settings |
-| `UserController` | `/users` | Directory, credentials, git watches/branches, Follow pins + candidates, personal daily reports, device tokens |
+| `MetadataController` | `/metadata`, `/admin/system-settings`, `/admin/configs` | Provider configs, status (includes daily-report lock), capabilities, admin config test/save, system settings |
+| `UserController` | `/users` | Directory, credentials, git watches/branches, Follow pins + candidates, personal daily reports (`GET /users/me/day-reports` and `GET /users/:id/day-reports` list dates; `GET /users/:id/day-reports/:date` for manager/admin), device tokens |
 
 ---
 

@@ -2,28 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/l10n_extension.dart';
-import '../../../core/styles/app_text_styles.dart';
-import '../../../core/widgets/dab_toggle_chip.dart';
 import '../../../core/widgets/view_toolbar.dart';
 import '../reports_notifier.dart';
+import 'reports_lock_status.dart';
+import 'reports_user_picker.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Reports toolbar — today label, Following toggle, copy and download.
+/// ROLE: Reports toolbar — lock status, Save, copy/download.
 class ReportsIslandBarContent extends ConsumerWidget {
-  const ReportsIslandBarContent({super.key});
+  final bool showUserPicker;
+
+  const ReportsIslandBarContent({super.key, this.showUserPicker = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final isReadOnly = ref.watch(
+      reportsNotifierProvider.select((s) => s.isReadOnly),
+    );
+    final isOwnReport = ref.watch(
+      reportsNotifierProvider.select((s) => s.isOwnReport),
+    );
     final date = ref.watch(reportsNotifierProvider.select((s) => s.date));
-    final includeFollowing = ref.watch(
-      reportsNotifierProvider.select((s) => s.includeFollowing),
+    final canBrowseTeam = ref.watch(
+      reportsNotifierProvider.select((s) => s.canBrowseTeam),
+    );
+    final canSave = ref.watch(
+      reportsNotifierProvider.select((s) => s.canSave),
+    );
+    final persistInFlight = ref.watch(
+      reportsNotifierProvider.select((s) => s.persistInFlight),
     );
     final notifier = ref.read(reportsNotifierProvider.notifier);
     return ViewToolbar(
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!isReadOnly)
+            FilledButton(
+              onPressed: canSave
+                  ? () async {
+                      await notifier.save();
+                      if (!context.mounted) return;
+                      final saved = !ref.read(reportsNotifierProvider).isDirty;
+                      if (!saved) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(context.l10n.reportsSaved)),
+                      );
+                    }
+                  : null,
+              child: persistInFlight
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(context.l10n.reportsSave),
+            ),
+          if (!isReadOnly) const SizedBox(width: 8),
           TextButton(
             onPressed: () async {
               await notifier.copyMarkdown();
@@ -47,15 +82,8 @@ class ReportsIslandBarContent extends ConsumerWidget {
         ],
       ),
       children: [
-        Text(
-          date.isEmpty ? context.l10n.reportsDateToday : date,
-          style: AppTextStyles.titleSmall.copyWith(color: scheme.onSurface),
-        ),
-        DabToggleChip(
-          label: context.l10n.reportsFollowingToggle,
-          isSelected: includeFollowing,
-          onTap: () => notifier.setIncludeFollowing(!includeFollowing),
-        ),
+        if (showUserPicker && canBrowseTeam) const ReportsUserPicker(),
+        if (isOwnReport && date.isNotEmpty) const ReportsLockStatus(),
       ],
     );
   }

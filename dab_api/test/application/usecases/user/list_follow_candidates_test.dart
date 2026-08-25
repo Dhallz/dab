@@ -133,4 +133,31 @@ void main() {
     expect(rows.any((row) => row.providerId == 'linear'), isTrue);
     expect(rows.any((row) => row.providerId == 'jira'), isTrue);
   });
+
+  test('typed query keeps rows whose title contains the needle', () async {
+    when(
+      () => catalog.list(
+        userId: any(named: 'userId'),
+        query: any(named: 'query'),
+      ),
+    ).thenAnswer(
+      (_) async => const Right([
+        FollowCandidate(
+          providerId: 'phorge',
+          objectKey: 'PHID-TASK-12',
+          title: '[T12] Fix login',
+        ),
+        FollowCandidate(
+          providerId: 'jira',
+          objectKey: 'DAB-1',
+          title: '[DAB-1] Unrelated',
+        ),
+      ]),
+    );
+
+    final result = await useCase.execute(userId: 'u-1', query: 'login');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows, hasLength(1));
+    expect(rows.single.title, '[T12] Fix login');
+  });
 }

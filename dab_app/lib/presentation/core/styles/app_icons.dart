@@ -41,6 +41,7 @@ class AppIcons {
   static final IconData at = HeroIcons.atSymbol.outline;
   static final IconData email = HeroIcons.envelope.outline;
   static final IconData lock = HeroIcons.lockClosed.outline;
+  static final IconData unlock = HeroIcons.lockOpen.outline;
   static final IconData building = HeroIcons.buildingOffice.outline;
 
   // Activity Types

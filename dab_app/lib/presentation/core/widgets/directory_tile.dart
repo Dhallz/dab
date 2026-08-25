@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Users / Groups switch tile in a Directory header.
 class DirectoryTile extends StatelessWidget {
   final String label;
   final IconData icon;

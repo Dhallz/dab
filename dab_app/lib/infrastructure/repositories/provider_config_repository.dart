@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/core/daily_report_lock_policy.dart';
 import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/core/failures.dart';
 import '../../../domain/core/org_calendar.dart';
@@ -55,6 +56,12 @@ class ProviderConfigRepository extends Repository
           payload['systemTimezone']?.toString(),
         ),
         deploymentMode: (payload['deploymentMode']?.toString()).normalizeDeploymentMode(),
+        dailyReportLockOffsetDays: parseDailyReportLockOffsetDays(
+          payload['dailyReportLockOffsetDays']?.toString(),
+        ),
+        dailyReportLockTime: formatDailyReportLockTime(
+          parseDailyReportLockTime(payload['dailyReportLockTime']?.toString()),
+        ),
       );
     });
   }

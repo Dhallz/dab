@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:relic/relic.dart';
 import '../../application/services/activity_purge_scheduler.dart';
+import '../../domain/core/daily_report_lock_policy.dart';
 import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/provider/provider_config.dart';
 import '../../application/containers/metadata_usecases.dart';
@@ -120,6 +121,16 @@ class MetadataController {
         kDeploymentModeSettingKey,
       );
       final deploymentMode = (modeResult.getOrElse((_) => null)).normalizeDeploymentMode();
+      final offsetResult = await sl<AbsISystemSettingsRepository>().getSetting(
+        kDailyReportLockOffsetDaysKey,
+      );
+      final timeResult = await sl<AbsISystemSettingsRepository>().getSetting(
+        kDailyReportLockTimeKey,
+      );
+      final reportLock = DailyReportLockPolicy.fromSettings(
+        offsetDays: offsetResult.getOrElse((_) => null),
+        time: timeResult.getOrElse((_) => null),
+      );
 
       return Response.ok(
         body: Body.fromString(
@@ -128,6 +139,8 @@ class MetadataController {
               'isSystemConfigured': isSystemConfigured,
               'systemTimezone': systemTimezone,
               'deploymentMode': deploymentMode,
+              'dailyReportLockOffsetDays': reportLock.offsetDays,
+              'dailyReportLockTime': reportLock.time,
             },
             'meta': {
               'dataType': 'system_status',

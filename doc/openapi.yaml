@@ -1049,7 +1049,7 @@ paths:
   /metadata/status:
     get:
       summary: Get bootstrap/system readiness state.
-      description: Returns whether the platform is configured (admin + active provider config) and the organization timezone used for calendar-day boundaries.
+      description: Returns whether the platform is configured (admin + active provider config), the organization timezone used for calendar-day boundaries, and the global daily-report edit deadline.
       responses:
         '200':
           description: Successful system status envelope
@@ -1071,6 +1071,15 @@ paths:
                         type: string
                         enum: [managed, individual]
                         description: Managed (Admin-owned tokens) or Individual (Settings PATs, shared live wall). Legacy `organization` / `personal` values are accepted and normalized.
+                      dailyReportLockOffsetDays:
+                        type: integer
+                        minimum: 0
+                        maximum: 7
+                        description: Days after the report date when the edit cutoff applies. Default 1 (next calendar day).
+                      dailyReportLockTime:
+                        type: string
+                        example: '00:00'
+                        description: Wall-clock `HH:mm` of the cutoff in `systemTimezone`. Default `00:00`. Combined with offset, a report for date D locks at that time on D+offset.
                   meta:
                     type: object
                     properties:
@@ -1286,11 +1295,13 @@ paths:
       summary: List Follow picker rows
       description: |
         Returns objects the caller can Follow from the Dashboard Following
-        search. Empty `q` lists open Phorge/Jira/Linear issues where the
-        caller is assignee, watcher/subscriber, or reporter. A typed `q`
-        searches any matching Phorge/Jira/Linear issue (instance team/project
-        allow-lists still apply) and also includes GitHub/GitLab/Bitbucket
-        branches on Admin-allow-listed repos whose repo or branch name matches.
+        search, and Phorge/Jira/Linear tasks for the Reports picker. Empty `q`
+        lists open Phorge/Jira/Linear issues where the caller is assignee,
+        watcher/subscriber, or reporter. A typed `q` substring-matches the
+        display title (task number or keyword; titles include `[T12]` / `[ENG-42]`)
+        on Phorge/Jira/Linear issues (instance team/project allow-lists still
+        apply) and also includes GitHub/GitLab/Bitbucket branches on
+        Admin-allow-listed repos whose repo or branch name matches.
         Git rows use `objectKey` `owner/repo|branch` and `kind` `gitBranch`.
         This is not `GET /activities/search`.
       security:
@@ -1383,6 +1394,18 @@ paths:
           description: Follow pin removed
         '400':
           description: Missing body or unsupported provider
+  /users/me/day-reports:
+    get:
+      summary: List my daily reports
+      description: |
+        Returns org-calendar dates (`YYYY-MM-DD`) for which the authenticated
+        user has a saved daily report, newest first. An empty list is **200**
+        with `data: []`. Fetch a day with `GET /users/me/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Date list envelope (`data` is an array of `YYYY-MM-DD` strings)
   /users/me/day-reports/{date}:
     get:
       summary: Get my daily report
@@ -1414,7 +1437,9 @@ paths:
         "github|acme/app|abc1234", "included": true, "note": "Shipped login",
         "role": "authored" } ] }`. `subjectKey` is provider + object +
         occurrence (commit sha, comment id, message ts) — not git Follow
-        `owner/repo|branch` alone. Notes stay in DAB.
+        `owner/repo|branch` alone. Notes stay in DAB. After the Admin report
+        deadline (`daily_report_lock_offset_days` + `daily_report_lock_time`
+        in `system_timezone`; default next-day 00:00) the write is **403**.
       security:
         - bearerAuth: []
       parameters:
@@ -1472,6 +1497,66 @@ paths:
           description: Saved daily report
         '400':
           description: Invalid date or missing subjectKey
+        '403':
+          description: Report is past the Admin edit deadline
+  /users/{id}/day-reports:
+    get:
+      summary: List a user's daily reports
+      description: |
+        Returns org-calendar dates (`YYYY-MM-DD`) with a saved daily report
+        for `{id}`, newest first. The caller may list their own dates.
+        **manager** and **admin** may list a teammate. **standard** callers
+        receive **403** unless `{id}` is self. An empty list is **200** with
+        `data: []`. Fetch a day with `GET /users/{id}/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 'u-2'
+      responses:
+        '200':
+          description: Date list envelope (`data` is an array of `YYYY-MM-DD` strings)
+        '400':
+          description: User id is empty
+        '403':
+          description: Caller is not self, manager, or admin
+  /users/{id}/day-reports/{date}:
+    get:
+      summary: Get a user's daily report
+      description: |
+        Returns the curated daily report for `{id}` on org-calendar `{date}`
+        (`YYYY-MM-DD`). The caller may read their own report. **manager** and
+        **admin** may read a teammate's report. **standard** callers receive
+        **403** unless `{id}` is self. Missing reports return **200** with
+        empty `lines`, not 404. Notes stay in DAB. There is no PUT on this
+        path — only the owner can save via `/users/me/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 'u-2'
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      responses:
+        '200':
+          description: Daily report envelope (`data.userId`, `date`, `includeFollowing`, `lines`)
+        '400':
+          description: Date is not `YYYY-MM-DD` or user id is empty
+        '403':
+          description: Caller is not self, manager, or admin
   /users/me/device-tokens:
     put:
       summary: Save my device token
@@ -1867,7 +1952,7 @@ paths:
     get:
       summary: Retrieve system configuration settings.
       description: |
-        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, and `deployment_mode`.
+        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`, and the daily-report deadline (`daily_report_lock_offset_days`, `daily_report_lock_time`).
         
         ### Database Mapping
         | API Field | DB Table | DB Column | Role |
@@ -1877,6 +1962,8 @@ paths:
         | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
         | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are normalized on read. |
+        | `daily_report_lock_offset_days` | `system_settings` | `value` where `key = 'daily_report_lock_offset_days'` | Days after the report date when the edit cutoff applies (0–7, default `1`) |
+        | `daily_report_lock_time` | `system_settings` | `value` where `key = 'daily_report_lock_time'` | Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`) |
       security:
         - bearerAuth: []
       responses:
@@ -1903,6 +1990,12 @@ paths:
                       deployment_mode:
                         type: string
                         enum: [managed, individual]
+                      daily_report_lock_offset_days:
+                        type: string
+                        example: '1'
+                      daily_report_lock_time:
+                        type: string
+                        example: '00:00'
     put:
       summary: Update system configuration settings.
       description: |
@@ -1920,6 +2013,8 @@ paths:
         | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
         | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
         | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are accepted and rewritten. |
+        | `daily_report_lock_offset_days` | `system_settings` | `value` where `key = 'daily_report_lock_offset_days'` | Days after the report date when the edit cutoff applies (0–7, default `1`) |
+        | `daily_report_lock_time` | `system_settings` | `value` where `key = 'daily_report_lock_time'` | Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`) |
       security:
         - bearerAuth: []
       requestBody:
@@ -1945,6 +2040,12 @@ paths:
                 deployment_mode:
                   type: string
                   enum: [managed, individual]
+                daily_report_lock_offset_days:
+                  type: string
+                  example: '1'
+                daily_report_lock_time:
+                  type: string
+                  example: '11:00'
       responses:
         '200':
           description: Settings updated

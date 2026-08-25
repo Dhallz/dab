@@ -462,6 +462,36 @@ class UserRepository extends Repository implements IUserRepository {
   }
 
   @override
+  Future<Either<AppFailure, DailyReport>> getUserDailyReport({
+    required String userId,
+    required String date,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get('/users/$userId/day-reports/$date');
+      final data = _getEnvelopeData(response);
+      return DailyReport.fromApiMap(Map<String, dynamic>.from(data as Map));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<String>>> listMyDailyReports() {
+    return guardedCall(() async {
+      final response = await _client.get('/users/me/day-reports');
+      return _dateList(_getEnvelopeData(response));
+    });
+  }
+
+  @override
+  Future<Either<AppFailure, List<String>>> listUserDailyReports({
+    required String userId,
+  }) {
+    return guardedCall(() async {
+      final response = await _client.get('/users/$userId/day-reports');
+      return _dateList(_getEnvelopeData(response));
+    });
+  }
+
+  @override
   Future<Either<AppFailure, DailyReport>> saveMyDailyReport({
     required String date,
     required bool includeFollowing,
@@ -493,5 +523,13 @@ class UserRepository extends Repository implements IUserRepository {
     }
 
     return map['data'];
+  }
+
+  List<String> _dateList(dynamic data) {
+    if (data is! List) return const [];
+    return [
+      for (final item in data)
+        if (item is String && item.trim().isNotEmpty) item.trim(),
+    ];
   }
 }

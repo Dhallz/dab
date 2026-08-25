@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/styles/app_icons.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/styles/app_text_styles.dart';
+import '../styles/app_icons.dart';
+import '../styles/app_spacing.dart';
+import '../styles/app_text_styles.dart';
 
-class ExplorerSidebarSection extends StatelessWidget {
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Collapsible uppercase section header plus optional body.
+class FilterSidebarSection extends StatelessWidget {
   final String title;
   final Widget child;
   final bool isExpanded;
   final VoidCallback onToggle;
 
-  const ExplorerSidebarSection({
+  const FilterSidebarSection({
     super.key,
     required this.title,
     required this.child,

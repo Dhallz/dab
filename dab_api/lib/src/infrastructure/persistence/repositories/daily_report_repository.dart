@@ -40,6 +40,27 @@ class DailyReportRepository implements AbsIDailyReportRepository {
   }
 
   @override
+  Future<Either<Failure, List<String>>> listDatesByUser({
+    required String userId,
+  }) async {
+    try {
+      final rows =
+          await (_db.select(_db.dailyReportsTable)
+                ..where((t) => t.userId.equals(userId))
+                ..orderBy([
+                  (t) => OrderingTerm(
+                    expression: t.reportDate,
+                    mode: OrderingMode.desc,
+                  ),
+                ]))
+              .get();
+      return Right([for (final row in rows) row.reportDate]);
+    } catch (e) {
+      return Left(DatabaseFailure('Failed to list daily reports: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, DailyReport>> save(DailyReport report) async {
     try {
       final now = DateTime.now().toUtc();

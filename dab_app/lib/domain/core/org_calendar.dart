@@ -94,6 +94,32 @@ int orgDayEpochMsFromDayKey(String orgTimezoneId, String dayKey) {
   return start.toUtc().millisecondsSinceEpoch;
 }
 
+/// Instant for a wall clock on an org-calendar day, as UTC.
+///
+/// [offsetDays] is applied in the organization timezone before [hour]/[minute]
+/// so DST transitions do not skip or double the cutoff day.
+DateTime orgLocalWallTimeUtc({
+  required String orgTimezoneId,
+  required int year,
+  required int month,
+  required int day,
+  int offsetDays = 0,
+  int hour = 0,
+  int minute = 0,
+}) {
+  final loc = _location(orgTimezoneId);
+  final start = tz.TZDateTime(loc, year, month, day);
+  final shifted = start.add(Duration(days: offsetDays));
+  return tz.TZDateTime(
+    loc,
+    shifted.year,
+    shifted.month,
+    shifted.day,
+    hour,
+    minute,
+  ).toUtc();
+}
+
 /// Inclusive org-calendar [startDay] through [endDay] as UTC epoch bounds.
 ({int startEpochMs, int endEpochMsExclusive}) orgDateWindowEpochMs(
   String orgTimezoneId,

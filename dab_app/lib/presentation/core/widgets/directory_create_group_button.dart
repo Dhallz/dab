@@ -1,17 +1,25 @@
-import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_icons.dart';
-import '../../../../core/styles/app_layout.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/styles/app_text_styles.dart';
-import '../create_group_dialog.dart';
+import '../../../domain/entities/group/group.dart';
+import '../../../domain/entities/user/user.dart';
+import '../localization/l10n_extension.dart';
+import '../styles/app_icons.dart';
+import '../styles/app_layout.dart';
+import '../styles/app_spacing.dart';
+import '../styles/app_text_styles.dart';
+import 'directory_create_group_dialog.dart';
 
-class CreateGroupButton extends StatelessWidget {
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Opens the create-group dialog from a Directory groups list.
+class DirectoryCreateGroupButton extends StatelessWidget {
   final List<User> availableUsers;
+  final ValueChanged<Group> onCreated;
 
-  const CreateGroupButton({super.key, required this.availableUsers});
+  const DirectoryCreateGroupButton({
+    super.key,
+    required this.availableUsers,
+    required this.onCreated,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +28,10 @@ class CreateGroupButton extends StatelessWidget {
       onTap: () {
         showDialog<void>(
           context: context,
-          builder: (dialogContext) =>
-              CreateGroupDialog(availableUsers: availableUsers),
+          builder: (dialogContext) => DirectoryCreateGroupDialog(
+            availableUsers: availableUsers,
+            onCreated: onCreated,
+          ),
         );
       },
       borderRadius: BorderRadius.circular(AppLayout.radiusSmall),
@@ -38,18 +48,12 @@ class CreateGroupButton extends StatelessWidget {
                 color: cs.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppLayout.radiusSmall - 2),
               ),
-              child: Icon(
-                AppIcons.add,
-                size: AppSpacing.s,
-                color: cs.primary,
-              ),
+              child: Icon(AppIcons.add, size: AppSpacing.s, color: cs.primary),
             ),
             const SizedBox(width: AppSpacing.xs + 2),
             Text(
               context.l10n.explorerCreateGroup,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: cs.primary,
-              ),
+              style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
             ),
           ],
         ),

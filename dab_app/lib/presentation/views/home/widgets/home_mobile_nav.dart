@@ -24,9 +24,9 @@ class HomeMobileNav extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tabs = [
       context.l10n.dashboardTitle,
-      context.l10n.navReports,
       context.l10n.navExplorer,
       context.l10n.insightsTitle,
+      context.l10n.navReports,
       if (showAdminTab) context.l10n.navAdmin,
     ];
     return SizedBox(

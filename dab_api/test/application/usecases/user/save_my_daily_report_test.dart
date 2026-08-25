@@ -1,22 +1,29 @@
 import 'package:dab_api/src/application/usecases/user/get_my_daily_report.dart';
 import 'package:dab_api/src/application/usecases/user/save_my_daily_report.dart';
+import 'package:dab_api/src/domain/core/daily_report_lock_policy.dart';
 import 'package:dab_api/src/domain/core/failures/failure.dart';
+import 'package:dab_api/src/domain/core/org_calendar.dart';
 import 'package:dab_api/src/domain/entities/user/daily_report.dart';
 import 'package:dab_api/src/domain/entities/user/daily_report_line.dart';
 import 'package:dab_api/src/domain/entities/user/daily_report_line_role.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_daily_report_repository.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
 class _MockReports extends Mock implements AbsIDailyReportRepository {}
 
+class _MockSettings extends Mock implements AbsISystemSettingsRepository {}
+
 void main() {
   late _MockReports reports;
+  late _MockSettings settings;
   late GetMyDailyReport get;
-  late SaveMyDailyReport save;
+  late DateTime clock;
 
   setUpAll(() {
+    initializeOrgCalendar();
     registerFallbackValue(
       const DailyReport(
         id: 'id',
@@ -28,9 +35,25 @@ void main() {
 
   setUp(() {
     reports = _MockReports();
+    settings = _MockSettings();
     get = GetMyDailyReport(reports);
-    save = SaveMyDailyReport(reports);
+    clock = DateTime.utc(2026, 8, 22, 16);
+    when(() => settings.getSetting(kSystemTimezoneSettingKey)).thenAnswer(
+      (_) async => const Right('UTC'),
+    );
+    when(() => settings.getSetting(kDailyReportLockOffsetDaysKey)).thenAnswer(
+      (_) async => const Right('1'),
+    );
+    when(() => settings.getSetting(kDailyReportLockTimeKey)).thenAnswer(
+      (_) async => const Right('00:00'),
+    );
   });
+
+  SaveMyDailyReport saveUseCase() => SaveMyDailyReport(
+    reports,
+    settings,
+    now: () => clock,
+  );
 
   test('get returns an empty draft when no row exists', () async {
     when(
@@ -63,6 +86,7 @@ void main() {
     when(() => reports.save(any())).thenAnswer((invocation) async {
       return Right(invocation.positionalArguments.first as DailyReport);
     });
+    final save = saveUseCase();
 
     final first = await save.execute(
       userId: 'u-1',
@@ -104,12 +128,24 @@ void main() {
   });
 
   test('save rejects empty subject keys', () async {
-    final result = await save.execute(
+    final result = await saveUseCase().execute(
       userId: 'u-1',
       date: '2026-08-22',
       includeFollowing: false,
       lines: const [DailyReportLine(subjectKey: '  ')],
     );
     expect(result.getLeft().toNullable(), isA<ValidationFailure>());
+  });
+
+  test('save rejects writes after the Admin deadline', () async {
+    clock = DateTime.utc(2026, 8, 23);
+    final result = await saveUseCase().execute(
+      userId: 'u-1',
+      date: '2026-08-22',
+      includeFollowing: false,
+      lines: const [],
+    );
+    expect(result.getLeft().toNullable(), isA<AuthFailure>());
+    verifyNever(() => reports.save(any()));
   });
 }

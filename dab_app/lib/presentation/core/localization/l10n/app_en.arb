@@ -46,15 +46,51 @@
   },
   "reportsDateToday": "Today",
   "@reportsDateToday": {
-    "description": "Reports toolbar date label when the org-calendar day is loading."
+    "description": "Label for the current org-calendar day in the Reports date list."
   },
-  "reportsFollowingToggle": "Following",
-  "@reportsFollowingToggle": {
-    "description": "Reports toolbar chip — include Follow-lane live rows."
+  "reportsSectionReports": "Reports",
+  "@reportsSectionReports": {
+    "description": "Sidebar section title for the dated report list."
+  },
+  "reportsNoSavedReports": "No reports yet",
+  "@reportsNoSavedReports": {
+    "description": "Empty state when the selected person has no saved daily reports."
   },
   "reportsCopy": "Copy",
   "@reportsCopy": {
     "description": "Reports toolbar action — copy Markdown to the clipboard."
+  },
+  "reportsSave": "Save",
+  "@reportsSave": {
+    "description": "Reports toolbar action — persist the open daily report."
+  },
+  "reportsSaved": "Report saved",
+  "@reportsSaved": {
+    "description": "SnackBar after a successful daily-report save."
+  },
+  "reportsLockedChip": "Locked",
+  "@reportsLockedChip": {
+    "description": "Toolbar chip when the open own daily report is past the Admin deadline."
+  },
+  "reportsUnlockedChip": "Unlocked",
+  "@reportsUnlockedChip": {
+    "description": "Toolbar chip when the open own daily report can still be edited."
+  },
+  "reportsLockCountdown": "Locks in {remaining}",
+  "@reportsLockCountdown": {
+    "description": "Toolbar chip counting down to the Admin daily-report deadline.",
+    "placeholders": {
+      "remaining": {"type": "String"}
+    }
+  },
+  "reportsLockedBanner": "Editing closed at {time} on {date} ({timezone}).",
+  "@reportsLockedBanner": {
+    "description": "Banner on an own daily report that can no longer be edited.",
+    "placeholders": {
+      "time": {"type": "String"},
+      "date": {"type": "String"},
+      "timezone": {"type": "String"}
+    }
   },
   "reportsDownload": "Download",
   "@reportsDownload": {
@@ -80,6 +116,18 @@
   "reportsEmpty": "No activity for today yet",
   "@reportsEmpty": {
     "description": "Empty state when today's Directed ∪ authored pool is empty."
+  },
+  "reportsTeamEmpty": "No report for this day",
+  "@reportsTeamEmpty": {
+    "description": "Empty state when a teammate has no saved report for the selected day."
+  },
+  "reportsSearchHint": "Add an activity…",
+  "@reportsSearchHint": {
+    "description": "Reports search field — pick extra activities onto today's report."
+  },
+  "reportsSearchEmpty": "No matching activities",
+  "@reportsSearchEmpty": {
+    "description": "Empty overlay when Reports activity search returns no rows."
   },
   "reportsRoleDirected": "Directed",
   "@reportsRoleDirected": {
@@ -700,6 +748,49 @@
   "adminTimezoneSavedSnack": "Organization timezone updated. Explorer cache was cleared.",
   "@adminTimezoneSavedSnack": {
     "description": "Snack bar after saving organization timezone"
+  },
+  "adminReportDeadlineTitle": "Report deadline",
+  "@adminReportDeadlineTitle": {
+    "description": "Title for the global daily-report edit deadline on Admin Security."
+  },
+  "adminReportDeadlineSubtitle": "How long after a report date teammates can still edit that day’s report. Times use the organization timezone.",
+  "@adminReportDeadlineSubtitle": {
+    "description": "Subtitle for the global daily-report deadline panel."
+  },
+  "adminReportDeadlineOffsetLabel": "Lock on",
+  "@adminReportDeadlineOffsetLabel": {
+    "description": "Label for the day offset of the daily-report deadline."
+  },
+  "adminReportDeadlineOffsetReportDay": "The report day",
+  "@adminReportDeadlineOffsetReportDay": {
+    "description": "Deadline offset option: cutoff falls on the report’s own date."
+  },
+  "adminReportDeadlineOffsetNextDay": "The next day",
+  "@adminReportDeadlineOffsetNextDay": {
+    "description": "Deadline offset option: cutoff falls on the following calendar day."
+  },
+  "adminReportDeadlineOffsetDaysLater": "{count} days after the report date",
+  "@adminReportDeadlineOffsetDaysLater": {
+    "description": "Deadline offset option for 2+ days after the report date.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "adminReportDeadlineTimeLabel": "At",
+  "@adminReportDeadlineTimeLabel": {
+    "description": "Label for the wall-clock time of the daily-report deadline."
+  },
+  "adminReportDeadlinePreview": "A report can be edited until {time} on {when}.",
+  "@adminReportDeadlinePreview": {
+    "description": "Live preview of the configured daily-report deadline.",
+    "placeholders": {
+      "time": {"type": "String"},
+      "when": {"type": "String"}
+    }
+  },
+  "adminReportDeadlineSavedSnack": "Report deadline updated.",
+  "@adminReportDeadlineSavedSnack": {
+    "description": "Snack bar after saving the global daily-report deadline."
   },
   "adminNonCompliantAccountsWarning": "Accounts outside the allowed domain (existing accounts keep working):",
   "@adminNonCompliantAccountsWarning": {

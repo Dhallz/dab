@@ -1,38 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../domain/entities/activity/activity_category.dart';
-import '../../../../core/localization/l10n_extension.dart';
-import '../../../../core/styles/app_icons.dart';
-import '../../../../core/styles/app_spacing.dart';
-import '../../../../core/widgets/selection_tile.dart';
-import '../../explorer_notifier.dart';
+import '../../../domain/entities/activity/activity_category.dart';
+import '../localization/l10n_extension.dart';
+import '../styles/app_icons.dart';
+import '../styles/app_spacing.dart';
+import 'selection_tile.dart';
 
-class ActivityFilterChecklist extends ConsumerWidget {
+/// [ARCH: PRESENTATION_CORE]
+/// ROLE: Multi-select activity-category tiles for filter sidebars.
+class ActivityCategoryChecklist extends StatelessWidget {
   final Set<ActivityCategory> availableCategories;
   final Set<ActivityCategory> selectedCategories;
+  final ValueChanged<ActivityCategory> onToggle;
 
-  const ActivityFilterChecklist({
+  const ActivityCategoryChecklist({
     super.key,
     required this.availableCategories,
     required this.selectedCategories,
+    required this.onToggle,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(explorerNotifierProvider.notifier);
+  Widget build(BuildContext context) {
     return Column(
-      children: availableCategories.map((category) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-          child: SelectionTile(
-            label: _labelFor(context, category),
-            isSelected: selectedCategories.contains(category),
-            iconData: _iconFor(category),
-            onTap: () => notifier.toggleActivityCategory(category),
+      children: [
+        for (final category in availableCategories)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectionTile(
+              label: _labelFor(context, category),
+              isSelected: selectedCategories.contains(category),
+              iconData: _iconFor(category),
+              onTap: () => onToggle(category),
+            ),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 

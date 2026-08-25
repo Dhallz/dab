@@ -12,6 +12,11 @@ abstract interface class AbsIDailyReportRepository {
     required String date,
   });
 
+  /// Org-calendar dates (`YYYY-MM-DD`) with a saved report for [userId], newest first.
+  Future<Either<Failure, List<String>>> listDatesByUser({
+    required String userId,
+  });
+
   /// Upserts the report header and replaces all lines for that row.
   Future<Either<Failure, DailyReport>> save(DailyReport report);
 }

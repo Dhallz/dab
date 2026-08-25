@@ -197,9 +197,42 @@ void main() {
     expect(rows.single.objectKey, 'ENG-42');
     expect(_containsAssigneeId(filter, 'linear-user-ada'), isFalse);
     expect(_containsIsMe(filter), isFalse);
-    expect(filter?['number'], {'eq': 42});
-    expect((filter?['team'] as Map?)?['key'], {'eq': 'ENG'});
+    expect(_containsTitleContains(filter, 'ENG-42'), isTrue);
+    expect(_containsNumberEq(filter, 42), isTrue);
     verifyNever(() => users.getIdentity(any(), any()));
+  });
+
+  test('keyword searches title contains, not exact identifier', () async {
+    Map<String, dynamic>? filter;
+    when(
+      () => graphql.execute(
+        any(),
+        bearerToken: any(named: 'bearerToken'),
+        document: any(named: 'document'),
+        variables: any(named: 'variables'),
+      ),
+    ).thenAnswer((invocation) async {
+      final variables =
+          invocation.namedArguments[#variables] as Map<String, dynamic>;
+      filter = variables['filter'] as Map<String, dynamic>?;
+      return {
+        'issues': {
+          'nodes': [
+            {
+              'identifier': 'ENG-9',
+              'title': 'Fix login',
+              'url': 'https://linear.app/acme/issue/ENG-9',
+            },
+          ],
+        },
+      };
+    });
+
+    final result = await catalog.list(userId: 'u-1', query: 'login');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows.single.title, '[ENG-9] Fix login');
+    expect(_containsTitleContains(filter, 'login'), isTrue);
+    expect(_containsNumberEq(filter, 9), isFalse);
   });
 }
 
@@ -248,5 +281,29 @@ bool _containsIsMe(Object? node) {
     return node.values.any(_containsIsMe);
   }
   if (node is List) return node.any(_containsIsMe);
+  return false;
+}
+
+bool _containsTitleContains(Object? node, String needle) {
+  if (node is Map) {
+    final title = node['title'];
+    if (title is Map && title['containsIgnoreCase'] == needle) return true;
+    return node.values.any((value) => _containsTitleContains(value, needle));
+  }
+  if (node is List) {
+    return node.any((value) => _containsTitleContains(value, needle));
+  }
+  return false;
+}
+
+bool _containsNumberEq(Object? node, int number) {
+  if (node is Map) {
+    final value = node['number'];
+    if (value is Map && value['eq'] == number) return true;
+    return node.values.any((child) => _containsNumberEq(child, number));
+  }
+  if (node is List) {
+    return node.any((value) => _containsNumberEq(value, number));
+  }
   return false;
 }

@@ -91,6 +91,31 @@ void main() {
     expect(rows.single.title, '[DAB-7] Someone else');
     final jql = captured.queryParameters['jql']!;
     expect(jql, contains('key = "DAB-7"'));
+    expect(jql, contains('summary ~ "DAB-7"'));
+    expect(jql, isNot(contains('currentUser()')));
+  });
+
+  test('typed keyword searches summary contains', () async {
+    late Uri captured;
+    when(
+      () => jsonRest.getJsonMap(any(), headers: any(named: 'headers')),
+    ).thenAnswer((invocation) async {
+      captured = invocation.positionalArguments[0] as Uri;
+      return {
+        'issues': [
+          {
+            'key': 'DAB-7',
+            'fields': {'summary': 'Fix login'},
+          },
+        ],
+      };
+    });
+
+    final result = await catalog.list(userId: 'u-1', query: 'login');
+    final rows = result.getOrElse((_) => throw StateError('left'));
+    expect(rows.single.title, '[DAB-7] Fix login');
+    final jql = captured.queryParameters['jql']!;
+    expect(jql, contains('summary ~ "login"'));
     expect(jql, isNot(contains('currentUser()')));
   });
 }

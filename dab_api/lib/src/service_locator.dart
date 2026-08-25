@@ -63,8 +63,11 @@ import 'package:dab_api/src/application/usecases/user/delete_user_provider_crede
 import 'package:dab_api/src/application/usecases/user/get_git_branch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_git_watch_list.dart';
 import 'package:dab_api/src/application/usecases/user/get_my_daily_report.dart';
+import 'package:dab_api/src/application/usecases/user/get_user_daily_report.dart';
 import 'package:dab_api/src/application/usecases/user/list_follow_candidates.dart';
 import 'package:dab_api/src/application/usecases/user/list_my_activity_follows.dart';
+import 'package:dab_api/src/application/usecases/user/list_my_daily_reports.dart';
+import 'package:dab_api/src/application/usecases/user/list_user_daily_reports.dart';
 import 'package:dab_api/src/application/usecases/user/save_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/delete_activity_follow.dart';
 import 'package:dab_api/src/application/usecases/user/save_my_daily_report.dart';
@@ -873,8 +876,23 @@ Future<void> serviceLocator() async {
   sl.registerSingleton<GetMyDailyReport>(
     GetMyDailyReport(sl<AbsIDailyReportRepository>()),
   );
+  sl.registerSingleton<GetUserDailyReport>(
+    GetUserDailyReport(sl<GetMyDailyReport>(), sl<GetUserById>()),
+  );
+  sl.registerSingleton<ListMyDailyReports>(
+    ListMyDailyReports(sl<AbsIDailyReportRepository>()),
+  );
+  sl.registerSingleton<ListUserDailyReports>(
+    ListUserDailyReports(
+      sl<AbsIDailyReportRepository>(),
+      sl<GetUserById>(),
+    ),
+  );
   sl.registerSingleton<SaveMyDailyReport>(
-    SaveMyDailyReport(sl<AbsIDailyReportRepository>()),
+    SaveMyDailyReport(
+      sl<AbsIDailyReportRepository>(),
+      sl<AbsISystemSettingsRepository>(),
+    ),
   );
 
   // Group
@@ -1015,6 +1033,9 @@ Future<void> serviceLocator() async {
       saveUserDeviceToken: sl<SaveUserDeviceToken>(),
       deleteUserDeviceToken: sl<DeleteUserDeviceToken>(),
       getMyDailyReport: sl<GetMyDailyReport>(),
+      getUserDailyReport: sl<GetUserDailyReport>(),
+      listMyDailyReports: sl<ListMyDailyReports>(),
+      listUserDailyReports: sl<ListUserDailyReports>(),
       saveMyDailyReport: sl<SaveMyDailyReport>(),
     ),
   );

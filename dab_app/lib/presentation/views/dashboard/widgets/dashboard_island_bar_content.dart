@@ -11,13 +11,9 @@ import '../dashboard_state.dart';
 import '../models/dashboard_feed_mode.dart';
 
 /// [ARCH: PRESENTATION_WIDGET]
-/// ROLE: Dashboard toolbar — feed mode chips, last sync, and archive toggle;
-/// counts on compact widths.
+/// ROLE: Dashboard toolbar — feed mode chips, counts, last sync, and archive toggle.
 class DashboardIslandBarContent extends ConsumerWidget {
-  /// When true (mobile), live/archived counts sit in this toolbar.
-  final bool showCounts;
-
-  const DashboardIslandBarContent({super.key, this.showCounts = true});
+  const DashboardIslandBarContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,26 +59,24 @@ class DashboardIslandBarContent extends ConsumerWidget {
           icon: AppIcons.providers,
           onTap: () => notifier.setFeedMode(DashboardFeedMode.provider),
         ),
-        if (showCounts) ...[
-          DabIslandStat(
-            compact: true,
-            icon: AppIcons.dashboard,
-            title: l10n.dashboardIslandDirected,
-            value: '${state.directedVisible.length}',
-          ),
-          DabIslandStat(
-            compact: true,
-            icon: AppIcons.following,
-            title: l10n.dashboardIslandFollowing,
-            value: '${state.followedFeed.length}',
-          ),
-          DabIslandStat(
-            compact: true,
-            icon: AppIcons.delete,
-            title: l10n.dashboardIslandArchived,
-            value: '${state.archivedCount}',
-          ),
-        ],
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.dashboard,
+          title: l10n.dashboardIslandDirected,
+          value: '${state.directedVisible.length}',
+        ),
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.following,
+          title: l10n.dashboardIslandFollowing,
+          value: '${state.followedFeed.length}',
+        ),
+        DabIslandStat(
+          compact: true,
+          icon: AppIcons.delete,
+          title: l10n.dashboardIslandArchived,
+          value: '${state.archivedCount}',
+        ),
         Text(
           state.lastSyncedAt == null
               ? l10n.dashboardNoSyncYet

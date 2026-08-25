@@ -2,13 +2,15 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../domain/core/activity_follow_key.dart';
 import '../../../domain/core/failures/failure.dart';
+import '../../../domain/core/follow_candidate_query.dart';
 import '../../../domain/entities/user/follow_candidate.dart';
 import '../../../domain/contracts/ports/abs_i_follow_candidate_catalog.dart';
 import 'get_git_branch_list.dart';
 import 'get_git_watch_list.dart';
 
 /// [ARCH: APPLICATION_USECASE]
-/// ROLE: Lists Follow picker rows: issues (any matching query) plus git branches.
+/// ROLE: Lists Follow picker rows: issues whose **title contains** [query]
+/// plus git branches. Empty [query] is involved issues only.
 class ListFollowCandidates {
   ListFollowCandidates(
     this._issueCatalogs,
@@ -38,7 +40,10 @@ class ListFollowCandidates {
       ]);
       final buckets = [
         for (final chunk in chunks)
-          chunk.getOrElse((_) => const <FollowCandidate>[]),
+          [
+            for (final row in chunk.getOrElse((_) => const <FollowCandidate>[]))
+              if (followCandidateTitleContains(row, q)) row,
+          ],
       ];
       return Right(_interleave(buckets));
     } catch (_) {

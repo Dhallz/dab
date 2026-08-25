@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import '../../../domain/core/daily_report_lock_policy.dart';
 import '../../../domain/core/deployment_mode.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
@@ -18,6 +19,10 @@ class SaveSystemSettings {
       var value = entry.value;
       if (entry.key == kDeploymentModeSettingKey) {
         value = value.normalizeDeploymentMode();
+      } else if (entry.key == kDailyReportLockOffsetDaysKey) {
+        value = parseDailyReportLockOffsetDays(value).toString();
+      } else if (entry.key == kDailyReportLockTimeKey) {
+        value = formatDailyReportLockTime(parseDailyReportLockTime(value));
       }
       final res = await _repo.setSetting(entry.key, value);
       if (res.isLeft()) {

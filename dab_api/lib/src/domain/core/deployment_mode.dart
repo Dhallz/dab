@@ -2,6 +2,8 @@
 /// ROLE: Deployment profile for managed vs individual credential UX.
 library;
 
+import 'daily_report_lock_policy.dart';
+
 /// System setting key stored in `system_settings`.
 const kDeploymentModeSettingKey = 'deployment_mode';
 
@@ -25,6 +27,8 @@ const kAllowedSystemSettingKeys = {
   'public_api_url',
   'system_timezone',
   kDeploymentModeSettingKey,
+  kDailyReportLockOffsetDaysKey,
+  kDailyReportLockTimeKey,
 };
 
 /// [ARCH: DOMAIN]

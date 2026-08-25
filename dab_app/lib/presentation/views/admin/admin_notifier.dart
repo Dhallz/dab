@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../domain/core/daily_report_lock_policy.dart';
 import '../../../../domain/core/deployment_mode.dart';
 import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/provider/provider_config.dart';
@@ -278,6 +279,16 @@ class AdminNotifier extends AutoDisposeNotifier<AdminState> {
         }
         if (timezoneChanged) {
           app.setOrgTimezoneId(nextTimezone);
+        }
+        final lockOffset = settings[kDailyReportLockOffsetDaysKey];
+        final lockTime = settings[kDailyReportLockTimeKey];
+        if (lockOffset != null || lockTime != null) {
+          app.setDailyReportLockPolicy(
+            DailyReportLockPolicy.fromSettings(
+              offsetDays: lockOffset,
+              time: lockTime,
+            ),
+          );
         }
         return true;
       },

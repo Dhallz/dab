@@ -45,10 +45,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get reportsDateToday => 'Heute';
 
   @override
-  String get reportsFollowingToggle => 'Following';
+  String get reportsSectionReports => 'Berichte';
+
+  @override
+  String get reportsNoSavedReports => 'Noch keine Berichte';
 
   @override
   String get reportsCopy => 'Kopieren';
+
+  @override
+  String get reportsSave => 'Speichern';
+
+  @override
+  String get reportsSaved => 'Bericht gespeichert';
+
+  @override
+  String get reportsLockedChip => 'Gesperrt';
+
+  @override
+  String get reportsUnlockedChip => 'Entsperrt';
+
+  @override
+  String reportsLockCountdown(String remaining) {
+    return 'Sperrt in $remaining';
+  }
+
+  @override
+  String reportsLockedBanner(String time, String date, String timezone) {
+    return 'Bearbeitung geschlossen um $time am $date ($timezone).';
+  }
 
   @override
   String get reportsDownload => 'Download';
@@ -66,6 +91,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportsEmpty => 'Noch keine Aktivität für heute';
+
+  @override
+  String get reportsTeamEmpty => 'Kein Bericht für diesen Tag';
+
+  @override
+  String get reportsSearchHint => 'Aktivität hinzufügen…';
+
+  @override
+  String get reportsSearchEmpty => 'Keine passenden Aktivitäten';
 
   @override
   String get reportsRoleDirected => 'Eingehend';
@@ -538,6 +572,38 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get adminTimezoneSavedSnack =>
       'Organization timezone updated. Explorer cache was cleared.';
+
+  @override
+  String get adminReportDeadlineTitle => 'Berichtsschluss';
+
+  @override
+  String get adminReportDeadlineSubtitle =>
+      'Wie lange nach dem Berichtsdatum noch bearbeitet werden kann. Uhrzeiten nutzen die Organisationszeitzone.';
+
+  @override
+  String get adminReportDeadlineOffsetLabel => 'Sperren am';
+
+  @override
+  String get adminReportDeadlineOffsetReportDay => 'Am Berichtstag';
+
+  @override
+  String get adminReportDeadlineOffsetNextDay => 'Am nächsten Tag';
+
+  @override
+  String adminReportDeadlineOffsetDaysLater(int count) {
+    return '$count Tage nach dem Berichtsdatum';
+  }
+
+  @override
+  String get adminReportDeadlineTimeLabel => 'Um';
+
+  @override
+  String adminReportDeadlinePreview(String time, String when) {
+    return 'Ein Bericht kann bis $time $when bearbeitet werden.';
+  }
+
+  @override
+  String get adminReportDeadlineSavedSnack => 'Berichtsschluss aktualisiert.';
 
   @override
   String get adminNonCompliantAccountsWarning =>

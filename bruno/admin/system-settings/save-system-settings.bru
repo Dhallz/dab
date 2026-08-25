@@ -13,6 +13,8 @@ docs {
   - `public_api_url`: Public DAB API base URL (no trailing slash). Used by the Admin Providers tab to compose webhook endpoint URLs.
   - `system_timezone`: IANA organization timezone (e.g. `America/New_York`). Calendar days in Explorer, Insights, and the live-feed purge follow this zone.
   - `deployment_mode`: `managed` (Admin-owned tokens and Identities) or `individual` (each teammate connects from Settings). Legacy `organization` / `personal` are accepted and rewritten.
+  - `daily_report_lock_offset_days`: Days after a report date when edits close (0–7, default `1`). Combined with `daily_report_lock_time`.
+  - `daily_report_lock_time`: Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`). Example: offset `1` + `11:00` = editable until 11:00 the next day.
 
   Existing accounts outside the allowed domain are grandfathered: enabling validation only gates future account creations, never login.
 }
@@ -28,7 +30,9 @@ body:json {
     "allowed_domain_enabled": "true",
     "allowed_domain": "example.com",
     "public_api_url": "https://dab.example.com",
-    "system_timezone": "America/New_York"
+    "system_timezone": "America/New_York",
+    "daily_report_lock_offset_days": "1",
+    "daily_report_lock_time": "11:00"
   }
 }
 

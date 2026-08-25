@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/session.dart';
 import '../../../domain/entities/user/user.dart';
 import '../../../domain/entities/user/user_role.dart';
-import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../postgres/app_database.dart';
 import '../postgres/drift_row_mappers.dart';
 
@@ -27,7 +27,7 @@ class AuthRepository implements AbsIAuthRepository {
       final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.email.equals(email))).getSingleOrNull();
-      return Right(row != null ? row.toUser() : null);
+      return Right(row?.toUser());
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by email: $e'));
     }
@@ -40,7 +40,7 @@ class AuthRepository implements AbsIAuthRepository {
       final row = await (_db.select(
         _db.usersTable,
       )..where((u) => u.id.equals(id))).getSingleOrNull();
-      return Right(row != null ? row.toUser() : null);
+      return Right(row?.toUser());
     } catch (e) {
       return Left(DatabaseFailure('Error finding user by ID: $e'));
     }
@@ -116,7 +116,7 @@ class AuthRepository implements AbsIAuthRepository {
                 ..where((s) => s.refreshToken.equals(token))
                 ..limit(1))
               .getSingleOrNull();
-      return Right(row != null ? row.toSession() : null);
+      return Right(row?.toSession());
     } catch (e) {
       return Left(DatabaseFailure('Error finding session: $e'));
     }

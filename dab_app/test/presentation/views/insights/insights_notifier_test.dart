@@ -2,14 +2,17 @@ import 'package:dab_app/domain/containers/activity_usecases.dart';
 import 'package:dab_app/domain/containers/metadata_usecases.dart';
 import 'package:dab_app/domain/containers/system_usecases.dart';
 import 'package:dab_app/domain/containers/user_usecases.dart';
-import 'package:dab_app/domain/entities/activity/activity_category.dart';
 import 'package:dab_app/domain/entities/activity/activity.dart';
+import 'package:dab_app/domain/entities/activity/activity_category.dart';
 import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
+import 'package:dab_app/domain/entities/group/group.dart';
+import 'package:dab_app/domain/entities/group/group_type.dart';
 import 'package:dab_app/domain/entities/provider/provider_config.dart';
 import 'package:dab_app/domain/entities/user/user.dart';
 import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_app/presentation/core/models/directory_type.dart';
 import 'package:dab_app/presentation/core/models/view_status.dart';
 import 'package:dab_app/presentation/features/app/app_notifier.dart';
 import 'package:dab_app/presentation/features/app/app_state.dart';
@@ -17,9 +20,9 @@ import 'package:dab_app/presentation/views/admin/models/provider_connection_stat
 import 'package:dab_app/presentation/views/insights/insights_notifier.dart';
 import 'package:dab_app/presentation/views/insights/insights_state.dart';
 import 'package:dab_app/presentation/views/insights/models/insights_date_preset.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:mocktail/mocktail.dart';
 
 class MockActivityRepository extends Mock implements IActivityRepository {}
@@ -88,6 +91,9 @@ void main() {
     when(
       () => mockUserRepository.getUsers(),
     ).thenAnswer((_) async => const Right([alice, bob]));
+    when(
+      () => mockUserRepository.getGroups(),
+    ).thenAnswer((_) async => const Right([]));
     when(() => mockProviderConfigRepository.getProviderConfigs()).thenAnswer(
       (_) async => Right([
         const ProviderConfig(
@@ -125,15 +131,14 @@ void main() {
 
   ProviderContainer createTestContainer({
     Map<String, ProviderConnectionStatus>? connections,
-  }) =>
-      ProviderContainer(
-        overrides: [
-          insightsNotifierProvider.overrideWith(createNotifier),
-          appNotifierProvider.overrideWith(
-            () => TestAppNotifier(connections: connections),
-          ),
-        ],
-      );
+  }) => ProviderContainer(
+    overrides: [
+      insightsNotifierProvider.overrideWith(createNotifier),
+      appNotifierProvider.overrideWith(
+        () => TestAppNotifier(connections: connections),
+      ),
+    ],
+  );
 
   void subscribeInsights(ProviderContainer container) {
     final sub = container.listen(insightsNotifierProvider, (_, _) {});
@@ -250,5 +255,36 @@ void main() {
     expect(state.activeUsersCount, 2);
     expect(state.activeProvidersCount, 2);
     expect(state.mostFrequentCategory, isNotNull);
+  });
+
+  test('group Directory selection queries member user ids', () async {
+    when(() => mockUserRepository.getGroups()).thenAnswer(
+      (_) async => const Right([
+        Group(id: 'g1', name: 'Core', type: GroupType.custom, members: [alice]),
+      ]),
+    );
+
+    final container = createTestContainer();
+    subscribeInsights(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(insightsNotifierProvider.notifier);
+    await notifier.started(null);
+    await notifier.setDirectoryType(DirectoryType.groups);
+    await notifier.toggleGroup('g1');
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+
+    expect(container.read(insightsNotifierProvider).selectedGroupIds, {'g1'});
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>().having(
+            (query) => query.users,
+            'users',
+            ['u1'],
+          ),
+        ),
+      ),
+    ).called(1);
   });
 }

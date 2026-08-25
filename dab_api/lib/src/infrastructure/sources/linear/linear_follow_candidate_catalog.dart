@@ -15,8 +15,8 @@ import '../../protocols/graphql/graphql_protocol.dart';
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: Lists Linear issues for the Follow picker. Read-only.
 /// CONTRACT: Empty [query] is involved (assignee/creator/subscriber). A typed
-/// query searches any issue in the instance [teamKeys] allow-list (or all
-/// teams when that list is empty).
+/// query matches title **contains**, issue number, or full identifier
+/// (`ENG-42`) in the instance [teamKeys] allow-list (or all teams when empty).
 class LinearFollowCandidateCatalog implements AbsIFollowCandidateCatalog {
   LinearFollowCandidateCatalog(
     this._configs,
@@ -125,8 +125,8 @@ query DabFollowCandidates(\$filter: IssueFilter, \$first: Int!) {
 
   static final _issueKey = RegExp(r'^([A-Za-z][A-Za-z0-9_]*)-(\d+)$');
 
-  /// Workspace search: identifier (`ENG-42`) or title, not involvement.
-  /// Returns null when [teamKeys] excludes the typed team.
+  /// Workspace search: title contains, numeric issue number, or identifier
+  /// (`ENG-42`). Returns null when [teamKeys] excludes the typed team.
   Map<String, dynamic>? _searchFilter({
     required String query,
     required List<String> teamKeys,
@@ -135,19 +135,36 @@ query DabFollowCandidates(\$filter: IssueFilter, \$first: Int!) {
     if (key != null) {
       final team = key.group(1)!;
       if (teamKeys.isNotEmpty && !teamKeys.contains(team)) return null;
-      return {
+    }
+    final clauses = <Map<String, dynamic>>[
+      {
+        'title': {'containsIgnoreCase': query},
+      },
+      {
+        'identifier': {'containsIgnoreCase': query},
+      },
+    ];
+    if (key != null) {
+      clauses.add({
         'team': {
-          'key': {'eq': team},
+          'key': {'eq': key.group(1)!},
         },
         'number': {'eq': int.parse(key.group(2)!)},
-      };
+      });
+    } else {
+      final n = int.tryParse(query);
+      if (n != null) {
+        clauses.add({
+          'number': {'eq': n},
+        });
+      }
     }
     return {
       if (teamKeys.isNotEmpty)
         'team': {
           'key': {'in': teamKeys},
         },
-      'title': {'containsIgnoreCase': query},
+      if (clauses.length == 1) ...clauses.first else 'or': clauses,
     };
   }
 
