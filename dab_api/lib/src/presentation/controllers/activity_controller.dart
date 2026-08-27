@@ -79,7 +79,7 @@ class ActivityController {
       );
     }
 
-    final limit = (parsedLimit ?? 50).clamp(1, 100);
+    final limit = (parsedLimit ?? 50).clamp(1, 250);
     final result = await _activity.getLiveActivities.execute(
       userId: userId,
       limit: limit,
@@ -896,9 +896,27 @@ class ActivityController {
     }
 
     final rawUserId = data['userId']?.toString().trim() ?? '';
+    final team =
+        data['team'] == true ||
+        data['team']?.toString().toLowerCase() == 'true';
+    final teamSizeRaw = data['teamSize'];
+    final teamSize = teamSizeRaw is num
+        ? teamSizeRaw.toInt()
+        : int.tryParse(teamSizeRaw?.toString() ?? '') ?? 20;
+    final userIds = <String>[];
+    final rawUserIds = data['userIds'];
+    if (rawUserIds is List) {
+      for (final entry in rawUserIds) {
+        final id = entry.toString().trim();
+        if (id.isNotEmpty) userIds.add(id);
+      }
+    }
     final result = await _activity.seedDemoDay.execute(
       userId: rawUserId.isNotEmpty ? rawUserId : callerId,
       date: data['date']?.toString() ?? '',
+      team: team,
+      teamSize: teamSize,
+      userIds: userIds,
     );
     return result.fold(
       (failure) {

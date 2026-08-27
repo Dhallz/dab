@@ -3,6 +3,8 @@ import 'package:dab_api/src/domain/core/failures/failure.dart';
 import 'package:dab_api/src/domain/core/org_calendar.dart';
 import 'package:dab_api/src/domain/entities/activity/activity.dart';
 import 'package:dab_api/src/domain/entities/activity/activity_provider.dart';
+import 'package:dab_api/src/domain/entities/group/group.dart';
+import 'package:dab_api/src/domain/entities/group/group_type.dart';
 import 'package:dab_api/src/domain/entities/provider/provider_config.dart';
 import 'package:dab_api/src/domain/entities/user/activity_follow.dart';
 import 'package:dab_api/src/domain/entities/user/daily_report.dart';
@@ -15,7 +17,8 @@ import 'package:dab_api/src/domain/contracts/repositories/abs_i_auth_repository.
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_daily_report_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_provider_config_repository.dart';
 import 'package:dab_api/src/domain/contracts/repositories/abs_i_system_settings_repository.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:dab_api/src/domain/contracts/repositories/abs_i_user_repository.dart';
+import 'package:fpdart/fpdart.dart' hide Group;
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
 
@@ -39,6 +42,8 @@ class _MockFollows extends Mock implements AbsIActivityFollowRepository {}
 
 class _MockReports extends Mock implements AbsIDailyReportRepository {}
 
+class _MockDirectory extends Mock implements IUserRepository {}
+
 void main() {
   late _MockAuth auth;
   late _MockConfigs configs;
@@ -49,6 +54,7 @@ void main() {
   late _MockDemoStore demoStore;
   late _MockFollows follows;
   late _MockReports reports;
+  late _MockDirectory directory;
   late bool enabled;
 
   final user = TestData.user(id: 'u-1', email: 'ada@acme.com');
@@ -65,6 +71,7 @@ void main() {
       demoStore: demoStore,
       follows: follows,
       reports: reports,
+      directory: directory,
       isEnabled: () => enabled,
       now: () => now,
     );
@@ -97,6 +104,14 @@ void main() {
     );
     registerFallbackValue(<Activity>[]);
     registerFallbackValue(<String, dynamic>{});
+    registerFallbackValue(TestData.user(id: 'fallback-user'));
+    registerFallbackValue(
+      const Group(
+        id: 'g',
+        name: 'Engineering',
+        type: GroupType.custom,
+      ),
+    );
   });
 
   setUp(() {
@@ -109,10 +124,12 @@ void main() {
     demoStore = _MockDemoStore();
     follows = _MockFollows();
     reports = _MockReports();
+    directory = _MockDirectory();
     enabled = true;
 
     when(() => auth.findById('u-1')).thenAnswer((_) async => Right(user));
     when(() => settings.getSetting(any())).thenAnswer((_) async => const Right(null));
+    when(() => settings.getAllowedDomain()).thenAnswer((_) async => const Right(null));
     when(() => configs.getConfigs()).thenAnswer(
       (_) async => const Right([
         ProviderConfig(
@@ -142,6 +159,9 @@ void main() {
     when(() => reports.save(any())).thenAnswer((invocation) async {
       return Right(invocation.positionalArguments.first as DailyReport);
     });
+    when(() => directory.saveGroup(any())).thenAnswer((invocation) async {
+      return Right(invocation.positionalArguments.first as Group);
+    });
   });
 
   test('rejects when mock seed is disabled', () async {
@@ -169,7 +189,7 @@ void main() {
     expect(seeded.date, '2026-08-24');
     expect(seeded.userId, 'u-1');
     expect(seeded.dashboardVisible, isTrue);
-    expect(seeded.activityCount, greaterThan(0));
+    expect(seeded.activityCount, greaterThan(8));
     expect(seeded.followCount, greaterThan(0));
     expect(seeded.reportLineCount, greaterThan(0));
     expect(seeded.providers, ['jira']);
@@ -205,5 +225,100 @@ void main() {
       date: any(named: 'date'),
       activities: any(named: 'activities'),
     )).called(1);
+  });
+
+  test('team mode creates roster users and seeds each with a variant', () async {
+    when(() => settings.getAllowedDomain()).thenAnswer((_) async => const Right(null));
+    when(() => auth.findByEmail(any())).thenAnswer((_) async => const Right(null));
+    when(() => auth.createUser(any())).thenAnswer((_) async => const Right(null));
+
+    final result = await build().execute(
+      userId: 'u-1',
+      date: '2026-08-24',
+      team: true,
+      teamSize: 3,
+    );
+    final seeded = result.getOrElse((_) => throw StateError('left'));
+
+    expect(seeded.userCount, 3);
+    expect(seeded.createdUserCount, 2);
+    expect(seeded.userIds, hasLength(3));
+    expect(seeded.userIds.first, 'u-1');
+    expect(seeded.activityCount, greaterThan(0));
+    expect(seeded.groupCount, 2);
+    verify(() => auth.createUser(any())).called(2);
+    verify(() => directory.saveGroup(any())).called(2);
+    verify(
+      () => demoStore.replaceDay(
+        userId: any(named: 'userId'),
+        date: '2026-08-24',
+        activities: any(named: 'activities'),
+      ),
+    ).called(3);
+  });
+
+  test('team roster cards do not author as the operator', () async {
+    final operator = TestData.user(
+      id: 'u-1',
+      name: 'Dhawud',
+      email: 'dhawud@acme.com',
+    );
+    when(() => auth.findById('u-1')).thenAnswer((_) async => Right(operator));
+    when(() => settings.getAllowedDomain()).thenAnswer((_) async => const Right(null));
+    when(() => auth.findByEmail(any())).thenAnswer((_) async => const Right(null));
+    when(() => auth.createUser(any())).thenAnswer((_) async => const Right(null));
+
+    final created = <Activity>[];
+    when(() => activities.createActivity(any())).thenAnswer((invocation) async {
+      created.add(invocation.positionalArguments.first as Activity);
+      return const Right(null);
+    });
+
+    final result = await build().execute(
+      userId: 'u-1',
+      date: '2026-08-24',
+      team: true,
+      teamSize: 3,
+    );
+    expect(result.isRight(), isTrue);
+
+    final rosterRows = created.where((activity) => activity.userId != 'u-1');
+    expect(rosterRows, isNotEmpty);
+    expect(
+      rosterRows.every((activity) {
+        final blob =
+            '${activity.authorName} ${activity.title} ${activity.content}'
+                .toLowerCase();
+        return !blob.contains('dhawud');
+      }),
+      isTrue,
+    );
+    expect(
+      rosterRows.every((activity) => activity.senderUserId != 'u-1'),
+      isTrue,
+    );
+  });
+
+  test('userIds seeds existing accounts and includes the caller', () async {
+    final other = TestData.user(id: 'u-2', email: 'rio@acme.com');
+    when(() => auth.findById('u-2')).thenAnswer((_) async => Right(other));
+
+    final result = await build().execute(
+      userId: 'u-1',
+      date: '2026-08-24',
+      userIds: const ['u-2'],
+    );
+    final seeded = result.getOrElse((_) => throw StateError('left'));
+
+    expect(seeded.userIds, ['u-1', 'u-2']);
+    expect(seeded.createdUserCount, 0);
+    verifyNever(() => auth.createUser(any()));
+    verify(
+      () => demoStore.replaceDay(
+        userId: any(named: 'userId'),
+        date: any(named: 'date'),
+        activities: any(named: 'activities'),
+      ),
+    ).called(2);
   });
 }

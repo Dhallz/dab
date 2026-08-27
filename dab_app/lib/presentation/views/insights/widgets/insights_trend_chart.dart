@@ -10,42 +10,27 @@ import '../insights_state.dart';
 
 class InsightsTrendChart extends StatelessWidget {
   final InsightsState state;
+  final String orgTimezoneId;
 
-  const InsightsTrendChart({super.key, required this.state});
+  const InsightsTrendChart({
+    super.key,
+    required this.state,
+    required this.orgTimezoneId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final days = state.dailyCounts.keys.toList()
-      ..sort((a, b) => a.compareTo(b));
-    final dayIndex = {for (var i = 0; i < days.length; i++) days[i]: i};
-    final providerCountsByDay = <String, Map<DateTime, int>>{};
-    for (final activity in state.activities) {
-      final provider = activity.provider.name;
-      final day = DateTime(
-        activity.createdAt.year,
-        activity.createdAt.month,
-        activity.createdAt.day,
-      );
-      if (!dayIndex.containsKey(day)) {
-        continue;
-      }
-      final providerCounts = providerCountsByDay.putIfAbsent(
-        provider,
-        () => {},
-      );
-      providerCounts.update(day, (value) => value + 1, ifAbsent: () => 1);
-    }
-    final providerKeys = providerCountsByDay.keys.toList()..sort();
+    final days = state.dailyCounts(orgTimezoneId).keys.toList();
+    final providerCounts = state.trendProviderSeries(orgTimezoneId);
+    final providerKeys = providerCounts.keys.toList()..sort();
     final providerStyles =
         Theme.of(context).extension<ProviderStyles>() ?? ProviderStyles.dark();
     final cs = Theme.of(context).colorScheme;
     final series = providerKeys.map((provider) {
+      final counts = providerCounts[provider]!;
       final spots = <FlSpot>[
-        for (final day in days)
-          FlSpot(
-            dayIndex[day]!.toDouble(),
-            (providerCountsByDay[provider]?[day] ?? 0).toDouble(),
-          ),
+        for (var i = 0; i < days.length; i++)
+          FlSpot(i.toDouble(), counts[i].toDouble()),
       ];
       return _ProviderSeries(
         provider: provider,
@@ -59,6 +44,7 @@ class InsightsTrendChart extends StatelessWidget {
               .expand((item) => item.spots)
               .map((spot) => spot.y)
               .fold<double>(1, (max, value) => value > max ? value : max);
+    final curved = days.length > 1;
     return DabGlassSurface(
       padding: const EdgeInsets.all(AppSpacing.m),
       child: Column(
@@ -106,7 +92,7 @@ class InsightsTrendChart extends StatelessWidget {
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: days.isEmpty ? 1 : (days.length - 1).toDouble(),
+                maxX: days.length <= 1 ? 1 : (days.length - 1).toDouble(),
                 minY: 0,
                 maxY: maxY == 0 ? 1 : maxY * 1.2,
                 gridData: FlGridData(
@@ -146,8 +132,8 @@ class InsightsTrendChart extends StatelessWidget {
                 lineBarsData: [
                   if (series.isEmpty)
                     LineChartBarData(
-                      spots: const [FlSpot(0, 0)],
-                      isCurved: true,
+                      spots: const [FlSpot(0, 0), FlSpot(1, 0)],
+                      isCurved: false,
                       color: cs.primary,
                       barWidth: 2,
                       dotData: const FlDotData(show: false),
@@ -165,8 +151,10 @@ class InsightsTrendChart extends StatelessWidget {
                     ),
                   ...series.map(
                     (item) => LineChartBarData(
-                      spots: item.spots,
-                      isCurved: true,
+                      spots: item.spots.length == 1
+                          ? [item.spots.first, FlSpot(1, item.spots.first.y)]
+                          : item.spots,
+                      isCurved: curved,
                       color: item.color,
                       barWidth: 2.5,
                       dotData: FlDotData(

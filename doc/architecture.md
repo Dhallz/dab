@@ -109,7 +109,7 @@ dab_app/lib/
 
 ### App Entities (`dab_app/lib/domain/entities/`)
 
-Contains API-aligned entities plus client-only models (`ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, `AppSettings`, `SystemStatus`, `ExplorerCacheClearRequest`, `Presence`, `AuthResponse`, `ActivityFollow`, `FollowCandidate`, `DailyReport`, `DailyReportLine`, git/Jira/Linear watch lists). Client `User` includes `linkedProviderIds` (Directory hint; not a secret).
+Contains API-aligned entities plus client-only models (`ActivitySearchQuery`, `ActivityCategory`, `SprintContext`, `AppSettings`, `SystemStatus`, `ExplorerCacheClearRequest`, `Presence`, `AuthResponse`, `ActivityFollow`, `FollowCandidate`, `DailyReport`, `DailyReportLine`, git/Jira/Linear watch lists). Client `User` includes `linkedProviderIds` (Directory hint; not a secret). In screenshot mock mode, and for seed teammates with an empty password hash, that list includes active ingest ids so Explorer/Insights tiles do not show “Hasn't connected”.
 
 `AppSettings` stores `appThemeVariant` (`light`, branded `dab`, or grayscale-dark `greyscale`), optional `localeCode`, and `inboxNotificationsEnabled` (default **on** — OS banners for Directed and Following while the desktop window is unfocused). An `islandBarSelections` map remains on the ObjectBox record but is unused — home branches use per-view toolbars.
 
@@ -169,7 +169,14 @@ come from Admin **file URLs/keys** and Follow pins — Connect OAuth cannot list
 a team. Explorer poll refreshes the Figma user access token before comments
 and retries once on HTTP 401. `POST /mock/demo-day` unions typed screenshot
 rows into that search path from Redis `demo:search:{userId}:{date}` so Explorer
-can render without linked identities or provider HTTP. Dashboard is a
+can render without linked identities or provider HTTP. `team: true` creates
+or reuses a 20-person roster with varied titles and cross-user `senderUserId`
+so Insights is a team graph, not one cloned inbox. Roster inbound authors stay
+on those named demo people (the caller is still seeded). The caller's day is a
+dense Dashboard inbox (every provider, extra Directed/Following cards). Team
+mode also upserts shared Directory groups (Engineering, Product, Design,
+Leadership) so Explorer and Insights show the same membership. Slack `@handles` on
+catalog cards come from the person's display name, not their email. Dashboard is a
 **personal inbound inbox**: live ingest fans out one row per recipient
 (`Activity.userId`), records the linked actor as `senderUserId`, and delivers
 `ACTIVITY_RECEIVED` with `broadcastToUser(recipient)`. The app hydrates

@@ -44,6 +44,28 @@ String orgCalendarDayString(String orgTimezoneId, DateTime calendarDay) {
   return '${calendarDay.year}-$month-$day';
 }
 
+/// Ordered `YYYY-MM-DD` keys from [startDay] through [endDay] inclusive.
+///
+/// Advances by civil date (`DateTime(year, month, day + 1)`), not a 24h
+/// duration, so DST transitions do not skip or duplicate a calendar day.
+List<String> orgCalendarDayKeysInclusive(
+  String orgTimezoneId,
+  DateTime startDay,
+  DateTime endDay,
+) {
+  final start = DateTime(startDay.year, startDay.month, startDay.day);
+  final end = DateTime(endDay.year, endDay.month, endDay.day);
+  final from = start.isAfter(end) ? end : start;
+  final to = start.isAfter(end) ? start : end;
+  final keys = <String>[];
+  var cursor = from;
+  while (!cursor.isAfter(to)) {
+    keys.add(orgCalendarDayString(orgTimezoneId, cursor));
+    cursor = DateTime(cursor.year, cursor.month, cursor.day + 1);
+  }
+  return keys;
+}
+
 /// `YYYY-MM-DD` for an instant interpreted in the org timezone.
 String orgDayKeyFromUtc(String orgTimezoneId, DateTime utcInstant) {
   final local = orgLocalFromUtc(orgTimezoneId, utcInstant);

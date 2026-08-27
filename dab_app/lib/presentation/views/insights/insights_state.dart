@@ -1,5 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 
+import '../../../../domain/core/org_calendar.dart';
 import '../../../../domain/entities/activity/activity.dart';
 import '../../../../domain/entities/activity/activity_category.dart';
 import '../../../../domain/entities/group/group.dart';
@@ -108,31 +109,56 @@ extension OnInsightsState on InsightsState {
     return sorted.first.key;
   }
 
-  Map<DateTime, int> get dailyCounts {
-    final buckets = <DateTime, int>{};
-    final normalizedStart = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-    );
-    final normalizedEnd = DateTime(endDate.year, endDate.month, endDate.day);
-    final dayCount = normalizedEnd.difference(normalizedStart).inDays;
-    for (var i = 0; i <= dayCount; i++) {
-      final day = normalizedStart.add(Duration(days: i));
-      buckets[day] = 0;
-    }
-
+  /// One count per org-calendar day in the selected range.
+  ///
+  /// Every activity in [activities] is included — Insights already scopes
+  /// that list to the Directory selection (users or expanded group members),
+  /// so a group or multi-select is the sum of those people.
+  Map<String, int> dailyCounts([
+    String orgTimezoneId = kDefaultOrgTimezoneId,
+  ]) {
+    final buckets = {
+      for (final key in orgCalendarDayKeysInclusive(
+        orgTimezoneId,
+        startDate,
+        endDate,
+      ))
+        key: 0,
+    };
     for (final activity in activities) {
-      final day = DateTime(
-        activity.createdAt.year,
-        activity.createdAt.month,
-        activity.createdAt.day,
-      );
-      if (buckets.containsKey(day)) {
-        buckets.update(day, (value) => value + 1);
+      final key = orgDayKeyFromUtc(orgTimezoneId, activity.createdAt);
+      if (buckets.containsKey(key)) {
+        buckets[key] = buckets[key]! + 1;
       }
     }
     return buckets;
+  }
+
+  /// Per-provider daily counts aligned with [dailyCounts] keys.
+  ///
+  /// Each provider's value on a day is the sum of matching activities from
+  /// every selected user, not a single-user slice.
+  Map<String, List<int>> trendProviderSeries([
+    String orgTimezoneId = kDefaultOrgTimezoneId,
+  ]) {
+    final days = orgCalendarDayKeysInclusive(
+      orgTimezoneId,
+      startDate,
+      endDate,
+    );
+    final dayIndex = {for (var i = 0; i < days.length; i++) days[i]: i};
+    final series = <String, List<int>>{};
+    for (final activity in activities) {
+      final day = orgDayKeyFromUtc(orgTimezoneId, activity.createdAt);
+      final index = dayIndex[day];
+      if (index == null) continue;
+      final counts = series.putIfAbsent(
+        activity.provider.name,
+        () => List<int>.filled(days.length, 0),
+      );
+      counts[index] += 1;
+    }
+    return series;
   }
 
   List<InsightsDetailRow> detailRows(Map<String, String> userNameById) {

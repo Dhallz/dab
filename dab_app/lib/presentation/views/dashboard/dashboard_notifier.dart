@@ -85,7 +85,7 @@ class DashboardNotifier extends AutoDisposeNotifier<DashboardState> {
     state = state.copyWith(status: ViewStatus.loading, errorMessage: null);
 
     final liveFuture = _activityUseCases.getLiveActivities.execute(
-      limit: 50,
+      limit: 150,
       includeArchived: true,
     );
     final followsFuture = _userUseCases.listMyActivityFollows.execute();

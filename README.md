@@ -5,7 +5,7 @@
 <h1 align="center">DAB (Dev Activity Board) ⚡</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache 2.0">
   <img src="https://img.shields.io/badge/Client-Flutter-02569B?logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/API-Dart-0175C2?logo=dart&logoColor=white" alt="Dart">
   <img src="https://img.shields.io/badge/Engine-Relic-orange" alt="Relic">
@@ -31,6 +31,14 @@ stack. Self-hosted. Read-only. Built so you can stay in flow.
 </p>
 
 ---
+
+<p align="center">
+  <img src="doc/screenshots/dashboard.png" alt="DAB Dashboard — Directed at you and Following">
+</p>
+
+<p align="center">
+  <em>Dashboard — Directed at you on the left, Following on the right. Mentions, tasks, and revisions in one place; DAB never writes back.</em>
+</p>
 
 ## 🌩️ Destroy the "Alt-Tab Tax"
 
@@ -151,6 +159,34 @@ infrastructure **Source**, a DTO `toActivities` mapping, and a
 
 ---
 
+## 🖥️ The board
+
+**Explorer** — One org-calendar day for a person or a group. Same Directory filters as Insights; not seven browser tabs.
+
+<p align="center">
+  <img src="doc/screenshots/explorer.png" alt="DAB Explorer">
+</p>
+
+**Insights** — Team KPIs and an activity trend. Select a group or several people and the chart is the sum of those users.
+
+<p align="center">
+  <img src="doc/screenshots/insights.png" alt="DAB Insights">
+</p>
+
+**Reports** — “What did I do today?” from real events. Curate lines, copy or download Markdown; locked after the Admin deadline.
+
+<p align="center">
+  <img src="doc/screenshots/reports.png" alt="DAB Reports">
+</p>
+
+**Admin** — Timezone, managed vs individual mode, report deadline, and users. Calendar days in Explorer, Insights, and the live feed follow this timezone.
+
+<p align="center">
+  <img src="doc/screenshots/admin-security.png" alt="DAB Admin System Security">
+</p>
+
+---
+
 ## 🏗️ Repository Architecture
 
 | Component | Tech Stack | Responsibility |
@@ -247,3 +283,16 @@ are built for those who value their focus above all else — a screen that still
 belongs to the IDE, and activity data that never leaves your infrastructure.
 
 **Stop searching. Start building.**
+
+---
+
+## License
+
+Copyright 2026 David L.
+
+DAB is licensed under the **Apache License 2.0**. See [LICENSE](./LICENSE)
+and [NOTICE](./NOTICE).
+
+Forks and derived works must keep the copyright notice and `NOTICE` so it
+stays clear that the software is based on DAB, originally created by
+David L.

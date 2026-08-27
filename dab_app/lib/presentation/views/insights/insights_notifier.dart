@@ -16,6 +16,7 @@ import '../../core/models/directory_type.dart';
 import '../../core/models/view_status.dart';
 import '../../core/provider_browse_filter.dart';
 import '../../features/app/app_notifier.dart';
+import '../../features/directory/directory_groups_notifier.dart';
 import '../../views/admin/models/provider_connection_status.dart';
 import 'insights_state.dart';
 import 'models/insights_date_preset.dart';
@@ -58,6 +59,13 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         unawaited(syncProviderFilters(next.configs, next.connections));
       },
     );
+    ref.listen(
+      directoryGroupsProvider,
+      (previous, next) {
+        if (state.groups == next) return;
+        state = state.copyWith(groups: next);
+      },
+    );
     return _seededState(InsightsState.initial());
   }
 
@@ -90,10 +98,18 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
       );
     });
 
-    groupsResult.fold(
-      (_) => null,
-      (groups) => nextState = nextState.copyWith(groups: groups),
-    );
+    final sharedGroups = ref.read(directoryGroupsProvider);
+    if (sharedGroups.isNotEmpty) {
+      nextState = nextState.copyWith(groups: sharedGroups);
+    } else {
+      groupsResult.fold(
+        (_) => null,
+        (groups) {
+          ref.read(directoryGroupsProvider.notifier).replaceAll(groups);
+          nextState = nextState.copyWith(groups: groups);
+        },
+      );
+    }
 
     providerResult.fold((_) => null, (configs) {
       final app = ref.read(appNotifierProvider);
@@ -220,6 +236,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         );
       },
       (savedGroup) {
+        ref.read(directoryGroupsProvider.notifier).upsert(savedGroup);
         state = state.copyWith(
           groups: [
             for (final item in state.groups)
@@ -240,6 +257,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
         );
       },
       (_) async {
+        ref.read(directoryGroupsProvider.notifier).remove(groupId);
         state = state.copyWith(
           groups: [for (final item in state.groups) if (item.id != groupId) item],
           selectedGroupIds: {...state.selectedGroupIds}..remove(groupId),
@@ -260,6 +278,7 @@ class InsightsNotifier extends AutoDisposeNotifier<InsightsState> {
       },
       (savedGroup) {
         final exists = state.groups.any((item) => item.id == savedGroup.id);
+        ref.read(directoryGroupsProvider.notifier).upsert(savedGroup);
         state = state.copyWith(
           groups: exists
               ? [

@@ -319,7 +319,7 @@ class ReportsNotifier extends AutoDisposeNotifier<ReportsState> {
     }
 
     final Either<AppFailure, List<Activity>>? liveResult = isToday
-        ? await _activityUseCases.getLiveActivities.execute(limit: 50)
+        ? await _activityUseCases.getLiveActivities.execute(limit: 150)
         : null;
     final Either<AppFailure, List<Activity>>? authoredResult =
         isToday && _userId != null

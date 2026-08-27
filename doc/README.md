@@ -18,6 +18,7 @@ only; they must not contradict these files.
 | [deployment.md](./deployment.md) | Local Compose and Railway |
 | [conventions.md](./conventions.md) | Naming, stack, testing |
 | [openapi.yaml](./openapi.yaml) | HTTP contract (aligned with `bruno/` and `dab_api` routes) |
+| [screenshots/](./screenshots) | Product shots used in the root README |
 
 ---
 

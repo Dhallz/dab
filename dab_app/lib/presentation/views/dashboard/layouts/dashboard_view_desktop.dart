@@ -18,7 +18,13 @@ class DashboardViewDesktop extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DashboardIslandBarContent(),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxxl,
+              vertical: 20,
+            ),
+            child: DashboardIslandBarContent(),
+          ),
           Expanded(
             child: DashboardLiveFeedScope(
               axis: Axis.horizontal,

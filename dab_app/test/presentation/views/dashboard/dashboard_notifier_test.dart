@@ -113,7 +113,7 @@ void main() {
   test('loads live activities on start', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -152,7 +152,7 @@ void main() {
     () async {
       when(
         () => repository.getLiveActivities(
-          limit: 50,
+          limit: 150,
           global: false,
           includeArchived: true,
         ),
@@ -216,7 +216,7 @@ void main() {
 
       verify(
         () => repository.getLiveActivities(
-          limit: 50,
+          limit: 150,
           global: false,
           includeArchived: true,
         ),
@@ -227,7 +227,7 @@ void main() {
   test('always hydrates the user-scoped inbound inbox', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -260,7 +260,7 @@ void main() {
     expect(state.activities.map((a) => a.id), ['bob-push']);
     verify(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -270,7 +270,7 @@ void main() {
   test('setFeedMode changes layout without refetching', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -305,7 +305,7 @@ void main() {
 
     verify(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -315,7 +315,7 @@ void main() {
   test('hydrates Follow pins and follow/unfollow updates local refs', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -401,7 +401,7 @@ void main() {
   test('follow is a no-op for git commits without a branch', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -447,7 +447,7 @@ void main() {
   test('followCandidate pins an issue from the Following picker', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -506,7 +506,7 @@ void main() {
   test('setFollowSearchQuery debounces candidate refresh', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),
@@ -548,7 +548,7 @@ void main() {
   test('shows a local banner when unfocused and skips when focused', () async {
     when(
       () => repository.getLiveActivities(
-        limit: 50,
+        limit: 150,
         global: false,
         includeArchived: true,
       ),

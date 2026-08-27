@@ -6,6 +6,9 @@
 
 ## General Principles
 
+- **License:** The repository is **Apache License 2.0**. Copyright 2026 David L.
+  See [`LICENSE`](../LICENSE) and [`NOTICE`](../NOTICE). Forks must retain both
+  so the DAB lineage stays visible.
 - **Conciseness over Redundancy:** If the folder name provides context, don't repeat it in the file or class name.  
   `lib/domain/entities/user.dart` → class `User`, not `UserEntity`.
 - **Modern Dart:** Use Dart 3 features — `sealed` classes, `switch` expressions, `abstract interface` classes, pattern matching.

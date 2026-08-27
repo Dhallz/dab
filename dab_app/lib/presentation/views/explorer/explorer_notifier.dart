@@ -17,6 +17,7 @@ import '../../core/models/directory_type.dart';
 import '../../core/models/view_status.dart';
 import '../../core/provider_browse_filter.dart';
 import '../../features/app/app_notifier.dart';
+import '../../features/directory/directory_groups_notifier.dart';
 import '../../views/admin/models/provider_connection_status.dart';
 import 'explorer_state.dart';
 import 'models/explorer_date_mode.dart';
@@ -68,6 +69,13 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         unawaited(syncProviderFilters(next.configs, next.connections));
       },
     );
+    ref.listen(
+      directoryGroupsProvider,
+      (previous, next) {
+        if (state.groups == next) return;
+        state = state.copyWith(groups: next);
+      },
+    );
     return _seededState(ExplorerState.initial());
   }
 
@@ -103,10 +111,18 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         selectedUserIds: {for (final u in users) u.id},
       ),
     );
-    groupsResult.fold(
-      (l) => null,
-      (groups) => newState = newState.copyWith(groups: groups),
-    );
+    final sharedGroups = ref.read(directoryGroupsProvider);
+    if (sharedGroups.isNotEmpty) {
+      newState = newState.copyWith(groups: sharedGroups);
+    } else {
+      groupsResult.fold(
+        (l) => null,
+        (groups) {
+          ref.read(directoryGroupsProvider.notifier).replaceAll(groups);
+          newState = newState.copyWith(groups: groups);
+        },
+      );
+    }
     providerResult.fold((failure) => null, (configs) {
       final app = ref.read(appNotifierProvider);
       newState = _applyProviderConfigFilters(
@@ -492,6 +508,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         final updatedGroups = state.groups
             .map((g) => g.id == savedGroup.id ? savedGroup : g)
             .toList();
+        ref.read(directoryGroupsProvider.notifier).upsert(savedGroup);
         state = state.copyWith(
           groups: updatedGroups,
           status: ViewStatus.success,
@@ -513,6 +530,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
         final updatedGroups = state.groups
             .where((g) => g.id != groupId)
             .toList();
+        ref.read(directoryGroupsProvider.notifier).remove(groupId);
         final updatedSelectedGroups = Set<String>.from(state.selectedGroupIds)
           ..remove(groupId);
         state = state.copyWith(
@@ -702,6 +720,7 @@ class ExplorerNotifier extends AutoDisposeNotifier<ExplorerState> {
                   .map((g) => g.id == savedGroup.id ? savedGroup : g)
                   .toList()
             : [...state.groups, savedGroup];
+        ref.read(directoryGroupsProvider.notifier).upsert(savedGroup);
         state = state.copyWith(
           groups: updatedGroups,
           status: ViewStatus.success,

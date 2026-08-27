@@ -289,7 +289,7 @@ paths:
         is accepted by the API but unused by the app.
 
         **Query Parameters**:
-        - `limit` (optional, 1..100): Max events. Default: 50.
+        - `limit` (optional, 1..250): Max events. Default: 50.
         - `scope` (optional): `user` (default) or `global`.
         - `includeArchived` (optional): `true` / `1` to include archived rows. Default: omitted (hidden).
 
@@ -2279,6 +2279,11 @@ paths:
         Enabled when `DAB_ENABLE_MOCK=true` or `APP_ENV=development`.
         Omit `date` to seed the organization calendar today (required for
         Dashboard UTC-day visibility). Omit `userId` to seed the caller.
+        Set `team: true` to create/reuse 20 named teammates with varied
+        titles and cross-user directed rows (Insights / Explorer), plus
+        shared Directory groups (Engineering, Product, Design, Leadership).
+        The caller's day is a dense Dashboard inbox (all providers, extra cards).
+        `userIds` seeds existing accounts instead of the roster.
       security:
         - bearerAuth: []
       requestBody:
@@ -2293,10 +2298,22 @@ paths:
                   description: Org-calendar day `YYYY-MM-DD`. Empty or omitted seeds today.
                 userId:
                   type: string
-                  description: Target user id. Empty or omitted seeds the caller.
+                  description: Target user id for a single seed. Empty or omitted seeds the caller.
+                team:
+                  type: boolean
+                  description: Create or reuse the 20-person demo roster and seed everyone.
+                teamSize:
+                  type: integer
+                  description: Roster size when team is true (2–40, default 20).
+                userIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Existing user ids to seed instead of the roster.
             example:
-              date: '2026-08-24'
-              userId: '11111111-1111-1111-1111-111111111111'
+              date: ''
+              team: true
+              teamSize: 20
       responses:
         '200':
           description: Demo day seeded

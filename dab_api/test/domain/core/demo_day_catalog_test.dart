@@ -86,10 +86,109 @@ void main() {
       createdAt: createdAt,
     );
 
-    expect(first.map((activity) => activity.id), second.map((activity) => activity.id));
+    expect(
+      first.map((activity) => activity.id),
+      second.map((activity) => activity.id),
+    );
     expect(
       first.map((activity) => activity.inboxLane),
       containsAll([ActivityInboxLane.directed, ActivityInboxLane.follow]),
+    );
+  });
+
+  test('variant shifts issue keys so teammates are not clones', () {
+    final first = buildDemoDayActivities(
+      user: user,
+      date: '2026-08-24',
+      providerIds: const {'jira'},
+      createdAt: createdAt,
+      variant: 0,
+    );
+    final second = buildDemoDayActivities(
+      user: user,
+      date: '2026-08-24',
+      providerIds: const {'jira'},
+      createdAt: createdAt,
+      variant: 1,
+    );
+
+    expect(first.map((activity) => activity.title), contains('[DAB-42] Fix login'));
+    expect(second.map((activity) => activity.title), contains('[DAB-43] Ship schema'));
+  });
+
+  test('dense catalog is a full inbox, not a teammate slice', () {
+    final peer = TestData.user(
+      id: 'u-peer',
+      name: 'Rio Patel',
+      email: 'rio@acme.com',
+    );
+    final thin = buildDemoDayActivities(
+      user: user,
+      date: '2026-08-24',
+      providerIds: const {},
+      createdAt: createdAt,
+      teammates: [user, peer],
+    );
+    final packed = buildDemoDayActivities(
+      user: user,
+      date: '2026-08-24',
+      providerIds: const {},
+      createdAt: createdAt,
+      teammates: [user, peer],
+      dense: true,
+    );
+
+    expect(packed.length, greaterThan(thin.length * 2));
+    expect(packed.length, greaterThan(40));
+    expect(
+      packed.where((activity) => activity.isFollowLane).length,
+      greaterThan(10),
+    );
+  });
+
+  test('handles come from the display name, not the email local-part', () {
+    final personal = TestData.user(
+      id: 'u-demo',
+      name: 'Alex Rivera',
+      email: 'dhawud@acme.com',
+    );
+    final activities = buildDemoDayActivities(
+      user: personal,
+      date: '2026-08-24',
+      providerIds: const {'slack'},
+      createdAt: createdAt,
+    );
+
+    expect(
+      activities.map((activity) => activity.title),
+      contains('[#eng] @alex can you take the login flake?'),
+    );
+    expect(
+      activities.every((activity) {
+        final blob = '${activity.title} ${activity.authorName}'.toLowerCase();
+        return !blob.contains('dhawud');
+      }),
+      isTrue,
+    );
+  });
+
+  test('teammates become senderUserId on inbound and Follow rows', () {
+    final peer = TestData.user(
+      id: 'u-peer',
+      name: 'Rio Patel',
+      email: 'rio@acme.com',
+    );
+    final activities = buildDemoDayActivities(
+      user: user,
+      date: '2026-08-24',
+      providerIds: const {'slack', 'jira'},
+      createdAt: createdAt,
+      teammates: [user, peer],
+    );
+
+    expect(
+      activities.any((activity) => activity.senderUserId == peer.id),
+      isTrue,
     );
   });
 

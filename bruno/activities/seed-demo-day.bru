@@ -10,14 +10,22 @@ docs {
   the Explorer search slice (`demo:search:{userId}:{date}`).
 
   Gated by `DAB_ENABLE_MOCK=true` or `APP_ENV=development`. JWT required.
+  Restart the API after pulling so this route exists.
 
   **Request Body** (all optional):
   - `date`: Org-calendar `YYYY-MM-DD`. Omit to seed **today** (required for Dashboard UTC-day visibility).
-  - `userId`: Target user. Omit to seed the authenticated caller.
+  - `userId`: Target user for a **single** seed. Omit to seed the authenticated caller.
+  - `team`: `true` creates/reuses 20 named demo teammates (plus the caller) with
+    varied titles and cross-user directed rows for Explorer / Insights.
+    Also seeds shared Directory groups (Engineering, Product, Design, Leadership).
+  - `teamSize`: 2–40 when `team` is true (default 20).
+  - `userIds`: Existing user ids to seed instead of the roster (caller is included).
 
   **Response** `data`:
-  - `activityCount`, `followCount`, `reportLineCount`
-  - `dashboardVisible`: `true` when `date` is org-today (live inbox will show the rows)
+  - `activityCount`, `followCount`, `reportLineCount`, `userCount`, `createdUserCount`, `groupCount`
+  - `userIds`: seeded accounts
+  - `userIds`: seeded accounts
+  - `dashboardVisible`: `true` when `date` is org-today
   - `providers`: ingest ids that were seeded
 }
 
@@ -30,7 +38,8 @@ post {
 body:json {
   {
     "date": "",
-    "userId": "{{targetUserId}}"
+    "team": true,
+    "teamSize": 20
   }
 }
 
@@ -43,5 +52,6 @@ tests {
     expect(res.body.meta.dataType).to.equal("object:demo_day");
     expect(res.body.data.activityCount).to.be.above(0);
     expect(res.body.data.reportLineCount).to.be.above(0);
+    expect(res.body.data.userCount).to.be.at.least(20);
   });
 }

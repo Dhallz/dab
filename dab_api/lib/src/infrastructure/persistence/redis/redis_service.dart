@@ -143,11 +143,11 @@ class RedisService implements AbsILiveFeedStore {
     bool global = false,
     bool includeArchived = false,
   }) async {
-    final normalizedLimit = limit.clamp(1, 100);
+    final normalizedLimit = limit.clamp(1, 250);
     final startOfTodayUtc = await liveFeedStartOfTodayUtc();
     final key = global ? 'activities:global' : 'activities:user:$userId';
     // Over-read so filtering by `archived` / date can still fill up to the limit.
-    final fetchSize = includeArchived ? normalizedLimit : 100;
+    final fetchSize = includeArchived ? normalizedLimit : (normalizedLimit * 2).clamp(1, 250);
     final raw = await _cmd.send_object(['LRANGE', key, 0, fetchSize - 1]);
 
     if (raw is! List) return const [];

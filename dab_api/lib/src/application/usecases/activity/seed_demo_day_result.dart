@@ -8,6 +8,10 @@ class SeedDemoDayResult {
   final int reportLineCount;
   final bool dashboardVisible;
   final List<String> providers;
+  final int userCount;
+  final int createdUserCount;
+  final List<String> userIds;
+  final int groupCount;
 
   const SeedDemoDayResult({
     required this.date,
@@ -17,6 +21,10 @@ class SeedDemoDayResult {
     required this.reportLineCount,
     required this.dashboardVisible,
     required this.providers,
+    this.userCount = 1,
+    this.createdUserCount = 0,
+    this.userIds = const [],
+    this.groupCount = 0,
   });
 
   Map<String, dynamic> toMap() => {
@@ -27,5 +35,9 @@ class SeedDemoDayResult {
     'reportLineCount': reportLineCount,
     'dashboardVisible': dashboardVisible,
     'providers': providers,
+    'userCount': userCount,
+    'createdUserCount': createdUserCount,
+    'userIds': userIds.isEmpty ? [userId] : userIds,
+    'groupCount': groupCount,
   };
 }

@@ -571,6 +571,7 @@ Future<void> serviceLocator() async {
       demoStore: sl<AbsIDemoActivityStore>(),
       follows: sl<AbsIActivityFollowRepository>(),
       reports: sl<AbsIDailyReportRepository>(),
+      directory: sl<IUserRepository>(),
       isEnabled: () => sl<Config>().enableMock,
       livePublisher: sl<ActivityLivePublisher>(),
     ),
@@ -736,7 +737,13 @@ Future<void> serviceLocator() async {
       allowedDomain: sl<Config>().allowedDomain,
     ),
   );
-  sl.registerSingleton<GetUsers>(GetUsers(sl<IUserRepository>()));
+  sl.registerSingleton<GetUsers>(
+    GetUsers(
+      sl<IUserRepository>(),
+      configs: sl<AbsIProviderConfigRepository>(),
+      isDemoMode: () => sl<Config>().enableMock,
+    ),
+  );
   sl.registerSingleton<GetUserById>(GetUserById(sl<IUserRepository>()));
   sl.registerSingleton<GetUsersByGroup>(GetUsersByGroup(sl<IUserRepository>()));
   sl.registerSingleton<ListUserProviderCredentials>(

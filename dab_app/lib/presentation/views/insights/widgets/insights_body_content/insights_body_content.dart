@@ -6,6 +6,7 @@ import '../../../../core/models/view_status.dart';
 import '../../../../core/styles/app_icons.dart';
 import '../../../../core/styles/app_spacing.dart';
 import '../../../../core/widgets/view_toolbar.dart';
+import '../../../../features/app/app_notifier.dart';
 import '../../insights_notifier.dart';
 import '../../insights_state.dart';
 import '../insights_breakdown_charts/insights_breakdown_charts.dart';
@@ -26,8 +27,13 @@ class InsightsBodyContent extends ConsumerWidget {
           errorMessage: s.errorMessage,
           activities: s.activities,
           users: s.users,
+          startDate: s.startDate,
+          endDate: s.endDate,
         ),
       ),
+    );
+    final orgTimezoneId = ref.watch(
+      appNotifierProvider.select((s) => s.orgTimezoneId),
     );
     final state = ref.read(insightsNotifierProvider);
     if (state.status == ViewStatus.initial ||
@@ -62,7 +68,7 @@ class InsightsBodyContent extends ConsumerWidget {
         children: [
           InsightsKpiGrid(state: state),
           const SizedBox(height: AppSpacing.m),
-          InsightsTrendChart(state: state),
+          InsightsTrendChart(state: state, orgTimezoneId: orgTimezoneId),
           const SizedBox(height: AppSpacing.m),
           InsightsBreakdownCharts(state: state, userNameById: userNames),
           const SizedBox(height: AppSpacing.m),
