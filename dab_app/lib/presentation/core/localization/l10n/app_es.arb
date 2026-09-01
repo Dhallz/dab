@@ -267,7 +267,7 @@
   "dashboardLastSync": "Últ. sync {time}",
   "authErrorFailed": "Auth failed",
   "appBrandShortName": "DAB",
-  "appWindowTitle": "DAB App",
+  "appWindowTitle": "Dev Activity Board",
   "dashboardRelativeDaysAgo": "{n}d ago",
   "dashboardRelativeHoursAgo": "{n}h ago",
   "dashboardRelativeMinutesAgo": "{n}m ago",

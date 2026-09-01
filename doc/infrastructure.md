@@ -220,12 +220,15 @@ Dev `docker-compose.yml` exposes the Dart VM service on host port **9181** with
 `http://127.0.0.1:9181/`. The API source tree is bind-mounted into the container
 so breakpoints in `dab_api/` resolve correctly.
 
-In VS Code / Cursor (workspace `.vscode/launch.json`):
+In VS Code / Cursor (workspace `.vscode/launch.json` — tracked; install the **Dart** and **Flutter** extensions so `"type": "dart"` validates):
 
 | Configuration | Use |
 |---|---|
 | **DAB API (Docker + Attach)** | Starts `docker compose` (db, redis, api), waits for `/health` and the VM port, then attaches the debugger (`vmServiceUri` → port 9181). |
-| **DAB App (Debug)** | Start the Flutter client yourself when ready (separate debug session). |
+| **DAB API** | Starts Postgres + Redis only, then launches `bin/dab_api.dart` on the host. |
+| **DAB App (Debug)** | Flutter client on the host (`DAB_API_BASE=http://localhost:9080`). Separate VM from the API. |
+| **DAB Stack (Docker API + App)** | Compound: Docker attach + Flutter. Waits for API health before the app starts. |
+| **DAB Stack (local API + App)** | Compound: host API + Flutter (db/redis still via Compose). |
 
 Compose `environment:` overrides `.env` for service hostnames (e.g. `REDIS_HOST=redis`).
 The app defaults to `http://localhost:9080` and `ws://localhost:9080/ws`

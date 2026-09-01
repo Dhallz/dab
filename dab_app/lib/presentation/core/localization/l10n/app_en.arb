@@ -1328,9 +1328,9 @@
   "@appBrandShortName": {
     "description": "appBrandShortName: DAB"
   },
-  "appWindowTitle": "DAB App",
+  "appWindowTitle": "Dev Activity Board",
   "@appWindowTitle": {
-    "description": "appWindowTitle: DAB App"
+    "description": "appWindowTitle: Dev Activity Board"
   },
   "dashboardRelativeDaysAgo": "{n}d ago",
   "@dashboardRelativeDaysAgo": {

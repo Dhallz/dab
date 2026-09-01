@@ -1025,7 +1025,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appBrandShortName => 'DAB';
 
   @override
-  String get appWindowTitle => 'DAB App';
+  String get appWindowTitle => 'Dev Activity Board';
 
   @override
   String dashboardRelativeDaysAgo(Object n) {

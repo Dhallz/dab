@@ -1982,10 +1982,10 @@ abstract class AppLocalizations {
   /// **'DAB'**
   String get appBrandShortName;
 
-  /// appWindowTitle: DAB App
+  /// appWindowTitle: Dev Activity Board
   ///
   /// In en, this message translates to:
-  /// **'DAB App'**
+  /// **'Dev Activity Board'**
   String get appWindowTitle;
 
   /// dashboardRelativeDaysAgo: {n}d ago

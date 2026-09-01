@@ -33,7 +33,7 @@ stack. Self-hosted. Read-only. Built so you can stay in flow.
 ---
 
 <p align="center">
-  <img src="doc/screenshots/dashboard.png" alt="DAB Dashboard — Directed at you and Following">
+  <img src="doc/screenshots/dab-cover.png" alt="DAB Dashboard — Directed at you and Following">
 </p>
 
 <p align="center">
