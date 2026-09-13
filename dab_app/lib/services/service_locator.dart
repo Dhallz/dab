@@ -8,6 +8,7 @@ import '../domain/containers/presence_usecases.dart';
 import '../domain/containers/system_usecases.dart';
 import '../domain/containers/user_usecases.dart';
 import '../domain/repositories/abs_i_user_repository.dart';
+import '../infrastructure/core/local/api_origin_storage.dart';
 import '../infrastructure/core/local/flutter_inbox_local_notification.dart';
 import '../infrastructure/core/local/objectbox_store.dart';
 import '../infrastructure/core/local/token_storage.dart';
@@ -24,6 +25,7 @@ import '../infrastructure/datasources/presence_remote_data_source.dart';
 import '../infrastructure/datasources/provider_config_remote_data_source.dart';
 import '../infrastructure/datasources/system_local_data_source.dart';
 import '../infrastructure/repositories/activity_repository.dart';
+import '../infrastructure/repositories/api_origin_repository.dart';
 import '../infrastructure/repositories/auth_repository.dart';
 import '../infrastructure/repositories/monitoring_repository.dart';
 import '../infrastructure/repositories/presence_repository.dart';
@@ -42,8 +44,10 @@ class ServiceLocator {
 
   // Infrastructure
   late final RestApiClient restApiClient;
+  late final WebSocketClient webSocketClient;
   late final ObjectBoxStore objectBoxStore;
   late final TokenStorage tokenStorage;
+  late final ApiOriginStorage apiOriginStorage;
   late final AuthInterceptor authInterceptor;
   late final FlutterSecureStorage secureStorage;
   late final AppRouter appRouter;
@@ -70,8 +74,11 @@ class ServiceLocator {
   /// Initializes all dependencies. Must be called at app boot.
   Future<void> init() async {
     // 1. Core Infrastructure
-    restApiClient = RestApiClient(baseUrl: ApiBaseUrl.fromEnvironment);
     tokenStorage = TokenStorage();
+    apiOriginStorage = ApiOriginStorage();
+    final storedOrigin = await apiOriginStorage.read();
+    final origin = storedOrigin ?? ApiBaseUrl.fromEnvironment;
+    restApiClient = RestApiClient(baseUrl: origin);
     authInterceptor = AuthInterceptor(tokenStorage);
     restApiClient.addInterceptor(authInterceptor);
 
@@ -94,7 +101,24 @@ class ServiceLocator {
       authLocalDataSource,
       tokenStorage,
     );
-    authUseCases = AuthUseCases(authRepository, monitoringRepository);
+    webSocketClient = WebSocketClient(
+      ApiBaseUrl.webSocket(origin),
+      tokenProvider: () async {
+        final tokens = await tokenStorage.readTokens();
+        return tokens?['accessToken'];
+      },
+    );
+    final apiOriginRepository = ApiOriginRepository(
+      apiOriginStorage,
+      restApiClient,
+      webSocketClient,
+      tokenStorage,
+    );
+    authUseCases = AuthUseCases(
+      authRepository,
+      monitoringRepository,
+      apiOriginRepository,
+    );
 
     authInterceptor.onRefreshToken = () async {
       final result = await authRepository.refreshToken();
@@ -107,16 +131,9 @@ class ServiceLocator {
     systemUseCases = SystemUseCases(systemRepository);
 
     // 5. Activity Context
-    final wsClient = WebSocketClient(
-      ApiBaseUrl.webSocket(),
-      tokenProvider: () async {
-        final tokens = await tokenStorage.readTokens();
-        return tokens?['accessToken'];
-      },
-    );
     final activityRemoteDataSource = ActivityRemoteDataSource(
       restApiClient,
-      wsClient,
+      webSocketClient,
     );
     final activityLocalDataSource = ActivityLocalDataSource(objectBoxStore);
     activityRepository = ActivityRepository(
@@ -132,7 +149,7 @@ class ServiceLocator {
     );
 
     // 6. Presence Context
-    final presenceRemoteDataSource = PresenceRemoteDataSource(wsClient);
+    final presenceRemoteDataSource = PresenceRemoteDataSource(webSocketClient);
     presenceRepository = PresenceRepository(presenceRemoteDataSource);
     presenceUseCases = PresenceUseCases(presenceRepository);
 

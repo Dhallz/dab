@@ -1,7 +1,8 @@
 /// [ARCH: INFRASTRUCTURE]
 /// ROLE: REST origin for the DAB API, overridable with `--dart-define=DAB_API_BASE`.
 /// CONTRACT: Default is local Docker (`http://localhost:9080`). HTTPS bases
-/// map to `wss://…/ws`.
+/// map to `wss://…/ws`. Runtime origin is persisted via `ApiOriginStorage`
+/// and applied before login; this compile-time value is the fallback.
 class ApiBaseUrl {
   /// Compile-time origin. Omit the define when talking to local Compose.
   static const fromEnvironment = String.fromEnvironment(

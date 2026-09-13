@@ -232,7 +232,8 @@ In VS Code / Cursor (workspace `.vscode/launch.json` — tracked; install the **
 
 Compose `environment:` overrides `.env` for service hostnames (e.g. `REDIS_HOST=redis`).
 The app defaults to `http://localhost:9080` and `ws://localhost:9080/ws`
-(`ApiBaseUrl` / `--dart-define=DAB_API_BASE`). See [deployment.md](./deployment.md).
+(`ApiBaseUrl` / `--dart-define=DAB_API_BASE`, overridable on the login **API URL**
+field). See [deployment.md](./deployment.md).
 
 ---
 

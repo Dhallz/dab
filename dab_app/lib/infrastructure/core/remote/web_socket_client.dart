@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:web_socket_channel/io.dart';
 
 class WebSocketClient {
-  final String url;
+  String _url;
   final Future<String?> Function()? tokenProvider;
   IOWebSocketChannel? _channel;
   final _controller = StreamController<dynamic>.broadcast();
@@ -13,7 +13,16 @@ class WebSocketClient {
   bool _isConnecting = false;
   bool _manualDisconnect = false;
 
-  WebSocketClient(this.url, {this.tokenProvider});
+  WebSocketClient(String url, {this.tokenProvider}) : _url = url;
+
+  String get url => _url;
+
+  /// Disconnects if the origin changed so the next [connect] uses [url].
+  void setUrl(String url) {
+    if (url == _url) return;
+    disconnect();
+    _url = url;
+  }
 
   Stream<dynamic> get stream => _controller.stream;
 
@@ -33,7 +42,7 @@ class WebSocketClient {
       }
 
       final socket = await WebSocket.connect(
-        url,
+        _url,
         headers: headers.isEmpty ? null : headers,
       );
       final channel = IOWebSocketChannel(socket);

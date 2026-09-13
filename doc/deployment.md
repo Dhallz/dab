@@ -6,7 +6,9 @@
 > Redis `AUTH` runs only when a password is present.
 
 The Flutter client defaults to local Compose. Point it at a hosted API with
-`--dart-define=DAB_API_BASE=https://<host>`.
+`--dart-define=DAB_API_BASE=https://<host>` (compile-time default) **or** type
+that URL in the auth form **API URL** field. The last successful origin is
+stored on device and reused on the next launch.
 
 ---
 
@@ -87,7 +89,8 @@ cd dab_app
 flutter run --dart-define=DAB_API_BASE=https://<your-service>.up.railway.app
 ```
 
-That sets REST to HTTPS and the live socket to `wss://<host>/ws`.
+That sets REST to HTTPS and the live socket to `wss://<host>/ws`. A downloaded
+client can instead paste the same URL into the login **API URL** field.
 
 ---
 

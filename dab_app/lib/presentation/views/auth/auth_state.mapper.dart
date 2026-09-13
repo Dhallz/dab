@@ -63,6 +63,13 @@ class AuthStateMapper extends ClassMapperBase<AuthState> {
     opt: true,
     def: '',
   );
+  static String _$apiBase(AuthState v) => v.apiBase;
+  static const Field<AuthState, String> _f$apiBase = Field(
+    'apiBase',
+    _$apiBase,
+    opt: true,
+    def: '',
+  );
   static bool _$isRegister(AuthState v) => v.isRegister;
   static const Field<AuthState, bool> _f$isRegister = Field(
     'isRegister',
@@ -78,6 +85,7 @@ class AuthStateMapper extends ClassMapperBase<AuthState> {
     #email: _f$email,
     #password: _f$password,
     #name: _f$name,
+    #apiBase: _f$apiBase,
     #isRegister: _f$isRegister,
   };
 
@@ -89,6 +97,7 @@ class AuthStateMapper extends ClassMapperBase<AuthState> {
       email: data.dec(_f$email),
       password: data.dec(_f$password),
       name: data.dec(_f$name),
+      apiBase: data.dec(_f$apiBase),
     );
   }
 
@@ -158,6 +167,7 @@ abstract class AuthStateCopyWith<$R, $In extends AuthState, $Out>
     String? email,
     String? password,
     String? name,
+    String? apiBase,
   });
   AuthStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -178,6 +188,7 @@ class _AuthStateCopyWithImpl<$R, $Out>
     String? email,
     String? password,
     String? name,
+    String? apiBase,
   }) => $apply(
     FieldCopyWithData({
       if (status != null) #status: status,
@@ -186,6 +197,7 @@ class _AuthStateCopyWithImpl<$R, $Out>
       if (email != null) #email: email,
       if (password != null) #password: password,
       if (name != null) #name: name,
+      if (apiBase != null) #apiBase: apiBase,
     }),
   );
   @override
@@ -196,6 +208,7 @@ class _AuthStateCopyWithImpl<$R, $Out>
     email: data.get(#email, or: $value.email),
     password: data.get(#password, or: $value.password),
     name: data.get(#name, or: $value.name),
+    apiBase: data.get(#apiBase, or: $value.apiBase),
   );
 
   @override

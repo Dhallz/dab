@@ -451,6 +451,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get authHintEmail => 'you@company.com';
 
   @override
+  String get authLabelApiUrl => 'API-URL';
+
+  @override
+  String get authHintApiUrl => 'https://dab.example.com';
+
+  @override
   String get authLabelPassword => 'Password';
 
   @override

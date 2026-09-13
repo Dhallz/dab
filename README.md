@@ -244,11 +244,9 @@ cd dab_app
 flutter pub get && flutter run
 ```
 
-The client defaults to `http://localhost:9080`. Point it at a hosted API with:
-
-```bash
-flutter run --dart-define=DAB_API_BASE=https://<your-api>
-```
+The client defaults to `http://localhost:9080`. A hosted API can be set with
+`--dart-define=DAB_API_BASE=https://<your-api>` or typed in the login **API URL**
+field (the last value is remembered).
 
 Open the app → register the first user (that account is admin) → **Settings →
 Connect** a provider you already use. Directed events show up on the Dashboard

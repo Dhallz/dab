@@ -956,6 +956,18 @@ abstract class AppLocalizations {
   /// **'you@company.com'**
   String get authHintEmail;
 
+  /// Label for the DAB API origin on the auth form.
+  ///
+  /// In en, this message translates to:
+  /// **'API URL'**
+  String get authLabelApiUrl;
+
+  /// Placeholder for the DAB API origin field.
+  ///
+  /// In en, this message translates to:
+  /// **'https://dab.example.com'**
+  String get authHintApiUrl;
+
   /// authLabelPassword: Password
   ///
   /// In en, this message translates to:

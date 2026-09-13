@@ -8,6 +8,8 @@ class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
   final TextInputType? keyboardType;
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   const AuthTextField({
     super.key,
@@ -18,6 +20,8 @@ class AuthTextField extends StatelessWidget {
     this.obscureText = false,
     this.onChanged,
     this.keyboardType,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
   });
 
   @override
@@ -35,16 +39,22 @@ class AuthTextField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          onChanged: onChanged,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          style: TextStyle(color: scheme.onSurface),
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: scheme.onSurfaceVariant, size: 20),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        Semantics(
+          label: label,
+          textField: true,
+          child: TextField(
+            controller: controller,
+            onChanged: onChanged,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            autocorrect: autocorrect,
+            enableSuggestions: enableSuggestions,
+            style: TextStyle(color: scheme.onSurface),
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: Icon(icon, color: scheme.onSurfaceVariant, size: 20),
+              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            ),
           ),
         ),
       ],

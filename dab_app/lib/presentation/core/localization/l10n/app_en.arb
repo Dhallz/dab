@@ -593,6 +593,14 @@
   "@authHintEmail": {
     "description": "authHintEmail: you@company.com"
   },
+  "authLabelApiUrl": "API URL",
+  "@authLabelApiUrl": {
+    "description": "Label for the DAB API origin on the auth form."
+  },
+  "authHintApiUrl": "https://dab.example.com",
+  "@authHintApiUrl": {
+    "description": "Placeholder for the DAB API origin field."
+  },
   "authLabelPassword": "Password",
   "@authLabelPassword": {
     "description": "authLabelPassword: Password"

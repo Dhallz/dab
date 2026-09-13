@@ -13,6 +13,7 @@ class AuthState with AuthStateMappable {
   final String email;
   final String password;
   final String name;
+  final String apiBase;
 
   const AuthState({
     this.status = ViewStatus.initial,
@@ -21,6 +22,7 @@ class AuthState with AuthStateMappable {
     this.email = '',
     this.password = '',
     this.name = '',
+    this.apiBase = '',
   });
 
   bool get isRegister => !isLogin;

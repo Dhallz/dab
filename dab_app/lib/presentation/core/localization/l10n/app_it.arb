@@ -121,6 +121,8 @@
   "authHintName": "Nome e cognome",
   "authLabelEmail": "Email",
   "authHintEmail": "tu@azienda.it",
+  "authLabelApiUrl": "URL API",
+  "authHintApiUrl": "https://dab.example.com",
   "authLabelPassword": "Password",
   "authSignIn": "Accedi",
   "authRegister": "Registrati",

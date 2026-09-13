@@ -10,6 +10,7 @@ class AuthForm extends StatefulWidget {
   final ValueChanged<String> onEmailChanged;
   final ValueChanged<String> onPasswordChanged;
   final ValueChanged<String> onNameChanged;
+  final ValueChanged<String> onApiBaseChanged;
   final VoidCallback onSubmitted;
   final VoidCallback onModeToggled;
 
@@ -23,6 +24,7 @@ class AuthForm extends StatefulWidget {
     required this.onEmailChanged,
     required this.onPasswordChanged,
     required this.onNameChanged,
+    required this.onApiBaseChanged,
     required this.onSubmitted,
     required this.onModeToggled,
     this.isSystemConfigured = true,
@@ -36,6 +38,7 @@ class _AuthFormState extends State<AuthForm> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   late final TextEditingController _nameController;
+  late final TextEditingController _apiBaseController;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _AuthFormState extends State<AuthForm> {
     _emailController = TextEditingController(text: widget.state.email);
     _passwordController = TextEditingController(text: widget.state.password);
     _nameController = TextEditingController(text: widget.state.name);
+    _apiBaseController = TextEditingController(text: widget.state.apiBase);
   }
 
   @override
@@ -57,6 +61,9 @@ class _AuthFormState extends State<AuthForm> {
     if (widget.state.name != _nameController.text) {
       _nameController.text = widget.state.name;
     }
+    if (widget.state.apiBase != _apiBaseController.text) {
+      _apiBaseController.text = widget.state.apiBase;
+    }
   }
 
   @override
@@ -64,6 +71,7 @@ class _AuthFormState extends State<AuthForm> {
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
+    _apiBaseController.dispose();
     super.dispose();
   }
 
@@ -111,6 +119,17 @@ class _AuthFormState extends State<AuthForm> {
           ],
         ),
         const SizedBox(height: 24),
+        AuthTextField(
+          label: l10n.authLabelApiUrl,
+          hint: l10n.authHintApiUrl,
+          icon: AppIcons.providers,
+          controller: _apiBaseController,
+          onChanged: widget.onApiBaseChanged,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          enableSuggestions: false,
+        ),
+        const SizedBox(height: 16),
         if (!widget.state.isLogin) ...[
           AuthTextField(
             label: l10n.authLabelName,

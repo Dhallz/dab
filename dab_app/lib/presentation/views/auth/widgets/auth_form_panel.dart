@@ -48,8 +48,10 @@ class _AuthFormPanelState extends ConsumerState<AuthFormPanel> {
           ref.read(authFormNotifierProvider.notifier).setPassword(v),
       onNameChanged: (v) =>
           ref.read(authFormNotifierProvider.notifier).setName(v),
+      onApiBaseChanged: (v) =>
+          ref.read(authFormNotifierProvider.notifier).setApiBase(v),
       onSubmitted: () =>
-          ref.read(authFormNotifierProvider.notifier).submit(ref),
+          ref.read(authFormNotifierProvider.notifier).submit(),
       onModeToggled: () =>
           ref.read(authFormNotifierProvider.notifier).toggleMode(),
     );

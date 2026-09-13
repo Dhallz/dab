@@ -4,9 +4,8 @@ import 'vegas_interceptor.dart';
 
 class RestApiClient {
   final Dio dio;
-  final String baseUrl;
 
-  RestApiClient({required this.baseUrl, Dio? dio})
+  RestApiClient({required String baseUrl, Dio? dio})
     : dio =
           dio ??
           Dio(
@@ -18,6 +17,14 @@ class RestApiClient {
             ),
           ) {
     this.dio.interceptors.add(VegasInterceptor());
+  }
+
+  /// Current REST origin (mirrors Dio `BaseOptions.baseUrl`).
+  String get baseUrl => dio.options.baseUrl;
+
+  /// Retargets subsequent REST calls at [origin].
+  void setBaseUrl(String origin) {
+    dio.options.baseUrl = origin;
   }
 
   void addInterceptor(Interceptor interceptor) {
