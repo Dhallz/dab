@@ -1,0 +1,69 @@
+meta {
+  name: 04 Webhook Endpoints
+  type: http
+  seq: 4
+}
+
+docs {
+  Computes provider **webhook endpoint URLs** from `publicApiUrl` (set in step 02).
+
+  Run after **02 Save System Settings** so `publicApiUrl` points at the host
+  external providers can reach (ngrok, staging, etc.) — not necessarily `baseUrl`.
+
+  Sets collection/environment vars:
+  - `githubWebhookUrl`, `slackWebhookUrl`, `gitlabWebhookUrl`, `bitbucketWebhookUrl`
+  - `jiraWebhookUrl`, `linearWebhookUrl`, `phorgeWebhookUrl`, `figmaWebhookUrl`
+
+  **Discord** has no HTTP webhook — ingest uses the Gateway bot connection.
+
+  Paste these URLs into GitHub / Slack / GitLab / etc. when configuring webhooks.
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+script:post-response {
+  const trimBase = (url) => (url || "").toString().replace(/\/+$/, "");
+  const base =
+    trimBase(bru.getEnvVar("publicApiUrl")) ||
+    trimBase(bru.getVar("publicApiUrl")) ||
+    trimBase(bru.getEnvVar("baseUrl")) ||
+    trimBase(bru.getVar("baseUrl"));
+
+  const endpoints = [
+    ["github", "/integrations/github/webhook"],
+    ["slack", "/integrations/slack/events"],
+    ["gitlab", "/integrations/gitlab/webhook"],
+    ["bitbucket", "/integrations/bitbucket/webhook"],
+    ["jira", "/integrations/jira/webhook"],
+    ["linear", "/integrations/linear/webhook"],
+    ["phorge", "/integrations/phorge/webhook"],
+    ["figma", "/integrations/figma/webhook"],
+  ];
+
+  console.log("=== DAB webhook endpoints (public_api_url base) ===");
+  console.log("Base:", base);
+  for (const [providerId, path] of endpoints) {
+    const webhookUrl = base + path;
+    const varName = providerId + "WebhookUrl";
+    bru.setEnvVar(varName, webhookUrl);
+    bru.setVar(varName, webhookUrl);
+    console.log(providerId + ":", webhookUrl);
+  }
+  console.log("discord: (no HTTP webhook — Gateway bot ingest)");
+  console.log("===================================================");
+}
+
+tests {
+  test("Health check OK", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Webhook URL vars set", function() {
+    const githubUrl = bru.getVar("githubWebhookUrl");
+    expect(githubUrl, "githubWebhookUrl").to.be.a("string").and.not.empty;
+    expect(githubUrl).to.include("/integrations/github/webhook");
+  });
+}

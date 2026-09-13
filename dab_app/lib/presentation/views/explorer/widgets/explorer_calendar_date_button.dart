@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+/// [ARCH: PRESENTATION_WIDGET]
+/// ROLE: Individual date button in the calendar selector.
+class ExplorerCalendarDateButton extends StatefulWidget {
+  final DateTime date;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool compact;
+
+  const ExplorerCalendarDateButton({
+    super.key,
+    required this.date,
+    required this.isSelected,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  @override
+  State<ExplorerCalendarDateButton> createState() =>
+      _ExplorerCalendarDateButtonState();
+}
+
+class _ExplorerCalendarDateButtonState
+    extends State<ExplorerCalendarDateButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isWeekend =
+        widget.date.weekday == DateTime.saturday ||
+        widget.date.weekday == DateTime.sunday;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: widget.compact ? 52 : 70,
+          padding: EdgeInsets.symmetric(
+            vertical: widget.compact
+                ? (widget.isSelected ? 6 : 4)
+                : (widget.isSelected ? 8 : 6),
+          ),
+          decoration: BoxDecoration(
+            color: _isHovered && !widget.isSelected
+                ? cs.onSurface.withValues(alpha: 0.06)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                DateFormat('E').format(widget.date).toUpperCase(),
+                style: TextStyle(
+                  fontSize: widget.compact ? 8 : 10,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isSelected
+                      ? cs.primary
+                      : isWeekend
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.45)
+                      : cs.onSurfaceVariant.withValues(alpha: 0.75),
+                ),
+              ),
+              SizedBox(height: widget.compact ? 2 : 4),
+              Text(
+                DateFormat('d').format(widget.date),
+                style: TextStyle(
+                  fontSize: widget.compact ? 14 : 18,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isSelected
+                      ? cs.primary
+                      : isWeekend
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.8)
+                      : cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

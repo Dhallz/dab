@@ -1,0 +1,28 @@
+meta {
+  name: Save My Linear Teams
+  type: http
+  seq: 12
+}
+
+docs {
+  Replaces instance Linear `teamKeys` with the keys the caller can still see.
+  Body: `{ "teamKeys": ["ENG", "OPS"] }`.
+}
+
+put {
+  url: {{baseUrl}}/users/me/credentials/linear/projects
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "teamKeys": ["ENG"]
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

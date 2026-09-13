@@ -1,0 +1,43 @@
+meta {
+  name: Get System Settings
+  type: http
+  seq: 1
+}
+
+docs {
+  Administrative endpoint to retrieve system configuration settings.
+
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
+  | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+  | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used to compose provider webhook endpoints in Admin |
+  | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+  | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are normalized on read. |
+  | `daily_report_lock_offset_days` | `system_settings` | `value` where `key = 'daily_report_lock_offset_days'` | Days after the report date when the edit cutoff applies (0–7, default `1`) |
+  | `daily_report_lock_time` | `system_settings` | `value` where `key = 'daily_report_lock_time'` | Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`) |
+}
+
+get {
+  url: {{baseUrl}}/admin/system-settings
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns system settings object", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("allowed_domain_enabled");
+    expect(res.body.data).to.have.property("allowed_domain");
+    expect(res.body.data).to.have.property("public_api_url");
+    expect(res.body.data).to.have.property("system_timezone");
+    expect(res.body.data).to.have.property("deployment_mode");
+    expect(res.body.data).to.have.property("daily_report_lock_offset_days");
+    expect(res.body.data).to.have.property("daily_report_lock_time");
+  });
+}

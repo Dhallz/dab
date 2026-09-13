@@ -1,0 +1,97 @@
+meta {
+  name: Jira Webhook
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/integrations/jira/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Webhook-Secret: {{jiraWebhookSecret}}
+}
+
+body:json {
+  {
+    "webhookEvent": "jira:issue_updated",
+    "issue": {
+      "id": "10001",
+      "key": "DAB-42",
+      "fields": {
+        "summary": "Example issue from webhook",
+        "status": {
+          "name": "In Progress"
+        },
+        "updated": "2026-03-01T15:30:00.000+0000",
+        "assignee": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Dev User",
+          "emailAddress": "dev@example.com"
+        }
+      }
+    },
+    "user": {
+      "accountId": "5b10ac8d82e05b22cc7d4ef5",
+      "displayName": "Dev User"
+    }
+  }
+}
+
+vars:pre-request {
+  jiraWebhookSecret: IK03ObbihqmifhOPpsox
+}
+
+script:pre-request {
+  // Request Pre Request vars (vars:pre-request / UI tab) are only visible via
+  // bru.getRequestVar — bru.getVar does not see them during this script phase.
+  const webhookSecret =
+    bru.getEnvVar("jiraWebhookSecret") ||
+    bru.getEnvVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getRequestVar("jiraWebhookSecret") ||
+    bru.getRequestVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getCollectionVar("jiraWebhookSecret") ||
+    bru.getVar("jiraWebhookSecret") ||
+    bru.getVar("JIRA_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing Jira webhook secret. Set jiraWebhookSecret in the active " +
+        "environment (local-secrets.bru), this request's Pre Request vars, or " +
+        "collection vars. Must match Admin → Jira → webhookSecret.",
+    );
+  }
+  
+  req.setHeader("X-Webhook-Secret", webhookSecret);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("jiraWebhookSecret", webhookSecret);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Jira Cloud webhook delivery to `POST /integrations/jira/webhook`.
+  
+  Jira admin-registered webhooks carry no HMAC signature, so the endpoint is
+  secured with a shared secret sent via the `X-Webhook-Secret` header or a
+  `?secret=` query parameter. Set `webhookSecret` on the Jira provider config
+  to match.
+  
+  Supported events: `jira:issue_created`, `jira:issue_updated`,
+  `comment_created`, `comment_updated`.
+  
+  Secret resolution order (pre-request script):
+  1. Environment `jiraWebhookSecret` / `JIRA_WEBHOOK_SECRET` (recommended: `local-secrets.bru`)
+  2. Request Pre Request var `jiraWebhookSecret` (`bru.getRequestVar`)
+  3. Collection var `jiraWebhookSecret`
+  
+  For Jira Cloud admin webhooks, append `?secret=<webhookSecret>` to the URL
+  (Jira cannot send `X-Webhook-Secret`).
+}

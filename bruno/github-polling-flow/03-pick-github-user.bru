@@ -1,0 +1,64 @@
+meta {
+  name: 3. Pick GitHub User
+  type: http
+  seq: 3
+}
+
+docs {
+  Selects a DAB user with a **linked** GitHub identity (`provider_id: github`).
+  Sets `targetUserId` and `githubLogin` for `/activities/search`.
+
+  GitHub commit polling attributes activities by matching commit `author.login`
+  to `user_identities.external_id`.
+}
+
+get {
+  url: {{baseUrl}}/admin/identities
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status !== 200 || !Array.isArray(res.body.data)) {
+    return;
+  }
+
+  const linkedGithub = res.body.data.find(
+    (i) =>
+      (i.providerId || "").toLowerCase() === "github" &&
+      (i.status || "").toLowerCase() === "linked" &&
+      (i.externalId || "").trim().length > 0,
+  );
+
+  if (!linkedGithub) {
+    console.error(
+      "No linked GitHub identity found. Link a user in Admin → Identities.",
+    );
+    return;
+  }
+
+  bru.setEnvVar("targetUserId", linkedGithub.userId);
+  bru.setVar("targetUserId", linkedGithub.userId);
+  bru.setVar("githubLogin", linkedGithub.externalId);
+  console.log(
+    "Selected user " +
+      linkedGithub.userId +
+      " githubLogin=" +
+      linkedGithub.externalId,
+  );
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Linked GitHub identity exists", function() {
+    const linked = (res.body.data || []).find(
+      (i) =>
+        (i.providerId || "").toLowerCase() === "github" &&
+        (i.status || "").toLowerCase() === "linked",
+    );
+    expect(linked, "linked github identity").to.exist;
+    expect(linked.externalId, "github login").to.be.a("string").and.not.empty;
+  });
+}

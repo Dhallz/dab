@@ -1,0 +1,64 @@
+meta {
+  name: 02 Save System Settings
+  type: http
+  seq: 2
+}
+
+docs {
+  Restores system settings after a DB reset.
+
+  **Important:** `public_api_url` is used by Admin to compose webhook URLs shown in the Providers tab.
+  Set it to the URL external providers can reach (e.g. ngrok or your dev host), not necessarily `baseUrl`.
+
+  Environment vars:
+  - `publicApiUrl`
+  - `systemTimezone`
+  - `allowedDomainEnabled` (`true` / `false`)
+  - `allowedDomain`
+}
+
+put {
+  url: {{baseUrl}}/admin/system-settings
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "public_api_url": "{{publicApiUrl}}",
+    "system_timezone": "{{systemTimezone}}",
+    "allowed_domain_enabled": "{{allowedDomainEnabled}}",
+    "allowed_domain": "{{allowedDomain}}"
+  }
+}
+
+script:post-response {
+  const trimBase = (url) => (url || "").toString().replace(/\/+$/, "");
+  const base = trimBase(bru.getEnvVar("publicApiUrl") || bru.getVar("publicApiUrl"));
+  if (!base) return;
+
+  const endpoints = [
+    ["github", "/integrations/github/webhook"],
+    ["slack", "/integrations/slack/events"],
+    ["gitlab", "/integrations/gitlab/webhook"],
+    ["bitbucket", "/integrations/bitbucket/webhook"],
+    ["jira", "/integrations/jira/webhook"],
+    ["linear", "/integrations/linear/webhook"],
+    ["phorge", "/integrations/phorge/webhook"],
+  ];
+
+  for (const [providerId, path] of endpoints) {
+    const varName = providerId + "WebhookUrl";
+    bru.setEnvVar(varName, base + path);
+    bru.setVar(varName, base + path);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Confirms success", function() {
+    expect(res.body.success).to.equal(true);
+  });
+}

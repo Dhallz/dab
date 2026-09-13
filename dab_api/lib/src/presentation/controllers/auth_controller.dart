@@ -2,41 +2,48 @@ import 'dart:convert';
 
 import 'package:relic/relic.dart';
 
-import '../../services/auth_service.dart';
+import '../../application/containers/auth_usecases.dart';
+import '../../domain/core/failures/failure.dart';
+import '../../service_locator.dart';
 
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Controller for Authentication and Identity Management.
+/// CONTRACT: Maps HTTP requests for registration and login to [AuthUseCases].
+/// CONSTRAINTS: Handles JSON parsing and Failure-to-HTTP mapping. Strictly no business logic.
 class AuthController {
-  final AuthService _authService = AuthService();
-
+  final AuthUseCases _auth = sl<AuthUseCases>();
   Future<Response> register(Request request) async {
     final body = await request.readAsString();
     final data = jsonDecode(body);
 
+    final name = data['name'] as String?;
     final email = data['email'] as String?;
     final password = data['password'] as String?;
 
-    if (email == null || password == null) {
+    if (name == null || email == null || password == null) {
       return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Email and password are required'}),
+          jsonEncode({'error': 'Name, email and password are required'}),
           mimeType: MimeType.json,
         ),
       );
     }
 
-    final user = await _authService.register(email, password);
-    if (user == null) {
-      return Response.badRequest(
-        body: Body.fromString(
-          jsonEncode({'error': 'User already exists'}),
-          mimeType: MimeType.json,
-        ),
-      );
-    }
+    final result = await _auth.registerNewUser.execute(name, email, password);
 
-    return Response.ok(
-      body: Body.fromString(
-        jsonEncode({'message': 'User registered successfully', 'id': user.id}),
-        mimeType: MimeType.json,
+    return result.match(
+      (failure) {
+        final body = Body.fromString(
+          jsonEncode({'error': failure.message, 'details': failure.toMap()}),
+          mimeType: MimeType.json,
+        );
+        if (failure is BootstrapLockFailure) {
+          return Response.forbidden(body: body);
+        }
+        return Response.badRequest(body: body);
+      },
+      (tokens) => Response.ok(
+        body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
       ),
     );
   }
@@ -57,18 +64,52 @@ class AuthController {
       );
     }
 
-    final tokens = await _authService.login(email, password);
-    if (tokens == null) {
-      return Response.unauthorized(
+    final result = await _auth.authenticateUser.execute(email, password);
+
+    return result.match(
+      (failure) {
+        final body = Body.fromString(
+          jsonEncode({'error': failure.message, 'details': failure.toMap()}),
+          mimeType: MimeType.json,
+        );
+        if (failure is BootstrapLockFailure) {
+          return Response.forbidden(body: body);
+        }
+        return Response.unauthorized(body: body);
+      },
+      (tokens) => Response.ok(
+        body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
+      ),
+    );
+  }
+
+  Future<Response> refresh(Request request) async {
+    final body = await request.readAsString();
+    final data = jsonDecode(body);
+
+    final refreshToken = data['refreshToken'] as String?;
+
+    if (refreshToken == null) {
+      return Response.badRequest(
         body: Body.fromString(
-          jsonEncode({'error': 'Invalid credentials'}),
+          jsonEncode({'error': 'Refresh token is required'}),
           mimeType: MimeType.json,
         ),
       );
     }
 
-    return Response.ok(
-      body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
+    final result = await _auth.refreshToken.execute(refreshToken);
+
+    return result.match(
+      (failure) => Response.unauthorized(
+        body: Body.fromString(
+          jsonEncode({'error': failure.message, 'details': failure.toMap()}),
+          mimeType: MimeType.json,
+        ),
+      ),
+      (tokens) => Response.ok(
+        body: Body.fromString(jsonEncode(tokens), mimeType: MimeType.json),
+      ),
     );
   }
 }

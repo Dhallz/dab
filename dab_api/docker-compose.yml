@@ -7,30 +7,64 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dab_api_db
     ports:
-      - "5433:5432"
+      - "${DB_PUBLIC_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "${REDIS_PUBLIC_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
 
   api:
     container_name: relic
     build:
       context: .
       target: build
+    env_file: .env
+    # dart run / dartdev resolve the package from cwd; bind mounts + sh -c can
+    # leave the process without a valid getcwd() unless this is explicit.
+    working_dir: /app
     ports:
-      - "8081:8081"
-      - "8181:8181"
+      - "${API_PUBLIC_PORT:-9080}:${PORT:-8080}"
+      - "${DART_VM_PUBLIC_PORT:-9181}:8181"
     volumes:
+      # Bind-mount so IDE breakpoints match files on disk (dev only).
       - .:/app
-      - /app/.dart_tool
-    command: sh -c "dart pub get && dart run --enable-vm-service=8181/0.0.0.0 bin/dab_api.dart"
+    command: >-
+      sh -c "dart pub get &&
+      dart run --enable-vm-service=8181/0.0.0.0 --disable-service-auth-codes
+      bin/dab_api.dart"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=user
       - DB_PASS=password
       - DB_NAME=dab_api_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=dev_secret_key_for_dab
+      # Self-signed / internal-CA Phorge in dev (see phorge_tls_overrides.dart)
+      - PHORGE_TLS_INSECURE=true
     depends_on:
       - db
+      - redis
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    container_name: swagger
+    ports:
+      - "${SWAGGER_PUBLIC_PORT:-9081}:8080"
+    volumes:
+      - ../doc/openapi.yaml:/usr/share/nginx/html/openapi.yaml
+    environment:
+      - API_URL=openapi.yaml
+    depends_on:
+      - api
 
 volumes:
   pgdata:
+  redisdata:

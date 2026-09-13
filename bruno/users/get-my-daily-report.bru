@@ -1,0 +1,31 @@
+meta {
+  name: Get My Daily Report
+  type: http
+  seq: 20
+}
+
+docs {
+  Loads the caller's personal daily report for an org-calendar day
+  (`YYYY-MM-DD`). Missing reports return 200 with empty `lines`, not 404.
+  Notes stay in DAB and are never posted to providers.
+  Requires a signed-in user.
+}
+
+get {
+  url: {{baseUrl}}/users/me/day-reports/2026-08-22
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  test("Returns a daily report envelope when successful", function() {
+    if (res.status !== 200) return;
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.have.property("date");
+    expect(res.body.data).to.have.property("lines");
+    expect(res.body.data.lines).to.be.an("array");
+  });
+}

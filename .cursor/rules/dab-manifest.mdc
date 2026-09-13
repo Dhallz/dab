@@ -1,0 +1,47 @@
+---
+description: Main entry point for DAB project agent rules (hierarchy index)
+alwaysApply: true
+---
+
+# DAB Project — Rule Manifest
+
+This is the primary entry point for AI agent rules in the DAB repository. Rules are organized into modular files; **Cursor loads** the copies in `.cursor/rules/*.mdc`. The canonical editable sources remain in `.agents/rules/` (kept in sync by convention).
+
+## Rule hierarchy
+
+### 1. Global project rules
+
+These apply to all packages and establish core architectural and behavioral standards.
+
+- **Global**: `dab-global.mdc` (source: `.agents/rules/global.md`) — Clean Architecture, tech stack (Dart/Flutter), agent behavior.
+
+### 2. Pattern rules
+
+Detailed patterns when writing specific kinds of code (both packages).
+
+- **Functional programming**: `dab-functional-programming.mdc` — `Either`, `fpdart`, `AppFailure`, `guardedCall`; never throw as control flow.
+- **Data classes**: `dab-data-classes.mdc` — entities, `dart_mappable`, immutability, sealed classes, `build_runner`.
+- **Views**: `dab-views.mdc` — view hierarchy, Riverpod notifiers/states, layouts, naming.
+- **Extensions**: `dab-extensions.mdc` — naming and placement of Dart extensions.
+
+### 3. Maintenance rules
+
+Keep supporting artifacts in sync with code changes.
+
+- **Documentation**: `dab-doc-maintenance.mdc` — updating `doc/*.md`.
+- **Bruno**: `dab-bruno-maintenance.mdc` — updating the `bruno/` API collection.
+- **Commits**: `dab-commit.mdc` (source: `.agents/rules/commit.md`) — commits only when the user explicitly asks; one commit per request; issue-key subjects when applicable; no AI/tool attribution in messages.
+- **Project management**: `dab-project-manager.mdc` (source: `.agents/rules/project-manager.md`) — PO/PM boundaries, Linear ticket hygiene, and delivery gatekeeping.
+
+### 4. Package-specific rules
+
+- **DAB API**: `dab-api-package.mdc` (source: `dab_api/.agents/rules.md`) — Relic, Drift, server patterns.
+- **DAB App**: `dab-app-package.mdc` (source: `dab_app/.agents/rules.md`) — Riverpod, go_router, ObjectBox, custom `ServiceLocator`.
+
+### 5. Workflows (opt-in / manual)
+
+- **Planning (`@plan`)**: `dab-plan.mdc`
+- **Implementation (`@code`)**: `dab-code.mdc`
+- **Scaffold view**: `dab-workflow-sc-view.mdc`
+
+> **Tip:** Read **dab-global** first, then package supplements. If something conflicts, follow global rules and call out the deviation.

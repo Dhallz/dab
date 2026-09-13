@@ -1,0 +1,55 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+docs {
+  Authenticates a user and returns a JWT pair (`accessToken` and `refreshToken`).
+  The tokens are automatically saved to the active environment upon a successful 200 OK response.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `email` | `users` | `email` | Lookup identifier |
+  | `password` | `users` | `password_hash` | Validated against stored hash |
+  | `token` (res) | `sessions` | `id` | Session record entry |
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.accessToken) {
+    // Set both Environment and Collection variables for maximum reliability
+    bru.setEnvVar("accessToken", res.body.accessToken);
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+    
+    bru.setVar("accessToken", res.body.accessToken);
+    bru.setVar("refreshToken", res.body.refreshToken);
+    
+    console.log("Tokens captured successfully in both Environment and Collection variables.");
+  } else {
+    console.error("Login failed. Status: " + res.status);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns tokens", function() {
+    expect(res.body).to.have.property("accessToken");
+    expect(res.body).to.have.property("refreshToken");
+  });
+}

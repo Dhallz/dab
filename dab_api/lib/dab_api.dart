@@ -3,9 +3,7 @@
 /// More dartdocs go here.
 library;
 
-export 'src/infrastructure/config/config.dart';
-export 'src/infrastructure/database/database_client.dart';
-export 'src/infrastructure/database/database_migrator.dart';
-export 'src/services/auth_service.dart';
-export 'src/services/logging_service.dart';
-export 'src/services/push_notification_service.dart';
+export 'src/infrastructure/core/config/config.dart';
+export 'src/infrastructure/persistence/postgres/postgres_client.dart';
+export 'src/infrastructure/persistence/repositories/activity_repository.dart';
+export 'src/infrastructure/persistence/repositories/auth_repository.dart';

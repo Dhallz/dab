@@ -1,0 +1,28 @@
+meta {
+  name: Get Provider Metadata
+  type: http
+  seq: 3
+}
+
+docs {
+  Retrieves metadata for configured providers (e.g., Phorge projects, repository tags).
+  This is used to populate filters and categories in the UI.
+  
+  ### Database Mapping
+  | Action | Source | Logic |
+  | :--- | :--- | :--- |
+  | READ | `provider_configs` | Fetches active providers |
+  | CACHE | Redis | Merged with provider-specific cached metadata |
+}
+
+get {
+  url: {{baseUrl}}/metadata/providers
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,87 @@
+meta {
+  name: Jira Webhook Comment
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/integrations/jira/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Webhook-Secret: {{jiraWebhookSecret}}
+}
+
+body:json {
+  {
+    "webhookEvent": "comment_created",
+    "timestamp": 1719741600000,
+    "comment": {
+      "id": "10050",
+      "body": "Can you take a look at this?",
+      "created": "2026-03-01T15:35:00.000+0000",
+      "author": {
+        "accountId": "5b10ac8d82e05b22cc7d4ef5",
+        "displayName": "Dev User"
+      }
+    },
+    "issue": {
+      "id": "10001",
+      "key": "DAB-42",
+      "self": "https://acme.atlassian.net/rest/api/2/issue/10001",
+      "fields": {
+        "summary": "Example issue from webhook",
+        "status": {
+          "name": "In Progress"
+        },
+        "project": {
+          "key": "DAB"
+        },
+        "assignee": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Dev User"
+        }
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const webhookSecret =
+    bru.getEnvVar("jiraWebhookSecret") ||
+    bru.getEnvVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getRequestVar("jiraWebhookSecret") ||
+    bru.getRequestVar("JIRA_WEBHOOK_SECRET") ||
+    bru.getCollectionVar("jiraWebhookSecret") ||
+    bru.getVar("jiraWebhookSecret") ||
+    bru.getVar("JIRA_WEBHOOK_SECRET");
+  
+  if (!webhookSecret) {
+    throw new Error(
+      "Missing Jira webhook secret. Set jiraWebhookSecret in the active " +
+        "environment (local-secrets.bru), this request's Pre Request vars, or " +
+        "collection vars. Must match Admin → Jira → webhookSecret.",
+    );
+  }
+  
+  req.setHeader("X-Webhook-Secret", webhookSecret);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("jiraWebhookSecret", webhookSecret);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Jira Cloud `comment_created` webhook to `POST /integrations/jira/webhook`.
+
+  Same shared-secret auth as the issue webhook. The comment is ingested as its
+  own live activity (Dashboard notify) grouped in Explorer by `DAB-42`.
+  Unmapped comment authors fall back to the linked issue assignee.
+}

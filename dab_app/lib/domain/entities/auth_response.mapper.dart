@@ -31,17 +31,44 @@ class AuthResponseMapper extends ClassMapperBase<AuthResponse> {
     'refreshToken',
     _$refreshToken,
   );
+  static String _$userId(AuthResponse v) => v.userId;
+  static const Field<AuthResponse, String> _f$userId = Field(
+    'userId',
+    _$userId,
+  );
+  static String _$name(AuthResponse v) => v.name;
+  static const Field<AuthResponse, String> _f$name = Field('name', _$name);
+  static String _$email(AuthResponse v) => v.email;
+  static const Field<AuthResponse, String> _f$email = Field('email', _$email);
+  static String _$role(AuthResponse v) => v.role;
+  static const Field<AuthResponse, String> _f$role = Field('role', _$role);
+  static String? _$avatarUrl(AuthResponse v) => v.avatarUrl;
+  static const Field<AuthResponse, String> _f$avatarUrl = Field(
+    'avatarUrl',
+    _$avatarUrl,
+    opt: true,
+  );
 
   @override
   final MappableFields<AuthResponse> fields = const {
     #accessToken: _f$accessToken,
     #refreshToken: _f$refreshToken,
+    #userId: _f$userId,
+    #name: _f$name,
+    #email: _f$email,
+    #role: _f$role,
+    #avatarUrl: _f$avatarUrl,
   };
 
   static AuthResponse _instantiate(DecodingData data) {
     return AuthResponse(
       accessToken: data.dec(_f$accessToken),
       refreshToken: data.dec(_f$refreshToken),
+      userId: data.dec(_f$userId),
+      name: data.dec(_f$name),
+      email: data.dec(_f$email),
+      role: data.dec(_f$role),
+      avatarUrl: data.dec(_f$avatarUrl),
     );
   }
 
@@ -107,7 +134,15 @@ extension AuthResponseValueCopy<$R, $Out>
 
 abstract class AuthResponseCopyWith<$R, $In extends AuthResponse, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({String? accessToken, String? refreshToken});
+  $R call({
+    String? accessToken,
+    String? refreshToken,
+    String? userId,
+    String? name,
+    String? email,
+    String? role,
+    String? avatarUrl,
+  });
   AuthResponseCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -120,16 +155,34 @@ class _AuthResponseCopyWithImpl<$R, $Out>
   late final ClassMapperBase<AuthResponse> $mapper =
       AuthResponseMapper.ensureInitialized();
   @override
-  $R call({String? accessToken, String? refreshToken}) => $apply(
+  $R call({
+    String? accessToken,
+    String? refreshToken,
+    String? userId,
+    String? name,
+    String? email,
+    String? role,
+    Object? avatarUrl = $none,
+  }) => $apply(
     FieldCopyWithData({
       if (accessToken != null) #accessToken: accessToken,
       if (refreshToken != null) #refreshToken: refreshToken,
+      if (userId != null) #userId: userId,
+      if (name != null) #name: name,
+      if (email != null) #email: email,
+      if (role != null) #role: role,
+      if (avatarUrl != $none) #avatarUrl: avatarUrl,
     }),
   );
   @override
   AuthResponse $make(CopyWithData data) => AuthResponse(
     accessToken: data.get(#accessToken, or: $value.accessToken),
     refreshToken: data.get(#refreshToken, or: $value.refreshToken),
+    userId: data.get(#userId, or: $value.userId),
+    name: data.get(#name, or: $value.name),
+    email: data.get(#email, or: $value.email),
+    role: data.get(#role, or: $value.role),
+    avatarUrl: data.get(#avatarUrl, or: $value.avatarUrl),
   );
 
   @override

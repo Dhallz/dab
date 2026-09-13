@@ -1,0 +1,30 @@
+meta {
+  name: Save My GitHub Watches
+  type: http
+  seq: 14
+}
+
+docs {
+  Replaces personal GitHub inbox watches on the caller's credential.
+  Body: `{ "repos": ["acme/app"], "branches": ["main"] }`. Empty `repos`
+  means no git inbox. Empty `branches` means all branches on selected repos.
+}
+
+put {
+  url: {{baseUrl}}/users/me/credentials/github/projects
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "repos": ["acme/app"],
+    "branches": []
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

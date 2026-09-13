@@ -1,0 +1,28 @@
+meta {
+  name: Delete My Device Token
+  type: http
+  seq: 19
+}
+
+docs {
+  Removes an FCM/APNs device token for the caller.
+  Body: `{ "token": "fcm-or-apns-token" }`.
+}
+
+delete {
+  url: {{baseUrl}}/users/me/device-tokens
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "token": "example-device-token"
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

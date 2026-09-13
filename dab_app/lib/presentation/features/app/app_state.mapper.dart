@@ -14,7 +14,10 @@ class AppStateMapper extends ClassMapperBase<AppState> {
   static AppStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = AppStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       AppSettingsMapper.ensureInitialized();
+      ProviderConfigMapper.ensureInitialized();
+      ProviderConnectionStatusMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -22,6 +25,13 @@ class AppStateMapper extends ClassMapperBase<AppState> {
   @override
   final String id = 'AppState';
 
+  static ViewStatus _$status(AppState v) => v.status;
+  static const Field<AppState, ViewStatus> _f$status = Field(
+    'status',
+    _$status,
+    opt: true,
+    def: ViewStatus.initial,
+  );
   static AppSettings _$settings(AppState v) => v.settings;
   static const Field<AppState, AppSettings> _f$settings = Field(
     'settings',
@@ -29,24 +39,100 @@ class AppStateMapper extends ClassMapperBase<AppState> {
     opt: true,
     def: const AppSettings(),
   );
-  static bool _$isLoading(AppState v) => v.isLoading;
-  static const Field<AppState, bool> _f$isLoading = Field(
-    'isLoading',
-    _$isLoading,
+  static List<ProviderConfig> _$configs(AppState v) => v.configs;
+  static const Field<AppState, List<ProviderConfig>> _f$configs = Field(
+    'configs',
+    _$configs,
+    opt: true,
+    def: const [],
+  );
+  static bool _$isSystemConfigured(AppState v) => v.isSystemConfigured;
+  static const Field<AppState, bool> _f$isSystemConfigured = Field(
+    'isSystemConfigured',
+    _$isSystemConfigured,
     opt: true,
     def: false,
+  );
+  static String _$orgTimezoneId(AppState v) => v.orgTimezoneId;
+  static const Field<AppState, String> _f$orgTimezoneId = Field(
+    'orgTimezoneId',
+    _$orgTimezoneId,
+    opt: true,
+    def: kDefaultOrgTimezoneId,
+  );
+  static int _$unresolvedIdentityCount(AppState v) => v.unresolvedIdentityCount;
+  static const Field<AppState, int> _f$unresolvedIdentityCount = Field(
+    'unresolvedIdentityCount',
+    _$unresolvedIdentityCount,
+    opt: true,
+    def: 0,
+  );
+  static Map<String, ProviderConnectionStatus> _$providerConnectionStatuses(
+    AppState v,
+  ) => v.providerConnectionStatuses;
+  static const Field<AppState, Map<String, ProviderConnectionStatus>>
+  _f$providerConnectionStatuses = Field(
+    'providerConnectionStatuses',
+    _$providerConnectionStatuses,
+    opt: true,
+    def: const {},
+  );
+  static String _$deploymentMode(AppState v) => v.deploymentMode;
+  static const Field<AppState, String> _f$deploymentMode = Field(
+    'deploymentMode',
+    _$deploymentMode,
+    opt: true,
+    def: kDeploymentModeManaged,
+  );
+  static int _$dailyReportLockOffsetDays(AppState v) =>
+      v.dailyReportLockOffsetDays;
+  static const Field<AppState, int> _f$dailyReportLockOffsetDays = Field(
+    'dailyReportLockOffsetDays',
+    _$dailyReportLockOffsetDays,
+    opt: true,
+    def: kDefaultDailyReportLockOffsetDays,
+  );
+  static String _$dailyReportLockTime(AppState v) => v.dailyReportLockTime;
+  static const Field<AppState, String> _f$dailyReportLockTime = Field(
+    'dailyReportLockTime',
+    _$dailyReportLockTime,
+    opt: true,
+    def: kDefaultDailyReportLockTime,
+  );
+  static bool _$isIndividualDeployment(AppState v) => v.isIndividualDeployment;
+  static const Field<AppState, bool> _f$isIndividualDeployment = Field(
+    'isIndividualDeployment',
+    _$isIndividualDeployment,
+    mode: FieldMode.member,
   );
 
   @override
   final MappableFields<AppState> fields = const {
+    #status: _f$status,
     #settings: _f$settings,
-    #isLoading: _f$isLoading,
+    #configs: _f$configs,
+    #isSystemConfigured: _f$isSystemConfigured,
+    #orgTimezoneId: _f$orgTimezoneId,
+    #unresolvedIdentityCount: _f$unresolvedIdentityCount,
+    #providerConnectionStatuses: _f$providerConnectionStatuses,
+    #deploymentMode: _f$deploymentMode,
+    #dailyReportLockOffsetDays: _f$dailyReportLockOffsetDays,
+    #dailyReportLockTime: _f$dailyReportLockTime,
+    #isIndividualDeployment: _f$isIndividualDeployment,
   };
 
   static AppState _instantiate(DecodingData data) {
     return AppState(
+      status: data.dec(_f$status),
       settings: data.dec(_f$settings),
-      isLoading: data.dec(_f$isLoading),
+      configs: data.dec(_f$configs),
+      isSystemConfigured: data.dec(_f$isSystemConfigured),
+      orgTimezoneId: data.dec(_f$orgTimezoneId),
+      unresolvedIdentityCount: data.dec(_f$unresolvedIdentityCount),
+      providerConnectionStatuses: data.dec(_f$providerConnectionStatuses),
+      deploymentMode: data.dec(_f$deploymentMode),
+      dailyReportLockOffsetDays: data.dec(_f$dailyReportLockOffsetDays),
+      dailyReportLockTime: data.dec(_f$dailyReportLockTime),
     );
   }
 
@@ -108,7 +194,35 @@ extension AppStateValueCopy<$R, $Out> on ObjectCopyWith<$R, AppState, $Out> {
 abstract class AppStateCopyWith<$R, $In extends AppState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings;
-  $R call({AppSettings? settings, bool? isLoading});
+  ListCopyWith<
+    $R,
+    ProviderConfig,
+    ProviderConfigCopyWith<$R, ProviderConfig, ProviderConfig>
+  >
+  get configs;
+  MapCopyWith<
+    $R,
+    String,
+    ProviderConnectionStatus,
+    ProviderConnectionStatusCopyWith<
+      $R,
+      ProviderConnectionStatus,
+      ProviderConnectionStatus
+    >
+  >
+  get providerConnectionStatuses;
+  $R call({
+    ViewStatus? status,
+    AppSettings? settings,
+    List<ProviderConfig>? configs,
+    bool? isSystemConfigured,
+    String? orgTimezoneId,
+    int? unresolvedIdentityCount,
+    Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
+    String? deploymentMode,
+    int? dailyReportLockOffsetDays,
+    String? dailyReportLockTime,
+  });
   AppStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -124,16 +238,89 @@ class _AppStateCopyWithImpl<$R, $Out>
   AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings =>
       $value.settings.copyWith.$chain((v) => call(settings: v));
   @override
-  $R call({AppSettings? settings, bool? isLoading}) => $apply(
+  ListCopyWith<
+    $R,
+    ProviderConfig,
+    ProviderConfigCopyWith<$R, ProviderConfig, ProviderConfig>
+  >
+  get configs => ListCopyWith(
+    $value.configs,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(configs: v),
+  );
+  @override
+  MapCopyWith<
+    $R,
+    String,
+    ProviderConnectionStatus,
+    ProviderConnectionStatusCopyWith<
+      $R,
+      ProviderConnectionStatus,
+      ProviderConnectionStatus
+    >
+  >
+  get providerConnectionStatuses => MapCopyWith(
+    $value.providerConnectionStatuses,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(providerConnectionStatuses: v),
+  );
+  @override
+  $R call({
+    ViewStatus? status,
+    AppSettings? settings,
+    List<ProviderConfig>? configs,
+    bool? isSystemConfigured,
+    String? orgTimezoneId,
+    int? unresolvedIdentityCount,
+    Map<String, ProviderConnectionStatus>? providerConnectionStatuses,
+    String? deploymentMode,
+    int? dailyReportLockOffsetDays,
+    String? dailyReportLockTime,
+  }) => $apply(
     FieldCopyWithData({
+      if (status != null) #status: status,
       if (settings != null) #settings: settings,
-      if (isLoading != null) #isLoading: isLoading,
+      if (configs != null) #configs: configs,
+      if (isSystemConfigured != null) #isSystemConfigured: isSystemConfigured,
+      if (orgTimezoneId != null) #orgTimezoneId: orgTimezoneId,
+      if (unresolvedIdentityCount != null)
+        #unresolvedIdentityCount: unresolvedIdentityCount,
+      if (providerConnectionStatuses != null)
+        #providerConnectionStatuses: providerConnectionStatuses,
+      if (deploymentMode != null) #deploymentMode: deploymentMode,
+      if (dailyReportLockOffsetDays != null)
+        #dailyReportLockOffsetDays: dailyReportLockOffsetDays,
+      if (dailyReportLockTime != null)
+        #dailyReportLockTime: dailyReportLockTime,
     }),
   );
   @override
   AppState $make(CopyWithData data) => AppState(
+    status: data.get(#status, or: $value.status),
     settings: data.get(#settings, or: $value.settings),
-    isLoading: data.get(#isLoading, or: $value.isLoading),
+    configs: data.get(#configs, or: $value.configs),
+    isSystemConfigured: data.get(
+      #isSystemConfigured,
+      or: $value.isSystemConfigured,
+    ),
+    orgTimezoneId: data.get(#orgTimezoneId, or: $value.orgTimezoneId),
+    unresolvedIdentityCount: data.get(
+      #unresolvedIdentityCount,
+      or: $value.unresolvedIdentityCount,
+    ),
+    providerConnectionStatuses: data.get(
+      #providerConnectionStatuses,
+      or: $value.providerConnectionStatuses,
+    ),
+    deploymentMode: data.get(#deploymentMode, or: $value.deploymentMode),
+    dailyReportLockOffsetDays: data.get(
+      #dailyReportLockOffsetDays,
+      or: $value.dailyReportLockOffsetDays,
+    ),
+    dailyReportLockTime: data.get(
+      #dailyReportLockTime,
+      or: $value.dailyReportLockTime,
+    ),
   );
 
   @override

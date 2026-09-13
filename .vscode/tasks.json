@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dab: docker compose up (api)",
+      "type": "shell",
+      "command": "docker compose up -d db redis api",
+      "options": {
+        "cwd": "${workspaceFolder}/dab_api"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dab: wait for docker vm service port",
+      "type": "shell",
+      "command": "bash -c 'port=\"${DART_VM_PUBLIC_PORT:-9181}\"; for i in $(seq 1 90); do nc -z 127.0.0.1 \"$port\" 2>/dev/null && { echo \"VM service ready on port $port\"; exit 0; }; if [ $((i % 10)) -eq 0 ]; then echo \"Waiting for VM service on port $port ($i/90)...\"; fi; sleep 1; done; echo \"Dart VM service port $port not open (check: docker compose logs api)\" >&2; exit 1'",
+      "options": {
+        "cwd": "${workspaceFolder}/dab_api"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dab: wait for docker api health",
+      "type": "shell",
+      "command": "bash -c 'port=\"${API_PUBLIC_PORT:-9080}\"; url=\"http://127.0.0.1:$port/health\"; for i in $(seq 1 90); do if curl -sf \"$url\" >/dev/null; then echo \"API healthy at $url\"; exit 0; fi; if [ $((i % 10)) -eq 0 ]; then echo \"Waiting for API at $url ($i/90)...\"; fi; sleep 1; done; echo \"API not healthy at $url (check: docker compose logs api)\" >&2; exit 1'",
+      "options": {
+        "cwd": "${workspaceFolder}/dab_api"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dab: docker stack ready for debug",
+      "dependsOn": [
+        "dab: docker compose up (api)",
+        "dab: wait for docker api health",
+        "dab: wait for docker vm service port"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

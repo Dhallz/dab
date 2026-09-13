@@ -1,0 +1,86 @@
+import 'package:dab_app/domain/entities/user/user_role.dart';
+import 'package:dab_app/presentation/core/navigation/app_route.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_notifier.dart';
+import 'package:dab_app/presentation/features/auth/auth_state.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/widgets/dab_mesh_background.dart';
+import '../widgets/home_top_nav.dart';
+
+class HomeViewDesktop extends ConsumerWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const HomeViewDesktop({super.key, required this.navigationShell});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider);
+    final userName = _displayName(authState);
+    final userInitials = _displayInitials(userName);
+
+    final adminBadgeCount = ref.watch(
+      appNotifierProvider.select((s) => s.unresolvedIdentityCount),
+    );
+    final showAdminTab = authState.user?.role == UserRole.admin;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: DabMeshBackground(
+        child: Column(
+          children: [
+            HomeTopNav(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (i) => _onBranchTap(context, ref, i),
+              adminTabBadgeCount: adminBadgeCount,
+              userName: userName,
+              userInitials: userInitials,
+              onOpenSettings: () => context.go(AppRoute.settings.path),
+              showAdminTab: showAdminTab,
+            ),
+            Expanded(child: navigationShell),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onBranchTap(BuildContext context, WidgetRef ref, int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+    if (index == 4) {
+      ref
+          .read(appNotifierProvider.notifier)
+          .refreshIdentityResolutionBadge(ref.read(authNotifierProvider));
+    }
+  }
+
+  String _displayName(AuthState state) {
+    final name = state.user?.name.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    final email = state.user?.email.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+    return 'User';
+  }
+
+  String _displayInitials(String value) {
+    final parts = value
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList(growable: false);
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
+}

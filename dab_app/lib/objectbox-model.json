@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:4753593989117032601",
-      "lastPropertyId": "4:8005673301360801686",
+      "lastPropertyId": "5:1630436793089971423",
       "name": "UserRecord",
       "properties": [
         {
@@ -30,13 +30,18 @@
           "id": "4:8005673301360801686",
           "name": "name",
           "type": 9
+        },
+        {
+          "id": "5:1630436793089971423",
+          "name": "role",
+          "type": 9
         }
       ],
       "relations": []
     },
     {
       "id": "2:4174291376144611737",
-      "lastPropertyId": "2:7417587751224718738",
+      "lastPropertyId": "7:9053524221215575545",
       "name": "AppSettingsRecord",
       "properties": [
         {
@@ -49,20 +54,224 @@
           "id": "2:7417587751224718738",
           "name": "themeMode",
           "type": 9
+        },
+        {
+          "id": "3:3503005441903137361",
+          "name": "syncToken",
+          "type": 9
+        },
+        {
+          "id": "4:4782039018344160783",
+          "name": "localeCode",
+          "type": 9
+        },
+        {
+          "id": "5:3281782940868744179",
+          "name": "islandBarSelectionsJson",
+          "type": 9
+        },
+        {
+          "id": "7:9053524221215575545",
+          "name": "inboxNotificationsDisabled",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:2073501343485982893",
+      "lastPropertyId": "3:4253006677878960762",
+      "name": "AuthCredentialRecord",
+      "properties": [
+        {
+          "id": "1:3625288301493778704",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4737509218442785945",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "3:4253006677878960762",
+          "name": "password",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:2114438073850940408",
+      "lastPropertyId": "11:8582881736033917369",
+      "name": "ExplorerActivityRecord",
+      "properties": [
+        {
+          "id": "1:889290399146030220",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1389225622195937843",
+          "name": "activityRemoteId",
+          "indexId": "2:4253150040991624744",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:6545617921150313747",
+          "name": "dayKey",
+          "indexId": "3:7152636154332435698",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:3513061140187161184",
+          "name": "createdAtEpochMs",
+          "indexId": "4:3735156122044755209",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:2191233798302343189",
+          "name": "userId",
+          "indexId": "5:3904247878649000190",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:2051884171915924359",
+          "name": "providerKey",
+          "indexId": "6:1758829703636283519",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "7:4847315401470611901",
+          "name": "categoryKey",
+          "indexId": "7:4332867278008176871",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "8:1443115378943154930",
+          "name": "searchText",
+          "type": 9
+        },
+        {
+          "id": "9:4434428181328378938",
+          "name": "payloadJson",
+          "type": 9
+        },
+        {
+          "id": "10:3782013091048683405",
+          "name": "providerDisplayNameLower",
+          "indexId": "13:3769193168313235368",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "11:8582881736033917369",
+          "name": "activityKindKey",
+          "indexId": "14:7756117237748901060",
+          "type": 9,
+          "flags": 2048
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:8030822507214583482",
+      "lastPropertyId": "7:72224913254877193",
+      "name": "ExplorerCoverageRecord",
+      "properties": [
+        {
+          "id": "1:6202451819738535208",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1580124125297852834",
+          "name": "coverageKey",
+          "indexId": "8:4275661977240097798",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:4121434524686579043",
+          "name": "dayKey",
+          "indexId": "9:5767892458705886714",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:2574896938146037739",
+          "name": "userId",
+          "indexId": "10:5589067974296492969",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "5:7256136590027625698",
+          "name": "providerKey",
+          "indexId": "11:5607866096785985598",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:3218094029066440736",
+          "name": "lastFetchedAtEpochMs",
+          "type": 6
+        },
+        {
+          "id": "7:72224913254877193",
+          "name": "dayEpochMs",
+          "indexId": "12:5904639541964778527",
+          "type": 6,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:2001301504864418651",
+      "lastPropertyId": "3:8184979429939381123",
+      "name": "ExplorerCacheMetaRecord",
+      "properties": [
+        {
+          "id": "1:861876112826827882",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:217035540434772102",
+          "name": "cacheSchemaVersion",
+          "type": 6
+        },
+        {
+          "id": "3:8184979429939381123",
+          "name": "lastMigrationAtEpochMs",
+          "type": 6
         }
       ],
       "relations": []
     }
   ],
-  "lastEntityId": "2:4174291376144611737",
-  "lastIndexId": "1:6218771340300999518",
+  "lastEntityId": "6:2001301504864418651",
+  "lastIndexId": "14:7756117237748901060",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    4384245772715690533
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

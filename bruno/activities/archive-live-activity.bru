@@ -1,0 +1,22 @@
+meta {
+  name: Archive Live Activity
+  type: http
+  seq: 5
+}
+
+docs {
+  POST /activities/live/:id/archive — sets archived=true on the caller's Redis inbox entry.
+  Returns 404 when the id is not in activities:user:{id}.
+}
+
+post {
+  url: {{baseUrl}}/activities/live/{{activityId}}/archive
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 404", function() {
+    expect([200, 404]).to.include(res.status);
+  });
+}

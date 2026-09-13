@@ -1,0 +1,659 @@
+import 'dart:async';
+
+import 'package:dab_app/domain/containers/activity_usecases.dart';
+import 'package:dab_app/domain/containers/metadata_usecases.dart';
+import 'package:dab_app/domain/containers/system_usecases.dart';
+import 'package:dab_app/domain/containers/user_usecases.dart';
+import 'package:dab_app/domain/core/failures.dart';
+import 'package:dab_app/domain/entities/activity/activity.dart';
+import 'package:dab_app/domain/entities/activity/activity_category.dart';
+import 'package:dab_app/domain/entities/activity/activity_search_query.dart';
+import 'package:dab_app/domain/entities/activity/explorer_cache_clear_request.dart';
+import 'package:dab_app/domain/entities/group/group.dart';
+import 'package:dab_app/domain/entities/group/group_type.dart';
+import 'package:dab_app/domain/entities/provider/provider_config.dart';
+import 'package:dab_app/domain/entities/user/user.dart';
+import 'package:dab_app/domain/repositories/abs_i_activity_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_provider_config_repository.dart';
+import 'package:dab_app/domain/repositories/abs_i_user_repository.dart';
+import 'package:dab_app/presentation/core/models/view_status.dart';
+import 'package:dab_app/presentation/features/app/app_notifier.dart';
+import 'package:dab_app/presentation/features/app/app_state.dart';
+import 'package:dab_app/presentation/views/admin/models/provider_connection_status.dart';
+import 'package:dab_app/presentation/views/explorer/explorer_notifier.dart';
+import 'package:dab_app/presentation/views/explorer/explorer_state.dart';
+import 'package:dab_app/presentation/core/models/directory_type.dart';
+import 'package:dab_app/presentation/views/explorer/models/explorer_date_mode.dart';
+import 'package:dab_app/presentation/views/explorer/models/explorer_item.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart' hide Group;
+import 'package:mocktail/mocktail.dart';
+
+class MockActivityRepository extends Mock implements IActivityRepository {}
+
+class MockUserRepository extends Mock implements IUserRepository {}
+
+class MockProviderConfigRepository extends Mock
+    implements IProviderConfigRepository {}
+
+class MockSystemUseCases extends Mock implements SystemUseCases {}
+
+class MockMetadataUseCases extends Mock implements MetadataUseCases {}
+
+Map<String, ProviderConnectionStatus> successConnectionsFor(
+  Iterable<String> providerIds,
+) {
+  return {
+    for (final id in providerIds)
+      id: const ProviderConnectionStatus(status: ViewStatus.success),
+  };
+}
+
+/// Stable [AppState] without async [AppNotifier.init] for unit tests.
+class TestAppNotifier extends AppNotifier {
+  TestAppNotifier({
+    Map<String, ProviderConnectionStatus>? connections,
+    List<ProviderConfig>? configs,
+  }) : _connections =
+           connections ?? successConnectionsFor(const ['slack', 'github']),
+       _configs = configs ?? const [],
+       super(
+         MockSystemUseCases(),
+         MockMetadataUseCases(),
+         MockUserRepository(),
+         MockProviderConfigRepository(),
+       );
+
+  final Map<String, ProviderConnectionStatus> _connections;
+  final List<ProviderConfig> _configs;
+
+  @override
+  AppState build() =>
+      AppState(configs: _configs, providerConnectionStatuses: _connections);
+}
+
+void main() {
+  late MockActivityRepository mockActivityRepository;
+  late MockUserRepository mockUserRepository;
+  late MockProviderConfigRepository mockProviderConfigRepository;
+
+  late ActivityUseCases activityUseCases;
+  late UserUseCases userUseCases;
+  late MetadataUseCases metadataUseCases;
+
+  const alice = User(id: 'u1', name: 'Alice', email: 'alice@example.com');
+  const bob = User(id: 'u2', name: 'Bob', email: 'bob@example.com');
+  final devGroup = Group(
+    id: 'g1',
+    name: 'Developers',
+    type: GroupType.custom,
+    members: const [alice, bob],
+  );
+  final providerConfig = ProviderConfig(
+    id: 'slack',
+    name: 'Slack',
+    baseUrl: 'https://slack.example.com',
+    isActive: true,
+  );
+  final githubProviderConfig = ProviderConfig(
+    id: 'github',
+    name: 'GitHub',
+    baseUrl: 'https://github.example.com',
+    isActive: true,
+  );
+
+  Activity activityFor(String userId, DateTime createdAt) {
+    return Activity(
+      id: 'a-$userId-${createdAt.millisecondsSinceEpoch}',
+      userId: userId,
+      provider: const SlackMessageProvider(channelId: 'C123'),
+      title: 'Activity',
+      content: 'Content',
+      authorName: 'Author',
+      commentCount: 0,
+      createdAt: createdAt,
+    );
+  }
+
+  ExplorerNotifier createNotifier() =>
+      ExplorerNotifier(activityUseCases, userUseCases, metadataUseCases);
+
+  ProviderContainer createTestContainer({
+    Map<String, ProviderConnectionStatus>? connections,
+    List<ProviderConfig>? configs,
+  }) => ProviderContainer(
+    overrides: [
+      explorerNotifierProvider.overrideWith(createNotifier),
+      appNotifierProvider.overrideWith(
+        () => TestAppNotifier(connections: connections, configs: configs),
+      ),
+    ],
+  );
+
+  /// Avoid auto-disposing [explorerNotifierProvider] between async gaps.
+  void subscribeExplorer(ProviderContainer container) {
+    final sub = container.listen(explorerNotifierProvider, (_, _) {});
+    addTearDown(sub.close);
+  }
+
+  setUpAll(() {
+    registerFallbackValue(
+      const Group(
+        id: 'fallback',
+        name: 'Fallback',
+        type: GroupType.custom,
+        members: [],
+      ),
+    );
+    registerFallbackValue(const ActivitySearchQuery());
+    registerFallbackValue(
+      ExplorerCacheClearRequest(
+        startDate: DateTime(2026, 1, 1),
+        endDate: DateTime(2026, 1, 1),
+        providerIds: {'slack'},
+        orgTimezoneId: 'UTC',
+      ),
+    );
+  });
+
+  setUp(() {
+    mockActivityRepository = MockActivityRepository();
+    mockUserRepository = MockUserRepository();
+    mockProviderConfigRepository = MockProviderConfigRepository();
+
+    activityUseCases = ActivityUseCases(mockActivityRepository);
+    userUseCases = UserUseCases(mockUserRepository);
+    metadataUseCases = MetadataUseCases(mockProviderConfigRepository);
+
+    when(
+      () => mockUserRepository.getUsers(),
+    ).thenAnswer((_) async => const Right([alice, bob]));
+    when(
+      () => mockUserRepository.getGroups(),
+    ).thenAnswer((_) async => Right([devGroup]));
+    when(
+      () => mockProviderConfigRepository.getProviderConfigs(),
+    ).thenAnswer((_) async => Right([providerConfig, githubProviderConfig]));
+    when(() => mockActivityRepository.searchActivities(any())).thenAnswer(
+      (_) async => Right([activityFor('u1', DateTime.utc(2026, 1, 1, 10))]),
+    );
+    when(
+      () => mockActivityRepository.clearExplorerCache(
+        request: any(named: 'request'),
+      ),
+    ).thenAnswer(
+      (_) async => right(
+        const ExplorerCacheClearResult(
+          removedActivities: 1,
+          removedCoverageRecords: 1,
+        ),
+      ),
+    );
+    when(() => mockUserRepository.saveGroup(any())).thenAnswer(
+      (invocation) async => Right(invocation.positionalArguments.first),
+    );
+    when(
+      () => mockUserRepository.deleteGroup(any()),
+    ).thenAnswer((_) async => const Right(null));
+  });
+
+  test(
+    'uses only active connected providers for provider/activity filters',
+    () async {
+      when(() => mockProviderConfigRepository.getProviderConfigs()).thenAnswer(
+        (_) async => Right([
+          providerConfig,
+          githubProviderConfig.copyWith(isActive: false),
+        ]),
+      );
+
+      final container = createTestContainer();
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      await container.read(explorerNotifierProvider.notifier).started('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = container.read(explorerNotifierProvider);
+      expect(state.availableProviders, ['slack']);
+      expect(state.selectedProviders, {'slack'});
+      expect(state.availableActivityCategories, {ActivityCategory.message});
+      expect(state.selectedActivityCategories, {ActivityCategory.message});
+    },
+  );
+
+  test(
+    'Figma is browsable with message and generic activity filters',
+    () async {
+      final figma = ProviderConfig(
+        id: 'figma',
+        name: 'Figma',
+        baseUrl: 'https://www.figma.com',
+        isActive: true,
+      );
+      when(
+        () => mockProviderConfigRepository.getProviderConfigs(),
+      ).thenAnswer((_) async => Right([figma]));
+
+      final container = createTestContainer(
+        connections: successConnectionsFor(['figma']),
+      );
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      await container.read(explorerNotifierProvider.notifier).started('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = container.read(explorerNotifierProvider);
+      expect(state.availableProviders, ['figma']);
+      expect(state.selectedProviders, {'figma'});
+      expect(state.availableActivityCategories, {
+        ActivityCategory.message,
+        ActivityCategory.generic,
+      });
+    },
+  );
+
+  test(
+    'syncProviderFilters drops deactivated providers without full reload',
+    () async {
+      final container = createTestContainer();
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      await container.read(explorerNotifierProvider.notifier).started('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      clearInteractions(mockActivityRepository);
+
+      await container
+          .read(explorerNotifierProvider.notifier)
+          .syncProviderFilters([
+            providerConfig,
+            githubProviderConfig.copyWith(isActive: false),
+          ], successConnectionsFor(['slack']));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = container.read(explorerNotifierProvider);
+      expect(state.availableProviders, ['slack']);
+      expect(state.selectedProviders, {'slack'});
+      verify(
+        () => mockActivityRepository.searchActivities(
+          any(
+            that: isA<ActivitySearchQuery>().having(
+              (query) => query.providers,
+              'providers',
+              {'slack'},
+            ),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  test('seeds provider filters from app configs before started completes', () {
+    final container = createTestContainer(
+      configs: [providerConfig, githubProviderConfig],
+    );
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.availableProviders, ['slack', 'github']);
+    expect(state.selectedProviders, {'slack', 'github'});
+    expect(state.availableActivityCategories, {
+      ActivityCategory.message,
+      ActivityCategory.commit,
+    });
+  });
+
+  test(
+    'keeps active providers that failed connection tests in the sidebar',
+    () async {
+      final container = createTestContainer(
+        connections: {
+          ...successConnectionsFor(['slack']),
+          'github': const ProviderConnectionStatus(status: ViewStatus.failure),
+        },
+      );
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      await container.read(explorerNotifierProvider.notifier).started('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = container.read(explorerNotifierProvider);
+      expect(state.availableProviders, ['slack', 'github']);
+      expect(state.selectedProviders, {'slack', 'github'});
+    },
+  );
+
+  test('preselects connected user on first load', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    await container.read(explorerNotifierProvider.notifier).started('u1');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(container.read(explorerNotifierProvider).selectedUserIds, {'u1'});
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>()
+              .having((query) => query.users, 'users', ['u1'])
+              .having((query) => query.providers, 'providers', {'slack'})
+              .having((query) => query.coverageProviders, 'coverageProviders', {
+                'slack',
+              })
+              .having((query) => query.categories, 'categories', {
+                ActivityCategory.message,
+                ActivityCategory.commit,
+              }),
+        ),
+      ),
+    ).called(1);
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>()
+              .having((query) => query.users, 'users', ['u1'])
+              .having((query) => query.providers, 'providers', {'github'})
+              .having((query) => query.coverageProviders, 'coverageProviders', {
+                'github',
+              })
+              .having((query) => query.categories, 'categories', {
+                ActivityCategory.message,
+                ActivityCategory.commit,
+              }),
+        ),
+      ),
+    ).called(1);
+  });
+
+  test('uses inclusive start/end dates in range mode', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.changeDateMode(ExplorerDateMode.range);
+    await notifier.changeDateRange(
+      DateTime.utc(2026, 1, 1),
+      DateTime.utc(2026, 1, 7),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>()
+              .having(
+                (query) => query.startDate,
+                'startDate',
+                DateTime.utc(2026, 1, 1),
+              )
+              .having(
+                (query) => query.endDate,
+                'endDate',
+                DateTime.utc(2026, 1, 7),
+              )
+              .having((query) => query.users, 'users', ['u1']),
+        ),
+      ),
+    ).called(2);
+  });
+
+  test('uses selected users only while in users directory', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.toggleGroup('g1');
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>().having(
+            (query) => query.users,
+            'users',
+            ['u1'],
+          ),
+        ),
+      ),
+    ).called(4);
+  });
+
+  test('uses selected group members only while in groups directory', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.toggleGroup('g1');
+    await notifier.setDirectoryType(DirectoryType.groups);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    verify(
+      () => mockActivityRepository.searchActivities(
+        any(
+          that: isA<ActivitySearchQuery>().having(
+            (query) => query.users,
+            'users',
+            ['u1', 'u2'],
+          ),
+        ),
+      ),
+    ).called(2);
+  });
+
+  test('returns empty when no selection exists in active directory', () async {
+    when(
+      () => mockUserRepository.getUsers(),
+    ).thenAnswer((_) async => const Right([]));
+
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    await container.read(explorerNotifierProvider.notifier).started(null);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    verifyNever(() => mockActivityRepository.searchActivities(any()));
+  });
+
+  test('filters activities by selected activity categories', () async {
+    final allActivities = [
+      Activity(
+        id: 'commit-1',
+        userId: 'u1',
+        provider: const GitHubCommitProvider(),
+        title: 'Commit',
+        content: 'Code updated',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 1, 1, 11),
+      ),
+      Activity(
+        id: 'message-1',
+        userId: 'u1',
+        provider: const SlackMessageProvider(channelId: 'C123'),
+        title: 'Message',
+        content: 'Slack update',
+        authorName: 'Alice',
+        commentCount: 0,
+        createdAt: DateTime.utc(2026, 1, 1, 10),
+      ),
+    ];
+    when(() => mockActivityRepository.searchActivities(any())).thenAnswer((
+      invocation,
+    ) async {
+      final query = invocation.positionalArguments.first as ActivitySearchQuery;
+      final filtered = allActivities
+          .where(
+            (activity) => query.categories.contains(activity.provider.category),
+          )
+          .toList();
+      return Right(filtered);
+    });
+
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.toggleActivityCategory(ActivityCategory.message);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    final state = container.read(explorerNotifierProvider);
+    final items = state.items.whereType<SingleActivityItem>().toList();
+    expect(items, hasLength(1));
+    expect(items.first.activity.provider.category, ActivityCategory.commit);
+    expect(
+      state.selectedActivityCategories.contains(ActivityCategory.message),
+      isFalse,
+    );
+  });
+
+  test('renames a group in state through saveGroup', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.renameGroup('g1', 'Core Team');
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    expect(
+      container
+          .read(explorerNotifierProvider)
+          .groups
+          .firstWhere((g) => g.id == 'g1')
+          .name,
+      'Core Team',
+    );
+    verify(() => mockUserRepository.saveGroup(any())).called(1);
+  });
+
+  test('deletes a group from state and selection', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.toggleGroup('g1');
+    await notifier.setDirectoryType(DirectoryType.groups);
+    await notifier.deleteGroup('g1');
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    final state = container.read(explorerNotifierProvider);
+    expect(state.groups.where((g) => g.id == 'g1'), isEmpty);
+    expect(state.selectedGroupIds.contains('g1'), isFalse);
+    verify(() => mockUserRepository.deleteGroup('g1')).called(1);
+  });
+
+  test('updates existing group members through saveGroup', () async {
+    final container = createTestContainer();
+    subscribeExplorer(container);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(explorerNotifierProvider.notifier);
+    await notifier.started('u1');
+    await notifier.saveGroup(devGroup.copyWith(members: const [alice]));
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    final state = container.read(explorerNotifierProvider);
+    final updatedGroup = state.groups.firstWhere((g) => g.id == 'g1');
+    expect(updatedGroup.members.map((m) => m.id).toList(), ['u1']);
+    expect(state.groups.where((g) => g.id == 'g1').length, 1);
+    verify(() => mockUserRepository.saveGroup(any())).called(greaterThan(0));
+  });
+
+  test(
+    'clearCacheAndRefresh clears all browsable providers for active window',
+    () async {
+      final container = createTestContainer();
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      final notifier = container.read(explorerNotifierProvider.notifier);
+      await notifier.started('u1');
+      await notifier.clearCacheAndRefresh();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final captured =
+          verify(
+                () => mockActivityRepository.clearExplorerCache(
+                  request: captureAny(named: 'request'),
+                ),
+              ).captured.single
+              as ExplorerCacheClearRequest;
+
+      expect(captured.providerIds, {'slack', 'github'});
+      verify(
+        () => mockActivityRepository.searchActivities(any()),
+      ).called(greaterThan(0));
+      expect(
+        container.read(explorerNotifierProvider).status,
+        ViewStatus.success,
+      );
+    },
+  );
+
+  test(
+    'paints the first provider while later providers are still loading',
+    () async {
+      final slackDone = Completer<Either<AppFailure, List<Activity>>>();
+      final githubDone = Completer<Either<AppFailure, List<Activity>>>();
+      when(() => mockActivityRepository.searchActivities(any())).thenAnswer((
+        invocation,
+      ) {
+        final query =
+            invocation.positionalArguments.first as ActivitySearchQuery;
+        if (query.providers.contains('slack')) return slackDone.future;
+        if (query.providers.contains('github')) return githubDone.future;
+        return Future.value(const Right([]));
+      });
+
+      final container = createTestContainer();
+      subscribeExplorer(container);
+      addTearDown(container.dispose);
+
+      final started = container
+          .read(explorerNotifierProvider.notifier)
+          .started('u1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      var state = container.read(explorerNotifierProvider);
+      expect(state.loadingProviders, {'slack', 'github'});
+      expect(state.items, isEmpty);
+
+      slackDone.complete(
+        Right([activityFor('u1', DateTime.utc(2026, 1, 1, 10))]),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      state = container.read(explorerNotifierProvider);
+      expect(state.items.whereType<SingleActivityItem>(), hasLength(1));
+      expect(state.loadingProviders, {'github'});
+      expect(state.isFetchingProviders, isTrue);
+
+      githubDone.complete(const Right([]));
+      await started;
+
+      state = container.read(explorerNotifierProvider);
+      expect(state.loadingProviders, isEmpty);
+      expect(state.isFetchingProviders, isFalse);
+      expect(state.status, ViewStatus.success);
+      expect(state.items.whereType<SingleActivityItem>(), hasLength(1));
+    },
+  );
+}

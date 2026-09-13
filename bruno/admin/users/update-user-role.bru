@@ -1,0 +1,43 @@
+meta {
+  name: Update User Role
+  type: http
+  seq: 2
+}
+
+docs {
+  Administrative endpoint to modify a user's role (e.g., 'user', 'admin').
+  
+  **Request Body**:
+  - `userId`: UUID of the target user.
+  - `role`: The new role to assign.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `userId` | `users` | `id` | Target record |
+  | `role` | `users` | `role` | Value to update |
+}
+
+post {
+  url: {{baseUrl}}/admin/users/role
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "role": "admin"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Response confirms update", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data.role).to.equal("admin");
+  });
+}

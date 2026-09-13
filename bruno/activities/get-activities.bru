@@ -1,0 +1,42 @@
+meta {
+  name: Get Activities
+  type: http
+  seq: 1
+}
+
+docs {
+  Retrieves the latest activities across all registered providers.
+  Uses the **Envelope Pattern** for response consistency and support the **Vegas Sync Pattern** via the `X-Sync-Token` header.
+  
+  If the provided `X-Sync-Token` matches the server's current version, a `304 Not Modified` response is returned.
+
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `activities` | `id` | Primary Key |
+  | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+  | `provider` | `activities` | `provider` | Source identifier |
+  | `title` | `activities` | `title` | Activity summary |
+  | `content` | `activities` | `content` | Detailed description |
+  | `url` | `activities` | `url` | Source link |
+  | `createdAt` | `activities` | `created_at` | Audit timestamp |
+}
+
+get {
+  url: {{baseUrl}}/activities
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-Sync-Token: 
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns data array", function() {
+    expect(res.body).to.have.property("data");
+  });
+}

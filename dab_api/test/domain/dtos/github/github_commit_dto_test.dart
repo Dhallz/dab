@@ -1,0 +1,80 @@
+import 'package:dab_api/src/domain/core/activity_inbox_lane.dart';
+import 'package:dab_api/src/domain/dtos/github/github_commit_dto.dart';
+import 'package:test/test.dart';
+
+import '../../../test_factories.dart';
+
+void main() {
+  test('returns no activity when dto is not attributed to a user', () {
+    final activities = GitHubCommitDto(
+      repo: 'acme/repo',
+      sha: 'abc1234',
+      message: 'feat: add flow',
+      url: 'https://github.com/acme/repo/commit/abc1234',
+      committedAt: DateTime.utc(2026, 1, 1),
+    ).toActivities([TestData.user(id: 'u-1')]);
+
+    expect(activities, isEmpty);
+  });
+
+  test('maps commit dto into a github activity', () {
+    final user = TestData.user(id: 'u-1', name: 'Alice');
+    final activities = GitHubCommitDto(
+      repo: 'acme/repo',
+      branch: 'main',
+      sha: 'abc1234',
+      message: 'feat: add flow\n\nBody paragraph.',
+      url: 'https://github.com/acme/repo/commit/abc1234',
+      committedAt: DateTime.utc(2026, 1, 1),
+      authorLogin: 'alicegh',
+      userId: 'u-1',
+    ).toActivities([user]);
+
+    expect(activities, hasLength(1));
+    final activity = activities.single;
+    expect(activity.userId, 'u-1');
+    expect(activity.provider.name, 'GitHub');
+    expect(activity.provider.category, 'commit');
+    expect(activity.title, 'feat: add flow');
+    expect(activity.content, 'Body paragraph.');
+    expect(activity.authorName, 'Alice (@alicegh)');
+  });
+
+  test('uses subject only title when branch is absent', () {
+    final user = TestData.user(id: 'u-1', name: 'Bob');
+    final activities = GitHubCommitDto(
+      repo: 'acme/repo',
+      sha: 'deadbeef',
+      message: 'fix: typo',
+      url: 'https://github.com/acme/repo/commit/deadbeef',
+      committedAt: DateTime.utc(2026, 1, 2),
+      authorLogin: 'bob',
+      userId: 'u-1',
+    ).toActivities([user]);
+    expect(activities.single.title, 'fix: typo');
+    expect(activities.single.content, '');
+    expect(activities.single.authorName, 'Bob (@bob)');
+  });
+
+  test('emits a Follow-lane copy for branch followers', () {
+    final user = TestData.user(id: 'u-1', name: 'Alice');
+    final activities = GitHubCommitDto(
+      repo: 'acme/repo',
+      branch: 'feature/foo',
+      sha: 'abc1234',
+      message: 'feat: add flow',
+      url: 'https://github.com/acme/repo/commit/abc1234',
+      committedAt: DateTime.utc(2026, 1, 1),
+      authorLogin: 'alicegh',
+      userId: 'u-1',
+    ).toActivities(
+      [user],
+      forUserIds: const [],
+      followerUserIds: const ['u-1'],
+    );
+
+    expect(activities, hasLength(1));
+    expect(activities.single.inboxLane, ActivityInboxLane.follow);
+    expect(activities.single.userId, 'u-1');
+  });
+}

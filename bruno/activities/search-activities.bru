@@ -1,0 +1,46 @@
+meta {
+  name: Search Activities
+  type: http
+  seq: 2
+}
+
+docs {
+  Searches for activities within a specified date range, scoped to the current sprint project.
+  
+  **Parameters**:
+  - `startDate`: ISO 8601 start date (e.g., `2026-04-06`).
+  - `endDate`: ISO 8601 end date.
+  - `authoredOnly`: 
+    - `true`: Returns only transactions **authored by** the target users.
+    - `false`: Returns transactions **authored by** OR **addressed to** (@mentions) the target users.
+  - `users`: (Optional) Comma-separated list of User UUIDs. Defaults to current caller.
+  - `providers`: (Optional) Comma-separated provider config ids (e.g. `slack,phorge`). Omit to poll every active connector.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `activities` | `id` | Primary Key |
+  | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+  | `title` | `activities` | `title` | Search keyword matches here |
+  | `date` | `activities` | `date` | Actual activity occurrence date |
+}
+
+get {
+  url: {{baseUrl}}/activities/search
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: 2026-04-06
+  endDate: 2026-04-07
+  authoredOnly: false
+  users: {{targetUserId}}
+  ~providers: slack
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

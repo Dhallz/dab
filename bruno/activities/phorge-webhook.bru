@@ -1,0 +1,89 @@
+meta {
+  name: Phorge Herald Webhook
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/integrations/phorge/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  X-Phabricator-Webhook-Signature: {{phorgeSignature}}
+}
+
+body:json {
+  {
+    "object": {
+      "type": "TASK",
+      "phid": "PHID-TASK-example123"
+    },
+    "triggers": [
+      {
+        "phid": "PHID-HRUL-example"
+      }
+    ],
+    "action": {
+      "test": false,
+      "silent": false,
+      "secure": false,
+      "epoch": 1767225600
+    },
+    "transactions": [
+      {
+        "phid": "PHID-XACT-TASK-example456"
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  phorgeSignature: 
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const hmacKey =
+    bru.getEnvVar("phorgeWebhookHmacKey") ||
+    bru.getEnvVar("PHORGE_WEBHOOK_HMAC_KEY") ||
+    bru.getVar("phorgeWebhookHmacKey") ||
+    bru.getVar("PHORGE_WEBHOOK_HMAC_KEY");
+  
+  if (!hmacKey) {
+    throw new Error(
+      "Missing Phorge webhook HMAC key. Set phorgeWebhookHmacKey or PHORGE_WEBHOOK_HMAC_KEY.",
+    );
+  }
+  
+  const rawBody = req.getBody({ raw: true });
+  const digest = CryptoJS.HmacSHA256(rawBody, hmacKey).toString(
+    CryptoJS.enc.Hex,
+  );
+  
+  req.setHeader("X-Phabricator-Webhook-Signature", digest);
+  req.setHeader("Content-Type", "application/json");
+  
+  bru.setVar("phorgeSignature", digest);
+}
+
+tests {
+  test("Acknowledged or unauthorized", function() {
+    expect(res.status).to.be.oneOf([200, 401, 500]);
+  });
+}
+
+docs {
+  Simulates a Phorge Herald webhook delivery to `POST /integrations/phorge/webhook`.
+  
+  Herald payloads are thin (object PHID + transaction PHIDs); the server hydrates
+  the object via the Conduit API before mapping to activities, so a real Phorge
+  instance must be reachable for full ingestion.
+  
+  Set `webhookHmacKey` on the Phorge provider config to match the HMAC key used below.
+  
+  Environment variables:
+  - `phorgeWebhookHmacKey` (or `PHORGE_WEBHOOK_HMAC_KEY`)
+}

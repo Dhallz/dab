@@ -1,0 +1,57 @@
+meta {
+  name: Get Provider Configs (Admin)
+  type: http
+  seq: 1
+}
+
+docs {
+  Administrative endpoint to retrieve all internal provider configurations including sensitive settings.
+  
+  Returns a list of `ProviderConfig` objects. It also automatically scripts the extraction of a `targetProviderId` and `targetProviderUrl` into the environment for use in subsequent requests (Save/Test/Link).
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `provider_configs` | `id` | Provider slug |
+  | `name` | `provider_configs` | `name` | Display label |
+  | `baseUrl` | `provider_configs` | `base_url` | API endpoint |
+  | `isActive` | `provider_configs` | `is_active` | Sync status |
+  | `settings` | `provider_configs` | `settings` | JSONB config |
+}
+
+get {
+  url: {{baseUrl}}/admin/configs
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.length > 0) {
+    const activeConfigs = res.body.data.filter(c => c.isActive === true);
+    const targetConfig = activeConfigs.length > 0 ? activeConfigs[0] : res.body.data[0];
+    
+    bru.setEnvVar("targetProviderId", targetConfig.id);
+    bru.setVar("targetProviderId", targetConfig.id);
+    bru.setEnvVar("targetProviderUrl", targetConfig.baseUrl);
+    bru.setVar("targetProviderUrl", targetConfig.baseUrl);
+    
+    // Attempt to extract api.token if it exists in settings
+    const token = targetConfig.settings ? targetConfig.settings['apiToken'] : null;
+    if (token) {
+      bru.setEnvVar("targetProviderToken", token);
+      bru.setVar("targetProviderToken", token);
+    }
+    
+    console.log("Automatically populated variables for: " + targetConfig.id + (activeConfigs.length > 0 ? " (active)" : " (fallback to first)"));
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns array of configurations", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

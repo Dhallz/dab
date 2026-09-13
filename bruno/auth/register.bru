@@ -1,0 +1,56 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+docs {
+  Registers the bootstrap (first) user in the DAB system. Self-registration
+  is only open while zero users exist; the first user becomes the system
+  admin. All subsequent accounts must be created by an administrator via
+  `POST /admin/users`.
+  Returns an `accessToken` and `refreshToken` upon success.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `name` | `users` | `name` | User's full name |
+  | `email` | `users` | `email` | Unique login identifier |
+  | `password` | `users` | `password_hash` | Stored as Argon2 hash |
+  | `id` (res) | `users` | `id` | Generated UUID |
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Test User",
+    "email": "test@dab.local",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+    
+    bru.setVar("accessToken", res.body.accessToken);
+    bru.setVar("refreshToken", res.body.refreshToken);
+    
+    console.log("Tokens captured successfully.");
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns tokens", function() {
+    expect(res.body).to.have.property("accessToken");
+  });
+}

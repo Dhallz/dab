@@ -1,0 +1,2326 @@
+openapi: 3.0.3
+info:
+  title: Dev Activity Board (DAB) API
+  description: High-performance aggregator of developer activities, featuring real-time caching and the Vegas Sync Pattern.
+  version: 1.0.0
+servers:
+  - url: http://localhost:9080
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        phorgePhid:
+          type: string
+          nullable: true
+        phorgeUsername:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+    ProviderConnectivitySection:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, warning, failure]
+        message:
+          type: string
+
+paths:
+  /auth/register:
+    post:
+      summary: Register the bootstrap (first) user in the DAB system.
+      description: |
+        Registers the bootstrap user account. Self-registration is only open
+        while zero users exist; the first user becomes the system admin. All
+        subsequent accounts must be created by an administrator via
+        `POST /admin/users`. Returns a JWT pair (accessToken and refreshToken).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `name` | `users` | `name` | Profile name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `password` | `users` | `password_hash` | Irreversible hash |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Created session (access + refresh token payload)
+        '400':
+          description: Self-registration is disabled (a user already exists) or validation error
+        '403':
+          description: Bootstrap lock (email does not match the configured initial admin)
+  /auth/refresh:
+    post:
+      summary: rotate the user's authentication tokens.
+      description: |
+        Rotates the user's authentication tokens. Validates the refreshToken and returns a new session.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `refreshToken` | `sessions` | `refresh_token` | Token verification |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Success
+  /auth/login:
+    post:
+      summary: Authenticate a user and return JWT tokens.
+      description: |
+        Authenticates a user with email and password. Returns a JWT pair.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `email` | `users` | `email` | Lookup identifier |
+        | `password` | `users` | `password_hash` | Hash comparison |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK with session payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  userId:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  role:
+                    type: string
+  /activities:
+    get:
+      summary: Get latest activities (Envelope + Vegas Pattern)
+      description: |
+        Retrieves the latest activities across all registered providers.
+        Uses the **Envelope Pattern** for response consistency and support the **Vegas Sync Pattern** via the `X-Sync-Token` header.
+        
+        If the provided `X-Sync-Token` matches the server's current version, a `304 Not Modified` response is returned.
+
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `activities` | `id` | Primary Key |
+        | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+        | `provider` | `activities` | `provider` | Source identifier |
+        | `title` | `activities` | `title` | Activity summary |
+        | `content` | `activities` | `content` | Detailed description |
+        | `url` | `activities` | `url` | Source link |
+        | `createdAt` | `activities` | `created_at` | Audit timestamp |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Sync-Token
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Client's version clock to detect staleness
+      responses:
+        '200':
+          description: Successful data envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                      syncToken:
+                        type: string
+        '304':
+          description: Not Modified. The client's sync token matches the server version.
+  /activities/search:
+    get:
+      summary: Search for activities within a date range.
+      description: |
+        Searches for activities within a specified date range, scoped to the current sprint project.
+        
+        **Parameters**:
+        - `startDate`: ISO 8601 start date (e.g., `2026-04-06`).
+        - `endDate`: ISO 8601 end date.
+        - `authoredOnly`: 
+          - `true`: Returns only transactions **authored by** the target users.
+          - `false`: Returns transactions **authored by** OR **addressed to** (@mentions) the target users.
+        - `users`: (Optional) Comma-separated list of User UUIDs. Defaults to current caller.
+        - `providers`: (Optional) Comma-separated provider config ids (e.g. `slack,phorge`). Omit to poll every active connector.
+
+        Connector polls still require a linked identity. Rows written by
+        `POST /mock/demo-day` are unioned from Redis `demo:search:{userId}:{date}`
+        after that gate so Explorer/Insights/Reports search can render a
+        screenshot day without provider HTTP.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `activities` | `id` | Primary Key |
+        | `userId` | `activities` | `user_id` | Foreign Key to `users.id` |
+        | `title` | `activities` | `title` | Search keyword matches here |
+        | `createdAt` | `activities` | `created_at` | Activity occurrence timestamp |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: ISO 8601 start date (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: ISO 8601 end date (YYYY-MM-DD)
+        - name: users
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of User UUIDs to query. Defaults to the requesting user.
+        - name: authoredOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: If true, only returns activities directly authored by the specified users. If false, includes mentions and tags addressed to them.
+        - name: providers
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated provider config ids (e.g. slack,github,phorge). Omit to search every active connector.
+      responses:
+        '200':
+          description: Successful data envelope with historical activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+        '400':
+          description: Bad request (missing or invalid date parameter)
+  /activities/live:
+    get:
+      summary: Get live dashboard activities from Redis.
+      description: |
+        Redis-only live inbox. Does not query Postgres. Dashboard hydrates with
+        the signed-in user scope (omit `scope` or pass `user`). `scope=global`
+        is accepted by the API but unused by the app.
+
+        **Query Parameters**:
+        - `limit` (optional, 1..250): Max events. Default: 50.
+        - `scope` (optional): `user` (default) or `global`.
+        - `includeArchived` (optional): `true` / `1` to include archived rows. Default: omitted (hidden).
+
+        Vegas 304 does **not** apply. `meta.syncToken` is still returned.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [user, global]
+            default: user
+        - name: includeArchived
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successful Redis live-data envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:activity_live']
+                      source:
+                        type: string
+                        enum: ['redis']
+                      scope:
+                        type: string
+                        enum: [user, global]
+                      limit:
+                        type: integer
+                      includeArchived:
+                        type: boolean
+                      syncToken:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid query parameter
+  /activities/live/{id}/archive:
+    post:
+      summary: Archive a live-feed activity for the caller.
+      description: |
+        Flips `archived=true` on the caller's Redis inbox entry.
+        Returns 404 when the id is not in `activities:user:{id}` (already purged or never fanned out).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated live-feed entry
+        '404':
+          description: Activity not in the caller's live feed
+  /activities/live/{id}/unarchive:
+    post:
+      summary: Unarchive a live-feed activity for the caller.
+      description: Flips `archived=false` on the caller's Redis inbox entry.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated live-feed entry
+        '404':
+          description: Activity not in the caller's live feed
+  /integrations/slack/events:
+    post:
+      summary: Slack Events API webhook receiver.
+      description: |
+        Receives Slack Events API callbacks for true push-live ingestion.
+        Supports URL verification challenge and signed event callbacks.
+      parameters:
+        - name: X-Slack-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Slack-Request-Timestamp
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful acknowledgement or challenge response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  challenge:
+                    type: string
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['slack_event_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '401':
+          description: Invalid Slack signature
+  /integrations/github/webhook:
+    post:
+      summary: GitHub repository webhook receiver (push commits).
+      description: |
+        Receives signed GitHub webhooks (`X-Hub-Signature-256`).
+        Processes `push` events asynchronously into the live-feed pipeline (`ping` acknowledges only).
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-GitHub-Delivery
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              ref: refs/heads/main
+              repository:
+                full_name: acme/repo
+              commits:
+                - id: abcdef1
+                  distinct: true
+                  message: "Example"
+                  timestamp: "2026-03-01T12:00:00Z"
+                  url: https://github.com/acme/repo/commit/abcdef1
+                  author:
+                    username: coder
+                    name: Coder
+      responses:
+        '200':
+          description: Accepted (processing may be asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['github_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature or missing headers
+        '500':
+          description: Webhook secret not configured for active github provider
+  /integrations/phorge/webhook:
+    post:
+      summary: Phorge Herald webhook receiver.
+      description: |
+        Receives Herald webhook deliveries signed with HMAC-SHA256
+        (`X-Phabricator-Webhook-Signature`). Payloads are thin (object PHID +
+        transaction PHIDs); the server hydrates the object via Conduit and
+        ingests it asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Phabricator-Webhook-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              object:
+                type: TASK
+                phid: PHID-TASK-example123
+              transactions:
+                - phid: PHID-XACT-TASK-example456
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['phorge_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook HMAC key not configured for active phorge provider
+  /integrations/jira/webhook:
+    post:
+      summary: Jira Cloud webhook receiver (issue and comment events).
+      description: |
+        Receives Jira admin-registered webhooks. When a **Secret** is configured
+        on the Jira webhook, payloads are signed with HMAC-SHA256 in the
+        `X-Hub-Signature` header (`sha256=<hex>`, WebSub format). DAB verifies
+        that signature against `webhookSecret`. Plain `X-Webhook-Secret` or
+        `secret` query parameter are accepted as a Bruno simulation fallback only.
+        Supported events are `jira:issue_created`, `jira:issue_updated`,
+        `comment_created`, and `comment_updated`; processing is asynchronous.
+      parameters:
+        - name: X-Hub-Signature
+          in: header
+          required: false
+          schema:
+            type: string
+          description: HMAC-SHA256 signature from Jira (`sha256=<hex>`)
+        - name: X-Webhook-Secret
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Bruno simulation fallback only
+        - name: secret
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Bruno simulation fallback only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              webhookEvent: jira:issue_updated
+              issue:
+                key: DAB-42
+                fields:
+                  summary: Example issue
+                  status:
+                    name: In Progress
+                  updated: "2026-03-01T15:30:00.000+0000"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['jira_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook secret
+        '500':
+          description: Webhook secret not configured for active jira provider
+  /integrations/figma/webhook:
+    post:
+      summary: Figma webhook receiver (FILE_COMMENT, FILE_UPDATE, PING).
+      description: |
+        Receives Figma team/project/file webhooks. Authentication is the JSON
+        body `passcode` compared constant-time to Live `webhookSecret`.
+        DAB does not register Figma webhooks. `FILE_COMMENT` fans Directed
+        mentions plus file Followers. `FILE_UPDATE` upserts a last-edited
+        Following heartbeat after `GET /v1/files/:key/meta`. `PING` is ACK-only.
+        Processing is asynchronous except PING.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              event_type: FILE_COMMENT
+              file_key: Abc123File
+              file_name: Onboarding
+              passcode: your-figma-passcode
+              comment:
+                - id: c-1
+                  message: Please take a look
+                  mentions:
+                    - id: "123456"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['figma_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook passcode
+        '500':
+          description: Webhook passcode not configured for active figma provider
+  /integrations/linear/webhook:
+    post:
+      summary: Linear webhook receiver (Issue and Comment create/update).
+      description: |
+        Receives Linear webhooks signed with HMAC-SHA256 of the raw body
+        (`linear-signature` header, hex digest). `linear-delivery` is used for
+        deduplication when present. Processing is asynchronous. `Issue` and
+        `Comment` create/update events are ingested; comments mint a distinct
+        activity id so Dashboard notifies while Explorer groups by issue key.
+      parameters:
+        - name: linear-signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: linear-delivery
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              action: update
+              type: Issue
+              data:
+                id: issue-uuid-example
+                identifier: DAB-42
+                title: Example issue
+                url: https://linear.app/acme/issue/DAB-42
+                updatedAt: "2026-03-01T15:30:00.000Z"
+                state:
+                  name: In Progress
+                team:
+                  key: DAB
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['linear_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook secret not configured for active linear provider
+  /integrations/gitlab/webhook:
+    post:
+      summary: GitLab webhook receiver (Push Hook).
+      description: |
+        Receives GitLab project webhooks authenticated with a plain shared
+        token in the `X-Gitlab-Token` header (constant-time compare, no HMAC).
+        Processes `push` events asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Gitlab-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Gitlab-Event
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              object_kind: push
+              ref: refs/heads/main
+              checkout_sha: abcdef1234567890abcdef1234567890abcdef12
+              project:
+                path_with_namespace: acme/app
+              commits:
+                - id: abcdef1234567890abcdef1234567890abcdef12
+                  message: Example commit
+                  timestamp: "2026-03-01T15:30:00Z"
+                  url: https://gitlab.com/acme/app/-/commit/abcdef1
+                  author:
+                    name: Dev User
+                    email: dev@example.com
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['gitlab_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook token
+        '500':
+          description: Webhook secret not configured for active gitlab provider
+  /integrations/bitbucket/webhook:
+    post:
+      summary: Bitbucket Cloud webhook receiver (repo:push).
+      description: |
+        Receives Bitbucket Cloud repository webhooks signed with HMAC-SHA256
+        (`X-Hub-Signature` header, `sha256=<hex>`). `X-Request-UUID` /
+        `X-Hook-UUID` are used for deduplication when present. Processes
+        `repo:push` events asynchronously into the live-feed pipeline.
+      parameters:
+        - name: X-Hub-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Event-Key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: X-Request-UUID
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              repository:
+                full_name: acme/app
+              push:
+                changes:
+                  - new:
+                      type: branch
+                      name: main
+                    commits:
+                      - hash: abcdef1234567890abcdef1234567890abcdef12
+                        message: Example commit
+                        date: "2026-03-01T15:30:00+00:00"
+                        author:
+                          raw: "Dev User <dev@example.com>"
+      responses:
+        '200':
+          description: Accepted (processing is asynchronous)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['bitbucket_webhook_ack']
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid JSON payload
+        '401':
+          description: Invalid webhook signature
+        '500':
+          description: Webhook secret not configured for active bitbucket provider
+  /ws:
+    get:
+      summary: WebSocket Connection for real-time broadcasts
+      description: This endpoint upgrades the connection to WebSocket.
+      security:
+        - bearerAuth: []
+      responses:
+        '101':
+          description: Switching Protocols
+  /health:
+    get:
+      summary: API availability health check.
+      description: |
+        Simple check to verify the API server is up and running.
+        
+        ### Database Mapping
+        | Action | Status | Role |
+        | :--- | :--- | :--- |
+        | N/A | N/A | No DB interaction |
+      responses:
+        '200':
+          description: API is healthy
+  /health/db:
+    get:
+      summary: Infrastructure (DB) health check.
+      description: |
+        Verifies connectivity to the PostgreSQL database.
+        
+        ### Database Mapping
+        | Target | Action | Role |
+        | :--- | :--- | :--- |
+        | PostgreSQL | Ping (`SELECT 1`) | Connectivity Test |
+      responses:
+        '200':
+          description: Databases connected
+  /metadata/providers:
+    get:
+      summary: Get available provider metadata (e.g., Phorge projects/tags)
+      description: |
+        Retrieves metadata for configured providers (e.g., Phorge projects, repository tags).
+        This is used to populate filters and categories in the UI.
+        
+        ### Database Mapping
+        | Action | Source | Logic |
+        | :--- | :--- | :--- |
+        | READ | `provider_configs` | Fetches active providers |
+        | CACHE | Redis | Merged with provider-specific cached metadata |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing ProviderMetadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        provider:
+                          type: string
+                        type:
+                          type: string
+                        color:
+                          type: string
+                          nullable: true
+                        icon:
+                          type: string
+                          nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_metadata']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/capabilities:
+    get:
+      summary: Get provider live ingestion capabilities.
+      description: |
+        Returns provider live-ingestion capabilities used by Dashboard strategy.
+        This allows clients to prefer webhook/websocket when available and use
+        API polling fallback otherwise.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope containing provider capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        providerId:
+                          type: string
+                        ingestionMode:
+                          type: string
+                          enum: [webhook, polling, hybrid]
+                        supportsWebhook:
+                          type: boolean
+                        supportsWebSocket:
+                          type: boolean
+                        supportsPolling:
+                          type: boolean
+                        isActive:
+                          type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_capability']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/configs:
+    get:
+      summary: Get public provider configurations.
+      description: Returns base URLs and icon URLs for active providers, used for deep-linking in the UI.
+      responses:
+        '200':
+          description: Successful data envelope containing ProviderConfig
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        baseUrl:
+                          type: string
+                        iconUrl:
+                          type: string
+                          nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['list:provider_config']
+                      isSystemConfigured:
+                        type: boolean
+                      timestamp:
+                        type: string
+                        format: date-time
+  /metadata/status:
+    get:
+      summary: Get bootstrap/system readiness state.
+      description: Returns whether the platform is configured (admin + active provider config), the organization timezone used for calendar-day boundaries, and the global daily-report edit deadline.
+      responses:
+        '200':
+          description: Successful system status envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      isSystemConfigured:
+                        type: boolean
+                      systemTimezone:
+                        type: string
+                        example: UTC
+                        description: IANA organization timezone for calendar-day boundaries.
+                      deploymentMode:
+                        type: string
+                        enum: [managed, individual]
+                        description: Managed (Admin-owned tokens) or Individual (Settings PATs, shared live wall). Legacy `organization` / `personal` values are accepted and normalized.
+                      dailyReportLockOffsetDays:
+                        type: integer
+                        minimum: 0
+                        maximum: 7
+                        description: Days after the report date when the edit cutoff applies. Default 1 (next calendar day).
+                      dailyReportLockTime:
+                        type: string
+                        example: '00:00'
+                        description: Wall-clock `HH:mm` of the cutoff in `systemTimezone`. Default `00:00`. Combined with offset, a report for date D locks at that time on D+offset.
+                  meta:
+                    type: object
+                    properties:
+                      dataType:
+                        type: string
+                        enum: ['system_status']
+                      timestamp:
+                        type: string
+                        format: date-time
+  /users:
+    get:
+      summary: List all registered users.
+      description: |
+        Returns a list of all registered users in the system.
+        The first user's ID is automatically captured into the `targetUserId` variable for use in other requests.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Primary Key |
+        | `name` | `users` | `name` | Display name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `role` | `users` | `role` | Permissions group |
+        | `avatarUrl` | `users` | `avatar_url` | Profile image |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful data envelope with user list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+  /users/me/credentials:
+    get:
+      summary: List masked provider credentials for the authenticated user
+      description: |
+        Returns connected providers and linked identity labels. Secrets are never included.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Masked credential summaries
+  /users/me/credentials/{provider}:
+    put:
+      summary: Save a personal credential (Phorge Conduit token; OAuth providers prefer /oauth/start)
+      description: |
+        Runs whoami, links `UserIdentity` as `linked`, and may seed a watch list
+        on `provider_configs` when empty. Prefer `POST .../oauth/start` for GitHub,
+        GitLab, Linear, Bitbucket, and Jira. Never returns secrets.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  additionalProperties: true
+            example:
+              settings:
+                api.token: ghp_example
+      responses:
+        '200':
+          description: Masked credential summary
+        '400':
+          description: Validation or whoami failure
+    delete:
+      summary: Disconnect the authenticated user's credential for a provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+  /users/me/credentials/{provider}/oauth/start:
+    post:
+      summary: Start browser OAuth for a provider
+      description: |
+        Returns `{ authorizationUrl }` for GitHub, GitLab, Linear, Bitbucket, or Jira.
+        PKCE verifier is stored in Redis and never returned. Requires an Admin OAuth
+        app (`clientId`) and `public_api_url`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authorization URL
+        '400':
+          description: Provider not OAuth-capable or OAuth app not configured
+  /users/me/credentials/{provider}/projects:
+    get:
+      summary: List Jira projects, Linear teams, or git inbox watches
+      description: |
+        Jira or Linear: `{ available: [{ key, name }], selected: [keys] }`
+        from the caller's OAuth token and instance `projectKeys` / `teamKeys`.
+        GitHub, GitLab, or Bitbucket: instance allow-list repos plus the
+        caller's personal inbox watches (`watchedRepos` / `watchedBranches`
+        on the user credential). Missing `watchedRepos` inherits the instance
+        list; an empty list means no git inbox. Requires a connected
+        credential. Never returns tokens.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [jira, linear, github, gitlab, bitbucket]
+      responses:
+        '200':
+          description: Available and selected keys
+        '400':
+          description: Unsupported provider, or the account is not connected
+    put:
+      summary: Save Jira/Linear ingest allow-lists or personal git watches
+      description: |
+        Jira or Linear: replaces instance `projectKeys` / `teamKeys` with keys
+        the caller can still see (shared ingest allow-list).
+        GitHub, GitLab, or Bitbucket: replaces personal `watchedRepos` /
+        `watchedBranches` on the caller's credential (Dashboard inbox).
+        Body `{ "projectKeys": ["DAB"] }`, `{ "teamKeys": ["ENG"] }`, or
+        `{ "repos": ["acme/app"], "branches": ["main"] }`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [jira, linear, github, gitlab, bitbucket]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectKeys:
+                  type: array
+                  items:
+                    type: string
+                teamKeys:
+                  type: array
+                  items:
+                    type: string
+            example:
+              teamKeys: [ENG, OPS]
+      responses:
+        '200':
+          description: Updated watch list
+        '400':
+          description: Unsupported provider, invalid body, or not connected
+  /users/me/credentials/{provider}/branches:
+    get:
+      summary: List unique git branch names for inbox watches
+      description: |
+        GitHub, GitLab, or Bitbucket only. Unions branch names on the
+        caller's selected inbox repos, or on `?repos=owner/repo,owner/other`
+        (must already be on the instance allow-list). Empty `available` when
+        no repos are selected. `truncated` is true when the catalog hit its
+        name cap. Requires a connected credential. Never returns tokens.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [github, gitlab, bitbucket]
+        - name: repos
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated repo keys to list. Defaults to saved watches.
+      responses:
+        '200':
+          description: '`{ available: ["main"], truncated: false }`'
+        '400':
+          description: Unsupported provider, or the account is not connected
+  /users/me/follows/candidates:
+    get:
+      summary: List Follow picker rows
+      description: |
+        Returns objects the caller can Follow from the Dashboard Following
+        search, and Phorge/Jira/Linear tasks for the Reports picker. Empty `q`
+        lists open Phorge/Jira/Linear issues where the caller is assignee,
+        watcher/subscriber, or reporter. A typed `q` substring-matches the
+        display title (task number or keyword; titles include `[T12]` / `[ENG-42]`)
+        on Phorge/Jira/Linear issues (instance team/project allow-lists still
+        apply) and also includes GitHub/GitLab/Bitbucket branches on
+        Admin-allow-listed repos whose repo or branch name matches.
+        Git rows use `objectKey` `owner/repo|branch` and `kind` `gitBranch`.
+        This is not `GET /activities/search`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of Follow candidates
+  /users/me/follows:
+    get:
+      summary: List Dashboard object Follow pins
+      description: |
+        Returns `{ providerId, objectKey, title?, url? }` pins for the
+        authenticated user. `title` / `url` are a display snapshot from the
+        Followed card so Dashboard can show a Following placeholder card
+        until the first Follow-lane event.
+        Followable providers: phorge, jira, linear, slack, discord, github,
+        gitlab, bitbucket. Git `objectKey` is `owner/repo|branch`. Settings
+        `watchedRepos` / `watchedBranches` stay Directed.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of Follow pins
+    put:
+      summary: Follow a Dashboard inbox object
+      description: |
+        Upserts a Follow pin. Later updates on that object land in the Follow
+        inbox lane. Optional `title` and `url` snapshot the Followed card for
+        an immediate Following placeholder card.
+        Body `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
+        Git pins use `{ "providerId": "github", "objectKey": "acme/app|feature/foo" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerId, objectKey]
+              properties:
+                providerId:
+                  type: string
+                  enum: [phorge, jira, linear, slack, discord, github, gitlab, bitbucket]
+                objectKey:
+                  type: string
+                title:
+                  type: string
+                url:
+                  type: string
+            example:
+              providerId: phorge
+              objectKey: PHID-TASK-1
+              title: '[T123] Fix login'
+      responses:
+        '200':
+          description: Saved Follow pin
+        '400':
+          description: Missing body or unsupported provider
+    delete:
+      summary: Unfollow a Dashboard inbox object
+      description: |
+        Removes a Follow pin. Body matches PUT
+        `{ "providerId": "phorge", "objectKey": "PHID-TASK-1" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [providerId, objectKey]
+              properties:
+                providerId:
+                  type: string
+                objectKey:
+                  type: string
+            example:
+              providerId: phorge
+              objectKey: PHID-TASK-1
+      responses:
+        '200':
+          description: Follow pin removed
+        '400':
+          description: Missing body or unsupported provider
+  /users/me/day-reports:
+    get:
+      summary: List my daily reports
+      description: |
+        Returns org-calendar dates (`YYYY-MM-DD`) for which the authenticated
+        user has a saved daily report, newest first. An empty list is **200**
+        with `data: []`. Fetch a day with `GET /users/me/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Date list envelope (`data` is an array of `YYYY-MM-DD` strings)
+  /users/me/day-reports/{date}:
+    get:
+      summary: Get my daily report
+      description: |
+        Returns the authenticated user's curated daily report for an
+        org-calendar `{date}` (`YYYY-MM-DD`). Missing reports return **200**
+        with empty `lines` and `includeFollowing: false`, not 404.
+        Notes are DAB-only and are never posted to providers.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      responses:
+        '200':
+          description: Daily report envelope (`data.userId`, `date`, `includeFollowing`, `lines`)
+        '400':
+          description: Date is not `YYYY-MM-DD`
+    put:
+      summary: Save my daily report
+      description: |
+        Upserts the caller's daily report for `{date}` and replaces curated
+        lines. Body `{ "includeFollowing": false, "lines": [ { "subjectKey":
+        "github|acme/app|abc1234", "included": true, "note": "Shipped login",
+        "role": "authored" } ] }`. `subjectKey` is provider + object +
+        occurrence (commit sha, comment id, message ts) — not git Follow
+        `owner/repo|branch` alone. Notes stay in DAB. After the Admin report
+        deadline (`daily_report_lock_offset_days` + `daily_report_lock_time`
+        in `system_timezone`; default next-day 00:00) the write is **403**.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                includeFollowing:
+                  type: boolean
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [subjectKey]
+                    properties:
+                      subjectKey:
+                        type: string
+                      included:
+                        type: boolean
+                      note:
+                        type: string
+                      role:
+                        type: string
+                        enum: [directed, authored, both]
+                      title:
+                        type: string
+                      url:
+                        type: string
+                      occurredAt:
+                        type: string
+                        format: date-time
+                      providerId:
+                        type: string
+            example:
+              includeFollowing: false
+              lines:
+                - subjectKey: github|acme/app|abc1234
+                  included: true
+                  note: Shipped login
+                  role: authored
+                  title: Fix login
+                  providerId: github
+      responses:
+        '200':
+          description: Saved daily report
+        '400':
+          description: Invalid date or missing subjectKey
+        '403':
+          description: Report is past the Admin edit deadline
+  /users/{id}/day-reports:
+    get:
+      summary: List a user's daily reports
+      description: |
+        Returns org-calendar dates (`YYYY-MM-DD`) with a saved daily report
+        for `{id}`, newest first. The caller may list their own dates.
+        **manager** and **admin** may list a teammate. **standard** callers
+        receive **403** unless `{id}` is self. An empty list is **200** with
+        `data: []`. Fetch a day with `GET /users/{id}/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 'u-2'
+      responses:
+        '200':
+          description: Date list envelope (`data` is an array of `YYYY-MM-DD` strings)
+        '400':
+          description: User id is empty
+        '403':
+          description: Caller is not self, manager, or admin
+  /users/{id}/day-reports/{date}:
+    get:
+      summary: Get a user's daily report
+      description: |
+        Returns the curated daily report for `{id}` on org-calendar `{date}`
+        (`YYYY-MM-DD`). The caller may read their own report. **manager** and
+        **admin** may read a teammate's report. **standard** callers receive
+        **403** unless `{id}` is self. Missing reports return **200** with
+        empty `lines`, not 404. Notes stay in DAB. There is no PUT on this
+        path — only the owner can save via `/users/me/day-reports/{date}`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 'u-2'
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-08-22'
+      responses:
+        '200':
+          description: Daily report envelope (`data.userId`, `date`, `includeFollowing`, `lines`)
+        '400':
+          description: Date is not `YYYY-MM-DD` or user id is empty
+        '403':
+          description: Caller is not self, manager, or admin
+  /users/me/device-tokens:
+    put:
+      summary: Save my device token
+      description: |
+        Upserts an FCM/APNs registration token for the authenticated user.
+        Used later to send a data-only inbox wake (`type=inbox_wake`) when no
+        WebSocket session is connected. Body
+        `{ "platform": "android", "token": "fcm-or-apns-token" }`.
+        `platform` is `android` or `ios`. Tokens are stored in development;
+        FCM is not sent unless `APP_ENV` is production and
+        `FCM_SERVICE_ACCOUNT_JSON` is set. Wake payloads never include
+        activity title or body.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, token]
+              properties:
+                platform:
+                  type: string
+                  enum: [android, ios]
+                token:
+                  type: string
+            example:
+              platform: android
+              token: example-device-token
+      responses:
+        '200':
+          description: Saved device token
+        '400':
+          description: Missing body or unsupported platform
+    delete:
+      summary: Delete my device token
+      description: |
+        Removes an FCM/APNs registration token for the caller.
+        Body `{ "token": "fcm-or-apns-token" }`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+            example:
+              token: example-device-token
+      responses:
+        '200':
+          description: Device token removed
+        '400':
+          description: Missing token
+  /integrations/{provider}/oauth/callback:
+    get:
+      summary: Public OAuth callback
+      description: |
+        Provider redirect. No JWT. Exchanges code+state, stores encrypted credentials,
+        returns HTML. Never includes tokens in the body.
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML success page
+        '400':
+          description: Invalid or expired state
+  /users/me/credentials/{provider}/test:
+    post:
+      summary: Test stored or posted credentials
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Probe succeeded
+        '400':
+          description: Probe failed
+  /users/{id}:
+    get:
+      summary: Get a specific user by ID
+      description: |
+        Retrieves the profile details for a specific user.
+        Requires a valid `targetUserId` variable.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Lookup identifier |
+        | `name` | `users` | `name` | Value from user record |
+        | `role` | `users` | `role` | User role |
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful data envelope with user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+        '404':
+          description: User not found
+  /users/sync:
+    post:
+      summary: Synchronize users from Phorge
+      description: |
+        Triggers a manual synchronization of users from the configured Phorge instance.
+        This will create new users in the DAB system if they exist in Phorge but not in DAB.
+        
+        ### Database Mapping
+        | Action | DB Table | Logic |
+        | :--- | :--- | :--- |
+        | INSERT | `users` | Created if email/phid not found |
+        | UPDATE | `users` | Metadata updated if existing |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sync completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      createdCount:
+                        type: integer
+                  meta:
+                    type: object
+  /admin/users:
+    get:
+      summary: Administrative endpoint to retrieve all users.
+      description: |
+        Administrative endpoint to retrieve all users with full metadata.
+        Requires administrator privileges.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `users` | `id` | Primary Key |
+        | `name` | `users` | `name` | Full name |
+        | `email` | `users` | `email` | Unique identifier |
+        | `role` | `users` | `role` | Access level |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create a new user account (admin only).
+      description: |
+        Administrative endpoint to create a new user account. This is the only
+        account creation path after the bootstrap admin has registered.
+        
+        When domain validation is enabled (`allowed_domain_enabled` system
+        setting), the email must match the configured `allowed_domain`;
+        otherwise any email is accepted. Existing accounts outside the domain
+        are unaffected by the toggle.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `name` | `users` | `name` | Full name |
+        | `email` | `users` | `email` | Unique login identifier |
+        | `password` | `users` | `password_hash` | Stored as bcrypt hash |
+        | `role` | `users` | `role` | Access control role |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, manager, standard]
+                  default: standard
+      responses:
+        '200':
+          description: Created user (without password hash)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error (missing fields, duplicate email, or domain restriction)
+  /admin/users/role:
+    post:
+      summary: Update a user's role.
+      description: |
+        Administrative endpoint to modify a user's role (e.g., 'user', 'admin').
+        
+        **Request Body**:
+        - `userId`: UUID of the target user.
+        - `role`: The new role to assign.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `userId` | `users` | `id` | Target record |
+        | `role` | `users` | `role` | Value to update |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, role]
+              properties:
+                userId:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Role updated
+  /admin/configs:
+    get:
+      summary: Get internal provider configurations.
+      description: |
+        Administrative endpoint to retrieve all internal provider configurations including sensitive settings.
+        
+        Returns a list of `ProviderConfig` objects. It also automatically scripts the extraction of a `targetProviderId` and `targetProviderUrl` into the environment for use in subsequent requests (Save/Test/Link).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `provider_configs` | `id` | Provider slug |
+        | `name` | `provider_configs` | `name` | Display label |
+        | `baseUrl` | `provider_configs` | `base_url` | API endpoint |
+        | `isActive` | `provider_configs` | `is_active` | Sync status |
+        | `settings` | `provider_configs` | `settings` | JSONB config |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Save or update a provider configuration.
+      description: |
+        Administrative endpoint to create or update a provider configuration.
+        
+        **Request Body**:
+        - `id`: Unique identifier for the provider (e.g., 'github', 'jira').
+        - `name`: Display name.
+        - `baseUrl`: Root URL of the provider API.
+        - `isActive`: Boolean toggle for syncing.
+        - `settings`: Map of provider-specific sensitive settings (e.g., `apiToken`).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `provider_configs` | `id` | Target record |
+        | `name` | `provider_configs` | `name` | Update value |
+        | `baseUrl` | `provider_configs` | `base_url` | Update value |
+        | `isActive` | `provider_configs` | `is_active` | Update value |
+        | `settings` | `provider_configs` | `settings` | Merged JSONB |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, baseUrl, isActive]
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                baseUrl:
+                  type: string
+                isActive:
+                  type: boolean
+                settings:
+                  type: object
+      responses:
+        '200':
+          description: Config saved
+  /admin/configs/test:
+    post:
+      summary: Test provider connectivity.
+      description: |
+        Verifies connection to a provider without saving the config. Requires admin privileges.
+        Returns a structured report with **Core**, **Live**, and **Polling** section results.
+
+        - **Core**: API credentials and base configuration (auth probe).
+        - **Live**: Strict external signal — last successful webhook/event ingest recorded in Redis within **7 days** (`live:last_ingest:{providerId}`). If none exists, Admin **Try** runs an internal webhook test delivery (validates signing secrets) and records the same key. Discord uses Gateway connection plus recent ingest or gateway test on Try.
+        - **Polling**: Read-only polling probe (commits, channel history, JQL, etc.).
+
+        **Aggregate** (main Admin card light) is derived from Live + Polling only:
+        both success → `success`; exactly one success → `warning`; neither → `failure`.
+        Core has its own section light but does not change the aggregate color.
+
+        Slack configs are validated with `auth.test` and support `settings.botToken`
+        (plus optional `settings.apiBaseUrl`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Connectivity test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      aggregate:
+                        type: string
+                        enum: [success, warning, failure]
+                        example: success
+                      summaryMessage:
+                        type: string
+                        example: Live and polling verified
+                      sections:
+                        type: object
+                        properties:
+                          core:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
+                          live:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
+                          polling:
+                            $ref: '#/components/schemas/ProviderConnectivitySection'
+  /admin/system-settings:
+    get:
+      summary: Retrieve system configuration settings.
+      description: |
+        Administrative endpoint to retrieve system configuration settings such as `allowed_domain_enabled`, `allowed_domain`, `public_api_url`, `system_timezone`, `deployment_mode`, and the daily-report deadline (`daily_report_lock_offset_days`, `daily_report_lock_time`).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
+        | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
+        | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+        | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are normalized on read. |
+        | `daily_report_lock_offset_days` | `system_settings` | `value` where `key = 'daily_report_lock_offset_days'` | Days after the report date when the edit cutoff applies (0–7, default `1`) |
+        | `daily_report_lock_time` | `system_settings` | `value` where `key = 'daily_report_lock_time'` | Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`) |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      allowed_domain_enabled:
+                        type: string
+                        enum: ['true', 'false']
+                      allowed_domain:
+                        type: string
+                      public_api_url:
+                        type: string
+                      system_timezone:
+                        type: string
+                        example: America/New_York
+                      deployment_mode:
+                        type: string
+                        enum: [managed, individual]
+                      daily_report_lock_offset_days:
+                        type: string
+                        example: '1'
+                      daily_report_lock_time:
+                        type: string
+                        example: '00:00'
+    put:
+      summary: Update system configuration settings.
+      description: |
+        Administrative endpoint to update system configuration settings
+        (key-value pairs, stored as-is).
+        
+        Existing accounts outside the allowed domain are grandfathered:
+        enabling validation only gates future account creations, never login.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `allowed_domain_enabled` | `system_settings` | `value` where `key = 'allowed_domain_enabled'` | Whether domain validation is enforced on account creation ('true'/'false') |
+        | `allowed_domain` | `system_settings` | `value` where `key = 'allowed_domain'` | Allowed email domain (kept even while validation is disabled) |
+        | `public_api_url` | `system_settings` | `value` where `key = 'public_api_url'` | Public DAB API base URL used for OAuth callbacks (`/integrations/{provider}/oauth/callback`) and webhook endpoint composition |
+        | `system_timezone` | `system_settings` | `value` where `key = 'system_timezone'` | IANA organization timezone for calendar-day boundaries (default `UTC`) |
+        | `deployment_mode` | `system_settings` | `value` where `key = 'deployment_mode'` | `managed` (Admin-owned tokens) or `individual` (Settings PATs). Legacy `organization` / `personal` are accepted and rewritten. |
+        | `daily_report_lock_offset_days` | `system_settings` | `value` where `key = 'daily_report_lock_offset_days'` | Days after the report date when the edit cutoff applies (0–7, default `1`) |
+        | `daily_report_lock_time` | `system_settings` | `value` where `key = 'daily_report_lock_time'` | Wall-clock `HH:mm` of the cutoff in `system_timezone` (default `00:00`) |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allowed_domain_enabled:
+                  type: string
+                  enum: ['true', 'false']
+                allowed_domain:
+                  type: string
+                  nullable: true
+                public_api_url:
+                  type: string
+                  nullable: true
+                system_timezone:
+                  type: string
+                  nullable: true
+                  example: America/New_York
+                deployment_mode:
+                  type: string
+                  enum: [managed, individual]
+                daily_report_lock_offset_days:
+                  type: string
+                  example: '1'
+                daily_report_lock_time:
+                  type: string
+                  example: '11:00'
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+  /admin/identities/summary:
+    get:
+      summary: Unresolved identity count for admin UI badge.
+      description: |
+        Returns `data.unresolvedCount` — identities in `pending` or `failed` state.
+        Requires administrator privileges.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      unresolvedCount:
+                        type: integer
+  /admin/identities:
+    get:
+      summary: List all linked identity records.
+      description: |
+        Administrative endpoint to retrieve all linked user identities across all providers.
+        Requires administrator privileges.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `user_identities` | `id` | Primary Key |
+        | `userId` | `user_identities` | `user_id` | Foreign Key |
+        | `providerId` | `user_identities` | `provider_id` | Provider name |
+        | `externalId` | `user_identities` | `external_id` | Provider PHID/ID |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /admin/identities/link:
+    post:
+      summary: Manually link a user identity.
+      description: |
+        Administrative endpoint to manually link a DAB user to an external provider's unique ID.
+        
+        **Request Body**:
+        - `userId`: UUID of the DAB user.
+        - `providerId`: ID of the provider (e.g., 'phorge', 'github').
+        - `externalId`: The unique identifier in the provider's system (e.g., PHID-USER-xxx).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `userId` | `user_identities` | `user_id` | Link target |
+        | `providerId` | `user_identities` | `provider_id` | Source system |
+        | `externalId` | `user_identities` | `external_id` | Remote ID |
+        | `externalUsername` | `user_identities` | `external_username` | Optional display linkage |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, providerId, externalId]
+              properties:
+                userId:
+                  type: string
+                providerId:
+                  type: string
+                externalId:
+                  type: string
+                externalUsername:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Identity linked
+  /admin/identities/{id}:
+    delete:
+      summary: Delete a user identity link.
+      description: |
+        Permanently removes a provider identity row from `user_identities` by primary key.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Identity deleted
+        '404':
+          description: Identity not found
+  /admin/identities/resolve:
+    post:
+      summary: Resolve identity status.
+      description: Administrative endpoint to update identity resolution status (`pending`, `linked`, `failed`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, providerId, status]
+              properties:
+                userId:
+                  type: string
+                providerId:
+                  type: string
+                status:
+                  type: string
+                  enum: [pending, linked, failed]
+      responses:
+        '200':
+          description: Identity resolved
+  /groups:
+    get:
+      summary: List all activity groups.
+      description: |
+        Retrieves alphabetical list of all activity groups.
+        Used for filtering and bulk viewing in the UI.
+        
+        Automatically scripts the extraction of a `targetGroupId` into the environment for use in subsequent requests (Delete/Modify).
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `id` | `groups` | `id` | Primary Key |
+        | `name` | `groups` | `name` | Display label |
+        | `description` | `groups` | `description` | Metadata |
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Save or update an activity group.
+      description: |
+        Creates or updates an activity group.
+        
+        **Request Body**:
+        - `name`: Human-readable name (e.g., 'Daily Sync', 'Production Alerts').
+        - `members`: List of user objects belonging to this group.
+        
+        ### Database Mapping
+        | API Field | DB Table | DB Column | Role |
+        | :--- | :--- | :--- | :--- |
+        | `name` | `groups` | `name` | Group record |
+        | `members` | `group_members` | `user_id` | Linked via join table |
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                type:
+                  type: string
+                members:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Group saved
+  /groups/{id}:
+    delete:
+      summary: Delete an activity group.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group deleted
+  /mock/activity:
+    post:
+      summary: Create a mock activity.
+      description: Development endpoint to manually trigger activity broadcasts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, provider, type, title]
+      responses:
+        '200':
+          description: Mock activity broadcasted
+  /mock/demo-day:
+    post:
+      summary: Seed a screenshot-ready demo day.
+      description: |
+        Authenticated development helper. Writes typed provider activities into
+        Postgres, Redis live feeds, Follow pins, a daily report, and
+        `demo:search:{userId}:{date}` for Explorer search.
+
+        Enabled when `DAB_ENABLE_MOCK=true` or `APP_ENV=development`.
+        Omit `date` to seed the organization calendar today (required for
+        Dashboard UTC-day visibility). Omit `userId` to seed the caller.
+        Set `team: true` to create/reuse 20 named teammates with varied
+        titles and cross-user directed rows (Insights / Explorer), plus
+        shared Directory groups (Engineering, Product, Design, Leadership).
+        The caller's day is a dense Dashboard inbox (all providers, extra cards).
+        `userIds` seeds existing accounts instead of the roster.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  description: Org-calendar day `YYYY-MM-DD`. Empty or omitted seeds today.
+                userId:
+                  type: string
+                  description: Target user id for a single seed. Empty or omitted seeds the caller.
+                team:
+                  type: boolean
+                  description: Create or reuse the 20-person demo roster and seed everyone.
+                teamSize:
+                  type: integer
+                  description: Roster size when team is true (2–40, default 20).
+                userIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Existing user ids to seed instead of the roster.
+            example:
+              date: ''
+              team: true
+              teamSize: 20
+      responses:
+        '200':
+          description: Demo day seeded
+        '400':
+          description: Invalid date
+        '403':
+          description: Mock seed disabled
+        '404':
+          description: User not found
+

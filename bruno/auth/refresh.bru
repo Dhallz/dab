@@ -1,0 +1,59 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 3
+}
+
+docs {
+  Rotates the user's authentication tokens.
+  
+  **Request Body**:
+  - `refreshToken`: The valid refresh token obtained from login or a previous refresh.
+  
+  Upon success, new `accessToken` and `refreshToken` pairs are returned and automatically saved to the environment.
+
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `refreshToken` | `sessions` | `id` | Validates against existing session |
+  | `accessToken` (res) | N/A | JWT | Stateless |
+  | `refreshToken` (res) | `sessions` | `id` | Rotated record |
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+    bru.setEnvVar("refreshToken", res.body.refreshToken);
+    
+    bru.setVar("accessToken", res.body.accessToken);
+    bru.setVar("refreshToken", res.body.refreshToken);
+    
+    console.log("Tokens refreshed successfully.");
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("New access token is provided", function() {
+    expect(res.body.accessToken).to.be.a("string");
+  });
+
+  test("New refresh token is provided", function() {
+    expect(res.body.refreshToken).to.be.a("string");
+  });
+}

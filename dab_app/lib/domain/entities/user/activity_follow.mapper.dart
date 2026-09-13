@@ -1,0 +1,181 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, unnecessary_cast, override_on_non_overriding_member
+// ignore_for_file: strict_raw_type, inference_failure_on_untyped_parameter
+
+part of 'activity_follow.dart';
+
+class ActivityFollowMapper extends ClassMapperBase<ActivityFollow> {
+  ActivityFollowMapper._();
+
+  static ActivityFollowMapper? _instance;
+  static ActivityFollowMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ActivityFollowMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ActivityFollow';
+
+  static String _$providerId(ActivityFollow v) => v.providerId;
+  static const Field<ActivityFollow, String> _f$providerId = Field(
+    'providerId',
+    _$providerId,
+  );
+  static String _$objectKey(ActivityFollow v) => v.objectKey;
+  static const Field<ActivityFollow, String> _f$objectKey = Field(
+    'objectKey',
+    _$objectKey,
+  );
+  static String? _$title(ActivityFollow v) => v.title;
+  static const Field<ActivityFollow, String> _f$title = Field(
+    'title',
+    _$title,
+    opt: true,
+  );
+  static String? _$url(ActivityFollow v) => v.url;
+  static const Field<ActivityFollow, String> _f$url = Field(
+    'url',
+    _$url,
+    opt: true,
+  );
+  static String _$objectRef(ActivityFollow v) => v.objectRef;
+  static const Field<ActivityFollow, String> _f$objectRef = Field(
+    'objectRef',
+    _$objectRef,
+    mode: FieldMode.member,
+  );
+  static String _$displayTitle(ActivityFollow v) => v.displayTitle;
+  static const Field<ActivityFollow, String> _f$displayTitle = Field(
+    'displayTitle',
+    _$displayTitle,
+    mode: FieldMode.member,
+  );
+
+  @override
+  final MappableFields<ActivityFollow> fields = const {
+    #providerId: _f$providerId,
+    #objectKey: _f$objectKey,
+    #title: _f$title,
+    #url: _f$url,
+    #objectRef: _f$objectRef,
+    #displayTitle: _f$displayTitle,
+  };
+
+  static ActivityFollow _instantiate(DecodingData data) {
+    return ActivityFollow(
+      providerId: data.dec(_f$providerId),
+      objectKey: data.dec(_f$objectKey),
+      title: data.dec(_f$title),
+      url: data.dec(_f$url),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ActivityFollow fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ActivityFollow>(map);
+  }
+
+  static ActivityFollow fromJson(String json) {
+    return ensureInitialized().decodeJson<ActivityFollow>(json);
+  }
+}
+
+mixin ActivityFollowMappable {
+  String toJson() {
+    return ActivityFollowMapper.ensureInitialized().encodeJson<ActivityFollow>(
+      this as ActivityFollow,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return ActivityFollowMapper.ensureInitialized().encodeMap<ActivityFollow>(
+      this as ActivityFollow,
+    );
+  }
+
+  ActivityFollowCopyWith<ActivityFollow, ActivityFollow, ActivityFollow>
+  get copyWith => _ActivityFollowCopyWithImpl<ActivityFollow, ActivityFollow>(
+    this as ActivityFollow,
+    $identity,
+    $identity,
+  );
+  @override
+  String toString() {
+    return ActivityFollowMapper.ensureInitialized().stringifyValue(
+      this as ActivityFollow,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return ActivityFollowMapper.ensureInitialized().equalsValue(
+      this as ActivityFollow,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return ActivityFollowMapper.ensureInitialized().hashValue(
+      this as ActivityFollow,
+    );
+  }
+}
+
+extension ActivityFollowValueCopy<$R, $Out>
+    on ObjectCopyWith<$R, ActivityFollow, $Out> {
+  ActivityFollowCopyWith<$R, ActivityFollow, $Out> get $asActivityFollow =>
+      $base.as((v, t, t2) => _ActivityFollowCopyWithImpl<$R, $Out>(v, t, t2));
+}
+
+abstract class ActivityFollowCopyWith<$R, $In extends ActivityFollow, $Out>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({String? providerId, String? objectKey, String? title, String? url});
+  ActivityFollowCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class _ActivityFollowCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, ActivityFollow, $Out>
+    implements ActivityFollowCopyWith<$R, ActivityFollow, $Out> {
+  _ActivityFollowCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<ActivityFollow> $mapper =
+      ActivityFollowMapper.ensureInitialized();
+  @override
+  $R call({
+    String? providerId,
+    String? objectKey,
+    Object? title = $none,
+    Object? url = $none,
+  }) => $apply(
+    FieldCopyWithData({
+      if (providerId != null) #providerId: providerId,
+      if (objectKey != null) #objectKey: objectKey,
+      if (title != $none) #title: title,
+      if (url != $none) #url: url,
+    }),
+  );
+  @override
+  ActivityFollow $make(CopyWithData data) => ActivityFollow(
+    providerId: data.get(#providerId, or: $value.providerId),
+    objectKey: data.get(#objectKey, or: $value.objectKey),
+    title: data.get(#title, or: $value.title),
+    url: data.get(#url, or: $value.url),
+  );
+
+  @override
+  ActivityFollowCopyWith<$R2, ActivityFollow, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  ) => _ActivityFollowCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+

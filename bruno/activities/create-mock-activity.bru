@@ -1,0 +1,54 @@
+meta {
+  name: Create Mock Activity
+  type: http
+  seq: 3
+}
+
+docs {
+  Development/Testing endpoint to inject a mock activity into the system.
+  This bypasses provider-specific logic and broadcasts the activity to all listeners.
+  
+  **Request Body**:
+  - `userId`: UUID of the user to attribute the activity to.
+  - `provider`: String name of the provider (e.g., 'Mock').
+  - `type`: Activity type (e.g., 'generic', 'commit').
+  - `title`: Short summary of the activity.
+  - `content`: Full description.
+  - `url`: Direct link to the mock activity.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `userId` | `activities` | `user_id` | Foreign Key |
+  | `provider` | `activities` | `provider` | Label |
+  | `title` | `activities` | `title` | Headline |
+  | `content` | `activities` | `content` | Body |
+  | `url` | `activities` | `url` | Resource Link |
+}
+
+post {
+  url: {{baseUrl}}/mock/activity
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "provider": "Mock",
+    "type": "generic",
+    "title": "Test Activity",
+    "content": "This is a test activity created via Bruno",
+    "url": "https://example.com"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Activity status confirmed", function() {
+    expect(res.body.status).to.equal("Activity logged and broadcasted");
+  });
+}

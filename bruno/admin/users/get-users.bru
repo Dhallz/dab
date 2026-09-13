@@ -1,0 +1,35 @@
+meta {
+  name: Get Users (Admin)
+  type: http
+  seq: 1
+}
+
+docs {
+  Administrative endpoint to retrieve all users with full metadata.
+  Requires administrator privileges.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `users` | `id` | Primary Key |
+  | `name` | `users` | `name` | Full name |
+  | `email` | `users` | `email` | Unique identifier |
+  | `role` | `users` | `role` | Access level |
+}
+
+get {
+  url: {{baseUrl}}/admin/users
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns data envelope with array", function() {
+    expect(res.body.data).to.be.an("array");
+    expect(res.body.meta).to.be.an("object");
+  });
+}

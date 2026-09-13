@@ -1,0 +1,36 @@
+meta {
+  name: Get Live Activities
+  type: http
+  seq: 4
+}
+
+docs {
+  Redis-only live inbox. Does not query Postgres. Dashboard omits `scope` (user inbox).
+  `scope=global` is accepted by the API but unused by the app.
+
+  **Query Parameters**:
+  - `limit` (optional, 1..250): Default 50. Dashboard requests 150.
+  - `scope` (optional): `user` (default) or `global`.
+  - `includeArchived` (optional): `true` / `1` to include archived rows.
+}
+
+get {
+  url: {{baseUrl}}/activities/live
+  body: none
+  auth: inherit
+}
+
+params:query {
+  limit: 50
+  scope: user
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns live activity array", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

@@ -1,0 +1,53 @@
+meta {
+  name: 12 Save GitLab
+  type: http
+  seq: 12
+}
+
+docs {
+  Restores **GitLab** provider config.
+
+  Settings:
+  - Core: `apiToken`, `instanceUrl`
+  - Live: `webhookSecret`
+  - Polling: newline `projects` (e.g. `group/repo`), optional `branch`
+
+  **Webhook URL** (GitLab project/group → Webhooks):
+  `{{gitlabWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "baseUrl": "{{gitlabInstanceUrl}}",
+    "isActive": true,
+    "settings": {
+      "apiToken": "{{gitlabApiToken}}",
+      "instanceUrl": "{{gitlabInstanceUrl}}",
+      "webhookSecret": "{{gitlabWebhookSecret}}",
+      "projects": "{{gitlabProjects}}",
+      "branch": "{{gitlabBranch}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("gitlabWebhookUrl") || bru.getEnvVar("gitlabWebhookUrl");
+  if (url) console.log("GitLab webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns gitlab config", function() {
+    expect(res.body.data.id).to.equal("gitlab");
+  });
+}

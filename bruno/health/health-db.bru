@@ -1,0 +1,30 @@
+meta {
+  name: Health DB
+  type: http
+  seq: 2
+}
+
+docs {
+  Checks the connectivity and health of the infrastructure dependencies (PostgreSQL and Redis).
+  
+  ### Database Mapping
+  | Component | DB Table | Method |
+  | :--- | :--- | :--- |
+  | `database` | `pg_catalog.pg_database` | Drift ping (SELECT 1) |
+  | `cache` | N/A | Redis PING command |
+}
+
+get {
+  url: {{baseUrl}}/health/db
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Database connected", function() {
+    expect(res.body.database).to.equal("connected");
+  });
+}

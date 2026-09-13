@@ -1,0 +1,51 @@
+meta {
+  name: Create FILE_COMMENT webhook
+  type: http
+  seq: 1
+}
+
+docs {
+  Registers a Figma Webhooks v2 subscription for **`FILE_COMMENT`**.
+
+  DAB does **not** call this API. Requires a Figma plan that allows webhooks
+  (Professional or higher) and a short-lived token with `webhooks:write`.
+
+  Fill `local-secrets` (or `local`) env:
+  - `figmaWebhookWriteToken`
+  - `figmaTeamId`
+  - `figmaWebhookUrl` (public HTTPS `/integrations/figma/webhook`)
+  - `figmaWebhookSecret` (same as Admin → Figma → Live)
+
+  Revoke the write token and clear `figmaWebhookWriteToken` after use.
+}
+
+post {
+  url: https://api.figma.com/v2/webhooks
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Figma-Token: {{figmaWebhookWriteToken}}
+}
+
+body:json {
+  {
+    "event_type": "FILE_COMMENT",
+    "context": "team",
+    "context_id": "{{figmaTeamId}}",
+    "endpoint": "{{figmaWebhookUrl}}",
+    "passcode": "{{figmaWebhookSecret}}",
+    "description": "DAB comments"
+  }
+}
+
+tests {
+  test("Created FILE_COMMENT webhook", function() {
+    if (res.status !== 200 && res.status !== 201) {
+      console.log("Body:", JSON.stringify(res.body));
+    }
+    expect([200, 201]).to.include(res.status);
+  });
+}

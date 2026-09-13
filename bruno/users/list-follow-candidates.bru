@@ -1,0 +1,31 @@
+meta {
+  name: List Follow Candidates
+  type: http
+  seq: 14
+}
+
+docs {
+  Lists Follow picker rows for the caller (also used by Reports search).
+
+  Empty `q` lists open Phorge/Jira/Linear issues the caller is assigned,
+  watching/subscribed, or reporting. A typed `q` substring-matches the
+  display title (task number or keyword) on Phorge/Jira/Linear issues
+  (instance team/project allow-lists still apply) plus GitHub/GitLab/Bitbucket
+  branches (`owner/repo|branch`).
+}
+
+get {
+  url: {{baseUrl}}/users/me/follows/candidates?q=
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns a candidate list envelope", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

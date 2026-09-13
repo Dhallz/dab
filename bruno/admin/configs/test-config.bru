@@ -1,0 +1,57 @@
+meta {
+  name: Test Provider Config
+  type: http
+  seq: 3
+}
+
+docs {
+  Administrative endpoint to test connectivity for a provider configuration without saving it.
+  
+  **Request Body**: Identical to `Save Provider Config`.
+  
+  Returns a structured connectivity report with Core, Live, and Polling section results.
+  Live green requires a successful ingest recorded in Redis within the last 7 days (Discord also requires an active Gateway session).
+  When no recent ingest exists, Try runs an internal webhook test delivery (validates Live signing secrets) and records success in Redis.
+  The aggregate status is derived from Live + Polling only: both success → `success`, one success → `warning`, neither → `failure`.
+  
+  ### Database Mapping
+  | Action | DB Table | Role |
+  | :--- | :--- | :--- |
+  | N/A | N/A | Stateless (No DB mutations) |
+}
+
+post {
+  url: {{baseUrl}}/admin/configs/test
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "{{targetProviderId}}",
+    "name": "{{targetProviderId}}",
+    "baseUrl": "{{targetProviderUrl}}",
+    "isActive": true,
+    "settings": {
+      "apiToken": "{{targetProviderToken}}",
+      "api.token": "{{targetProviderToken}}",
+      "botToken": "{{targetProviderToken}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Connectivity report is returned", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data).to.have.property("aggregate");
+    expect(res.body.data).to.have.property("summaryMessage");
+    expect(res.body.data).to.have.property("sections");
+    expect(res.body.data.sections).to.have.property("core");
+    expect(res.body.data.sections).to.have.property("live");
+    expect(res.body.data.sections).to.have.property("polling");
+  });
+}

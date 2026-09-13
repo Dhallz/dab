@@ -1,0 +1,61 @@
+---
+trigger: always_on
+glob: "**/*"
+description: Git commits — user-initiated only, one per request; message discipline
+---
+
+# Git commit rule
+
+## Commits only when the user asks
+
+- **Do not run `git commit`** unless the user **explicitly** asks you to commit in the current conversation (for example “commit this”, “make a commit”, “please commit”).
+- Do **not** infer permission from “task done”, analyzer clean, tests passing, docs updated, or end of session.
+- If work is finished and nothing is staged, **leave changes uncommitted** and tell the user they can ask for a commit when they want history updated.
+
+## One commit per explicit request
+
+- A single request to commit means **exactly one** `git commit` for the scope implied (typically the current focused change set). Do **not** split it into multiple commits unless the user **explicitly** asks for separate commits in the same message.
+- After that commit, **wait for a new request** before running `git commit` again—even if more edits follow in the chat.
+
+Prefer **one cohesive commit** when they do ask: staged files should belong to what they intend to record; avoid bundling unrelated work into that commit unless they ask otherwise.
+
+## Tie commits to the active issue
+
+- When work maps to a tracker issue (e.g. Linear **DAB-40**), **every commit subject must include that issue key** so history is searchable and reviewable.
+
+## Subject line (first line)
+
+- Preferred form: `DAB-NN: Short imperative description` (issue id, colon, space, summary).
+- Use **imperative mood** (`Add`, `Fix`, `Align`), not past tense or “Adding…”.
+- Keep the first line roughly **72 characters** or fewer.
+
+## Body
+
+- For non-trivial changes, add a blank line after the subject, then **what changed and why** in clear, complete sentences—same tone as a good PR description, not raw chat or internal checklists.
+
+## Do not put in commit messages
+
+- Any note that the change was made **by Cursor, Copilot, ChatGPT**, or another AI assistant.
+- **Generated-by** / **Co-authored-by** lines (or similar) whose only purpose is to credit a tool.
+- Session meta (“fixed lints”, “address review”) unless that is the actual substance of the commit and still written professionally.
+
+## Examples
+
+**Good**
+
+```text
+DAB-40: Map bootstrap lock failure to 403 on login
+
+Reject credential exchange when no admins exist and the email is not the
+configured bootstrap address. Surfaces BootstrapLockFailure in the auth flow.
+```
+
+**Bad**
+
+```text
+updates
+
+Co-authored-by: Cursor <noreply@cursor.com>
+
+DAB-40 wip
+```

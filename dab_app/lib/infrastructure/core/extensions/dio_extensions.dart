@@ -26,17 +26,14 @@ extension OnDioException on DioException {
               {};
           return ValidationFailure(
             errors: errors,
-            message: data['message'] ?? 'Validation failed',
+            message: data['error'] ?? data['message'] ?? 'Validation failed',
           );
         }
 
-        // Handle specific server errors
         return ServerFailure(
-          message: data is Map
-              ? data['message'] ?? 'Server error'
-              : 'Server error',
+          message: _badResponseMessage(data),
           statusCode: status,
-          errorCode: data is Map ? data['code'] : null,
+          errorCode: data is Map ? data['code']?.toString() : null,
         );
 
       case DioExceptionType.cancel:
@@ -49,4 +46,27 @@ extension OnDioException on DioException {
         );
     }
   }
+}
+
+String _badResponseMessage(dynamic data) {
+  if (data is Map) {
+    final error = data['error'];
+    if (error is Map) {
+      final nested = error['details'] ?? error['message'];
+      if (nested != null && nested.toString().trim().isNotEmpty) {
+        return nested.toString();
+      }
+    }
+    final raw = data['details'] ?? error ?? data['message'];
+    if (raw is String && raw.trim().isNotEmpty) return raw;
+    if (raw != null && raw is! Map) return raw.toString();
+  }
+  if (data is String && data.trim().isNotEmpty) {
+    final trimmed = data.trim();
+    if (trimmed.contains("doesn't compute")) {
+      return 'Not found';
+    }
+    return trimmed;
+  }
+  return 'Server error';
 }

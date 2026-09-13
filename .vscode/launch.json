@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DAB API (Docker + Attach)",
+      "type": "dart",
+      "request": "attach",
+      "cwd": "${workspaceFolder}/dab_api",
+      "vmServiceUri": "http://127.0.0.1:9181/",
+      "waitForVmServiceMs": 90000,
+      "preLaunchTask": "dab: docker stack ready for debug"
+    },
+    {
+      "name": "DAB API",
+      "cwd": "dab_api",
+      "request": "launch",
+      "type": "dart",
+      "program": "bin/dab_api.dart"
+    },
+    {
+      "name": "DAB App (Debug)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "DAB App (Profile)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "DAB App (Release)",
+      "cwd": "dab_app",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "DAB Stack (local API + App)",
+      "configurations": [
+        "DAB API",
+        "DAB App (Debug)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+meta {
+  name: 13 Save Bitbucket
+  type: http
+  seq: 13
+}
+
+docs {
+  Restores **Bitbucket** provider config.
+
+  Settings:
+  - Core: `username`, `apiToken`, `workspace`
+  - Live: `webhookSecret`
+  - Polling: newline `repos` (repo slugs within the workspace)
+
+  **Webhook URL** (Bitbucket repo → Webhooks):
+  `{{bitbucketWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "bitbucket",
+    "name": "Bitbucket",
+    "baseUrl": "https://bitbucket.org",
+    "isActive": true,
+    "settings": {
+      "username": "{{bitbucketUsername}}",
+      "apiToken": "{{bitbucketApiToken}}",
+      "workspace": "{{bitbucketWorkspace}}",
+      "webhookSecret": "{{bitbucketWebhookSecret}}",
+      "repos": "{{bitbucketRepos}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("bitbucketWebhookUrl") || bru.getEnvVar("bitbucketWebhookUrl");
+  if (url) console.log("Bitbucket webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns bitbucket config", function() {
+    expect(res.body.data.id).to.equal("bitbucket");
+  });
+}

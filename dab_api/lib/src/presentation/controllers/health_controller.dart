@@ -1,19 +1,30 @@
 import 'dart:convert';
-
 import 'package:relic/relic.dart';
+import '../../application/containers/health_usecases.dart';
+import '../../service_locator.dart';
 
-import '../../infrastructure/database/database_client.dart';
-
+/// [ARCH: PRESENTATION_CONTROLLER]
+/// ROLE: Controller for System Health and Monitoring.
+/// CONTRACT: Standard Relic Controller providing status and database connectivity info.
+/// CONSTRAINTS: Purely for system vitals. Uses [HealthUseCases] to verify DB connectivity.
 class HealthController {
-  static Future<Response> check(Request request) async {
-    bool dbHealthy = false;
-    try {
-      final pool = DatabaseClient().pool;
-      await pool.execute('SELECT 1');
-      dbHealthy = true;
-    } catch (e) {
-      dbHealthy = false;
-    }
+  final HealthUseCases _health = sl<HealthUseCases>();
+
+  Future<Response> check(Request request) async {
+    return Response.ok(
+      body: Body.fromString(
+        jsonEncode({
+          'status': 'healthy',
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+        mimeType: MimeType.json,
+      ),
+    );
+  }
+
+  Future<Response> checkDb(Request request) async {
+    final result = await _health.checkDatabaseHealth.execute();
+    final dbHealthy = result.isRight();
 
     return Response.ok(
       body: Body.fromString(

@@ -1,16 +1,49 @@
-# dab_app
+# 📱 DAB Dashboard (Flutter)
 
-A new Flutter project.
+The ultra-lean, sub-second real-time dashboard for DAB. Experience **high-frame-rate insight** through premium [glassmorphism](https://en.wikipedia.org/wiki/Glassmorphism) and strict Clean Architecture.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🏗️ Layered Architecture
 
-A few resources to get you started if this is your first Flutter project:
+| Layer | Responsibility | Pattern |
+| :--- | :--- | :--- |
+| **Presentation** | UI & screen state | Flutter + Riverpod (`Notifier`) |
+| **Domain** | Models, use cases & contracts | Pure Dart + `Either` |
+| **Infrastructure** | Local persistence & API clients | ObjectBox + Dio |
+| **Composition** | Wiring | `ServiceLocator` (`sl`) |
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+> [!TIP]
+> Dive deep into the mobile world: **[App Documentation](../doc/app.md)** and **[Design Conventions](../doc/conventions.md)**.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 🚀 Ignition Checklist
+
+1. **Gear Up**:
+   ```bash
+   flutter pub get
+   ```
+
+2. **Generate Native Bindings**:
+   ```bash
+   flutter pub run build_runner build --delete-conflicting-outputs
+   ```
+
+3. **Launch the Experience**:
+   ```bash
+   flutter run
+   ```
+
+4. **Debug API in Docker** (optional): From the repo root, run **DAB API (Docker + Attach)** in `.vscode/launch.json`, then start **DAB App (Debug)** when the API is healthy.
+
+---
+
+## 🛠️ Performance Stack
+- **State:** Riverpod notifiers + immutable `@MappableClass` states
+- **Persistence:** ObjectBox (local-first explorer cache)
+- **DI:** Custom `ServiceLocator` (`sl`) — not GetIt
+- **Visuals:** Material 3 + custom glass design tokens
+
+---
+*Built for developers who value their pixels.*

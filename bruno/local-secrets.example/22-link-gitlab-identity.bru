@@ -1,0 +1,32 @@
+meta {
+  name: 22 Link GitLab Identity
+  type: http
+  seq: 22
+}
+
+docs {
+  Links a DAB user to a GitLab user id or username.
+
+  Requires `targetUserId` and `gitlabExternalId`.
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "gitlab",
+    "externalId": "{{gitlabExternalId}}",
+    "externalUsername": "{{gitlabExternalId}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,32 @@
+meta {
+  name: 27 Link Discord Identity
+  type: http
+  seq: 27
+}
+
+docs {
+  Links a DAB user to a Discord snowflake user id.
+
+  Requires `targetUserId` and `discordExternalId`.
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "discord",
+    "externalId": "{{discordExternalId}}",
+    "externalUsername": "{{discordExternalId}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

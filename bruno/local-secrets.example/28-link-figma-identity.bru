@@ -1,0 +1,32 @@
+meta {
+  name: 28 Link Figma Identity
+  type: http
+  seq: 28
+}
+
+docs {
+  Links a DAB user to a Figma user id (`GET /v1/me` → `id`). No email fallback.
+
+  Requires `targetUserId` and `figmaExternalId`.
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "figma",
+    "externalId": "{{figmaExternalId}}",
+    "externalUsername": "{{figmaExternalId}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,34 @@
+meta {
+  name: Save My Follow
+  type: http
+  seq: 16
+}
+
+docs {
+  Upserts a Dashboard object Follow pin for the caller.
+  Body: `{ "providerId": "phorge", "objectKey": "PHID-TASK-1", "title": "[T123] Fix login" }`.
+  Optional `title` and `url` are a display snapshot for the Following pane.
+  Allowed provider ids: phorge, jira, linear, slack, discord, github, gitlab,
+  bitbucket, figma. Git objectKey is `owner/repo|branch`. Figma objectKey is
+  the file key.
+}
+
+put {
+  url: {{baseUrl}}/users/me/follows
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "providerId": "phorge",
+    "objectKey": "PHID-TASK-1",
+    "title": "[T123] Fix login"
+  }
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+}

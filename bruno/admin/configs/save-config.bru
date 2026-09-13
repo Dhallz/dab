@@ -1,0 +1,54 @@
+meta {
+  name: Save Provider Config
+  type: http
+  seq: 2
+}
+
+docs {
+  Administrative endpoint to create or update a provider configuration.
+  
+  **Request Body**:
+  - `id`: Unique identifier for the provider (e.g., 'github', 'jira').
+  - `name`: Display name.
+  - `baseUrl`: Root URL of the provider API.
+  - `isActive`: Boolean toggle for syncing.
+  - `settings`: Map of provider-specific sensitive settings (e.g., `apiToken`).
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `provider_configs` | `id` | Target record |
+  | `name` | `provider_configs` | `name` | Update value |
+  | `baseUrl` | `provider_configs` | `base_url` | Update value |
+  | `isActive` | `provider_configs` | `is_active` | Update value |
+  | `settings` | `provider_configs` | `settings` | Merged JSONB |
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "{{targetProviderId}}",
+    "name": "{{targetProviderId}}",
+    "baseUrl": "{{targetProviderUrl}}",
+    "isActive": true,
+    "settings": {
+      "apiToken": "{{targetProviderToken}}"
+    }
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns saved config", function() {
+    expect(res.body.data).to.be.an("object");
+    expect(res.body.data.id).to.equal(bru.getVar("targetProviderId"));
+  });
+}

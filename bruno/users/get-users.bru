@@ -1,0 +1,43 @@
+meta {
+  name: Get Users
+  type: http
+  seq: 1
+}
+
+docs {
+  Returns a list of all registered users in the system.
+  The first user's ID is automatically captured into the `targetUserId` variable for use in other requests.
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `users` | `id` | Primary Key |
+  | `name` | `users` | `name` | Display name |
+  | `email` | `users` | `email` | Unique identifier |
+  | `role` | `users` | `role` | Permissions group |
+  | `avatarUrl` | `users` | `avatar_url` | Profile image |
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.length > 0) {
+    const firstUser = res.body.data[0];
+    bru.setEnvVar("targetUserId", firstUser.id);
+    bru.setVar("targetUserId", firstUser.id);
+    console.log("Automatically populated targetUserId with: " + firstUser.id);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns users array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

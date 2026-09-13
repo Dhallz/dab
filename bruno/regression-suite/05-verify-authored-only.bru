@@ -1,0 +1,20 @@
+meta {
+  name: 5. Verify Authored Only
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/activities/search?startDate=2026-04-01&endDate=2026-04-30&authoredOnly=true&users={{targetUserId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Personal activities returned", function() {
+    expect(res.body.data).to.be.an('array');
+  });
+}

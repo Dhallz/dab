@@ -1,0 +1,34 @@
+meta {
+  name: Start My OAuth
+  type: http
+  seq: 8
+}
+
+docs {
+  Starts a browser OAuth authorization-code flow for the authenticated user.
+  Returns `{ authorizationUrl }` only — the PKCE verifier stays in Redis (`oauth:state:{id}`, TTL ~10 minutes).
+
+  The callback is `GET /integrations/{provider}/oauth/callback` (public, no JWT).
+  It never returns tokens in the HTML body.
+
+  Providers: github, gitlab, linear, bitbucket, jira.
+  Requires Admin OAuth `clientId`/`clientSecret` and `public_api_url`.
+}
+
+post {
+  url: {{baseUrl}}/users/me/credentials/github/oauth/start
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  test("Does not return a verifier or token", function() {
+    const body = JSON.stringify(res.body || {});
+    expect(body).to.not.include("codeVerifier");
+    expect(body).to.not.include("access_token");
+    expect(body).to.not.include("clientSecret");
+  });
+}

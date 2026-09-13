@@ -1,0 +1,28 @@
+meta {
+  name: List My Jira Projects
+  type: http
+  seq: 9
+}
+
+docs {
+  Lists Jira Cloud projects visible to the authenticated user's OAuth token,
+  plus the instance watch list (`provider_configs.settings.projectKeys`).
+  Requires a connected Jira credential. Secrets are never returned.
+}
+
+get {
+  url: {{baseUrl}}/users/me/credentials/jira/projects
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200 or 400", function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  test("Does not return tokens", function() {
+    const body = JSON.stringify(res.body || {});
+    expect(body).to.not.include("access_token");
+    expect(body).to.not.include("apiToken");
+  });
+}

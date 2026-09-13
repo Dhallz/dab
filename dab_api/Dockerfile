@@ -13,11 +13,11 @@ RUN dart pub get --offline
 RUN dart compile exe bin/dab_api.dart -o bin/server
 
 # Build minimal serving image from AOT-compiled `/server`
-# and the pre-compiled AOT runtime.
+# and the pre-compiled AOT runtime. Drift runs migrations in-process (no
+# `migrations/` directory).
 FROM scratch
 COPY --from=build /runtime/ /
 COPY --from=build /app/bin/server /app/server
-COPY --from=build /app/migrations /app/migrations
 
 # Start server.
 WORKDIR /app

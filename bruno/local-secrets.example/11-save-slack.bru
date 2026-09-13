@@ -1,0 +1,57 @@
+meta {
+  name: 11 Save Slack
+  type: http
+  seq: 11
+}
+
+docs {
+  Restores **Slack** provider config.
+
+  Settings:
+  - Core: `botToken`, `workspaceId`, optional `apiBaseUrl`
+  - Live: `signingSecret`
+  - Polling: newline-separated `channels`
+
+  **Webhook URL** (Slack app → Event Subscriptions → Request URL):
+  `{{slackWebhookUrl}}`
+  Run **04 Webhook Endpoints** first if this var is empty.
+
+  Use `\n` in `slackChannels` for multiple channel IDs (e.g. `C0123\nC0456`).
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "slack",
+    "name": "Slack",
+    "baseUrl": "https://slack.com",
+    "isActive": true,
+    "settings": {
+      "botToken": "{{slackBotToken}}",
+      "workspaceId": "{{slackWorkspaceId}}",
+      "apiBaseUrl": "{{slackApiBaseUrl}}",
+      "signingSecret": "{{slackSigningSecret}}",
+      "webhookUrl": "{{slackWebhookUrl}}",
+      "channels": "{{slackChannels}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("slackWebhookUrl") || bru.getEnvVar("slackWebhookUrl");
+  if (url) console.log("Slack events URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns slack config", function() {
+    expect(res.body.data.id).to.equal("slack");
+  });
+}

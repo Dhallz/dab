@@ -1,0 +1,41 @@
+meta {
+  name: Save My Daily Report
+  type: http
+  seq: 21
+}
+
+docs {
+  Upserts the caller's personal daily report for an org-calendar day.
+  Body: `{ "includeFollowing": false, "lines": [ { "subjectKey": "github|acme/app|abc1234", "included": true, "note": "Shipped login", "role": "authored", "title": "Fix login", "providerId": "github" } ] }`.
+  Replaces all lines for that date. Notes stay in DAB.
+  Writes after the Admin report deadline (`daily_report_lock_offset_days` + `daily_report_lock_time` in `system_timezone`) return **403**.
+  Requires a signed-in user.
+}
+
+put {
+  url: {{baseUrl}}/users/me/day-reports/2026-08-22
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "includeFollowing": false,
+    "lines": [
+      {
+        "subjectKey": "github|acme/app|abc1234",
+        "included": true,
+        "note": "Shipped login",
+        "role": "authored",
+        "title": "Fix login",
+        "providerId": "github"
+      }
+    ]
+  }
+}
+
+tests {
+  test("Status 200, 400, or 403", function() {
+    expect([200, 400, 403]).to.include(res.status);
+  });
+}

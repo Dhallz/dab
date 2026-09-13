@@ -1,0 +1,27 @@
+meta {
+  name: List My Daily Reports
+  type: http
+  seq: 19
+}
+
+docs {
+  Lists org-calendar dates (`YYYY-MM-DD`) for which the caller has a saved
+  daily report, newest first. Requires a signed-in user. Empty lists are
+  `200` with `data: []`.
+}
+
+get {
+  url: {{baseUrl}}/users/me/day-reports
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns a date list envelope", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Get Identities Summary
+  type: http
+  seq: 2
+}
+
+docs {
+  Returns `unresolvedCount`: number of identities in `pending` or `failed` state (admin shell badge).
+  Requires administrator privileges.
+}
+
+get {
+  url: {{baseUrl}}/admin/identities/summary
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns unresolvedCount", function() {
+    expect(res.body.data).to.have.property("unresolvedCount");
+  });
+}

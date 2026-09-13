@@ -1,0 +1,25 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+docs {
+  Basic availability check for the DAB API.
+  Returns "healthy" if the server is running and accepting requests.
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Status is healthy", function() {
+    expect(res.body.status).to.equal("healthy");
+  });
+}

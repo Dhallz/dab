@@ -1,0 +1,32 @@
+meta {
+  name: 23 Link Bitbucket Identity
+  type: http
+  seq: 23
+}
+
+docs {
+  Links a DAB user to a Bitbucket account UUID or username.
+
+  Requires `targetUserId` and `bitbucketExternalId`.
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "bitbucket",
+    "externalId": "{{bitbucketExternalId}}",
+    "externalUsername": "{{bitbucketExternalId}}"
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

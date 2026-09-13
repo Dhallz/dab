@@ -14,6 +14,7 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
   static SettingsStateMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = SettingsStateMapper._());
+      ViewStatusMapper.ensureInitialized();
       AppSettingsMapper.ensureInitialized();
     }
     return _instance!;
@@ -22,31 +23,50 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
   @override
   final String id = 'SettingsState';
 
-  static AppSettings _$settings(SettingsState v) => v.settings;
-  static const Field<SettingsState, AppSettings> _f$settings = Field(
-    'settings',
-    _$settings,
+  static ViewStatus _$status(SettingsState v) => v.status;
+  static const Field<SettingsState, ViewStatus> _f$status = Field(
+    'status',
+    _$status,
+    opt: true,
+    def: ViewStatus.initial,
+  );
+  static AppSettings _$persistedSettings(SettingsState v) =>
+      v.persistedSettings;
+  static const Field<SettingsState, AppSettings> _f$persistedSettings = Field(
+    'persistedSettings',
+    _$persistedSettings,
     opt: true,
     def: const AppSettings(),
   );
-  static bool _$isLoading(SettingsState v) => v.isLoading;
-  static const Field<SettingsState, bool> _f$isLoading = Field(
-    'isLoading',
-    _$isLoading,
+  static AppSettings _$draftSettings(SettingsState v) => v.draftSettings;
+  static const Field<SettingsState, AppSettings> _f$draftSettings = Field(
+    'draftSettings',
+    _$draftSettings,
+    opt: true,
+    def: const AppSettings(),
+  );
+  static bool _$isDirty(SettingsState v) => v.isDirty;
+  static const Field<SettingsState, bool> _f$isDirty = Field(
+    'isDirty',
+    _$isDirty,
     opt: true,
     def: false,
   );
 
   @override
   final MappableFields<SettingsState> fields = const {
-    #settings: _f$settings,
-    #isLoading: _f$isLoading,
+    #status: _f$status,
+    #persistedSettings: _f$persistedSettings,
+    #draftSettings: _f$draftSettings,
+    #isDirty: _f$isDirty,
   };
 
   static SettingsState _instantiate(DecodingData data) {
     return SettingsState(
-      settings: data.dec(_f$settings),
-      isLoading: data.dec(_f$isLoading),
+      status: data.dec(_f$status),
+      persistedSettings: data.dec(_f$persistedSettings),
+      draftSettings: data.dec(_f$draftSettings),
+      isDirty: data.dec(_f$isDirty),
     );
   }
 
@@ -112,8 +132,14 @@ extension SettingsStateValueCopy<$R, $Out>
 
 abstract class SettingsStateCopyWith<$R, $In extends SettingsState, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings;
-  $R call({AppSettings? settings, bool? isLoading});
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get persistedSettings;
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get draftSettings;
+  $R call({
+    ViewStatus? status,
+    AppSettings? persistedSettings,
+    AppSettings? draftSettings,
+    bool? isDirty,
+  });
   SettingsStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -126,19 +152,36 @@ class _SettingsStateCopyWithImpl<$R, $Out>
   late final ClassMapperBase<SettingsState> $mapper =
       SettingsStateMapper.ensureInitialized();
   @override
-  AppSettingsCopyWith<$R, AppSettings, AppSettings> get settings =>
-      $value.settings.copyWith.$chain((v) => call(settings: v));
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get persistedSettings =>
+      $value.persistedSettings.copyWith.$chain(
+        (v) => call(persistedSettings: v),
+      );
   @override
-  $R call({AppSettings? settings, bool? isLoading}) => $apply(
+  AppSettingsCopyWith<$R, AppSettings, AppSettings> get draftSettings =>
+      $value.draftSettings.copyWith.$chain((v) => call(draftSettings: v));
+  @override
+  $R call({
+    ViewStatus? status,
+    AppSettings? persistedSettings,
+    AppSettings? draftSettings,
+    bool? isDirty,
+  }) => $apply(
     FieldCopyWithData({
-      if (settings != null) #settings: settings,
-      if (isLoading != null) #isLoading: isLoading,
+      if (status != null) #status: status,
+      if (persistedSettings != null) #persistedSettings: persistedSettings,
+      if (draftSettings != null) #draftSettings: draftSettings,
+      if (isDirty != null) #isDirty: isDirty,
     }),
   );
   @override
   SettingsState $make(CopyWithData data) => SettingsState(
-    settings: data.get(#settings, or: $value.settings),
-    isLoading: data.get(#isLoading, or: $value.isLoading),
+    status: data.get(#status, or: $value.status),
+    persistedSettings: data.get(
+      #persistedSettings,
+      or: $value.persistedSettings,
+    ),
+    draftSettings: data.get(#draftSettings, or: $value.draftSettings),
+    isDirty: data.get(#isDirty, or: $value.isDirty),
   );
 
   @override

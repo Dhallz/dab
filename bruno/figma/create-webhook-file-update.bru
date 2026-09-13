@@ -1,0 +1,42 @@
+meta {
+  name: Create FILE_UPDATE webhook
+  type: http
+  seq: 2
+}
+
+docs {
+  Registers a Figma Webhooks v2 subscription for **`FILE_UPDATE`**. Same
+  endpoint, passcode, and team as FILE_COMMENT. Requires a webhook-capable
+  Figma plan. Revoke `figmaWebhookWriteToken` after use.
+}
+
+post {
+  url: https://api.figma.com/v2/webhooks
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Figma-Token: {{figmaWebhookWriteToken}}
+}
+
+body:json {
+  {
+    "event_type": "FILE_UPDATE",
+    "context": "team",
+    "context_id": "{{figmaTeamId}}",
+    "endpoint": "{{figmaWebhookUrl}}",
+    "passcode": "{{figmaWebhookSecret}}",
+    "description": "DAB last edited"
+  }
+}
+
+tests {
+  test("Created FILE_UPDATE webhook", function() {
+    if (res.status !== 200 && res.status !== 201) {
+      console.log("Body:", JSON.stringify(res.body));
+    }
+    expect([200, 201]).to.include(res.status);
+  });
+}

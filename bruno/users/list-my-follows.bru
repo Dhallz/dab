@@ -1,0 +1,28 @@
+meta {
+  name: List My Follows
+  type: http
+  seq: 15
+}
+
+docs {
+  Lists the caller's Dashboard object Follow pins
+  (`providerId` + `objectKey`, plus optional `title` / `url` snapshot).
+  Git branch pins use `github|gitlab|bitbucket` and `owner/repo|branch`.
+  Requires a signed-in user.
+}
+
+get {
+  url: {{baseUrl}}/users/me/follows
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns a follow list envelope", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
+}

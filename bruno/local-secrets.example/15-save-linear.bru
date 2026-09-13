@@ -1,0 +1,49 @@
+meta {
+  name: 15 Save Linear
+  type: http
+  seq: 15
+}
+
+docs {
+  Restores **Linear** provider config.
+
+  Settings:
+  - Core: `apiKey`
+  - Live: `webhookSecret`
+
+  **Webhook URL** (Linear → Settings → API → Webhooks):
+  `{{linearWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "linear",
+    "name": "Linear",
+    "baseUrl": "https://linear.app",
+    "isActive": true,
+    "settings": {
+      "apiKey": "{{linearApiKey}}",
+      "webhookSecret": "{{linearWebhookSecret}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("linearWebhookUrl") || bru.getEnvVar("linearWebhookUrl");
+  if (url) console.log("Linear webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns linear config", function() {
+    expect(res.body.data.id).to.equal("linear");
+  });
+}

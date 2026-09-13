@@ -1,0 +1,45 @@
+meta {
+  name: 90 Verify Configs
+  type: http
+  seq: 90
+}
+
+docs {
+  Smoke check after restore: lists all provider configs and logs which secrets are present
+  (without printing secret values).
+}
+
+get {
+  url: {{baseUrl}}/admin/configs
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status !== 200 || !Array.isArray(res.body.data)) {
+    return;
+  }
+  for (const config of res.body.data) {
+    const settings = config.settings || {};
+    const keys = Object.keys(settings).filter((k) => {
+      const v = settings[k];
+      return v !== null && v !== undefined && String(v).trim() !== "";
+    });
+    console.log(
+      config.id +
+        ": active=" +
+        config.isActive +
+        " settings=" +
+        keys.join(", "),
+    );
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns config list", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

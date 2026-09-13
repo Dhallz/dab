@@ -1,0 +1,44 @@
+meta {
+  name: Get Groups
+  type: http
+  seq: 1
+}
+
+docs {
+  Retrieves alphabetical list of all activity groups.
+  Used for filtering and bulk viewing in the UI.
+  
+  Automatically scripts the extraction of a `targetGroupId` into the environment for use in subsequent requests (Delete/Modify).
+  
+  ### Database Mapping
+  | API Field | DB Table | DB Column | Role |
+  | :--- | :--- | :--- | :--- |
+  | `id` | `groups` | `id` | Primary Key |
+  | `name` | `groups` | `name` | Display label |
+  | `description` | `groups` | `description` | Metadata |
+}
+
+get {
+  url: {{baseUrl}}/groups
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data && res.body.data.length > 0) {
+    const firstGroup = res.body.data[0];
+    bru.setEnvVar("targetGroupId", firstGroup.id);
+    bru.setVar("targetGroupId", firstGroup.id);
+    console.log("Automatically populated targetGroupId with: " + firstGroup.id);
+  }
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Returns array of groups", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

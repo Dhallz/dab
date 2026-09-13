@@ -1,0 +1,53 @@
+meta {
+  name: 16 Save Phorge
+  type: http
+  seq: 16
+}
+
+docs {
+  Restores **Phorge** provider config.
+
+  Settings:
+  - Core: `api.token`
+  - Live: `webhookHmacKey`
+  - Polling: `project` (project PHID / tag)
+
+  Set `phorgeBaseUrl` to your instance root URL.
+
+  **Webhook URL** (Phorge Herald → Webhook URI):
+  `{{phorgeWebhookUrl}}`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "phorge",
+    "name": "Phorge",
+    "baseUrl": "{{phorgeBaseUrl}}",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{phorgeApiToken}}",
+      "webhookHmacKey": "{{phorgeWebhookHmacKey}}",
+      "project": "{{phorgeProject}}"
+    }
+  }
+}
+
+script:post-response {
+  const url = bru.getVar("phorgeWebhookUrl") || bru.getEnvVar("phorgeWebhookUrl");
+  if (url) console.log("Phorge webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns phorge config", function() {
+    expect(res.body.data.id).to.equal("phorge");
+  });
+}

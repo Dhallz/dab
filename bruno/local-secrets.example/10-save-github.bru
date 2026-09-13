@@ -1,0 +1,75 @@
+meta {
+  name: 10 Save GitHub
+  type: http
+  seq: 10
+}
+
+docs {
+  Restores **GitHub** provider config (`POST /admin/configs`).
+
+  ### What DAB stores vs what you configure in GitHub
+
+  | Item | Where it lives | Bruno / Admin field |
+  |------|----------------|---------------------|
+  | Webhook **secret** | DAB `settings.webhookSecret` | `githubWebhookSecret` (editable) |
+  | Webhook **URL** | **Not stored in DAB** | `githubWebhookUrl` (copy-only reference) |
+
+  DAB builds the webhook URL from **`public_api_url`** (step **02**) + `/integrations/github/webhook`.
+  The Admin app shows the same URL **read-only** under Live — paste it into
+  **GitHub → repo → Settings → Webhooks → Payload URL**.
+
+  Settings saved by this request:
+  - Core: `api.token`, optional `apiBaseUrl`
+  - Live: `webhookSecret` (must match the secret on the GitHub webhook)
+  - Polling: `owner`, `repo`, and/or newline `repos`, optional `branch`
+}
+
+post {
+  url: {{baseUrl}}/admin/configs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "github",
+    "name": "GitHub",
+    "baseUrl": "https://github.com",
+    "isActive": true,
+    "settings": {
+      "api.token": "{{githubApiToken}}",
+      "apiBaseUrl": "{{githubApiBaseUrl}}",
+      "webhookSecret": "{{githubWebhookSecret}}",
+      "webhookUrl": "{{githubWebhookUrl}}",
+      "owner": "{{githubOwner}}",
+      "repo": "{{githubRepo}}",
+      "repos": "{{githubRepos}}",
+      "branch": "{{githubBranch}}"
+    }
+  }
+}
+
+script:pre-request {
+  const url = bru.getVar("githubWebhookUrl") || bru.getEnvVar("githubWebhookUrl");
+  console.log("");
+  console.log("=== GitHub Live webhook setup ===");
+  console.log("SAVED in this request: webhookSecret, api.token, repos…");
+  console.log("NOT saved in DAB — paste into GitHub webhook Payload URL:");
+  console.log(url || "(empty — run 02 Save System Settings + 04 Webhook Endpoints)");
+  console.log("=================================");
+  console.log("");
+}
+
+script:post-response {
+  const url = bru.getVar("githubWebhookUrl") || bru.getEnvVar("githubWebhookUrl");
+  if (url) console.log("GitHub webhook URL:", url);
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("Returns github config", function() {
+    expect(res.body.data.id).to.equal("github");
+  });
+}

@@ -1,0 +1,117 @@
+---
+trigger: always_on
+glob: "dab_app/**/*"
+description: Package-specific rules for DAB App
+---
+
+# DAB App — Package-Specific Agent Rules
+
+> These rules supplement (not replace) the global rules in `/.agents/rules/global.md`.  
+> Always read the global rules first.
+
+**Stack**: Flutter `^3.x` · Dart `^3.9.2` · flutter_riverpod · go_router · ObjectBox · Dio · dart_mappable · custom `ServiceLocator` (`sl`)
+
+---
+
+## 🗂️ Package Layer Map
+
+```
+dab_app/lib/
+├── domain/
+│   ├── entities/      ← Pure Dart models (no Flutter/framework imports)
+│   ├── repositories/  ← Abstract repository interfaces (I*)
+│   ├── usecases/      ← Single-responsibility use case classes
+│   ├── core/          ← Shared failures, value objects, core abstractions
+│   └── containers/    ← Domain-level DI containers / registry
+├── infrastructure/
+│   ├── datasources/   ← Remote (Dio) and local (ObjectBox) data sources
+│   ├── repositories/  ← Concrete implementations of domain interfaces
+│   └── core/          ← Interceptors, ObjectBox setup, storage helpers
+├── presentation/
+│   ├── features/      ← Cross-cutting notifiers (auth/, app/)
+│   ├── views/         ← Screen modules (`[name]_view`, layouts, notifier, state, widgets/)
+│   └── core/          ← navigation/, styles/, widgets/, extensions/, localization/
+├── services/
+│   └── service_locator.dart  ← Single file for all DI registrations
+└── main.dart
+```
+
+---
+
+## 🧩 Riverpod Notifier Rules
+
+- **One `Notifier` per feature screen or major UI concern** — expose a single `NotifierProvider` / `AutoDisposeNotifierProvider` pair next to the notifier file.
+- **Notifiers call use cases only** — never datasources or repositories directly.
+- State classes use `dart_mappable` (`@MappableClass`) with `ViewStatus` + feature fields; complex projections use `extension OnFooState on FooState`.
+- Use **`ProviderContainer`** + **`provider.overrideWith`** in tests; for **autoDispose** providers, **`listen`** during async gaps so notifiers are not torn down mid-await.
+- **`ConsumerWidget` / `ConsumerStatefulWidget`** + **`ref.watch`** / **`ref.read`** — scope watches to the smallest subtree that needs rebuilds.
+
+---
+
+## 🗺️ Navigation Rules (go_router)
+
+- All routes are declared in `presentation/core/navigation/app_route.dart` and wired in `app_router.dart`.
+- Use **named routes** — never push raw path strings from business logic or use cases.
+- Route guards (redirect logic) live in the router configuration, not in widgets or notifiers.
+- Never import a screen file directly into another screen to perform navigation.
+
+---
+
+## 🗄️ Local Persistence Rules (ObjectBox)
+
+- The `objectbox.g.dart` and `objectbox-model.json` files are **generated** — never hand-edit them.
+- After any ObjectBox entity change run:  
+  `dart run build_runner build --delete-conflicting-outputs`
+- ObjectBox `@Entity()` records live in `infrastructure/core/local/records/` — never on Domain entities.
+- All ObjectBox I/O is isolated inside `infrastructure/datasources/` — the domain never touches `Store` or `Box` directly.
+
+---
+
+## 🌐 Networking Rules (Dio)
+
+- The Dio client is configured exclusively in `infrastructure/core/` (interceptors, base URL, timeouts).
+- Auth token injection and refresh live in a dedicated `AuthInterceptor` — never inline token logic in datasources.
+- All API calls return `Either<Failure, T>` — catch `DioException` in the datasource layer and map to a domain `Failure`.
+- Never add `.catchError` or raw try-catch inside notifiers for I/O. Error handling belongs in the datasource or repository.
+
+---
+
+## 🔐 Auth & Token Rules (App-Specific)
+
+- `FlutterSecureStorage` is the only acceptable storage for tokens. Never store tokens in `SharedPreferences`, `ObjectBox`, or in-memory singletons.
+- Token refresh is handled entirely by `AuthInterceptor` — presentation code must not trigger refresh manually.
+- On logout, clear session state via **`authNotifierProvider`** / routing **and** secure storage atomically.
+
+---
+
+## 🧪 Testing Rules (App-Specific)
+
+- Test file mirrors source path: `lib/presentation/features/auth/auth_notifier.dart` → `test/presentation/features/auth/auth_notifier_test.dart`
+- **Notifier tests:** `ProviderContainer(overrides: [...])`, optional `listen(provider, …)` for autoDispose; no `emit`.
+- Use `mocktail` to mock repository interfaces — construct real use-case containers where integration is needed.
+- Use `TestData` factories for all entity fixtures.
+- Widget tests live in `test/presentation/` and use `pumpWidget` with `ProviderScope` / overrides as needed.
+- Always run `flutter analyze && flutter test` before declaring a task complete.
+
+---
+
+## 🎨 UI / Widget Rules
+
+- **No business logic in widgets.** Widgets read state via `ref.watch` and call notifier methods — nothing more.
+- Shared UI components belong in `presentation/core/widgets/` — never duplicate widget code across features.
+- Use the app's `ThemeData` tokens (colours, text styles) — never hardcode hex values or font sizes inline.
+- Animations use Flutter's built-in animation system (`AnimationController`, `AnimatedWidget`, `Hero`). Avoid third-party animation packages unless a gap is confirmed.
+- Accessibility: every interactive widget must have a `Semantics` label or a `Tooltip`.
+
+---
+
+## 🤖 Agent Quick-Reference
+
+| Action | Command |
+|---|---|
+| Analyze | `flutter analyze` |
+| Run tests | `flutter test` |
+| Run single test | `flutter test test/path/to/foo_test.dart` |
+| Rebuild generated code | `dart run build_runner build --delete-conflicting-outputs` |
+| Run app (dev) | `flutter run` |
+| L10n generation | Handled automatically by `flutter gen-l10n` (configured in `l10n.yaml`) |

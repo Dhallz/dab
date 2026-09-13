@@ -1,0 +1,36 @@
+meta {
+  name: 21 Link Slack Identity
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/admin/identities/link
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{targetUserId}}",
+    "providerId": "slack",
+    "externalId": "{{slackExternalId}}",
+    "externalUsername": "{{slackExternalId}}"
+  }
+}
+
+vars:pre-request {
+  slackExternalId: UA597BWR2
+}
+
+tests {
+  test("Status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Links a DAB user to a Slack member ID (`U…`).
+  
+  Requires `targetUserId` and `slackExternalId`.
+}
