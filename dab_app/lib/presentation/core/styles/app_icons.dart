@@ -59,7 +59,8 @@ class AppIcons {
   static final IconData linear = SimpleIcons.linear;
   static final IconData figma = SimpleIcons.figma;
   static final IconData jira = SimpleIcons.jira;
-  static final IconData slack = SimpleIcons.slack;
+  /// Slack is no longer in Simple Icons (trademark removal); hashtag is the stand-in.
+  static final IconData slack = HeroIcons.hashtag.outline;
   static final IconData discord = SimpleIcons.discord;
   static final IconData unknownProvider = HeroIcons.questionMarkCircle.outline;
   static final IconData testConnection = HeroIcons.bolt.outline;

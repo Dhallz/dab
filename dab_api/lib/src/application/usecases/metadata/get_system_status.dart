@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../domain/core/failures/failure.dart';
 import '../../../domain/contracts/repositories/abs_i_auth_repository.dart';
 import '../../../domain/contracts/repositories/abs_i_provider_config_repository.dart';
+import '../../../domain/core/failures/failure.dart';
 
 /// [ARCH: APPLICATION_USECASE]
 /// ROLE: Determines if the DAB platform is fully configured.
@@ -18,13 +18,11 @@ class GetSystemStatus {
       final adminCountResult = await _authRepo.countAdmins();
       final configCountResult = await _configRepo.countActiveConfigs();
 
-      return adminCountResult.fold(
+      return await adminCountResult.fold(
         (f) => Left(f),
         (adminCount) => configCountResult.fold(
           (f) => Left(f),
-          (activeConfigCount) => Right(
-            adminCount > 0 && activeConfigCount > 0,
-          ),
+          (activeConfigCount) => Right(adminCount > 0 && activeConfigCount > 0),
         ),
       );
     } catch (e) {

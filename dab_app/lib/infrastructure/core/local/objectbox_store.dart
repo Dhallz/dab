@@ -6,6 +6,11 @@ import 'package:path_provider/path_provider.dart';
 import '../../../objectbox.g.dart';
 
 class ObjectBoxStore {
+  /// POSIX semaphore prefix for sandboxed macOS. Must match
+  /// `com.apple.security.application-groups` in the macOS entitlements and be
+  /// at most 19 characters.
+  static const macosApplicationGroupId = 'dab.objectbox';
+
   late final Store store;
 
   ObjectBoxStore._create(this.store);
@@ -22,7 +27,10 @@ class ObjectBoxStore {
       await directory.create(recursive: true);
     }
 
-    final store = await openStore(directory: dbPath);
+    final store = await openStore(
+      directory: dbPath,
+      macosApplicationGroup: macosApplicationGroupId,
+    );
     return ObjectBoxStore._create(store);
   }
 }

@@ -1,11 +1,13 @@
 import 'dart:convert';
+
 import 'package:relic/relic.dart';
+
+import '../../application/containers/metadata_usecases.dart';
 import '../../application/services/activity_purge_scheduler.dart';
+import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import '../../domain/core/daily_report_lock_policy.dart';
 import '../../domain/core/deployment_mode.dart';
 import '../../domain/entities/provider/provider_config.dart';
-import '../../application/containers/metadata_usecases.dart';
-import '../../domain/contracts/repositories/abs_i_system_settings_repository.dart';
 import '../../infrastructure/sources/discord/discord_gateway_client.dart';
 import '../../service_locator.dart';
 import '../middlewares/auth_middleware.dart';
@@ -120,7 +122,9 @@ class MetadataController {
       final modeResult = await sl<AbsISystemSettingsRepository>().getSetting(
         kDeploymentModeSettingKey,
       );
-      final deploymentMode = (modeResult.getOrElse((_) => null)).normalizeDeploymentMode();
+      final deploymentMode = (modeResult.getOrElse(
+        (_) => null,
+      )).normalizeDeploymentMode();
       final offsetResult = await sl<AbsISystemSettingsRepository>().getSetting(
         kDailyReportLockOffsetDaysKey,
       );
@@ -173,7 +177,7 @@ class MetadataController {
 
       final result = await _metadata.saveProviderConfig.execute(config);
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -214,7 +218,7 @@ class MetadataController {
       final config = ProviderConfigMapper.fromMap(data);
 
       final result = await _metadata.testProviderConfig.execute(config);
-      return result.fold(
+      return await result.fold(
         (failure) => Response.badRequest(
           body: Body.fromString(
             jsonEncode({
@@ -265,7 +269,7 @@ class MetadataController {
 
   Future<Response> getSystemSettings(Request request) async {
     final result = await _metadata.getSystemSettings.execute();
-    return result.fold(
+    return await result.fold(
       (failure) => Response.internalServerError(
         body: Body.fromString(
           jsonEncode({
@@ -293,7 +297,7 @@ class MetadataController {
       );
 
       final result = await _metadata.saveSystemSettings.execute(settings);
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),

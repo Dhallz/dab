@@ -394,7 +394,7 @@ class UserController {
         providerId: provider,
         settings: settings,
       );
-      return result.fold(
+      return await result.fold(
         (failure) {
           if (failure is ValidationFailure) {
             return Response.badRequest(
@@ -693,7 +693,7 @@ class UserController {
         includeFollowing: includeFollowing,
         lines: lines,
       );
-      return result.fold(
+      return await result.fold(
         (failure) {
           if (failure is ValidationFailure) {
             return Response.badRequest(

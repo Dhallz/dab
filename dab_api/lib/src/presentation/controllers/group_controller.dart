@@ -15,7 +15,7 @@ class GroupController {
 
   Future<Response> getGroups(Request request) async {
     final result = await _group.getGroups.execute();
-    return result.fold(
+    return await result.fold(
       (failure) => Response.internalServerError(
         body: Body.fromString(
           jsonEncode({'error': failure.message}),
@@ -45,7 +45,7 @@ class GroupController {
 
       final result = await _group.saveGroup.execute(group);
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.badRequest(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),

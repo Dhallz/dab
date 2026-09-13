@@ -52,7 +52,7 @@ dependencies:
   flutter_markdown: ^0.7.5
   stream_transform: ^2.1.1
   google_fonts: ^6.2.1
-  simple_icons: ^14.6.1
+  simple_icons: ^16.20.0
   flutty_heroicons: ^1.1.1
   fl_chart: ^1.2.0
   package_info_plus: ^9.0.1

@@ -2,11 +2,11 @@ import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../domain/contracts/repositories/abs_i_daily_report_repository.dart';
 import '../../../domain/core/failures/failure.dart';
 import '../../../domain/entities/user/daily_report.dart';
 import '../../../domain/entities/user/daily_report_line.dart';
 import '../../../domain/entities/user/daily_report_line_role.dart';
-import '../../../domain/contracts/repositories/abs_i_daily_report_repository.dart';
 import '../postgres/app_database.dart';
 import '../postgres/drift_row_mappers.dart';
 
@@ -103,29 +103,24 @@ class DailyReportRepository implements AbsIDailyReportRepository {
         if (report.lines.isEmpty) return;
 
         await _db.batch((batch) {
-          batch.insertAll(
-            _db.dailyReportLinesTable,
-            [
-              for (final line in report.lines)
-                DailyReportLinesTableCompanion.insert(
-                  id: _uuid.v5(
-                    Namespace.url.value,
-                    'day-report-line|${savedHeader.id}|${line.subjectKey}',
-                  ),
-                  reportId: savedHeader.id,
-                  subjectKey: line.subjectKey,
-                  included: Value(line.included ? 1 : 0),
-                  note: Value(line.note),
-                  role: Value(line.role.wireName),
-                  title: Value(line.title),
-                  url: Value(line.url),
-                  occurredAt: Value(
-                    line.occurredAt?.toUtc().toPgDateTime(),
-                  ),
-                  providerId: Value(line.providerId),
+          batch.insertAll(_db.dailyReportLinesTable, [
+            for (final line in report.lines)
+              DailyReportLinesTableCompanion.insert(
+                id: _uuid.v5(
+                  Namespace.url.value,
+                  'day-report-line|${savedHeader.id}|${line.subjectKey}',
                 ),
-            ],
-          );
+                reportId: savedHeader.id,
+                subjectKey: line.subjectKey,
+                included: Value(line.included ? 1 : 0),
+                note: Value(line.note),
+                role: Value(line.role.wireName),
+                title: Value(line.title),
+                url: Value(line.url),
+                occurredAt: Value(line.occurredAt?.toUtc().toPgDateTime()),
+                providerId: Value(line.providerId),
+              ),
+          ]);
         });
       });
 
@@ -133,7 +128,7 @@ class DailyReportRepository implements AbsIDailyReportRepository {
         userId: report.userId,
         date: report.date,
       );
-      return reloaded.fold(
+      return await reloaded.fold(
         (failure) => Left(failure),
         (saved) => Right(saved ?? report.copyWith(updatedAt: now)),
       );

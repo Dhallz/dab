@@ -19,7 +19,7 @@ class AdminController {
     try {
       final result = await _auth.countUnresolvedIdentities.execute();
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -53,7 +53,7 @@ class AdminController {
     try {
       final result = await _auth.getAllIdentities.execute();
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -111,7 +111,7 @@ class AdminController {
         externalUsername: externalUsername,
       );
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -151,7 +151,7 @@ class AdminController {
         identityId: id.trim(),
       );
 
-      return result.fold(
+      return await result.fold(
         (failure) {
           if (failure is NotFoundFailure) {
             return Response.notFound(
@@ -222,7 +222,7 @@ class AdminController {
         status: status,
       );
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -250,7 +250,7 @@ class AdminController {
     try {
       final result = await _auth.findAllUsers.execute();
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -311,7 +311,7 @@ class AdminController {
         role: role,
       );
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.badRequest(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
@@ -362,7 +362,7 @@ class AdminController {
 
       final result = await _auth.updateUserRole.execute(userId, userRole);
 
-      return result.fold(
+      return await result.fold(
         (failure) => Response.internalServerError(
           body: Body.fromString(
             jsonEncode({'error': failure.message}),
